@@ -7,90 +7,98 @@
  * http://docstore.mik.ua/orelly/linux/sql/ch19_01.htm
  */
 
-const char* FinanceAnalyzerSqlReader::DEF_SERVER = "localhost";
-const char* FinanceAnalyzerSqlReader::DEF_USERNAME = "root";
-const char* FinanceAnalyzerSqlReader::DEF_PASSWORD = "lab4man1";
-//const char* FinanceAnalyzerSqlReader::DEF_DATABASE = "msg_dumper";
-//const char* FinanceAnalyzerSqlReader::format_cmd_create_database = "CREATE DATABASE %s";
+
+using namespace std;
+
+const char* FinanceAnalyzerSqlReader::MYSQL_SERVER = "localhost";
+const char* FinanceAnalyzerSqlReader::MYSQL_USERNAME = "root";
+const char* FinanceAnalyzerSqlReader::MYSQL_PASSWORD = "lab4man1";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_CREATE_DATABASE = "CREATE DATABASE %s";
 //const char* FinanceAnalyzerSqlReader::format_cmd_create_table = "CREATE TABLE sql%s (date VARCHAR(16), time VARCHAR(16), severity INT, data VARCHAR(512))";
 //const char* FinanceAnalyzerSqlReader::format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
+DECLARE_MSG_DUMPER_PARAM()
 
 FinanceAnalyzerSqlReader::FinanceAnalyzerSqlReader() :
 	connection(NULL)
 {
-//	memcpy(facility_name, MSG_DUMPER_FACILITY_DESC[FACILITY_SQL], strlen(MSG_DUMPER_FACILITY_DESC[FACILITY_SQL]));
-//	memset(server, 0x0, sizeof(char) * MSG_DUMPER_STRING_SIZE);
-//	memcpy(server, DEF_SERVER, sizeof(char) * strlen(DEF_SERVER));
-//	memset(username, 0x0, sizeof(char) * MSG_DUMPER_STRING_SIZE);
-//	memcpy(username, DEF_USERNAME, sizeof(char) * strlen(DEF_USERNAME));
-//	memset(password, 0x0, sizeof(char) * MSG_DUMPER_STRING_SIZE);
-//	memcpy(password, DEF_PASSWORD, sizeof(char) * strlen(DEF_PASSWORD));
-//	memset(database, 0x0, sizeof(char) * MSG_DUMPER_STRING_SIZE);
-//	memcpy(database, DEF_DATABASE, sizeof(char) * strlen(DEF_DATABASE));
+	IMPLEMENT_MSG_DUMPER()
 }
 
 FinanceAnalyzerSqlReader::~FinanceAnalyzerSqlReader()
 {
-	WRITE_DEBUG_SYSLOG("The destructor of FinanceAnalyzerSqlReader is called...");
+	RELEASE_MSG_DUMPER()
 }
 
-unsigned short FinanceAnalyzerSqlReader::try_connect_mysql()
+unsigned short FinanceAnalyzerSqlReader::try_connect_mysql(const string database)
 {
-	WRITE_DEBUG_SYSLOG("Initialize the parameters connected to the MySQL database server");
+	WRITE_DEBUG("Initialize the parameters connected to the MySQL database server");
 	connection = mysql_init(NULL); // 初始化数据库连接变量
 	if(connection == NULL)
 	{
-		WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "mysql_init() fails, due to: %s", mysql_error(connection));
-		return MSG_DUMPER_FAILURE_MYSQL;
+		WRITE_FORMAT_ERROR("mysql_init() fails, due to: %s", mysql_error(connection));
+		return RET_FAILURE_MYSQL;
 	}
 
-	WRITE_DEBUG_SYSLOG("Try to connect to the MySQL database server...");
+	database_name = database;
+	WRITE_DEBUG("Try to connect to the MySQL database server...");
 // 函数mysql_real_connect建立一个数据库连接，成功返回MYSQL*连接句柄，失败返回NULL
-	if(mysql_real_connect(connection, server, username, password, database, 0, NULL, 0) == NULL)
+	if(mysql_real_connect(connection, MYSQL_SERVER, MYSQL_USERNAME, MYSQL_PASSWORD, database_name.c_str(), 0, NULL, 0) == NULL)
 	{
 // The database does NOT exist !!! Try to create one
-		WRITE_DEBUG_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "The %s database does NOT exist, create a NEW one", database);
+		WRITE_FORMAT_DEBUG("The %s database does NOT exist, create a NEW one", database_name.c_str());
 // mysql_create_db() has been deprecated in the newer releases of MySQL. MySQL now supports the CREATE DATABASE SQL statement.
 // This should be used, via the mysql_query function, instead
-//		if(mysql_create_db(connection, database) != 0)
-		if(mysql_real_connect(connection, server, username, password, NULL, 0, NULL, 0) == NULL)
+		if(mysql_real_connect(connection, MYSQL_SERVER, MYSQL_USERNAME, MYSQL_PASSWORD, NULL, 0, NULL, 0) == NULL)
 		{
-			WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "mysql_real_connect() fails, due to: %s", mysql_error(connection));
-			return MSG_DUMPER_FAILURE_MYSQL;
+			WRITE_FORMAT_ERROR("mysql_real_connect() fails, due to: %s", mysql_error(connection));
+			return RET_FAILURE_MYSQL;
 		}
 
-		snprintf(cmd_buf, MSG_DUMPER_LONG_STRING_SIZE, format_cmd_create_database, database);
-		WRITE_DEBUG_FORMAT_SYSLOG(MSG_DUMPER_LONG_STRING_SIZE, "Try to create database[%s] by command: %s", database, cmd_buf);
+		snprintf(cmd_buf, CMD_BUF_SIZE, FORMAT_CMD_CREATE_DATABASE, database_name.c_str());
+		WRITE_FORMAT_DEBUG("Try to create database[%s] by command: %s", database_name.c_str(), cmd_buf);
 		if(mysql_query(connection, cmd_buf) != 0)
 		{
-			WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "mysql_query() fails, due to: %s", mysql_error(connection));
-			return MSG_DUMPER_FAILURE_MYSQL;
+			WRITE_FORMAT_ERROR("mysql_query() fails, due to: %s", mysql_error(connection));
+			return RET_FAILURE_MYSQL;
 		}
-		WRITE_DEBUG_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "The %s database is created", database);
+		WRITE_FORMAT_DEBUG("The %s database is created", database_name.c_str());
 	}
-	WRITE_DEBUG_SYSLOG("Try to connect to the MySQL database server...... Successfully");
+	WRITE_DEBUG("Try to connect to the MySQL database server...... Successfully");
 
 // Select the database
-	if (mysql_select_db(connection, database))
+	if (mysql_select_db(connection, database_name.c_str()))
 	{
-		WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "mysql_select_db() fails, due to: %s", mysql_error(connection));
-		return MSG_DUMPER_FAILURE_MYSQL;
+		WRITE_FORMAT_ERROR("mysql_select_db() fails, due to: %s", mysql_error(connection));
+		return RET_FAILURE_MYSQL;
 	}
 
-	return MSG_DUMPER_SUCCESS;
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerSqlReader::disconnect_mysql()
+{
+	WRITE_DEBUG("Disconnect from the MySQL database server...");
+	if (connection != NULL)
+	{
+		mysql_close(connection);
+		connection = NULL;
+	}
+	database_name.clear();
+
+	return RET_SUCCESS;
 }
 
 //unsigned short FinanceAnalyzerSqlReader::parse_config_param(const char* param_title, const char* param_content)
 //{
 //	if (param_title == NULL || param_content == NULL)
 //	{
-//		WRITE_ERR_SYSLOG("Invalid argument: param_title/param_content");
-//		return MSG_DUMPER_FAILURE_INVALID_ARGUMENT;
+//		WRITE_ERR("Invalid argument: param_title/param_content");
+//		return RET_FAILURE_INVALID_ARGUMENT;
 //	}
 //	static const char* title[] = {"server", "username", "password", "database"};
 //	static int title_len = sizeof title / sizeof title[0];
 //
-//	unsigned short ret = MSG_DUMPER_SUCCESS;
+//	unsigned short ret = RET_SUCCESS;
 //	bool found = false;
 //	for (int index = 0 ; index < title_len ; index++)
 //	{
@@ -116,15 +124,15 @@ unsigned short FinanceAnalyzerSqlReader::try_connect_mysql()
 //
 //			if (param_member_variable != NULL)
 //			{
-//				memset(param_member_variable, 0x0, sizeof(char) * MSG_DUMPER_STRING_SIZE);
+//				memset(param_member_variable, 0x0, sizeof(char) * RET_STRING_SIZE);
 //				memcpy(param_member_variable, param_content, param_content_len);
 //				found = true;
-//				WRITE_DEBUG_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "Update parameter: %s=%s", param_title, param_content);
+//				WRITE_DEBUG_FORMAT(RET_STRING_SIZE, "Update parameter: %s=%s", param_title, param_content);
 //			}
 //			else
 //			{
-//				WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "Incorrect parameter: %s=%s", param_title, param_content);
-//				ret = MSG_DUMPER_FAILURE_INVALID_ARGUMENT;
+//				WRITE_ERR_FORMAT(RET_STRING_SIZE, "Incorrect parameter: %s=%s", param_title, param_content);
+//				ret = RET_FAILURE_INVALID_ARGUMENT;
 //			}
 //			break;
 //		}
@@ -132,8 +140,8 @@ unsigned short FinanceAnalyzerSqlReader::try_connect_mysql()
 //// If the title is NOT found...
 //	if (!found)
 //	{
-//		WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "Incorrect parameter, fail to find the title: %s", param_title);
-//		ret = MSG_DUMPER_FAILURE_INVALID_ARGUMENT;
+//		WRITE_ERR_FORMAT(RET_STRING_SIZE, "Incorrect parameter, fail to find the title: %s", param_title);
+//		ret = RET_FAILURE_INVALID_ARGUMENT;
 //	}
 //
 //	return ret;
@@ -144,20 +152,20 @@ unsigned short FinanceAnalyzerSqlReader::try_connect_mysql()
 //// Check if the connection is established
 //	if (connection == NULL)
 //	{
-//		WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "Thread[%s]=> The connection is NOT established", facility_name);
-//		return MSG_DUMPER_FAILURE_MYSQL;
+//		WRITE_ERR_FORMAT(RET_STRING_SIZE, "Thread[%s]=> The connection is NOT established", facility_name);
+//		return RET_FAILURE_MYSQL;
 //	}
 //
 //// Checks to see if the connection to the MySQL server is still alive. If it is not, the client will attempt to reconnect automatically.
 //// This function returns zero if the connection is alive and nonzero in the case of an error.
 //	if (mysql_ping(connection))
 //	{
-//		WRITE_INFO_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "Thread[%s]=> The connection is NOT alive.Attempt to reconnect it......", facility_name);
+//		WRITE_INFO_FORMAT(RET_STRING_SIZE, "Thread[%s]=> The connection is NOT alive.Attempt to reconnect it......", facility_name);
 //// Select the database
 //		if (mysql_select_db(connection, database))
 //		{
-//			WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "Thread[%s]=> mysql_select_db() fails, due to: %s", facility_name, mysql_error(connection));
-//			return MSG_DUMPER_FAILURE_MYSQL;
+//			WRITE_ERR_FORMAT(RET_STRING_SIZE, "Thread[%s]=> mysql_select_db() fails, due to: %s", facility_name, mysql_error(connection));
+//			return RET_FAILURE_MYSQL;
 //		}
 //	}
 //
@@ -167,23 +175,23 @@ unsigned short FinanceAnalyzerSqlReader::try_connect_mysql()
 //		generate_current_time_string(current_time_string);
 //
 //// Create the table in the database...
-//		snprintf(cmd_buf, MSG_DUMPER_LONG_STRING_SIZE, format_cmd_create_table, current_time_string);
-//		WRITE_DEBUG_FORMAT_SYSLOG(MSG_DUMPER_LONG_STRING_SIZE, "Thread[%s]=> Try to create table[sql%s] by command: %s", facility_name, current_time_string, cmd_buf);
+//		snprintf(cmd_buf, RET_LONG_STRING_SIZE, format_cmd_create_table, current_time_string);
+//		WRITE_DEBUG_FORMAT(RET_LONG_STRING_SIZE, "Thread[%s]=> Try to create table[sql%s] by command: %s", facility_name, current_time_string, cmd_buf);
 //		if(mysql_query(connection, cmd_buf) != 0)
 //		{
 //			int error = mysql_errno(connection);
 //			if (error != ER_TABLE_EXISTS_ERROR)
 //			{
-//				WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "Thread[%s]=> mysql_query() fails, due to: %d, %s", facility_name, error, mysql_error(connection));
-//				return MSG_DUMPER_FAILURE_MYSQL;
+//				WRITE_ERR_FORMAT(RET_STRING_SIZE, "Thread[%s]=> mysql_query() fails, due to: %d, %s", facility_name, error, mysql_error(connection));
+//				return RET_FAILURE_MYSQL;
 //			}
 //			else
-//				WRITE_DEBUG_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "Thread[%s]=> The sql%s has already existed", facility_name, current_time_string);
+//				WRITE_DEBUG_FORMAT(RET_STRING_SIZE, "Thread[%s]=> The sql%s has already existed", facility_name, current_time_string);
 //		}
 //		table_created = true;
 //	}
 //
-//	return MSG_DUMPER_SUCCESS;
+//	return RET_SUCCESS;
 //}
 //
 //unsigned short FinanceAnalyzerSqlReader::close_device()
@@ -191,12 +199,12 @@ unsigned short FinanceAnalyzerSqlReader::try_connect_mysql()
 //// Close the MySQL
 ////	mysql_close(connection);
 //
-//	return MSG_DUMPER_SUCCESS;
+//	return RET_SUCCESS;
 //}
 //
 //unsigned short FinanceAnalyzerSqlReader::initialize(const char* config_path, void* config)
 //{
-//	WRITE_DEBUG_SYSLOG("Initialize the FinanceAnalyzerSqlReader object......");
+//	WRITE_DEBUG("Initialize the FinanceAnalyzerSqlReader object......");
 //
 //// Parse the config file first
 //	unsigned short ret = parse_config(config_path, "sql");
@@ -213,32 +221,32 @@ unsigned short FinanceAnalyzerSqlReader::try_connect_mysql()
 //	if (CHECK_FAILURE(ret))
 //		return ret;
 //
-//	return MSG_DUMPER_SUCCESS;
+//	return RET_SUCCESS;
 //}
 //
 //unsigned short FinanceAnalyzerSqlReader::deinitialize()
 //{
-//	WRITE_DEBUG_SYSLOG("DeInitialize the FinanceAnalyzerSqlReader object......");
-//	WRITE_DEBUG_SYSLOG("Release the parameters connected to the MySQL database server");
+//	WRITE_DEBUG("DeInitialize the FinanceAnalyzerSqlReader object......");
+//	WRITE_DEBUG("Release the parameters connected to the MySQL database server");
 //	if(connection != NULL)  // 关闭数据库连接
 //	{
 //		mysql_close(connection);
 //		connection = NULL;
 //	}
 //
-//	return MSG_DUMPER_SUCCESS;
+//	return RET_SUCCESS;
 //}
 //
 //unsigned short FinanceAnalyzerSqlReader::write_msg(PMSG_CFG msg_cfg)
 //{
 //// Write the message into SQL database
-//	snprintf(cmd_buf, MSG_DUMPER_LONG_STRING_SIZE, format_cmd_insert_into_table, current_time_string, msg_cfg->date_str, msg_cfg->time_str, msg_cfg->severity, msg_cfg->data);
-//	WRITE_DEBUG_FORMAT_SYSLOG(MSG_DUMPER_LONG_STRING_SIZE, "Thread[%s]=> Try to Write the message[%s] to MySQL by command: %s", facility_name, msg_cfg->to_string(), cmd_buf);
+//	snprintf(cmd_buf, RET_LONG_STRING_SIZE, format_cmd_insert_into_table, current_time_string, msg_cfg->date_str, msg_cfg->time_str, msg_cfg->severity, msg_cfg->data);
+//	WRITE_DEBUG_FORMAT(RET_LONG_STRING_SIZE, "Thread[%s]=> Try to Write the message[%s] to MySQL by command: %s", facility_name, msg_cfg->to_string(), cmd_buf);
 //	if(mysql_query(connection, cmd_buf) != 0)
 //	{
-//		WRITE_ERR_FORMAT_SYSLOG(MSG_DUMPER_STRING_SIZE, "Thread[%s]=> mysql_query() fails, due to: %s", facility_name, mysql_error(connection));
-//		return MSG_DUMPER_FAILURE_MYSQL;
+//		WRITE_ERR_FORMAT(RET_STRING_SIZE, "Thread[%s]=> mysql_query() fails, due to: %s", facility_name, mysql_error(connection));
+//		return RET_FAILURE_MYSQL;
 //	}
 //
-//	return MSG_DUMPER_SUCCESS;
+//	return RET_SUCCESS;
 //}

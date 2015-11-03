@@ -3,7 +3,7 @@ MAKE := make
 
 CXXFLAGS := -g -Wall -std=c++0x
 
-SOURCES := msg_dumper_wrapper.cpp finance_analyzer.cpp finance_analyzer_common.cpp finance_analyzer_mgr.cpp
+SOURCES := msg_dumper_wrapper.cpp finance_analyzer.cpp finance_analyzer_common.cpp finance_analyzer_mgr.cpp finance_analyzer_sql_reader.cpp
 OBJS := $(SOURCES:.cpp=.o)
 LIB_MSG_DUMPER := libmsg_dumper.so
 LIB_MSG_DUMPER_HEADER := msg_dumper.h
@@ -17,7 +17,7 @@ OUTPUT := finance_analyzer
 build: $(LIB_MSG_DUMPER_HEADER) $(LIB_MSG_DUMPER_WRAPPER_HEADER) $(LIB_MSG_DUMPER_WRAPPER_SOURCE) $(LIB_MSG_DUMPER) $(OUTPUT)
 
 $(OUTPUT): $(OBJS)
-	$(CC) $(CXXFLAGS) $^ -o $@ -Wl,--start-group $(LIB_MSG_DUMPER) -Wl,--end-group -lrt -ldl -lpthread
+	$(CC) $(CXXFLAGS) $^ -o $@ -Wl,--start-group $(LIB_MSG_DUMPER) -Wl,--end-group -lrt -ldl -lpthread -lmysqlclient
 
 $(LIB_MSG_DUMPER_WRAPPER_HEADER):
 	cp $(LIB_MSG_DUMPER_PATH)/$(LIB_MSG_DUMPER_WRAPPER_FOLDER)/$(LIB_MSG_DUMPER_WRAPPER_HEADER) .
