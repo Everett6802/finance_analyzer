@@ -14,6 +14,15 @@ const char* FinanceAnalyzerSqlReader::MYSQL_SERVER = "localhost";
 const char* FinanceAnalyzerSqlReader::MYSQL_USERNAME = "root";
 const char* FinanceAnalyzerSqlReader::MYSQL_PASSWORD = "lab4man1";
 const char* FinanceAnalyzerSqlReader::FORMAT_CMD_CREATE_DATABASE = "CREATE DATABASE %s";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATA_HEAD = "SELECT ";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATA_TAIL_FORMAT = " FROM %s";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT = " WHERE date BETWEEN %s AND %s";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN_FORMAT = " WHERE date > %s";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN_FORMAT = " WHERE date < %s";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT = " WHERE month(date) > '%d'";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT = " WHERE month(date) < '%d'";
+
 //const char* FinanceAnalyzerSqlReader::format_cmd_create_table = "CREATE TABLE sql%s (date VARCHAR(16), time VARCHAR(16), severity INT, data VARCHAR(512))";
 //const char* FinanceAnalyzerSqlReader::format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
 DECLARE_MSG_DUMPER_PARAM()
@@ -71,6 +80,7 @@ unsigned short FinanceAnalyzerSqlReader::try_connect_mysql(const string database
 		WRITE_FORMAT_ERROR("mysql_select_db() fails, due to: %s", mysql_error(connection));
 		return RET_FAILURE_MYSQL;
 	}
+	WRITE_FORMAT_DEBUG("Select the MySQL database: %s", database_name.c_str());
 
 	return RET_SUCCESS;
 }
@@ -87,6 +97,93 @@ unsigned short FinanceAnalyzerSqlReader::disconnect_mysql()
 
 	return RET_SUCCESS;
 }
+
+unsigned short FinanceAnalyzerSqlReader::select_data(const string table_name, const string cmd_table_field, const PTIME_RANGE_CFG time_range_cfg)
+{
+// Check if the connection is established
+	if (connection == NULL)
+	{
+		WRITE_ERROR("The connection is NOT established");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+
+// Checks to see if the connection to the MySQL server is still alive. If it is not, the client will attempt to reconnect automatically.
+// This function returns zero if the connection is alive and non-zero in the case of an error.
+	if (mysql_ping(connection))
+	{
+		WRITE_INFO("The connection is NOT alive. Attempt to reconnect it......");
+// Select the database
+		if (mysql_select_db(connection, database_name.c_str()))
+		{
+			WRITE_FORMAT_ERROR("mysql_select_db() fails, due to: %s", mysql_error(connection));
+			return RET_FAILURE_MYSQL;
+		}
+	}
+// Read data from database
+// Generate the SQL command for querying
+	char _format_cmd_select_data_tail[32];
+	snprintf(_format_cmd_select_data_tail, 32, FORMAT_CMD_SELECT_DATA_TAIL_FORMAT, table_name.c_str());
+	string cmd_select_data = FORMAT_CMD_SELECT_DATA_HEAD + cmd_table_field + string(_format_cmd_select_data_tail);
+	if (time_range_cfg != NULL)
+	{
+		char _cmd_search_rule[256];
+		bool need_add_rule = true;
+		if (time_range_cfg->is_month_type())
+		{
+			if (time_range_cfg->get_start_time() != NULL && time_range_cfg->get_end_time() != NULL)
+				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT, time_range_cfg->get_start_time()->get_month(), time_range_cfg->get_end_time()->get_month());
+			else if (time_range_cfg->get_start_time() != NULL)
+				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT, time_range_cfg->get_start_time()->get_month());
+			else if (time_range_cfg->get_end_time() != NULL)
+				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT, time_range_cfg->get_end_time()->get_month());
+			else
+				need_add_rule = false;
+		}
+		else
+		{
+			if (time_range_cfg->get_start_time() != NULL && time_range_cfg->get_end_time() != NULL)
+				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT, time_range_cfg->get_start_time()->to_string(), time_range_cfg->get_end_time()->to_string());
+			else if (time_range_cfg->get_start_time() != NULL)
+				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN_FORMAT, time_range_cfg->get_start_time()->to_string());
+			else if (time_range_cfg->get_end_time() != NULL)
+				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN_FORMAT, time_range_cfg->get_end_time()->to_string());
+			else
+				need_add_rule = false;
+		}
+		if (need_add_rule)
+			cmd_select_data += string(_cmd_search_rule);
+	}
+//	string format_cmd = FORMAT_CMD_SELECT_DATA_HEAD + cmd_table_field + FORMAT_CMD_SELECT_DATA_TAIL_FORMAT + string(" WHERE date BETWEEN 2004-04-09 AND 2004-09-04");
+//	snprintf(cmd_buf, CMD_BUF_SIZE, format_cmd.c_str(), table_name.c_str());
+	WRITE_FORMAT_DEBUG("select data by command: %s",cmd_select_data.c_str());
+	if(mysql_query(connection, cmd_select_data.c_str()) != 0)
+	{
+		WRITE_FORMAT_ERROR("mysql_query() fails, due to: %s", mysql_error(connection));
+		return RET_FAILURE_MYSQL;
+	}
+
+	MYSQL_RES *result = mysql_store_result(connection);
+	unsigned int num_fields = mysql_num_fields(result);
+	MYSQL_ROW row;
+	unsigned int i;
+	while ((row = mysql_fetch_row(result)))
+	{
+//		unsigned long *lengths;
+//		lengths = mysql_fetch_lengths(result);
+		for(i = 0; i < num_fields; i++)
+		{
+			printf("%s ", row[i]);
+		}
+		printf("\n");
+	}
+
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name, const std::string cmd_table_field){return select_data(table_name, cmd_table_field, NULL);}
+unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name, const PTIME_RANGE_CFG time_range_cfg){return select_data(table_name, string("*"), time_range_cfg);}
+unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name){return select_data(table_name, string("*"), NULL);}
+
 
 //unsigned short FinanceAnalyzerSqlReader::parse_config_param(const char* param_title, const char* param_content)
 //{
@@ -147,53 +244,7 @@ unsigned short FinanceAnalyzerSqlReader::disconnect_mysql()
 //	return ret;
 //}
 //
-//unsigned short FinanceAnalyzerSqlReader::open_device()
-//{
-//// Check if the connection is established
-//	if (connection == NULL)
-//	{
-//		WRITE_ERR_FORMAT(RET_STRING_SIZE, "Thread[%s]=> The connection is NOT established", facility_name);
-//		return RET_FAILURE_MYSQL;
-//	}
-//
-//// Checks to see if the connection to the MySQL server is still alive. If it is not, the client will attempt to reconnect automatically.
-//// This function returns zero if the connection is alive and nonzero in the case of an error.
-//	if (mysql_ping(connection))
-//	{
-//		WRITE_INFO_FORMAT(RET_STRING_SIZE, "Thread[%s]=> The connection is NOT alive.Attempt to reconnect it......", facility_name);
-//// Select the database
-//		if (mysql_select_db(connection, database))
-//		{
-//			WRITE_ERR_FORMAT(RET_STRING_SIZE, "Thread[%s]=> mysql_select_db() fails, due to: %s", facility_name, mysql_error(connection));
-//			return RET_FAILURE_MYSQL;
-//		}
-//	}
-//
-//	if (!table_created)
-//	{
-//// Get the current time
-//		generate_current_time_string(current_time_string);
-//
-//// Create the table in the database...
-//		snprintf(cmd_buf, RET_LONG_STRING_SIZE, format_cmd_create_table, current_time_string);
-//		WRITE_DEBUG_FORMAT(RET_LONG_STRING_SIZE, "Thread[%s]=> Try to create table[sql%s] by command: %s", facility_name, current_time_string, cmd_buf);
-//		if(mysql_query(connection, cmd_buf) != 0)
-//		{
-//			int error = mysql_errno(connection);
-//			if (error != ER_TABLE_EXISTS_ERROR)
-//			{
-//				WRITE_ERR_FORMAT(RET_STRING_SIZE, "Thread[%s]=> mysql_query() fails, due to: %d, %s", facility_name, error, mysql_error(connection));
-//				return RET_FAILURE_MYSQL;
-//			}
-//			else
-//				WRITE_DEBUG_FORMAT(RET_STRING_SIZE, "Thread[%s]=> The sql%s has already existed", facility_name, current_time_string);
-//		}
-//		table_created = true;
-//	}
-//
-//	return RET_SUCCESS;
-//}
-//
+
 //unsigned short FinanceAnalyzerSqlReader::close_device()
 //{
 //// Close the MySQL

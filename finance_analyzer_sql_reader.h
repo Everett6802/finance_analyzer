@@ -4,6 +4,7 @@
 #include <mysql/mysql.h>
 #include <mysql/mysqld_error.h>
 #include <string>
+#include <list>
 #include "finance_analyzer_common.h"
 
 
@@ -21,14 +22,17 @@ private:
 	static const char* FORMAT_CMD_CREATE_DATABASE;
 //	static const char* format_cmd_create_table;
 //	static const char* format_cmd_insert_into_table;
-
+	static const char* FORMAT_CMD_SELECT_DATA_HEAD;
+	static const char* FORMAT_CMD_SELECT_DATA_TAIL_FORMAT;
+	static const char* FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT;
 	MYSQL* connection;
 	char cmd_buf[CMD_BUF_SIZE];
 //	char current_time_string[CURRENT_TIME_STRING_LENGTH];
-//	bool table_created;
-//	char server[MSG_DUMPER_STRING_SIZE];
-//	char username[MSG_DUMPER_STRING_SIZE];
-//	char password[MSG_DUMPER_STRING_SIZE];
 	std::string database_name;
 
 protected:
@@ -41,12 +45,10 @@ public:
 	unsigned short try_connect_mysql(const std::string database);
 	unsigned short disconnect_mysql();
 
-//	virtual unsigned short open_device();
-//	virtual unsigned short close_device();
-//
-//	virtual unsigned short initialize(const char* config_path, void* config=NULL);
-//	virtual unsigned short deinitialize();
-//	virtual unsigned short write_msg(PMSG_CFG msg_cfg);
+	unsigned short select_data(const std::string table_name, const std::string cmd_table_field, const PTIME_RANGE_CFG time_range_cfg);
+	unsigned short select_data(const std::string table_name, const std::string cmd_table_field);
+	unsigned short select_data(const std::string table_name, const PTIME_RANGE_CFG time_range_cfg);
+	unsigned short select_data(const std::string table_name);
 };
 
 #endif

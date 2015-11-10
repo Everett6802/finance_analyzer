@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <string>
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_sql_reader.h"
 
@@ -28,6 +29,10 @@ unsigned short FinanceAnalyzerMgr::test()
 
 	unsigned short ret = RET_SUCCESS;
 	ret = finance_analyzer_sql_reader->try_connect_mysql(database_name);
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	ret = finance_analyzer_sql_reader->select_data("year2014");
 	if (CHECK_FAILURE(ret))
 		return ret;
 
