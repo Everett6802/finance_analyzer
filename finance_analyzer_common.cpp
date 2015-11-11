@@ -10,75 +10,217 @@ using namespace std;
 const char* FINANCE_DATABASE_NAME_LIST[] =
 {
 	"stock_top3_legal_persons_net_buy_or_sell",
-	"future_top3_legal_persons_open_interest",
+	"future_and_option_top3_legal_persons_open_interest",
+	"option_top3_legal_persons_buy_and_sell_option_open_interest",
 	"future_top10_dealers_and_legal_persons"
 };
 const int FINANCE_DATABASE_NAME_LIST_LEN = sizeof(FINANCE_DATABASE_NAME_LIST) / sizeof(FINANCE_DATABASE_NAME_LIST[0]);
 const char* FINANCE_DATABASE_DESCRIPTION_LIST[] =
 {
 	"三大法人現貨買賣超",
-	"三大法人期貨留倉淨額",
+	"三大法人期貨選擇權留倉淨額",
+	"三大法人選擇權買賣權留倉淨額",
 	"十大交易人及特定法人期貨資訊"
 };
 const char* STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION[] =
 {
-	"date DATE NOT NULL PRIMARY KEY", // 日期
-	"value1 BIGINT", // 自營商(自行買賣)_買進金額
-	"value2 BIGINT", // 自營商(自行買賣)_賣出金額
-	"value3 BIGINT", // 自營商(自行買賣)_買賣差額
-	"value4 BIGINT", // 自營商(避險)_買進金額
-	"value5 BIGINT", // 自營商(避險)_賣出金額
-	"value6 BIGINT", // 自營商(避險)_買賣差額
-	"value7 BIGINT", // 投信_買進金額
-	"value8 BIGINT", // 投信_賣出金額
-	"value9 BIGINT", // 投信_買賣差額
-	"value10 BIGINT", // 外資及陸資_買進金額
-	"value11 BIGINT", // 外資及陸資_賣出金額
-	"value12 BIGINT", // 外資及陸資_買賣差額
+	"date", // 日期
+	"value1", // 自營商(自行買賣)_買進金額
+	"value2", // 自營商(自行買賣)_賣出金額
+	"value3", // 自營商(自行買賣)_買賣差額
+	"value4", // 自營商(避險)_買進金額
+	"value5", // 自營商(避險)_賣出金額
+	"value6", // 自營商(避險)_買賣差額
+	"value7", // 投信_買進金額
+	"value8", // 投信_賣出金額
+	"value9", // 投信_買賣差額
+	"value10", // 外資及陸資_買進金額
+	"value11", // 外資及陸資_賣出金額
+	"value12", // 外資及陸資_買賣差額
 };
-const char* FUTURE_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION[] =
+const char* STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[] =
 {
-	"date DATE NOT NULL PRIMARY KEY", // 日期
-	"value1 INT", // 自營商_多方_口數 int",
-	"value2 INT", // 自營商_多方_契約金額 int",
-	"value3 INT", // 自營商_空方_口數 int",
-	"value4 INT", // 自營商_空方_契約金額 int",
-	"value5 INT", // 自營商_多空淨額_口數 int",
-	"value6 INT", // 自營商_多空淨額_契約金額 int",
-	"value7 INT", // "投信_多方_口數 int",
-	"value8 INT", // 投信_多方_契約金額 int",
-	"value9 INT", // 投信_空方_口數 int",
-	"value10 INT", // 投信_空方_契約金額 int",
-	"value11 INT", // 投信_多空淨額_口數 int",
-	"value12 INT", // 投信_多空淨額_契約金額 int",
-	"value13 INT", // 外資_多方_口數 int",
-	"value14 INT", // 外資_多方_契約金額 int",
-	"value15 INT", // 外資_空方_口數 int",
-	"value16 INT", // 外資_空方_契約金額 int",
-	"value17 INT", // 外資_多空淨額_口數 int",
-	"value18 INT", // 外資_多空淨額_契約金額 int",
+	"DATE NOT NULL PRIMARY KEY", // 日期
+	"BIGINT", // 自營商(自行買賣)_買進金額
+	"BIGINT", // 自營商(自行買賣)_賣出金額
+	"BIGINT", // 自營商(自行買賣)_買賣差額
+	"BIGINT", // 自營商(避險)_買進金額
+	"BIGINT", // 自營商(避險)_賣出金額
+	"BIGINT", // 自營商(避險)_買賣差額
+	"BIGINT", // 投信_買進金額
+	"BIGINT", // 投信_賣出金額
+	"BIGINT", // 投信_買賣差額
+	"BIGINT", // 外資及陸資_買進金額
+	"BIGINT", // 外資及陸資_賣出金額
+	"BIGINT", // 外資及陸資_買賣差額
+};
+const char* FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION[] =
+{
+	"date", // 日期
+	"value1", // 自營商_多方_口數 int",
+	"value2", // 自營商_多方_契約金額 int",
+	"value3", // 自營商_空方_口數 int",
+	"value4", // 自營商_空方_契約金額 int",
+	"value5", // 自營商_多空淨額_口數 int",
+	"value6", // 自營商_多空淨額_契約金額 int",
+	"value7", // 投信_多方_口數 int",
+	"value8", // 投信_多方_契約金額 int",
+	"value9", // 投信_空方_口數 int",
+	"value10", // 投信_空方_契約金額 int",
+	"value11", // 投信_多空淨額_口數 int",
+	"value12", // 投信_多空淨額_契約金額 int",
+	"value13", // 外資_多方_口數 int",
+	"value14", // 外資_多方_契約金額 int",
+	"value15", // 外資_空方_口數 int",
+	"value16", // 外資_空方_契約金額 int",
+	"value17", // 外資_多空淨額_口數 int",
+	"value18", // 外資_多空淨額_契約金額 int",
+};
+const char* FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[] =
+{
+	"DATE NOT NULL PRIMARY KEY", // 日期
+	"INT", // 自營商_多方_口數 int",
+	"INT", // 自營商_多方_契約金額 int",
+	"INT", // 自營商_空方_口數 int",
+	"INT", // 自營商_空方_契約金額 int",
+	"INT", // 自營商_多空淨額_口數 int",
+	"INT", // 自營商_多空淨額_契約金額 int",
+	"INT", // 投信_多方_口數 int",
+	"INT", // 投信_多方_契約金額 int",
+	"INT", // 投信_空方_口數 int",
+	"INT", // 投信_空方_契約金額 int",
+	"INT", // 投信_多空淨額_口數 int",
+	"INT", // 投信_多空淨額_契約金額 int",
+	"INT", // 外資_多方_口數 int",
+	"INT", // 外資_多方_契約金額 int",
+	"INT", // 外資_空方_口數 int",
+	"INT", // 外資_空方_契約金額 int",
+	"INT", // 外資_多空淨額_口數 int",
+	"INT", // 外資_多空淨額_契約金額 int",
+};
+const char* OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION[] =
+{
+	"date", // 日期
+	"value1", // 買權_自營商_買方_口數 int",
+	"value2", // 買權_自營商_買方_契約金額 int",
+	"value3", // 買權_自營商_賣方_口數 int",
+	"value4", // 買權_自營商_賣方_契約金額 int",
+	"value5", // 買權_自營商_買賣差額_口數 int",
+	"value6", // 買權_自營商_買賣差額_契約金額 int",
+	"value7", // 買權_投信_買方_口數 int",
+	"value8", // 買權_投信_買方_契約金額 int",
+	"value9", // 買權_投信_賣方_口數 int",
+	"value10", // 買權_投信_賣方_契約金額 int",
+	"value11", // 買權_投信_買賣差額_口數 int",
+	"value12", // 買權_投信_買賣差額_契約金額 int",
+	"value13", // 買權_外資_買方_口數 int",
+	"value14", // 買權_外資_買方_契約金額 int",
+	"value15", // 買權_外資_賣方_口數 int",
+	"value16", // 買權_外資_賣方_契約金額 int",
+	"value17", // 買權_外資_買賣差額_口數 int",
+	"value18", // 買權_外資_買賣差額_契約金額 int",
+	"value19", // 賣權_自營商_買方_口數 int",
+	"value20", // 賣權_自營商_買方_契約金額 int",
+	"value21", // 賣權_自營商_賣方_口數 int",
+	"value22", // 賣權_自營商_賣方_契約金額 int",
+	"value23", // 賣權_自營商_買賣差額_口數 int",
+	"value24", // 賣權_自營商_買賣差額_契約金額 int",
+	"value25", // 賣權_投信_買方_口數 int",
+	"value26", // 賣權_投信_買方_契約金額 int",
+	"value27", // 賣權_投信_賣方_口數 int",
+	"value28", // 賣權_投信_賣方_契約金額 int",
+	"value29", // 賣權_投信_買賣差額_口數 int",
+	"value30", // 賣權_投信_買賣差額_契約金額 int",
+	"value31", // 賣權_外資_買方_口數 int",
+	"value32", // 賣權_外資_買方_契約金額 int",
+	"value33", // 賣權_外資_賣方_口數 int",
+	"value34", // 賣權_外資_賣方_契約金額 int",
+	"value35", // 賣權_外資_買賣差額_口數 int",
+	"value36", // 賣權_外資_買賣差額_契約金額 int",
+};
+const char* OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION[] =
+{
+	"DATE NOT NULL PRIMARY KEY", // 日期
+	"INT", // 買權_自營商_買方_口數 int",
+	"INT", // 買權_自營商_買方_契約金額 int",
+	"INT", // 買權_自營商_賣方_口數 int",
+	"INT", // 買權_自營商_賣方_契約金額 int",
+	"INT", // 買權_自營商_買賣差額_口數 int",
+	"INT", // 買權_自營商_買賣差額_契約金額 int",
+	"INT", // 買權_投信_買方_口數 int",
+	"INT", // 買權_投信_買方_契約金額 int",
+	"INT", // 買權_投信_賣方_口數 int",
+	"INT", // 買權_投信_賣方_契約金額 int",
+	"INT", // 買權_投信_買賣差額_口數 int",
+	"INT", // 買權_投信_買賣差額_契約金額 int",
+	"INT", // 買權_外資_買方_口數 int",
+	"INT", // 買權_外資_買方_契約金額 int",
+	"INT", // 買權_外資_賣方_口數 int",
+	"INT", // 買權_外資_賣方_契約金額 int",
+	"INT", // 買權_外資_買賣差額_口數 int",
+	"INT", // 買權_外資_買賣差額_契約金額 int",
+	"INT", // 賣權_自營商_買方_口數 int",
+	"INT", // 賣權_自營商_買方_契約金額 int",
+	"INT", // 賣權_自營商_賣方_口數 int",
+	"INT", // 賣權_自營商_賣方_契約金額 int",
+	"INT", // 賣權_自營商_買賣差額_口數 int",
+	"INT", // 賣權_自營商_買賣差額_契約金額 int",
+	"INT", // 賣權_投信_買方_口數 int",
+	"INT", // 賣權_投信_買方_契約金額 int",
+	"INT", // 賣權_投信_賣方_口數 int",
+	"INT", // 賣權_投信_賣方_契約金額 int",
+	"INT", // 賣權_投信_買賣差額_口數 int",
+	"INT", // 賣權_投信_買賣差額_契約金額 int",
+	"INT", // 賣權_外資_買方_口數 int",
+	"INT", // 賣權_外資_買方_契約金額 int",
+	"INT", // 賣權_外資_賣方_口數 int",
+	"INT", // 賣權_外資_賣方_契約金額 int",
+	"INT", // 賣權_外資_買賣差額_口數 int",
+	"INT", // 賣權_外資_買賣差額_契約金額 int",
 };
 const char* FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION[] =
 {
-	"date DATE NOT NULL PRIMARY KEY", // 日期
-	"value1 INT", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
-	"value2 FLOAT", // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
-	"value3 INT", // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
-	"value4 FLOAT", // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
-	"value5 INT", // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
-	"value6 FLOAT", // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
-	"value7 INT", // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
-	"value8 FLOAT", // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
-	"value9 INT", // 臺股期貨_到期月份_全市場未沖銷部位數
-	"value10 INT", // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
-	"value11 FLOAT", // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
-	"value12 INT", // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
-	"value13 FLOAT", // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
-	"value14 INT", // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
-	"value15 FLOAT", // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
-	"value16 INT", // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
-	"value17 FLOAT", // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
-	"value18 INT", // 臺股期貨_所有契約_全市場未沖銷部位數
+	"date", // 日期
+	"value1", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
+	"value2", // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
+	"value3", // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
+	"value4", // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
+	"value5", // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
+	"value6", // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
+	"value7", // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
+	"value8", // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
+	"value9", // 臺股期貨_到期月份_全市場未沖銷部位數
+	"value10", // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
+	"value11", // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
+	"value12", // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
+	"value13", // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
+	"value14", // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
+	"value15", // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
+	"value16", // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
+	"value17", // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
+	"value18", // 臺股期貨_所有契約_全市場未沖銷部位數
+};
+const char* FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[] =
+{
+	"DATE NOT NULL PRIMARY KEY", // 日期
+	"INT", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
+	"FLOAT", // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
+	"INT", // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
+	"FLOAT", // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
+	"INT", // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
+	"FLOAT", // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
+	"INT", // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
+	"FLOAT", // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
+	"INT", // 臺股期貨_到期月份_全市場未沖銷部位數
+	"INT", // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
+	"FLOAT", // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
+	"INT", // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
+	"FLOAT", // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
+	"INT", // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
+	"FLOAT", // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
+	"INT", // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
+	"FLOAT", // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
+	"INT", // 臺股期貨_所有契約_全市場未沖銷部位數
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,164 +240,3 @@ const unsigned short RET_FAILURE_IO_OPERATION = 10;
 const unsigned short RET_FAILURE_HANDLE_THREAD = 11;
 const unsigned short RET_FAILURE_SYSTEM_API = 12;
 const unsigned short RET_FAILURE_MYSQL = 13;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// class
-
-TimeCfg::TimeCfg(const char* cur_time_str)
-{
-	static const char *DELIM = "-";
-	if (cur_time_str == NULL)
-		throw invalid_argument(string("cur_time_str should NOT be NULL"));
-	snprintf(time_str, 16, "%s", cur_time_str);
-
-	char * pch;
-	pch = strtok(time_str, DELIM);
-	int count = 0;
-	while (pch != NULL)
-	{
-		switch (count)
-		{
-		case 0:
-			year = atoi(pch);
-			break;
-		case 1:
-			month = atoi(pch);
-			break;
-		case 2:
-			day = atoi(pch);
-			break;
-		}
-//		printf ("%s, %d\n", pch, atoi(pch));
-		pch = strtok(NULL, DELIM);
-		count++;
-	}
-	if (count == 2)
-		time_type = TIME_MONTH;
-	else if (count == 3)
-		time_type = TIME_DATE;
-	else
-	{
-		char errmsg[64];
-		snprintf(errmsg, 64, "Incorrect time format: %s, count: %d", time_str, count);
-		throw invalid_argument(errmsg);
-	}
-}
-
-TimeCfg::TimeCfg(int cur_year, int cur_month)
-{
-	year = cur_year;
-	month = cur_month;
-	snprintf(time_str, 16, "%04d-%02d", year, month);
-	time_type = TIME_MONTH;
-}
-
-TimeCfg::TimeCfg(int cur_year, int cur_month, int cur_day)
-{
-	year = cur_year;
-	month = cur_month;
-	day = cur_day;
-	snprintf(time_str, 16, "%04d-%02d-%02d", year, month, day);
-	time_type = TIME_DATE;
-}
-
-int TimeCfg::get_year()const{return year;}
-int TimeCfg::get_month()const{return month;}
-int TimeCfg::get_day()const{return day;}
-const char* TimeCfg::to_string()const{return time_str;}
-bool TimeCfg::is_month_type()const{return (time_type == TIME_MONTH);}
-
-
-TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str)
-{
-	if (time_start_str != NULL)
-	{
-		time_start_cfg = new TimeCfg(time_start_str);
-		if (time_start_cfg == NULL)
-			throw bad_alloc();
-	}
-	if (time_end_str != NULL)
-	{
-		time_end_cfg = new TimeCfg(time_end_str);
-		if (time_end_cfg == NULL)
-			throw bad_alloc();
-	}
-
-	if (time_start_cfg != NULL && time_end_cfg != NULL)
-	{
-		if (time_start_cfg->is_month_type() != time_end_cfg->is_month_type())
-		{
-			char errmsg[64];
-			snprintf(errmsg, 64, "The time format is NOT identical, start: %s, end: %s", time_start_cfg->to_string(), time_end_cfg->to_string());
-			throw invalid_argument(errmsg);
-		}
-		type_is_month = time_start_cfg->is_month_type();
-	}
-	else if (time_start_cfg != NULL)
-		type_is_month = time_start_cfg->is_month_type();
-	else if (time_end_cfg != NULL)
-		type_is_month = time_end_cfg->is_month_type();
-	else
-		throw invalid_argument("time_start_str and time_end_str should NOT be NULL simultaneously");
-}
-
-TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int year_end, int month_end)
-{
-	time_start_cfg = new TimeCfg(year_start, month_start);
-	if (time_start_cfg == NULL)
-		throw bad_alloc();
-	time_end_cfg = new TimeCfg(year_end, month_end);
-	if (time_end_cfg == NULL)
-		throw bad_alloc();
-	type_is_month = true;
-}
-
-TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
-{
-	time_start_cfg = new TimeCfg(year_start, month_start, year_end);
-	if (time_start_cfg == NULL)
-		throw bad_alloc();
-	time_end_cfg = new TimeCfg(year_end, month_end, day_end);
-	if (time_end_cfg == NULL)
-		throw bad_alloc();
-	type_is_month = false;
-}
-
-TimeRangeCfg::~TimeRangeCfg()
-{
-	if (time_start_cfg != NULL)
-	{
-		delete time_start_cfg;
-		time_start_cfg = NULL;
-	}
-	if (time_end_cfg != NULL)
-	{
-		delete time_end_cfg;
-		time_end_cfg = NULL;
-	}
-	if (time_range_description != NULL)
-	{
-		delete time_range_description;
-		time_range_description = NULL;
-	}
-}
-
-const char* TimeRangeCfg::to_string()
-{
-	if (time_range_description != NULL)
-	{
-		time_range_description = new char[32];
-		if (time_range_description == NULL)
-			throw bad_alloc();
-		if (time_start_cfg != NULL && time_end_cfg != NULL)
-			snprintf(time_range_description, 32, "%s:%s", time_start_cfg->to_string(), time_end_cfg->to_string());
-		else if (time_start_cfg != NULL)
-			snprintf(time_range_description, 32, "%s", time_start_cfg->to_string());
-		else if (time_end_cfg != NULL)
-			snprintf(time_range_description, 32, "%s", time_end_cfg->to_string());
-	}
-	return time_range_description;
-}
-
-const PTIME_CFG TimeRangeCfg::get_start_time(){return time_start_cfg;}
-const PTIME_CFG TimeRangeCfg::get_end_time(){return time_end_cfg;}

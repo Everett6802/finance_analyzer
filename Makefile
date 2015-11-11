@@ -3,7 +3,7 @@ MAKE := make
 
 CXXFLAGS := -g -Wall -std=c++0x
 
-SOURCES := msg_dumper_wrapper.cpp finance_analyzer.cpp finance_analyzer_common.cpp finance_analyzer_mgr.cpp finance_analyzer_sql_reader.cpp
+SOURCES := msg_dumper_wrapper.cpp finance_analyzer.cpp finance_analyzer_common.cpp finance_analyzer_common_class.cpp finance_analyzer_mgr.cpp finance_analyzer_sql_reader.cpp
 OBJS := $(SOURCES:.cpp=.o)
 LIB_MSG_DUMPER := libmsg_dumper.so
 LIB_MSG_DUMPER_HEADER := msg_dumper.h

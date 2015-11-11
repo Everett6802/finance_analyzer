@@ -6,6 +6,7 @@
 #include <string>
 #include <list>
 #include "finance_analyzer_common.h"
+#include "finance_analyzer_common_class.h"
 
 
 #define CMD_BUF_SIZE 512
