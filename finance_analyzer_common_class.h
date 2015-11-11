@@ -27,6 +27,8 @@ public:
 };
 typedef TimeCfg* PTIME_CFG;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class TimeRangeCfg
 {
 private:
@@ -47,5 +49,44 @@ public:
 };
 typedef TimeRangeCfg* PTIME_RANGE_CFG;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+class FinanceDataArrayBase
+{
+protected:
+	static int DEF_ARRAY_SIZE;
+
+	T* array_data;
+	int array_size;
+	int array_pos;
+
+public:
+	FinanceDataArrayBase();
+	virtual ~FinanceDataArrayBase();
+
+	void add(T data);
+	T operator[](int index)const;
+	bool is_empty()const;
+	int get_size()const;
+	int get_array_size()const;
+	const T* get_data_array()const;
+};
+
+template <typename T>
+class FinanceDataPtrArrayBase : public FinanceDataArrayBase<T>
+{
+public:
+	virtual ~FinanceDataPtrArrayBase();
+};
+
+typedef FinanceDataArrayBase<int> FinanceIntDataArray;
+typedef FinanceIntDataArray* PFINANCE_INT_DATA_ARRAY;
+
+typedef FinanceDataArrayBase<long> FinanceLongDataArray;
+typedef FinanceLongDataArray* PFINANCE_LONG_DATA_ARRAY;
+
+typedef FinanceDataArrayBase<float> FinanceFloatDataArray;
+typedef FinanceFloatDataArray* PFINANCE_FLOAT_DATA_ARRAY;
 
 #endif

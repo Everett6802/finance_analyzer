@@ -71,6 +71,7 @@ int TimeCfg::get_day()const{return day;}
 const char* TimeCfg::to_string()const{return time_str;}
 bool TimeCfg::is_month_type()const{return (time_type == TIME_MONTH);}
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str)
 {
@@ -165,3 +166,77 @@ const char* TimeRangeCfg::to_string()
 
 const PTIME_CFG TimeRangeCfg::get_start_time(){return time_start_cfg;}
 const PTIME_CFG TimeRangeCfg::get_end_time(){return time_end_cfg;}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+int FinanceDataArrayBase<T>::DEF_ARRAY_SIZE = 512;
+
+template <typename T>
+FinanceDataArrayBase<T>::FinanceDataArrayBase() :
+	array_size(DEF_ARRAY_SIZE),
+	array_pos(0)
+{
+	array_data = calloc(array_size, sizeof(T));
+	if (array_data == NULL)
+		throw bad_alloc();
+}
+
+template <typename T>
+FinanceDataArrayBase<T>::~FinanceDataArrayBase()
+{
+	if (array_data != NULL)
+	{
+		free(array_data);
+		array_data = NULL;
+	}
+}
+
+template <typename T>
+void FinanceDataArrayBase<T>::add(T data)
+{
+	if (array_pos + 1 >= array_size)
+	{
+		T* array_data_old = array_data;
+		array_size <<= 1;
+		array_data = realloc(array_data_old, sizeof(T) * array_size);
+		if (array_data == NULL)
+			throw bad_alloc();
+	}
+	array_data[array_pos++] = data;
+}
+
+template <typename T>
+T FinanceDataArrayBase<T>::operator[](int index)const
+{
+	assert(array_data != NULL && "array_data == NULL");
+	assert((index >= 0 && index < array_pos) && "index is out of range");
+	return array_data[index];
+}
+
+template <typename T>
+bool FinanceDataArrayBase<T>::is_empty()const{return (array_pos == 0);}
+
+template <typename T>
+int FinanceDataArrayBase<T>::get_size()const{return array_pos;}
+
+template <typename T>
+int FinanceDataArrayBase<T>::get_array_size()const{return array_size;}
+
+template <typename T>
+const T* FinanceDataArrayBase<T>::get_data_array()const{return array_data;}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+FinanceDataPtrArrayBase<T>::~FinanceDataPtrArrayBase()
+{
+	if (FinanceDataArrayBase<T>::array_data != NULL)
+	{
+		for (int i = 0 ; i < FinanceDataArrayBase<T>::array_pos ; i++)
+		{
+			free(FinanceDataArrayBase<T>::array_data[i]);
+			FinanceDataArrayBase<T>::array_data[i] = NULL;
+		}
+	}
+}
