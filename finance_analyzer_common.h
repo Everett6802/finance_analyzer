@@ -15,17 +15,40 @@
 #define CHECK_FAILURE(X) !CHECK_SUCCESS(X)
 #endif
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Enumeration
+
+enum FinanceSourceType
+{
+	FinanceSource_StockTop3LegalPersonsNetBuyOrSell,
+	FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest,
+	FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest,
+	FinanceSource_FutureTop10DealersAndLegalPersons,
+	FinanceSourceSize
+};
+
+enum FinanceFieldType
+{
+	FinanceField_INT,
+	FinanceField_LONG,
+	FinanceField_FLOAT,
+	FinanceField_DATE,
+	FinanceFieldSize,
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Global Variables
+
+extern const int STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[];
+extern const int FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];
+extern const int OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];
+extern const int FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[];
+
 extern const char* FINANCE_DATABASE_NAME_LIST[];
 extern const int FINANCE_DATABASE_NAME_LIST_LEN;
 extern const char* FINANCE_DATABASE_DESCRIPTION_LIST[];
-extern const char* STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION[];
-extern const char* STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[];
-extern const char* FUTURE_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION[];
-extern const char* FUTURE_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];
-extern const char* OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION[];
-extern const char* OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];
-extern const char* FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION[];
-extern const char* FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[];
+extern const int* FINANCE_DATABASE_FIELD_TYPE_LIST[];
+extern const int FINANCE_DATABASE_FIELD_AMOUNT_LIST[];
 
 // Return values
 extern const unsigned short RET_SUCCESS;

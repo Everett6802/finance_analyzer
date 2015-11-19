@@ -153,8 +153,6 @@ unsigned short FinanceAnalyzerSqlReader::select_data(const string table_name, co
 		if (need_add_rule)
 			cmd_select_data += string(_cmd_search_rule);
 	}
-//	string format_cmd = FORMAT_CMD_SELECT_DATA_HEAD + cmd_table_field + FORMAT_CMD_SELECT_DATA_TAIL_FORMAT + string(" WHERE date BETWEEN 2004-04-09 AND 2004-09-04");
-//	snprintf(cmd_buf, CMD_BUF_SIZE, format_cmd.c_str(), table_name.c_str());
 	WRITE_FORMAT_DEBUG("select data by command: %s",cmd_select_data.c_str());
 	if(mysql_query(connection, cmd_select_data.c_str()) != 0)
 	{
@@ -170,7 +168,7 @@ unsigned short FinanceAnalyzerSqlReader::select_data(const string table_name, co
 	{
 //		unsigned long *lengths;
 //		lengths = mysql_fetch_lengths(result);
-		for(i = 0; i < num_fields; i++)
+		for(i = 0 ; i < num_fields ; i++)
 		{
 			printf("%s ", row[i]);
 		}
@@ -183,7 +181,6 @@ unsigned short FinanceAnalyzerSqlReader::select_data(const string table_name, co
 unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name, const std::string cmd_table_field){return select_data(table_name, cmd_table_field, NULL);}
 unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name, const PTIME_RANGE_CFG time_range_cfg){return select_data(table_name, string("*"), time_range_cfg);}
 unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name){return select_data(table_name, string("*"), NULL);}
-
 
 //unsigned short FinanceAnalyzerSqlReader::parse_config_param(const char* param_title, const char* param_content)
 //{

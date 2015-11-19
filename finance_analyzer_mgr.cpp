@@ -32,6 +32,7 @@ unsigned short FinanceAnalyzerMgr::test()
 	if (CHECK_FAILURE(ret))
 		return ret;
 
+
 	ret = finance_analyzer_sql_reader->select_data("year2014");
 	if (CHECK_FAILURE(ret))
 		return ret;

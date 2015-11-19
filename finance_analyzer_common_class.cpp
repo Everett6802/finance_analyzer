@@ -6,6 +6,8 @@
 #include "finance_analyzer_common_class.h"
 
 
+DECLARE_MSG_DUMPER_PARAM()
+
 using namespace std;
 
 TimeCfg::TimeCfg(const char* cur_time_str)
@@ -177,7 +179,8 @@ FinanceDataArrayBase<T>::FinanceDataArrayBase() :
 	array_size(DEF_ARRAY_SIZE),
 	array_pos(0)
 {
-	array_data = calloc(array_size, sizeof(T));
+	IMPLEMENT_MSG_DUMPER()
+	array_data = (T*)calloc(array_size, sizeof(T));
 	if (array_data == NULL)
 		throw bad_alloc();
 }
@@ -190,28 +193,17 @@ FinanceDataArrayBase<T>::~FinanceDataArrayBase()
 		free(array_data);
 		array_data = NULL;
 	}
+	RELEASE_MSG_DUMPER()
 }
 
 template <typename T>
-void FinanceDataArrayBase<T>::add(T data)
+void FinanceDataArrayBase<T>::alloc_new()
 {
-	if (array_pos + 1 >= array_size)
-	{
-		T* array_data_old = array_data;
-		array_size <<= 1;
-		array_data = realloc(array_data_old, sizeof(T) * array_size);
-		if (array_data == NULL)
-			throw bad_alloc();
-	}
-	array_data[array_pos++] = data;
-}
-
-template <typename T>
-T FinanceDataArrayBase<T>::operator[](int index)const
-{
-	assert(array_data != NULL && "array_data == NULL");
-	assert((index >= 0 && index < array_pos) && "index is out of range");
-	return array_data[index];
+	T* array_data_old = array_data;
+	array_size <<= 1;
+	array_data = (T*)realloc(array_data_old, sizeof(T) * array_size);
+	if (array_data == NULL)
+		throw bad_alloc();
 }
 
 template <typename T>
@@ -225,6 +217,29 @@ int FinanceDataArrayBase<T>::get_array_size()const{return array_size;}
 
 template <typename T>
 const T* FinanceDataArrayBase<T>::get_data_array()const{return array_data;}
+
+template <typename T>
+void FinanceDataArrayBase<T>::add(T data)
+{
+	if (array_pos + 1 >= array_size)
+		alloc_new();
+
+	array_data[array_pos++] = data;
+}
+
+template <typename T>
+const T FinanceDataArrayBase<T>::operator[](int index)const
+{
+	assert(array_data != NULL && "array_data == NULL");
+	if(index >= 0 && index < array_pos)
+	{
+		char errmsg[32];
+		snprintf(errmsg, 32, "index[%d] is out of range: (0, %d)", index, array_pos);
+		WRITE_ERROR(errmsg);
+		throw out_of_range(errmsg);
+	}
+	return array_data[index];
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -240,3 +255,368 @@ FinanceDataPtrArrayBase<T>::~FinanceDataPtrArrayBase()
 		}
 	}
 }
+
+template <typename T>
+void FinanceDataPtrArrayBase<T>::add(T data, size_t data_size)
+{
+	if (FinanceDataArrayBase<T>::array_pos + 1 >= FinanceDataArrayBase<T>::array_size)
+		FinanceDataArrayBase<T>::alloc_new();
+
+	T data_new = (T)calloc(data_size, sizeof(char));
+	if (data_new == NULL)
+		throw bad_alloc();
+	memcpy((void*)data_new, (void*)data, sizeof(char) * data_size);
+	FinanceDataArrayBase<T>::array_data[FinanceDataArrayBase<T>::array_pos++] = data_new;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+QuerySet::QuerySet()
+{
+	IMPLEMENT_MSG_DUMPER()
+}
+
+QuerySet::~QuerySet()
+{
+	RELEASE_MSG_DUMPER()
+}
+
+unsigned short QuerySet::add_query(int source_index, int field_index)
+{
+	if(source_index < 0 && source_index >= FinanceSourceSize)
+	{
+		WRITE_ERROR("source_index is out of range in QuerySet");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	if(field_index < 0 && field_index >= FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index])
+	{
+// If field_index == -1, it means select all field in the table
+		if (field_index != -1)
+		{
+			WRITE_ERROR("field_index is out of range in QuerySet");
+			return RET_FAILURE_INVALID_ARGUMENT;
+		}
+	}
+
+	query_set[source_index].push_back(field_index);
+	return RET_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+unsigned short ResultSet::get_combined_index(int x, int y)
+{
+	return (unsigned short)(((x & 0xFF) << 8) | (y & 0xFF));
+}
+
+unsigned short ResultSet::get_upper_subindex(unsigned short x)
+{
+	return (unsigned short)((x >> 8) & 0xFF);
+}
+
+unsigned short ResultSet::get_lower_subindex(unsigned short x)
+{
+	return (unsigned short)(x & 0xFF);
+}
+
+ResultSet::ResultSet() :
+	int_data_set_size(0),
+	long_data_set_size(0),
+	float_data_set_size(0)
+{
+	IMPLEMENT_MSG_DUMPER()
+}
+
+ResultSet::~ResultSet()
+{
+	int data_size = 0;
+	if (!int_data_set.empty())
+	{
+		data_size = int_data_set.size();
+		for(int i = 0 ; i < data_size ; i++)
+		{
+			delete int_data_set[i];
+			int_data_set[i] = NULL;
+		}
+		int_data_set.clear();
+	}
+	if (!long_data_set.empty())
+	{
+		data_size = long_data_set.size();
+		for(int i = 0 ; i < data_size ; i++)
+		{
+			delete long_data_set[i];
+			long_data_set[i] = NULL;
+		}
+		long_data_set.clear();
+	}
+	if (!float_data_set.empty())
+	{
+		data_size = float_data_set.size();
+		for(int i = 0 ; i < data_size ; i++)
+		{
+			delete float_data_set[i];
+			float_data_set[i] = NULL;
+		}
+		float_data_set.clear();
+	}
+
+	RELEASE_MSG_DUMPER()
+}
+
+unsigned short ResultSet::add_set(int source_index, int field_index)
+{
+	if(source_index < 0 && source_index >= FinanceSourceSize)
+	{
+		WRITE_ERROR("source_index is out of range in ResultSet");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	if(field_index < 0 && field_index >= FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index])
+	{
+// If field_index == -1, it means select all field in the table
+		if (field_index != -1)
+		{
+			WRITE_ERROR("field_index is out of range in ResultSet");
+			return RET_FAILURE_INVALID_ARGUMENT;
+		}
+	}
+
+	deque<int> field_type_list;
+	if (field_index == -1)
+	{
+		for(int i = 1 ; i < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] ; i++)
+			field_type_list.push_back(FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][i]);
+	}
+
+	deque<int>::iterator iter = field_type_list.begin();
+	while(iter != field_type_list.end())
+	{
+		field_index = *iter;
+		unsigned short key = get_combined_index(source_index, field_index);
+		if (data_set_mapping.find(key) != data_set_mapping.end())
+		{
+			WRITE_FORMAT_ERROR("The key[%d] from (%d, %d) is duplicate", key, source_index, field_index);
+			return RET_FAILURE_INVALID_ARGUMENT;
+		}
+		unsigned short value;
+//		int next_index = -1;
+		switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index])
+		{
+		case FinanceField_INT:
+//			PFINANCE_INT_DATA_ARRAY new_finance_int_data = new FinanceIntDataArray();
+//			if (new_finance_int_data == NULL)
+//			{
+//				WRITE_ERROR("Fail to allocate memory: new_finance_int_data");
+//				return RET_FAILURE_INSUFFICIENT_MEMORY;
+//			}
+			value = get_combined_index(FinanceField_INT, int_data_set.size());
+			int_data_set.push_back(new FinanceIntDataArray());
+			int_data_set_size = int_data_set.size();
+			break;
+		case FinanceField_LONG:
+//			PFINANCE_LONG_DATA_ARRAY new_finance_long_data = new FinanceLongDataArray();
+//			if (new_finance_long_data == NULL)
+//			{
+//				WRITE_ERROR("Fail to allocate memory: new_finance_long_data");
+//				return RET_FAILURE_INSUFFICIENT_MEMORY;
+//			}
+			value = get_combined_index(FinanceField_LONG, long_data_set.size());
+			long_data_set.push_back(new FinanceLongDataArray());
+			long_data_set_size = long_data_set.size();
+			break;
+		case FinanceField_FLOAT:
+//			PFINANCE_FLOAT_DATA_ARRAY new_finance_float_data = new FinanceFloatDataArray();
+//			if (new_finance_float_data == NULL)
+//			{
+//				WRITE_ERROR("Fail to allocate memory: new_finance_float_data");
+//				return RET_FAILURE_INSUFFICIENT_MEMORY;
+//			}
+			value = get_combined_index(FinanceField_FLOAT, float_data_set.size());
+			float_data_set.push_back(new FinanceFloatDataArray());
+			float_data_set_size = float_data_set.size();
+			break;
+		case FinanceField_DATE:
+			WRITE_ERROR("The DATE field type is NOT supported");
+			return RET_FAILURE_INVALID_ARGUMENT;
+		default:
+			WRITE_FORMAT_ERROR("The unsupported field type: %d", FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]);
+			return RET_FAILURE_INVALID_ARGUMENT;
+		}
+		data_set_mapping[key] = value;
+		iter++;
+	}
+	return RET_SUCCESS;
+}
+
+unsigned short ResultSet::set_date(char* element_value)
+{
+	date_data.add(element_value, strlen(element_value) + 1);
+	return RET_SUCCESS;
+}
+
+unsigned short ResultSet::set_data(int source_index, int field_index, char* data_string)
+{
+	if (data_string == NULL)
+	{
+		WRITE_ERROR("data_string should NOT be NULL");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+
+	unsigned short key = get_combined_index(source_index, field_index);
+	if (data_set_mapping.find(key) == data_set_mapping.end())
+	{
+		WRITE_FORMAT_ERROR("The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	unsigned short value = data_set_mapping[key];
+	unsigned short field_type_index = get_upper_subindex(value);
+	unsigned short field_type_pos = get_lower_subindex(value);
+	switch(field_type_index)
+	{
+	case FinanceField_INT:
+		int_data_set[field_type_pos]->add(atoi(data_string));
+		break;
+	case FinanceField_LONG:
+		long_data_set[field_type_pos]->add(atol(data_string));
+		break;
+	case FinanceField_FLOAT:
+		float_data_set[field_type_pos]->add(atof(data_string));
+		break;
+	default:
+		WRITE_FORMAT_ERROR("Unsupported field_type_index: %d", field_type_index);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	return RET_SUCCESS;
+}
+
+#define DEFINE_GET_ELEMENT_FUNC(n, m)\
+n ResultSet::get_##n##_element(int source_index, int field_index, int index)const\
+{\
+	unsigned short key = get_combined_index(source_index, field_index);\
+	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);\
+	if (iter == data_set_mapping.end())\
+	{\
+		char errmsg[64];\
+		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);\
+		WRITE_ERROR(errmsg);\
+		throw invalid_argument(errmsg);\
+	}\
+	unsigned short value = iter->second;\
+	unsigned short field_type_index = get_upper_subindex(value);\
+	if (field_type_index != FinanceField_##m)\
+	{\
+		char errmsg[64];\
+		snprintf(errmsg, 64, "The field type[%d] is NOT int", field_type_index);\
+		WRITE_ERROR(errmsg);\
+		throw invalid_argument(errmsg);\
+	}\
+	unsigned short field_type_pos = get_lower_subindex(value);\
+	if (field_type_pos >= int_data_set_size || field_type_pos < 0)\
+	{\
+		char errmsg[64];\
+		snprintf(errmsg, 64, "The field pos[%d] is out of range", field_type_pos);\
+		WRITE_ERROR(errmsg);\
+		throw out_of_range(errmsg);\
+	}\
+	return (*n##_data_set[field_type_pos])[index];\
+}
+
+DEFINE_GET_ELEMENT_FUNC(int, INT)
+DEFINE_GET_ELEMENT_FUNC(long, LONG)
+DEFINE_GET_ELEMENT_FUNC(float, FLOAT)
+
+//int ResultSet::get_int_element(int source_index, int field_index, int index)const
+//{
+//	unsigned short key = get_combined_index(source_index, field_index);
+//	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);
+//	if (iter == data_set_mapping.end())
+//	{
+//		char errmsg[64];
+//		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
+//		WRITE_ERROR(errmsg);
+//		throw invalid_argument(errmsg);
+//	}
+//
+//	unsigned short value = iter->second; //data_set_mapping[key];
+//	unsigned short field_type_index = get_upper_subindex(value);
+//	if (field_type_index != FinanceField_INT)
+//	{
+//		char errmsg[64];
+//		snprintf(errmsg, 64, "The field type[%d] is NOT int", field_type_index);
+//		WRITE_ERROR(errmsg);
+//		throw invalid_argument(errmsg);
+//	}
+//	unsigned short field_type_pos = get_lower_subindex(value);
+//	if (field_type_pos >= int_data_set_size || field_type_pos < 0)
+//	{
+//		char errmsg[64];
+//		snprintf(errmsg, 64, "The field pos[%d] is out of range", field_type_pos);
+//		WRITE_ERROR(errmsg);
+//		throw out_of_range(errmsg);
+//	}
+//	return (*int_data_set[field_type_pos])[index];
+//}
+//
+//long ResultSet::get_long_element(int source_index, int field_index, int index)const
+//{
+//	unsigned short key = get_combined_index(source_index, field_index);
+//	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);
+//	if (iter == data_set_mapping.end())
+//	{
+//		char errmsg[64];
+//		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
+//		WRITE_ERROR(errmsg);
+//		throw invalid_argument(errmsg);
+//	}
+//
+//	unsigned short value = iter->second; //data_set_mapping[key];
+//	unsigned short field_type_index = get_upper_subindex(value);
+//	if (field_type_index != FinanceField_LONG)
+//	{
+//		char errmsg[64];
+//		snprintf(errmsg, 64, "The field type[%d] is NOT long", field_type_index);
+//		WRITE_ERROR(errmsg);
+//		throw invalid_argument(errmsg);
+//	}
+//	unsigned short field_type_pos = get_lower_subindex(value);
+//	if (field_type_pos >= int_data_set_size || field_type_pos < 0)
+//	{
+//		char errmsg[64];
+//		snprintf(errmsg, 64, "The field pos[%d] is out of range", field_type_pos);
+//		WRITE_ERROR(errmsg);
+//		throw out_of_range(errmsg);
+//	}
+//	return (*long_data_set[field_type_pos])[index];
+//}
+//
+//float ResultSet::get_float_element(int source_index, int field_index, int index)const
+//{
+//	unsigned short key = get_combined_index(source_index, field_index);
+//	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);
+//	if (iter == data_set_mapping.end())
+//	{
+//		char errmsg[64];
+//		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
+//		WRITE_ERROR(errmsg);
+//		throw invalid_argument(errmsg);
+//	}
+//
+//	unsigned short value = iter->second; //data_set_mapping[key];
+//	unsigned short field_type_index = get_upper_subindex(value);
+//	if (field_type_index != FinanceField_INT)
+//	{
+//		char errmsg[64];
+//		snprintf(errmsg, 64, "The field type[%d] is NOT float", field_type_index);
+//		WRITE_ERROR(errmsg);
+//		throw invalid_argument(errmsg);
+//	}
+//	unsigned short field_type_pos = get_lower_subindex(value);
+//	if (field_type_pos >= int_data_set_size || field_type_pos < 0)
+//	{
+//		char errmsg[64];
+//		snprintf(errmsg, 64, "The field pos[%d] is out of range", field_type_pos);
+//		WRITE_ERROR(errmsg);
+//		throw out_of_range(errmsg);
+//	}
+//	return (*float_data_set[field_type_pos])[index];
+//}

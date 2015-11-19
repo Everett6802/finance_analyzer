@@ -1,6 +1,8 @@
 #ifndef FINANCE_ANALYZER_COMMON_CLASS_H
 #define FINANCE_ANALYZER_COMMON_CLASS_H
 
+#include <deque>
+#include <map>
 #include "msg_dumper_wrapper.h"
 
 
@@ -54,6 +56,7 @@ typedef TimeRangeCfg* PTIME_RANGE_CFG;
 template <typename T>
 class FinanceDataArrayBase
 {
+	DECLARE_MSG_DUMPER()
 protected:
 	static int DEF_ARRAY_SIZE;
 
@@ -61,16 +64,19 @@ protected:
 	int array_size;
 	int array_pos;
 
+	void alloc_new();
+
 public:
 	FinanceDataArrayBase();
 	virtual ~FinanceDataArrayBase();
 
-	void add(T data);
-	T operator[](int index)const;
 	bool is_empty()const;
 	int get_size()const;
 	int get_array_size()const;
 	const T* get_data_array()const;
+	const T operator[](int index)const;
+
+	void add(T data);
 };
 
 template <typename T>
@@ -78,6 +84,8 @@ class FinanceDataPtrArrayBase : public FinanceDataArrayBase<T>
 {
 public:
 	virtual ~FinanceDataPtrArrayBase();
+
+	void add(T data, size_t data_size);
 };
 
 typedef FinanceDataArrayBase<int> FinanceIntDataArray;
@@ -88,5 +96,65 @@ typedef FinanceLongDataArray* PFINANCE_LONG_DATA_ARRAY;
 
 typedef FinanceDataArrayBase<float> FinanceFloatDataArray;
 typedef FinanceFloatDataArray* PFINANCE_FLOAT_DATA_ARRAY;
+
+typedef FinanceDataPtrArrayBase<char*> FinanceCharDataPtrArray;
+typedef FinanceCharDataPtrArray* PFINANCE_CHAR_DATA_PTR_ARRAY;
+
+//typedef FinanceDataPtrArrayBase<const char*> FinanceConstCharDataPtrArray;
+//typedef FinanceConstCharDataPtrArray* PFINANCE_CONST_CHAR_DATA_PTR_ARRAY;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class QuerySet
+{
+	DECLARE_MSG_DUMPER()
+private:
+	std::deque<int> query_set[FinanceSourceSize];
+
+public:
+	QuerySet();
+	~QuerySet();
+
+	unsigned short add_query(int source_index, int field_index=-1);
+};
+typedef QuerySet* PQUERY_SET;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class ResultSet
+{
+	DECLARE_MSG_DUMPER()
+
+	static unsigned short get_combined_index(int x, int y);
+	static unsigned short get_upper_subindex(unsigned short x);
+	static unsigned short get_lower_subindex(unsigned short x);
+
+private:
+	std::map<unsigned short, unsigned short> data_set_mapping;
+	FinanceCharDataPtrArray date_data;
+	std::deque<PFINANCE_INT_DATA_ARRAY> int_data_set;
+	std::deque<PFINANCE_LONG_DATA_ARRAY> long_data_set;
+	std::deque<PFINANCE_FLOAT_DATA_ARRAY> float_data_set;
+	int int_data_set_size;
+	int long_data_set_size;
+	int float_data_set_size;
+
+public:
+	ResultSet();
+	~ResultSet();
+
+	unsigned short add_set(int source_index, int field_index);
+	unsigned short set_date(char* element_value);
+	unsigned short set_data(int source_index, int field_index, char* data_string);
+
+#define DECLARE_GET_ELEMENT_FUNC(n) n get_##n##_element(int source_index, int field_index, int index)const;
+	DECLARE_GET_ELEMENT_FUNC(int)
+	DECLARE_GET_ELEMENT_FUNC(long)
+	DECLARE_GET_ELEMENT_FUNC(float)
+//	int get_int_element(int source_index, int field_index, int index)const;
+//	long get_long_element(int source_index, int field_index, int index)const;
+//	float get_float_element(int source_index, int field_index, int index)const;
+};
+typedef ResultSet* PRESULT_SET;
 
 #endif
