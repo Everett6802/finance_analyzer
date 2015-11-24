@@ -17,8 +17,11 @@ TimeCfg::TimeCfg(const char* cur_time_str)
 		throw invalid_argument(string("cur_time_str should NOT be NULL"));
 	snprintf(time_str, 16, "%s", cur_time_str);
 
-	char * pch;
-	pch = strtok(time_str, DELIM);
+	char time_tmp_str[16];
+	memset(time_tmp_str, 0x0, sizeof(char) * 16);
+	memcpy(time_tmp_str, time_str, sizeof(char) * strlen(time_str));
+	char* pch;
+	pch = strtok(time_tmp_str, DELIM);
 	int count = 0;
 	while (pch != NULL)
 	{
@@ -75,7 +78,11 @@ bool TimeCfg::is_month_type()const{return (time_type == TIME_MONTH);}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str)
+TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str) :
+	time_start_cfg(NULL),
+	time_end_cfg(NULL),
+	time_range_description(NULL),
+	type_is_month(false)
 {
 	if (time_start_str != NULL)
 	{
@@ -121,7 +128,7 @@ TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int year_end, int mo
 
 TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
 {
-	time_start_cfg = new TimeCfg(year_start, month_start, year_end);
+	time_start_cfg = new TimeCfg(year_start, month_start, day_start);
 	if (time_start_cfg == NULL)
 		throw bad_alloc();
 	time_end_cfg = new TimeCfg(year_end, month_end, day_end);
@@ -302,6 +309,18 @@ unsigned short QuerySet::add_query(int source_index, int field_index)
 	return RET_SUCCESS;
 }
 
+const DEQUE_INT& QuerySet::operator[](int index)const
+{
+	if (index < 0 || index >= FinanceSourceSize)
+	{
+		char errmsg[64];
+		snprintf(errmsg, 64, "The index[%d] is out of range(0, %d)", index , FinanceSourceSize - 1);
+		WRITE_ERROR(errmsg);
+		throw out_of_range(errmsg);
+	}
+	return query_set[index];
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 unsigned short ResultSet::get_combined_index(int x, int y)
@@ -320,6 +339,9 @@ unsigned short ResultSet::get_lower_subindex(unsigned short x)
 }
 
 ResultSet::ResultSet() :
+	check_date_data_mode(false),
+	date_data_size(0),
+	date_date_pos(0),
 	int_data_set_size(0),
 	long_data_set_size(0),
 	float_data_set_size(0)
@@ -448,9 +470,32 @@ unsigned short ResultSet::add_set(int source_index, int field_index)
 	return RET_SUCCESS;
 }
 
+unsigned short ResultSet::add_set(int source_index, const DEQUE_INT& field_set)
+{
+	unsigned short ret = RET_SUCCESS;
+	int field_set_size = field_set.size();
+	for (int index = 0 ; index < field_set_size ; index++)
+	{
+		ret = add_set(source_index, field_set[index]);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	return ret;
+}
+
 unsigned short ResultSet::set_date(char* element_value)
 {
-	date_data.add(element_value, strlen(element_value) + 1);
+	if (check_date_data_mode)
+	{
+		if (strcmp(date_data[date_date_pos], element_value) != 0)
+		{
+			WRITE_FORMAT_ERROR("The date(%s, %s) is NOT equal", date_data[date_date_pos], element_value);
+			return RET_FAILURE_INCORRECT_OPERATION;
+		}
+		date_date_pos++;
+	}
+	else
+		date_data.add(element_value, strlen(element_value) + 1);
 	return RET_SUCCESS;
 }
 
@@ -489,8 +534,8 @@ unsigned short ResultSet::set_data(int source_index, int field_index, char* data
 	return RET_SUCCESS;
 }
 
-#define DEFINE_GET_ELEMENT_FUNC(n, m)\
-n ResultSet::get_##n##_element(int source_index, int field_index, int index)const\
+#define DEFINE_GET_ARRAY_FUNC(n, m)\
+const PFINANCE_##m##_DATA_ARRAY ResultSet::get_##n##_array(int source_index, int field_index)const\
 {\
 	unsigned short key = get_combined_index(source_index, field_index);\
 	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);\
@@ -518,12 +563,28 @@ n ResultSet::get_##n##_element(int source_index, int field_index, int index)cons
 		WRITE_ERROR(errmsg);\
 		throw out_of_range(errmsg);\
 	}\
-	return (*n##_data_set[field_type_pos])[index];\
+	return n##_data_set[field_type_pos];\
+}
+DEFINE_GET_ARRAY_FUNC(int, INT)
+DEFINE_GET_ARRAY_FUNC(long, LONG)
+DEFINE_GET_ARRAY_FUNC(float, FLOAT)
+
+#define DEFINE_GET_ARRAY_ELEMENT_FUNC(n, m)\
+n ResultSet::get_##n##_array_element(int source_index, int field_index, int index)const\
+{\
+	PFINANCE_##m##_DATA_ARRAY data_array = get_##n##_array(source_index, field_index);\
+	return (*data_array)[index];\
+}
+DEFINE_GET_ARRAY_ELEMENT_FUNC(int, INT)
+DEFINE_GET_ARRAY_ELEMENT_FUNC(long, LONG)
+DEFINE_GET_ARRAY_ELEMENT_FUNC(float, FLOAT)
+
+void ResultSet::switch_to_check_date_mode()
+{
+	check_date_data_mode = true;
+	date_date_pos = 0;
 }
 
-DEFINE_GET_ELEMENT_FUNC(int, INT)
-DEFINE_GET_ELEMENT_FUNC(long, LONG)
-DEFINE_GET_ELEMENT_FUNC(float, FLOAT)
 
 //int ResultSet::get_int_element(int source_index, int field_index, int index)const
 //{

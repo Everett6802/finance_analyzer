@@ -43,13 +43,22 @@ public:
 	FinanceAnalyzerSqlReader();
 	~FinanceAnalyzerSqlReader();
 
+	static unsigned short get_sql_field_command(const DEQUE_INT& query_field, std::string& field_cmd);
+
 	unsigned short try_connect_mysql(const std::string database);
 	unsigned short disconnect_mysql();
 
-	unsigned short select_data(const std::string table_name, const std::string cmd_table_field, const PTIME_RANGE_CFG time_range_cfg);
-	unsigned short select_data(const std::string table_name, const std::string cmd_table_field);
-	unsigned short select_data(const std::string table_name, const PTIME_RANGE_CFG time_range_cfg);
-	unsigned short select_data(const std::string table_name);
+	unsigned short select_data(
+		int source_index,
+		const std::string& table_name,
+		const std::string& cmd_table_field,
+		const PDEQUE_INT query_field,
+		const PTIME_RANGE_CFG time_range_cfg,
+		PRESULT_SET result_cfg
+	);
+//	unsigned short select_data(const std::string table_name, const std::string cmd_table_field);
+//	unsigned short select_data(const std::string table_name, const PTIME_RANGE_CFG time_range_cfg);
+//	unsigned short select_data(const std::string table_name);
 };
 
 #endif

@@ -1,4 +1,6 @@
 //#include <fcntl.h>
+#include <assert.h>
+#include <stdexcept>
 #include "finance_analyzer_sql_reader.h"
 
 /*
@@ -16,9 +18,9 @@ const char* FinanceAnalyzerSqlReader::MYSQL_PASSWORD = "lab4man1";
 const char* FinanceAnalyzerSqlReader::FORMAT_CMD_CREATE_DATABASE = "CREATE DATABASE %s";
 const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATA_HEAD = "SELECT ";
 const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATA_TAIL_FORMAT = " FROM %s";
-const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT = " WHERE date BETWEEN %s AND %s";
-const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN_FORMAT = " WHERE date > %s";
-const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN_FORMAT = " WHERE date < %s";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT = " WHERE date BETWEEN '%s' AND '%s'";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN_FORMAT = " WHERE date > '%s'";
+const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN_FORMAT = " WHERE date < '%s'";
 const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
 const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT = " WHERE month(date) > '%d'";
 const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT = " WHERE month(date) < '%d'";
@@ -36,6 +38,32 @@ FinanceAnalyzerSqlReader::FinanceAnalyzerSqlReader() :
 FinanceAnalyzerSqlReader::~FinanceAnalyzerSqlReader()
 {
 	RELEASE_MSG_DUMPER()
+}
+
+unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(const DEQUE_INT& query_field, string& field_cmd)
+{
+	if (query_field.empty())
+		throw invalid_argument("The query should NOT be empty");
+//	string field_cmd;
+// Select all the fields in the table
+	if (query_field[0] == -1)
+		field_cmd = string("*");
+	else
+	{
+// Assemble the MySQL command of the designated field
+// The "date" field is a must
+		char field_buf[16];
+		snprintf(field_buf, 16, "%s", MYSQL_DATE_FILED_NAME);
+		field_cmd = string(field_buf);
+		int query_field_size = query_field.size();
+		for(int field_index = 0 ; field_index < query_field_size ; field_index++)
+		{
+			snprintf(field_buf, 16, ",%s%d", MYSQL_FILED_NAME_BASE, query_field[field_index]);
+			field_cmd += string(field_buf);
+		}
+	}
+
+	return RET_SUCCESS;
 }
 
 unsigned short FinanceAnalyzerSqlReader::try_connect_mysql(const string database)
@@ -98,8 +126,17 @@ unsigned short FinanceAnalyzerSqlReader::disconnect_mysql()
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerSqlReader::select_data(const string table_name, const string cmd_table_field, const PTIME_RANGE_CFG time_range_cfg)
+unsigned short FinanceAnalyzerSqlReader::select_data(
+		int source_index,
+		const std::string& table_name,
+		const std::string& cmd_table_field,
+		const PDEQUE_INT query_field,
+		const PTIME_RANGE_CFG time_range_cfg,
+		PRESULT_SET result_cfg
+	)
 {
+	assert(query_field != NULL && "query_field should NOT be NULL");
+	assert(result_cfg != NULL && "result_cfg should NOT be NULL");
 // Check if the connection is established
 	if (connection == NULL)
 	{
@@ -159,28 +196,42 @@ unsigned short FinanceAnalyzerSqlReader::select_data(const string table_name, co
 		WRITE_FORMAT_ERROR("mysql_query() fails, due to: %s", mysql_error(connection));
 		return RET_FAILURE_MYSQL;
 	}
-
+// Store the query result into a self-defined data structure
 	MYSQL_RES *result = mysql_store_result(connection);
 	unsigned int num_fields = mysql_num_fields(result);
 	MYSQL_ROW row;
-	unsigned int i;
+	if (num_fields != query_field->size() + 1) // Since the 'date' field is NOT in the query_field
+	{
+		WRITE_FORMAT_ERROR("num_fields[%d] is NOT identical to query_field_size[%d]", num_fields, (int)query_field->size() + 1);
+		return RET_FAILURE_UNKNOWN;
+	}
+	unsigned short ret = RET_SUCCESS;
+// Fetch the data in each row
 	while ((row = mysql_fetch_row(result)))
 	{
-//		unsigned long *lengths;
-//		lengths = mysql_fetch_lengths(result);
-		for(i = 0 ; i < num_fields ; i++)
+//		unsigned long *lengths = mysql_fetch_lengths(result);
+// Parse each row
+// Set the date
+		ret = result_cfg->set_date(row[0]);
+		if (CHECK_FAILURE(ret))
+			return ret;
+// Set the data in each field
+		for(unsigned int field_index = 1 ; field_index < num_fields ; field_index++)
 		{
-			printf("%s ", row[i]);
+			ret = result_cfg->set_data(source_index, field_index, row[field_index]);
+			if (CHECK_FAILURE(ret))
+				return ret;
+//			printf("%s ", row[i]);
 		}
-		printf("\n");
+//		printf("\n");
 	}
 
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name, const std::string cmd_table_field){return select_data(table_name, cmd_table_field, NULL);}
-unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name, const PTIME_RANGE_CFG time_range_cfg){return select_data(table_name, string("*"), time_range_cfg);}
-unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name){return select_data(table_name, string("*"), NULL);}
+//unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name, const std::string cmd_table_field){return select_data(table_name, cmd_table_field, NULL);}
+//unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name, const PTIME_RANGE_CFG time_range_cfg){return select_data(table_name, string("*"), time_range_cfg);}
+//unsigned short FinanceAnalyzerSqlReader::select_data(const std::string table_name){return select_data(table_name, string("*"), NULL);}
 
 //unsigned short FinanceAnalyzerSqlReader::parse_config_param(const char* param_title, const char* param_content)
 //{

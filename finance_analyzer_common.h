@@ -39,6 +39,10 @@ enum FinanceFieldType
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 
+extern const char* MYSQL_TABLE_NAME_BASE;
+extern const char* MYSQL_DATE_FILED_NAME;
+extern const char* MYSQL_FILED_NAME_BASE;
+
 extern const int STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[];
 extern const int FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];
 extern const int OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];

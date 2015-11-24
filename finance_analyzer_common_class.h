@@ -100,22 +100,60 @@ typedef FinanceFloatDataArray* PFINANCE_FLOAT_DATA_ARRAY;
 typedef FinanceDataPtrArrayBase<char*> FinanceCharDataPtrArray;
 typedef FinanceCharDataPtrArray* PFINANCE_CHAR_DATA_PTR_ARRAY;
 
-//typedef FinanceDataPtrArrayBase<const char*> FinanceConstCharDataPtrArray;
-//typedef FinanceConstCharDataPtrArray* PFINANCE_CONST_CHAR_DATA_PTR_ARRAY;
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+typedef std::deque<int> DEQUE_INT;
+typedef DEQUE_INT* PDEQUE_INT;
 
 class QuerySet
 {
 	DECLARE_MSG_DUMPER()
 private:
-	std::deque<int> query_set[FinanceSourceSize];
+	DEQUE_INT query_set[FinanceSourceSize];
 
 public:
 	QuerySet();
 	~QuerySet();
 
 	unsigned short add_query(int source_index, int field_index=-1);
+
+	class iterator
+	{
+	private:
+		PDEQUE_INT ptr_;
+		PDEQUE_INT ptr_end_;
+//		void get_next()
+//		{
+//			while(true)
+//			{
+//				ptr_++;
+//				if (ptr_ != ptr_end_ && !ptr_->empty()) break;
+//			}
+//		}
+
+	public:
+		iterator(const PDEQUE_INT ptr) : ptr_(ptr), ptr_end_(ptr + FinanceSourceSize) {}
+		iterator operator++()
+		{
+			ptr_++;
+//			get_next();
+			return *this;
+		}
+		iterator operator++(int junk)
+		{
+			iterator i = *this;
+			ptr_++;
+//			get_next();
+			return i;
+		}
+		const DEQUE_INT& operator*() { return *ptr_; }
+		const PDEQUE_INT operator->() { return ptr_; }
+	};
+
+	iterator begin() { return iterator(query_set); }
+	iterator end() { return iterator(query_set + FinanceSourceSize); }
+
+	const DEQUE_INT& operator[](int index)const;
 };
 typedef QuerySet* PQUERY_SET;
 
@@ -135,6 +173,9 @@ private:
 	std::deque<PFINANCE_INT_DATA_ARRAY> int_data_set;
 	std::deque<PFINANCE_LONG_DATA_ARRAY> long_data_set;
 	std::deque<PFINANCE_FLOAT_DATA_ARRAY> float_data_set;
+	bool check_date_data_mode;
+	int date_data_size;
+	int date_date_pos;
 	int int_data_set_size;
 	int long_data_set_size;
 	int float_data_set_size;
@@ -144,13 +185,20 @@ public:
 	~ResultSet();
 
 	unsigned short add_set(int source_index, int field_index);
+	unsigned short add_set(int source_index, const DEQUE_INT& field_set);
 	unsigned short set_date(char* element_value);
 	unsigned short set_data(int source_index, int field_index, char* data_string);
 
-#define DECLARE_GET_ELEMENT_FUNC(n) n get_##n##_element(int source_index, int field_index, int index)const;
-	DECLARE_GET_ELEMENT_FUNC(int)
-	DECLARE_GET_ELEMENT_FUNC(long)
-	DECLARE_GET_ELEMENT_FUNC(float)
+	void switch_to_check_date_mode();
+
+#define DECLARE_GET_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array(int source_index, int field_index)const;
+	DECLARE_GET_ARRAY_FUNC(int, INT)
+	DECLARE_GET_ARRAY_FUNC(long, LONG)
+	DECLARE_GET_ARRAY_FUNC(float, FLOAT)
+#define DECLARE_GET_ARRAY_ELEMENT_FUNC(n) n get_##n##_array_element(int source_index, int field_index, int index)const;
+	DECLARE_GET_ARRAY_ELEMENT_FUNC(int)
+	DECLARE_GET_ARRAY_ELEMENT_FUNC(long)
+	DECLARE_GET_ARRAY_ELEMENT_FUNC(float)
 //	int get_int_element(int source_index, int field_index, int index)const;
 //	long get_long_element(int source_index, int field_index, int index)const;
 //	float get_float_element(int source_index, int field_index, int index)const;

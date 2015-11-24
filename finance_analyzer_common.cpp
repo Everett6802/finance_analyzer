@@ -7,6 +7,10 @@
 
 using namespace std;
 
+const char* MYSQL_TABLE_NAME_BASE = "year";
+const char* MYSQL_DATE_FILED_NAME = "date";
+const char* MYSQL_FILED_NAME_BASE = "value";
+
 const int STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[] =
 {
 	FinanceField_DATE, // 日期
