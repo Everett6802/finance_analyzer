@@ -238,10 +238,10 @@ template <typename T>
 const T FinanceDataArrayBase<T>::operator[](int index)const
 {
 	assert(array_data != NULL && "array_data == NULL");
-	if(index >= 0 && index < array_pos)
+	if(index < 0 && index >= array_pos)
 	{
-		char errmsg[32];
-		snprintf(errmsg, 32, "index[%d] is out of range: (0, %d)", index, array_pos);
+		char errmsg[64];
+		snprintf(errmsg, 64, "index[%d] is out of range: (0, %d)", index, array_pos);
 		WRITE_ERROR(errmsg);
 		throw out_of_range(errmsg);
 	}
@@ -621,12 +621,75 @@ unsigned short ResultSet::check_data()const
 		if (date_data_size != data_size)
 		{
 			key = iter->first;
-			unsigned short source_type_index = get_upper_subindex(key);
-			unsigned short field_type_index = get_lower_subindex(key);
-			WRITE_FORMAT_ERROR("Incorrect data size in %d, %d, expected: %d, actual: %d", date_data_size, data_size, source_type_index, field_type_index);
+			unsigned short source_index = get_upper_subindex(key);
+			unsigned short field_index = get_lower_subindex(key);
+			WRITE_FORMAT_ERROR("Incorrect data size in %d, %d, expected: %d, actual: %d", date_data_size, data_size, source_index, field_index);
 			return RET_FAILURE_INCORRECT_OPERATION;
 		}
 		iter++;
+	}
+	return RET_SUCCESS;
+}
+
+unsigned short ResultSet::show_data()const
+{
+	static int STAR_LEN = 120;
+	unsigned short key;
+	unsigned short value;
+	unsigned short source_index;
+	unsigned short field_index;
+	unsigned short field_type_index;
+	unsigned short field_type_pos;
+
+// Show the database:field info
+	for(int i = 0 ; i < STAR_LEN ; i++)
+		putchar('*');
+	printf("\n| %s |", MYSQL_DATE_FILED_NAME);
+
+	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.begin();
+	while (iter != data_set_mapping.end())
+	{
+		key = iter->first;
+		source_index = get_upper_subindex(key);
+		field_index = get_lower_subindex(key);
+		printf(" %s:%s%d |", FINANCE_DATABASE_DESCRIPTION_LIST[source_index], MYSQL_FILED_NAME_BASE, field_index);
+
+		iter++;
+	}
+	printf("\n");
+	for(int i = 0 ; i < STAR_LEN ; i++)
+		putchar('*');
+	printf("\n\n");
+
+// Show the data info
+	int date_data_size = date_data.get_size();
+	for(int i = 0 ; i < date_data_size ; i++)
+	{
+		printf("| %s |", date_data[i]);
+		iter = data_set_mapping.begin();
+		while (iter != data_set_mapping.end())
+		{
+			value = iter->second;
+			field_type_index = get_upper_subindex(value);
+			field_type_pos = get_lower_subindex(value);
+			switch(field_type_index)
+			{
+			case FinanceField_INT:
+				printf(" %10d |", (*int_data_set[field_type_pos])[i]);
+				break;
+			case FinanceField_LONG:
+				printf(" %12ld |", (*long_data_set[field_type_pos])[i]);
+				break;
+			case FinanceField_FLOAT:
+				printf(" %8.1f |", (*float_data_set[field_type_pos])[i]);
+				break;
+			default:
+				WRITE_FORMAT_ERROR("Unsupported field_type_index: %d", field_type_index);
+				return RET_FAILURE_INVALID_ARGUMENT;
+			}
+			iter++;
+		}
+		printf("\n");
 	}
 	return RET_SUCCESS;
 }

@@ -191,6 +191,7 @@ public:
 
 	void switch_to_check_date_mode();
 	unsigned short check_data()const;
+	unsigned short show_data()const;
 
 #define DECLARE_GET_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array(int source_index, int field_index)const;
 	DECLARE_GET_ARRAY_FUNC(int, INT)
