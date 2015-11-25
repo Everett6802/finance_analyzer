@@ -32,7 +32,7 @@ unsigned short FinanceAnalyzerMgr::test()
 {
 	PTIME_RANGE_CFG time_range_cfg = new TimeRangeCfg(2015, 1, 1, 2015, 11, 11);
 	PQUERY_SET query_set = new QuerySet();
-	query_set->add_query(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 1);
+	query_set->add_query(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 5);
 	query_set->add_query(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 2);
 	query_set->add_query(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 3);
 	PRESULT_SET result_set = new ResultSet();
@@ -105,6 +105,9 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 			return ret;
 		result_set->switch_to_check_date_mode();
 	}
+// Check the result
+	ret = result_set->check_data();
+
 	return ret;
 }
 

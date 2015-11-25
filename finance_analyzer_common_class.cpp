@@ -403,15 +403,17 @@ unsigned short ResultSet::add_set(int source_index, int field_index)
 		}
 	}
 
-	deque<int> field_type_list;
+	deque<int> field_list;
 	if (field_index == -1)
 	{
 		for(int i = 1 ; i < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] ; i++)
-			field_type_list.push_back(FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][i]);
+			field_list.push_back(i);
 	}
+	else
+		field_list.push_back(field_index);
 
-	deque<int>::iterator iter = field_type_list.begin();
-	while(iter != field_type_list.end())
+	deque<int>::iterator iter = field_list.begin();
+	while(iter != field_list.end())
 	{
 		field_index = *iter;
 		unsigned short key = get_combined_index(source_index, field_index);
@@ -585,99 +587,46 @@ void ResultSet::switch_to_check_date_mode()
 	date_date_pos = 0;
 }
 
+unsigned short ResultSet::check_data()const
+{
+	int date_data_size = date_data.get_size();
+	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.begin();
 
-//int ResultSet::get_int_element(int source_index, int field_index, int index)const
-//{
-//	unsigned short key = get_combined_index(source_index, field_index);
-//	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);
-//	if (iter == data_set_mapping.end())
-//	{
-//		char errmsg[64];
-//		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
-//		WRITE_ERROR(errmsg);
-//		throw invalid_argument(errmsg);
-//	}
-//
-//	unsigned short value = iter->second; //data_set_mapping[key];
-//	unsigned short field_type_index = get_upper_subindex(value);
-//	if (field_type_index != FinanceField_INT)
-//	{
-//		char errmsg[64];
-//		snprintf(errmsg, 64, "The field type[%d] is NOT int", field_type_index);
-//		WRITE_ERROR(errmsg);
-//		throw invalid_argument(errmsg);
-//	}
-//	unsigned short field_type_pos = get_lower_subindex(value);
-//	if (field_type_pos >= int_data_set_size || field_type_pos < 0)
-//	{
-//		char errmsg[64];
-//		snprintf(errmsg, 64, "The field pos[%d] is out of range", field_type_pos);
-//		WRITE_ERROR(errmsg);
-//		throw out_of_range(errmsg);
-//	}
-//	return (*int_data_set[field_type_pos])[index];
-//}
-//
-//long ResultSet::get_long_element(int source_index, int field_index, int index)const
-//{
-//	unsigned short key = get_combined_index(source_index, field_index);
-//	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);
-//	if (iter == data_set_mapping.end())
-//	{
-//		char errmsg[64];
-//		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
-//		WRITE_ERROR(errmsg);
-//		throw invalid_argument(errmsg);
-//	}
-//
-//	unsigned short value = iter->second; //data_set_mapping[key];
-//	unsigned short field_type_index = get_upper_subindex(value);
-//	if (field_type_index != FinanceField_LONG)
-//	{
-//		char errmsg[64];
-//		snprintf(errmsg, 64, "The field type[%d] is NOT long", field_type_index);
-//		WRITE_ERROR(errmsg);
-//		throw invalid_argument(errmsg);
-//	}
-//	unsigned short field_type_pos = get_lower_subindex(value);
-//	if (field_type_pos >= int_data_set_size || field_type_pos < 0)
-//	{
-//		char errmsg[64];
-//		snprintf(errmsg, 64, "The field pos[%d] is out of range", field_type_pos);
-//		WRITE_ERROR(errmsg);
-//		throw out_of_range(errmsg);
-//	}
-//	return (*long_data_set[field_type_pos])[index];
-//}
-//
-//float ResultSet::get_float_element(int source_index, int field_index, int index)const
-//{
-//	unsigned short key = get_combined_index(source_index, field_index);
-//	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);
-//	if (iter == data_set_mapping.end())
-//	{
-//		char errmsg[64];
-//		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
-//		WRITE_ERROR(errmsg);
-//		throw invalid_argument(errmsg);
-//	}
-//
-//	unsigned short value = iter->second; //data_set_mapping[key];
-//	unsigned short field_type_index = get_upper_subindex(value);
-//	if (field_type_index != FinanceField_INT)
-//	{
-//		char errmsg[64];
-//		snprintf(errmsg, 64, "The field type[%d] is NOT float", field_type_index);
-//		WRITE_ERROR(errmsg);
-//		throw invalid_argument(errmsg);
-//	}
-//	unsigned short field_type_pos = get_lower_subindex(value);
-//	if (field_type_pos >= int_data_set_size || field_type_pos < 0)
-//	{
-//		char errmsg[64];
-//		snprintf(errmsg, 64, "The field pos[%d] is out of range", field_type_pos);
-//		WRITE_ERROR(errmsg);
-//		throw out_of_range(errmsg);
-//	}
-//	return (*float_data_set[field_type_pos])[index];
-//}
+	unsigned short key;
+	unsigned short value;
+	unsigned short field_type_index;
+	unsigned short field_type_pos;
+	int data_size;
+	while (iter != data_set_mapping.end())
+	{
+		value = iter->second;
+		field_type_index = get_upper_subindex(value);
+		field_type_pos = get_lower_subindex(value);
+		switch(field_type_index)
+		{
+		case FinanceField_INT:
+			data_size = int_data_set[field_type_pos]->get_size();
+			break;
+		case FinanceField_LONG:
+			data_size = long_data_set[field_type_pos]->get_size();
+			break;
+		case FinanceField_FLOAT:
+			data_size = float_data_set[field_type_pos]->get_size();
+			break;
+		default:
+			WRITE_FORMAT_ERROR("Unsupported field_type_index: %d", field_type_index);
+			return RET_FAILURE_INVALID_ARGUMENT;
+		}
+// Check all the data size are equal
+		if (date_data_size != data_size)
+		{
+			key = iter->first;
+			unsigned short source_type_index = get_upper_subindex(key);
+			unsigned short field_type_index = get_lower_subindex(key);
+			WRITE_FORMAT_ERROR("Incorrect data size in %d, %d, expected: %d, actual: %d", date_data_size, data_size, source_type_index, field_type_index);
+			return RET_FAILURE_INCORRECT_OPERATION;
+		}
+		iter++;
+	}
+	return RET_SUCCESS;
+}

@@ -190,6 +190,7 @@ public:
 	unsigned short set_data(int source_index, int field_index, char* data_string);
 
 	void switch_to_check_date_mode();
+	unsigned short check_data()const;
 
 #define DECLARE_GET_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array(int source_index, int field_index)const;
 	DECLARE_GET_ARRAY_FUNC(int, INT)
@@ -199,9 +200,6 @@ public:
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(int)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(long)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(float)
-//	int get_int_element(int source_index, int field_index, int index)const;
-//	long get_long_element(int source_index, int field_index, int index)const;
-//	float get_float_element(int source_index, int field_index, int index)const;
 };
 typedef ResultSet* PRESULT_SET;
 

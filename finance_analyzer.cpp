@@ -9,6 +9,9 @@ static FinanceAnalyzerMgr finance_analyzer_mgr;
 
 int main()
 {
+//	char* value_str = "4901376433";
+//	long value = atol(value_str);
+//	printf("value_str: %s, value: %ld\n", value_str, value);
 	unsigned short ret = RET_SUCCESS;
 	ret = finance_analyzer_mgr.test();
 	if (CHECK_FAILURE(ret))
