@@ -8,11 +8,19 @@
 // Macro
 
 #ifndef CHECK_SUCCESS
-#define CHECK_SUCCESS(X) (X == RET_SUCCESS ? true : false)
+#define CHECK_SUCCESS(X) ((X == RET_SUCCESS) ? true : false)
+#endif
+
+#ifndef CHECK_WARN
+#define CHECK_WARN(X) ((X > RET_WARN_BASE && X < RET_FAILURE_BASE) ? true : false)
 #endif
 
 #ifndef CHECK_FAILURE
-#define CHECK_FAILURE(X) !CHECK_SUCCESS(X)
+#define CHECK_FAILURE(X) ((X >= RET_FAILURE_BASE) ? true : false)
+#endif
+
+#ifndef CHECK_SUCCESS_IGNORE_WARN
+#define CHECK_SUCCESS_IGNORE_WARN(X) !CHECK_FAILURE(X)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +65,11 @@ extern const int FINANCE_DATABASE_FIELD_AMOUNT_LIST[];
 // Return values
 extern const unsigned short RET_SUCCESS;
 
+extern const unsigned short RET_WARN_BASE;
+extern const unsigned short RET_WARN_INDEX_DUPLICATE;
+extern const unsigned short RET_WARN_INDEX_IGNORE;
+
+extern const unsigned short RET_FAILURE_BASE;
 extern const unsigned short RET_FAILURE_UNKNOWN;
 extern const unsigned short RET_FAILURE_INVALID_ARGUMENT;
 extern const unsigned short RET_FAILURE_INVALID_POINTER;
@@ -70,5 +83,9 @@ extern const unsigned short RET_FAILURE_IO_OPERATION;
 extern const unsigned short RET_FAILURE_HANDLE_THREAD;
 extern const unsigned short RET_FAILURE_SYSTEM_API;
 extern const unsigned short RET_FAILURE_MYSQL;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Functions
+const char* get_ret_description(unsigned short ret);
 
 #endif

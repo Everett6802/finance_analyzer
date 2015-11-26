@@ -105,17 +105,27 @@ typedef FinanceCharDataPtrArray* PFINANCE_CHAR_DATA_PTR_ARRAY;
 typedef std::deque<int> DEQUE_INT;
 typedef DEQUE_INT* PDEQUE_INT;
 
+#define ADD_QUERY(QuerySet, SourceIndex, FieldIndex)\
+do{\
+unsigned short ret = QuerySet.add_query(SourceIndex, FieldIndex);\
+if (CHECK_FAILURE(ret))\
+	return ret;\
+}while(0)
+
 class QuerySet
 {
 	DECLARE_MSG_DUMPER()
 private:
 	DEQUE_INT query_set[FinanceSourceSize];
+	bool add_done;
 
 public:
 	QuerySet();
 	~QuerySet();
 
 	unsigned short add_query(int source_index, int field_index=-1);
+	unsigned short add_query_done();
+	bool is_add_query_done()const;
 
 	class iterator
 	{

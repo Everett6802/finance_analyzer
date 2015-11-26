@@ -32,9 +32,13 @@ unsigned short FinanceAnalyzerMgr::test()
 {
 	PTIME_RANGE_CFG time_range_cfg = new TimeRangeCfg(2015, 8, 5, 2015, 11, 11);
 	PQUERY_SET query_set = new QuerySet();
-	query_set->add_query(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, -1);
-	query_set->add_query(FinanceSource_FutureTop10DealersAndLegalPersons, 2);
-	query_set->add_query(FinanceSource_FutureTop10DealersAndLegalPersons, 3);
+//	query_set->add_query(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, -1);
+//	query_set->add_query(FinanceSource_FutureTop10DealersAndLegalPersons, 2);
+//	query_set->add_query(FinanceSource_FutureTop10DealersAndLegalPersons, 3);
+	ADD_QUERY((*query_set), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, -1);
+	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 2);
+	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 3);
+	query_set->add_query_done();
 	PRESULT_SET result_set = new ResultSet();
 
 	unsigned short ret = query(time_range_cfg, query_set, result_set);
@@ -61,6 +65,11 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 		WRITE_ERROR("The time format of time_range_cfg should be Day type");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
+	if (query_set->is_add_query_done())
+	{
+		WRITE_ERROR("The setting of query data is NOT complete");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
 
 	unsigned short ret = RET_SUCCESS;
 //	for (QuerySet::iterator iter = query_set.begin() ; iter < query_set.end() ; iter++)
@@ -79,7 +88,7 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 			return ret;
 // Generate the field command
 		string field_cmd = string("");
-		FinanceAnalyzerSqlReader::get_sql_field_command(query_field, field_cmd);
+		FinanceAnalyzerSqlReader::get_sql_field_command(source_index, query_field, field_cmd);
 // Query the data in each table
 		int start_year = time_range_cfg->get_start_time()->get_year();
 		int end_year = time_range_cfg->get_end_time()->get_year();

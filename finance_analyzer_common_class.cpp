@@ -2,6 +2,7 @@
 #include <string>
 #include <stdexcept>
 #include <new>
+#include <algorithm>
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
 
@@ -278,7 +279,8 @@ void FinanceDataPtrArrayBase<T>::add(T data, size_t data_size)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-QuerySet::QuerySet()
+QuerySet::QuerySet() :
+	add_done(false)
 {
 	IMPLEMENT_MSG_DUMPER()
 }
@@ -290,11 +292,19 @@ QuerySet::~QuerySet()
 
 unsigned short QuerySet::add_query(int source_index, int field_index)
 {
+	if (add_done)
+	{
+		WRITE_ERROR("Fail to add another data");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+
+// Check if the index is out of range
 	if(source_index < 0 && source_index >= FinanceSourceSize)
 	{
 		WRITE_ERROR("source_index is out of range in QuerySet");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
+
 	if(field_index < 0 && field_index >= FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index])
 	{
 // If field_index == -1, it means select all field in the table
@@ -304,10 +314,51 @@ unsigned short QuerySet::add_query(int source_index, int field_index)
 			return RET_FAILURE_INVALID_ARGUMENT;
 		}
 	}
+// Check the index is duplicate
+	DEQUE_INT::iterator it = find(query_set[source_index].begin(), query_set[source_index].end(), 10);
+	if (it != query_set[source_index].end())
+	{
+		WRITE_FORMAT_WARN("Duplicate index: %d in %s", field_index, FINANCE_DATABASE_DESCRIPTION_LIST[source_index]);
+		return RET_WARN_INDEX_DUPLICATE;
+	}
+// If all fields are selected, it's no need to add extra index
+	if (query_set[source_index][0] == -1)
+	{
+		WRITE_FORMAT_WARN("Ignore index: %d in %s", field_index, FINANCE_DATABASE_DESCRIPTION_LIST[source_index]);
+		return RET_WARN_INDEX_IGNORE;
+	}
 
+// Add the index
+	if (field_index == -1)
+		query_set[source_index].clear();
 	query_set[source_index].push_back(field_index);
 	return RET_SUCCESS;
 }
+
+unsigned short QuerySet::add_query_done()
+{
+	if (add_done)
+	{
+		WRITE_ERROR("Fail to add another data");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	for (int i = 0 ; i < FinanceSourceSize ; i++)
+	{
+		if (query_set[i].empty())
+			continue;
+		WRITE_FORMAT_DEBUG("Transform the query data[source_index: %d]", i);
+		if (query_set[i][0] == -1)
+		{
+			query_set[i].clear();
+			for (int field_index = 0 ; field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[i] ; field_index++)
+				query_set[i].push_back(field_index);
+		}
+	}
+	add_done = true;
+	return RET_SUCCESS;
+}
+
+bool QuerySet::is_add_query_done()const{ return add_done; }
 
 const DEQUE_INT& QuerySet::operator[](int index)const
 {
@@ -396,22 +447,21 @@ unsigned short ResultSet::add_set(int source_index, int field_index)
 	if(field_index < 0 && field_index >= FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index])
 	{
 // If field_index == -1, it means select all field in the table
-		if (field_index != -1)
-		{
+//		if (field_index != -1)
+//		{
 			WRITE_ERROR("field_index is out of range in ResultSet");
 			return RET_FAILURE_INVALID_ARGUMENT;
-		}
+//		}
 	}
 
 	deque<int> field_list;
-	if (field_index == -1)
-	{
-		for(int i = 1 ; i < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] ; i++)
-			field_list.push_back(i);
-	}
-	else
+//	if (field_index != -1)
 		field_list.push_back(field_index);
-
+//	else
+//	{
+//		for(int i = 1 ; i < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] ; i++)
+//			field_list.push_back(i);
+//	}
 	deque<int>::iterator iter = field_list.begin();
 	while(iter != field_list.end())
 	{

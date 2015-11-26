@@ -16,7 +16,7 @@ int main()
 	ret = finance_analyzer_mgr.test();
 	if (CHECK_FAILURE(ret))
 	{
-		fprintf(stderr, "Error occurs, due to: %d\n", ret);
+		fprintf(stderr, "Error occurs, due to: %d, %s\n", ret, get_ret_description(ret));
 		exit(EXIT_FAILURE);
 	}
 

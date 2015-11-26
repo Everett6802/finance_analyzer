@@ -40,13 +40,13 @@ FinanceAnalyzerSqlReader::~FinanceAnalyzerSqlReader()
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(const DEQUE_INT& query_field, string& field_cmd)
+unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(int source_index, const DEQUE_INT& query_field, string& field_cmd)
 {
 	if (query_field.empty())
 		throw invalid_argument("The query should NOT be empty");
 //	string field_cmd;
 // Select all the fields in the table
-	if (query_field[0] == -1)
+	if ((int)query_field.size() == FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index])
 		field_cmd = string("*");
 	else
 	{
@@ -135,7 +135,7 @@ unsigned short FinanceAnalyzerSqlReader::select_data(
 		PRESULT_SET result_cfg
 	)
 {
-	assert(query_field != NULL && "query_field should NOT be NULL");
+	assert(query_field != NULL && !query_field->empty() && "result_cfg should NOT be NULL/Empty");
 	assert(result_cfg != NULL && "result_cfg should NOT be NULL");
 // Check if the connection is established
 	if (connection == NULL)
@@ -196,15 +196,22 @@ unsigned short FinanceAnalyzerSqlReader::select_data(
 		WRITE_FORMAT_ERROR("mysql_query() fails, due to: %s", mysql_error(connection));
 		return RET_FAILURE_MYSQL;
 	}
+
+	int expected_data_dimension = (int)query_field->size() + 1;
+//	if ((*query_field)[0] == -1)
+//		expected_data_dimension = FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index];
+//	else
+//		expected_data_dimension = (int)query_field->size() + 1;
 // Store the query result into a self-defined data structure
 	MYSQL_RES *result = mysql_store_result(connection);
-	unsigned int num_fields = mysql_num_fields(result);
+	int actual_data_dimension = mysql_num_fields(result);
 	MYSQL_ROW row;
-	if (num_fields != query_field->size() + 1) // Since the 'date' field is NOT in the query_field
+	if (actual_data_dimension != expected_data_dimension) // Since the 'date' field is NOT in the query_field
 	{
-		WRITE_FORMAT_ERROR("num_fields[%d] is NOT identical to query_field_size[%d]", num_fields, (int)query_field->size() + 1);
+		WRITE_FORMAT_ERROR("actual_data_dimension[%d] is NOT identical to expected_data_dimension[%d]", actual_data_dimension, expected_data_dimension);
 		return RET_FAILURE_UNKNOWN;
 	}
+
 	unsigned short ret = RET_SUCCESS;
 // Fetch the data in each row
 	while ((row = mysql_fetch_row(result)))
@@ -216,7 +223,7 @@ unsigned short FinanceAnalyzerSqlReader::select_data(
 		if (CHECK_FAILURE(ret))
 			return ret;
 // Set the data in each field
-		for(unsigned int field_index = 1 ; field_index < num_fields ; field_index++)
+		for(int field_index = 1 ; field_index < actual_data_dimension ; field_index++)
 		{
 			ret = result_cfg->set_data(source_index, (*query_field)[field_index - 1], row[field_index]);
 			if (CHECK_FAILURE(ret))
