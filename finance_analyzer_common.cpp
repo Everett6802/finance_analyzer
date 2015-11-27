@@ -11,6 +11,15 @@ const char* MYSQL_TABLE_NAME_BASE = "year";
 const char* MYSQL_DATE_FILED_NAME = "date";
 const char* MYSQL_FILED_NAME_BASE = "value";
 
+const int STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION[] =
+{
+	FinanceField_DATE, // 日期
+	FinanceField_LONG, // 成交股數
+	FinanceField_LONG, // 成交金額
+	FinanceField_INT, // 成交筆數
+	FinanceField_FLOAT, // 發行量加權股價指數
+	FinanceField_FLOAT, // 漲跌點數
+};
 const int STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[] =
 {
 	FinanceField_DATE, // 日期
@@ -26,6 +35,25 @@ const int STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[] =
 	FinanceField_LONG, // 外資及陸資_買進金額
 	FinanceField_LONG, // 外資及陸資_賣出金額
 	FinanceField_LONG, // 外資及陸資_買賣差額
+};
+const int STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION[] =
+{
+	FinanceField_DATE, // 日期
+	FinanceField_INT, // 融資(交易單位)_買進
+	FinanceField_INT, // 融資(交易單位)_賣出
+	FinanceField_INT, // 融資(交易單位)_現金(券)償還
+	FinanceField_INT, // 融資(交易單位)_前日餘額
+	FinanceField_INT, // 融資(交易單位)_今日餘額
+	FinanceField_INT, // 融券(交易單位)_買進
+	FinanceField_INT, // 融券(交易單位)_賣出
+	FinanceField_INT, // 融券(交易單位)_現金(券)償還
+	FinanceField_INT, // 融券(交易單位)_前日餘額
+	FinanceField_INT, // 融券(交易單位)_今日餘額
+	FinanceField_INT, // 融資金額(仟元)_買進
+	FinanceField_INT, // 融資金額(仟元)_賣出
+	FinanceField_INT, // 融資金額(仟元)_現金(券)償還
+	FinanceField_LONG, // 融資金額(仟元)_前日餘額
+	FinanceField_LONG, // 融資金額(仟元)_今日餘額
 };
 const int FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[] =
 {
@@ -48,6 +76,46 @@ const int FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITI
 	FinanceField_INT, // 外資_空方_契約金額 int",
 	FinanceField_INT, // 外資_多空淨額_口數 int",
 	FinanceField_INT, // 外資_多空淨額_契約金額 int",
+};
+const int FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[] =
+{
+	FinanceField_DATE, // 日期
+	FinanceField_INT, // 自營商_多方_口數_期貨 int",
+	FinanceField_INT, // 自營商_多方_口數_選擇權 int",
+	FinanceField_INT, // 自營商_多方_契約金額_期貨 int",
+	FinanceField_INT, // 自營商_多方_契約金額_選擇權 int",
+	FinanceField_INT, // 自營商_空方_口數_期貨 int",
+	FinanceField_INT, // 自營商_空方_口數_選擇權 int",
+	FinanceField_INT, // 自營商_空方_契約金額_期貨 int",
+	FinanceField_INT, // 自營商_空方_契約金額_選擇權 int",
+	FinanceField_INT, // 自營商_多空淨額_口數_期貨 int",
+	FinanceField_INT, // 自營商_多空淨額_口數_選擇權 int",
+	FinanceField_INT, // 自營商_多空淨額_契約金額_期貨 int",
+	FinanceField_INT, // 自營商_多空淨額_契約金額_選擇權 int",
+	FinanceField_INT, // 投信_多方_口數_期貨 int",
+	FinanceField_INT, // 投信_多方_口數_選擇權 int",
+	FinanceField_INT, // 投信_多方_契約金額_期貨 int",
+	FinanceField_INT, // 投信_多方_契約金額_選擇權 int",
+	FinanceField_INT, // 投信_空方_口數_期貨 int",
+	FinanceField_INT, // 投信_空方_口數_選擇權 int",
+	FinanceField_INT, // 投信_空方_契約金額_期貨 int",
+	FinanceField_INT, // 投信_空方_契約金額_選擇權 int",
+	FinanceField_INT, // 投信_多空淨額_口數_期貨 int",
+	FinanceField_INT, // 投信_多空淨額_口數_選擇權 int",
+	FinanceField_INT, // 投信_多空淨額_契約金額_期貨 int",
+	FinanceField_INT, // 投信_多空淨額_契約金額_選擇權 int",
+	FinanceField_INT, // 外資_多方_口數_期貨 int",
+	FinanceField_INT, // 外資_多方_口數_選擇權 int",
+	FinanceField_INT, // 外資_多方_契約金額_期貨 int",
+	FinanceField_INT, // 外資_多方_契約金額_選擇權 int",
+	FinanceField_INT, // 外資_空方_口數_期貨 int",
+	FinanceField_INT, // 外資_空方_口數_選擇權 int",
+	FinanceField_INT, // 外資_空方_契約金額_期貨 int",
+	FinanceField_INT, // 外資_空方_契約金額_選擇權 int",
+	FinanceField_INT, // 外資_多空淨額_口數_期貨 int",
+	FinanceField_INT, // 外資_多空淨額_口數_選擇權 int",
+	FinanceField_INT, // 外資_多空淨額_契約金額_期貨 int",
+	FinanceField_INT, // 外資_多空淨額_契約金額_選擇權 int",
 };
 const int OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION[] =
 {
@@ -89,6 +157,16 @@ const int OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE
 	FinanceField_INT, // 賣權_外資_買賣差額_口數 int",
 	FinanceField_INT, // 賣權_外資_買賣差額_契約金額 int",
 };
+const int OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION[] =
+{
+	FinanceField_DATE, // 日期
+	FinanceField_INT, // 賣權成交量
+	FinanceField_INT, // 買權成交量
+	FinanceField_FLOAT, // 買賣權成交量比率%
+	FinanceField_INT, // 賣權未平倉量
+	FinanceField_INT, // 買權未平倉量
+	FinanceField_FLOAT, // 買賣權未平倉量比率%
+};
 const int FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[] =
 {
 	FinanceField_DATE, // 日期
@@ -114,32 +192,48 @@ const int FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[] =
 
 const char* FINANCE_DATABASE_NAME_LIST[] =
 {
+	"stock_exchange_and_volume",
 	"stock_top3_legal_persons_net_buy_or_sell",
+	"stock_margin_trading_and_short_selling",
 	"future_and_option_top3_legal_persons_open_interest",
+	"future_or_option_top3_legal_persons_open_interest",
 	"option_top3_legal_persons_buy_and_sell_option_open_interest",
+	"option_put_call_ratio",
 	"future_top10_dealers_and_legal_persons"
 };
 const int FINANCE_DATABASE_NAME_LIST_LEN = sizeof(FINANCE_DATABASE_NAME_LIST) / sizeof(FINANCE_DATABASE_NAME_LIST[0]);
 const char* FINANCE_DATABASE_DESCRIPTION_LIST[] =
 {
+	"臺股指數及成交量",
 	"三大法人現貨買賣超",
-	"三大法人期貨選擇權留倉淨額",
+	"現貨融資融券餘額",
+	"三大法人期貨和選擇權留倉淨額",
+	"三大法人期貨或選擇權留倉淨額",
 	"三大法人選擇權買賣權留倉淨額",
+	"三大法人選擇權賣權買權比",
 	"十大交易人及特定法人期貨資訊"
 };
 const int* FINANCE_DATABASE_FIELD_TYPE_LIST[] =
 {
+	STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION,
 	STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION,
+	STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION,
 	FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
+	FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
 	OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
-	FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION,
+	OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION,
+	FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION
 };
 const int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] =
 {
+	sizeof(STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION) / sizeof(STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION[0]),
 	sizeof(STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION) / sizeof(STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[0]),
+	sizeof(STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION) / sizeof(STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION[0]),
 	sizeof(FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION) / sizeof(FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[0]),
+	sizeof(FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION) / sizeof(FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[0]),
 	sizeof(OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION) / sizeof(OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION[0]),
-	sizeof(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION) / sizeof(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[0]),
+	sizeof(OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION) / sizeof(OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION[0]),
+	sizeof(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION) / sizeof(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[0])
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

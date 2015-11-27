@@ -1,8 +1,6 @@
-//#include <fcntl.h>
 #include <assert.h>
 #include <stdexcept>
 #include "finance_analyzer_sql_reader.h"
-
 /*
  * Go to the following links to see more detailed info:
  * http://www.cs.wichita.edu/~chang/lecture/cs742/program/how-mysql-c-api.html

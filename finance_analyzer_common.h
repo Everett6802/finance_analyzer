@@ -28,10 +28,18 @@
 
 enum FinanceSourceType
 {
+//	FinanceSource_StockTop3LegalPersonsNetBuyOrSell,
+//	FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest,
+//	FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest,
+//	FinanceSource_FutureTop10DealersAndLegalPersons,
+	FinanceSource_StockExchangeAndVolume,
 	FinanceSource_StockTop3LegalPersonsNetBuyOrSell,
-	FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest,
-	FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest,
-	FinanceSource_FutureTop10DealersAndLegalPersons,
+    FinanceSource_StockMarginTradingAndShortSelling,
+    FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest,
+    FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest,
+    FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest,
+    FinanceSource_OptionPutCallRatio,
+    FinanceSource_FutureTop10DealersAndLegalPersons,
 	FinanceSourceSize
 };
 
@@ -51,9 +59,13 @@ extern const char* MYSQL_TABLE_NAME_BASE;
 extern const char* MYSQL_DATE_FILED_NAME;
 extern const char* MYSQL_FILED_NAME_BASE;
 
+extern const int STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION[];
 extern const int STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[];
+extern const int STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION[];
 extern const int FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];
+extern const int FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];
 extern const int OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];
+extern const int OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION[];
 extern const int FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[];
 
 extern const char* FINANCE_DATABASE_NAME_LIST[];
