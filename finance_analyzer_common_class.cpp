@@ -350,7 +350,7 @@ unsigned short QuerySet::add_query_done()
 		if (query_set[i][0] == -1)
 		{
 			query_set[i].clear();
-			for (int field_index = 0 ; field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[i] ; field_index++)
+			for (int field_index = 1 ; field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[i] ; field_index++) // Caution: Don't include the "date" field
 				query_set[i].push_back(field_index);
 		}
 	}

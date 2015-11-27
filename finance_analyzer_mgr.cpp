@@ -65,7 +65,7 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 		WRITE_ERROR("The time format of time_range_cfg should be Day type");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	if (query_set->is_add_query_done())
+	if (!query_set->is_add_query_done())
 	{
 		WRITE_ERROR("The setting of query data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
@@ -92,6 +92,7 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 // Query the data in each table
 		int start_year = time_range_cfg->get_start_time()->get_year();
 		int end_year = time_range_cfg->get_end_time()->get_year();
+// Search for each table year by year
 		for (int year = start_year ; year <= end_year ; year++)
 		{
 			char table_name[16];

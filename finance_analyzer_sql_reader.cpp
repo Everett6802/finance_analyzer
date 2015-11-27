@@ -46,7 +46,7 @@ unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(int source_index,
 		throw invalid_argument("The query should NOT be empty");
 //	string field_cmd;
 // Select all the fields in the table
-	if ((int)query_field.size() == FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index])
+	if ((int)query_field.size() == FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] - 1) // Caution: Don't include the "date" field
 		field_cmd = string("*");
 	else
 	{
@@ -197,6 +197,7 @@ unsigned short FinanceAnalyzerSqlReader::select_data(
 		return RET_FAILURE_MYSQL;
 	}
 
+// Count the amount of the field including the date field
 	int expected_data_dimension = (int)query_field->size() + 1;
 //	if ((*query_field)[0] == -1)
 //		expected_data_dimension = FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index];
