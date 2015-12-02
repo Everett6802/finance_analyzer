@@ -77,6 +77,18 @@ int TimeCfg::get_day()const{return day;}
 const char* TimeCfg::to_string()const{return time_str;}
 bool TimeCfg::is_month_type()const{return (time_type == TIME_MONTH);}
 
+bool TimeCfg::equal_to(const TimeCfg* another_time_cfg)const
+{
+	assert(another_time_cfg != NULL && "another_time_cfg should NOT be NULL");
+	if (year != another_time_cfg->get_year())
+		return false;
+	if (month != another_time_cfg->get_month())
+		return false;
+	if (!is_month_type() && day != another_time_cfg->get_day())
+		return false;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str) :
@@ -157,6 +169,13 @@ TimeRangeCfg::~TimeRangeCfg()
 	}
 }
 
+bool TimeRangeCfg::is_single_time()const
+{
+	if (time_start_cfg != NULL && time_end_cfg != NULL)
+		return time_start_cfg->equal_to(time_end_cfg);
+	return false;
+}
+
 const char* TimeRangeCfg::to_string()
 {
 	if (time_range_description != NULL)
@@ -176,6 +195,12 @@ const char* TimeRangeCfg::to_string()
 
 const PTIME_CFG TimeRangeCfg::get_start_time(){return time_start_cfg;}
 const PTIME_CFG TimeRangeCfg::get_end_time(){return time_end_cfg;}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+SingleTimeRangeCfg::SingleTimeRangeCfg(const char* time_str) : TimeRangeCfg(time_str, time_str){} // Single day
+SingleTimeRangeCfg::SingleTimeRangeCfg(int year, int month) : TimeRangeCfg(year, month, year, month){} // Single month
+SingleTimeRangeCfg::SingleTimeRangeCfg(int year, int month, int day) : TimeRangeCfg(year, month, day, year, month, day){} // Single day
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -391,7 +416,7 @@ unsigned short ResultSet::get_lower_subindex(unsigned short x)
 
 ResultSet::ResultSet() :
 	check_date_data_mode(false),
-	date_data_size(0),
+//	date_data_size(0),
 	date_date_pos(0),
 	int_data_set_size(0),
 	long_data_set_size(0),

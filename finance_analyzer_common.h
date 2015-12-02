@@ -28,18 +28,14 @@
 
 enum FinanceSourceType
 {
-//	FinanceSource_StockTop3LegalPersonsNetBuyOrSell,
-//	FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest,
-//	FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest,
-//	FinanceSource_FutureTop10DealersAndLegalPersons,
 	FinanceSource_StockExchangeAndVolume,
 	FinanceSource_StockTop3LegalPersonsNetBuyOrSell,
-    FinanceSource_StockMarginTradingAndShortSelling,
-    FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest,
-    FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest,
-    FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest,
-    FinanceSource_OptionPutCallRatio,
-    FinanceSource_FutureTop10DealersAndLegalPersons,
+	FinanceSource_StockMarginTradingAndShortSelling,
+	FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest,
+	FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest,
+	FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest,
+	FinanceSource_OptionPutCallRatio,
+	FinanceSource_FutureTop10DealersAndLegalPersons,
 	FinanceSourceSize
 };
 

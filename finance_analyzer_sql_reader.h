@@ -26,9 +26,11 @@ private:
 	static const char* FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_DATE_RULE_EQUAL_FORMAT;
 	static const char* FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT;
 	MYSQL* connection;
 	char cmd_buf[CMD_BUF_SIZE];
 	std::string database_name;

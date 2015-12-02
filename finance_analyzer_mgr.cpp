@@ -28,30 +28,6 @@ FinanceAnalyzerMgr::~FinanceAnalyzerMgr()
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short FinanceAnalyzerMgr::test()
-{
-	PTIME_RANGE_CFG time_range_cfg = new TimeRangeCfg(2015, 8, 5, 2015, 11, 11);
-	PQUERY_SET query_set = new QuerySet();
-//	query_set->add_query(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, -1);
-//	query_set->add_query(FinanceSource_FutureTop10DealersAndLegalPersons, 2);
-//	query_set->add_query(FinanceSource_FutureTop10DealersAndLegalPersons, 3);
-	ADD_QUERY((*query_set), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, -1);
-	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 2);
-	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 3);
-	query_set->add_query_done();
-	PRESULT_SET result_set = new ResultSet();
-
-	unsigned short ret = query(time_range_cfg, query_set, result_set);
-	if (CHECK_FAILURE(ret))
-		return ret;
-
-	ret = result_set->show_data();
-	if (CHECK_FAILURE(ret))
-		return ret;
-
-	return RET_SUCCESS;
-}
-
 unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set)const
 {
 	assert(time_range_cfg != NULL && query_set != NULL && result_set != NULL);
@@ -129,3 +105,48 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 	return ret;
 }
 
+unsigned short FinanceAnalyzerMgr::run_daily()
+{
+	PSINGLE_TIME_RANGE_CFG time_range_cfg = new SingleTimeRangeCfg(2015, 9, 4);
+	PQUERY_SET query_set = new QuerySet();
+
+	ADD_QUERY((*query_set), FinanceSource_StockExchangeAndVolume, 2);
+	ADD_QUERY((*query_set), FinanceSource_StockExchangeAndVolume, 4);
+	ADD_QUERY((*query_set), FinanceSource_StockExchangeAndVolume, 5);
+	query_set->add_query_done();
+	PRESULT_SET result_set = new ResultSet();
+
+	unsigned short ret = query(time_range_cfg, query_set, result_set);
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	ret = result_set->show_data();
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerMgr::test()
+{
+	PTIME_RANGE_CFG time_range_cfg = new TimeRangeCfg(2015, 8, 5, 2015, 11, 11);
+	PQUERY_SET query_set = new QuerySet();
+//	query_set->add_query(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, -1);
+//	query_set->add_query(FinanceSource_FutureTop10DealersAndLegalPersons, 2);
+//	query_set->add_query(FinanceSource_FutureTop10DealersAndLegalPersons, 3);
+	ADD_QUERY((*query_set), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, -1);
+	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 2);
+	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 3);
+	query_set->add_query_done();
+	PRESULT_SET result_set = new ResultSet();
+
+	unsigned short ret = query(time_range_cfg, query_set, result_set);
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	ret = result_set->show_data();
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	return RET_SUCCESS;
+}

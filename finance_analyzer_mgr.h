@@ -18,6 +18,8 @@ public:
 	~FinanceAnalyzerMgr();
 
 	unsigned short query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set)const;
+
+	unsigned short run_daily();
 	unsigned short test();
 };
 

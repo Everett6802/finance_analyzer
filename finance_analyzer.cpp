@@ -13,7 +13,7 @@ int main()
 //	long value = atol(value_str);
 //	printf("value_str: %s, value: %ld\n", value_str, value);
 	unsigned short ret = RET_SUCCESS;
-	ret = finance_analyzer_mgr.test();
+	ret = finance_analyzer_mgr.run_daily();
 	if (CHECK_FAILURE(ret))
 	{
 		fprintf(stderr, "Error occurs, due to: %d, %s\n", ret, get_ret_description(ret));

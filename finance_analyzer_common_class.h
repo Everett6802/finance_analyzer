@@ -26,6 +26,7 @@ public:
 	int get_day()const;
 	const char* to_string()const;
 	bool is_month_type()const;
+	bool equal_to(const TimeCfg* another_time_cfg)const;
 };
 typedef TimeCfg* PTIME_CFG;
 
@@ -33,7 +34,7 @@ typedef TimeCfg* PTIME_CFG;
 
 class TimeRangeCfg
 {
-private:
+protected:
 	PTIME_CFG time_start_cfg;
 	PTIME_CFG time_end_cfg;
 	char* time_range_description;
@@ -43,13 +44,26 @@ public:
 	TimeRangeCfg(const char* time_start_str, const char* time_end_str);
 	TimeRangeCfg(int year_start, int month_start, int year_end, int month_end);
 	TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end);
+
 	~TimeRangeCfg();
 	bool is_month_type()const{return type_is_month;}
+	bool is_single_time()const;
 	const char* to_string();
 	const PTIME_CFG get_start_time();
 	const PTIME_CFG get_end_time();
 };
 typedef TimeRangeCfg* PTIME_RANGE_CFG;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class SingleTimeRangeCfg : public TimeRangeCfg
+{
+public:
+	SingleTimeRangeCfg(const char* time_str); // Single day
+	SingleTimeRangeCfg(int year, int month); // Single month
+	SingleTimeRangeCfg(int year, int month, int day); // Single day
+};
+typedef SingleTimeRangeCfg* PSINGLE_TIME_RANGE_CFG;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -184,7 +198,7 @@ private:
 	std::deque<PFINANCE_LONG_DATA_ARRAY> long_data_set;
 	std::deque<PFINANCE_FLOAT_DATA_ARRAY> float_data_set;
 	bool check_date_data_mode;
-	int date_data_size;
+//	int date_data_size;
 	int date_date_pos;
 	int int_data_set_size;
 	int long_data_set_size;
