@@ -107,12 +107,52 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 
 unsigned short FinanceAnalyzerMgr::run_daily()
 {
-	PSINGLE_TIME_RANGE_CFG time_range_cfg = new SingleTimeRangeCfg(2015, 9, 4);
+	int year = 2015;
+	int month = 9;
+	int day = 4;
+	PSINGLE_TIME_RANGE_CFG time_range_cfg = new SingleTimeRangeCfg(year, month, day);
 	PQUERY_SET query_set = new QuerySet();
-
+/*
+* 臺股指數及成交量
+	成交金額(2), 發行量加權股價指數(4), 漲跌點數(5)
+* 三大法人現貨買賣超
+	自營商(自行買賣)_買賣差額(3), 自營商(避險)_買賣差額(6), 投信_買賣差額(9), 外資及陸資_買賣差額(12)
+* 現貨融資融券餘額
+	融資金額(仟元)_前日餘額(14), 融資金額(仟元)_今日餘額(15)
+* 三大法人期貨和選擇權留倉淨額
+	自營商_多空淨額_契約金額(6), 投信_多空淨額_契約金額(12), 外資_多空淨額_契約金額(18)
+* 三大法人選擇權賣權買權比
+	買賣權未平倉量比率%(6)
+* 三大法人選擇權買賣權留倉淨額
+	買權_自營商_買方_口數(1), 買權_自營商_賣方_口數(3), 買權_外資_買方_口數(13), 買權_外資_賣方_口數(15), 賣權_自營商_買方_口數(19), 賣權_自營商_賣方_口數(21), 賣權_外資_買方_口數(31), 賣權_外資_賣方_口數(33)
+* 十大交易人及特定法人期貨資訊
+	臺股期貨_到期月份_買方_前十大交易人合計_部位數(3), 臺股期貨_到期月份_賣方_前十大交易人合計_部位數(7), 臺股期貨_所有契約_買方_前十大交易人合計_部位數(12), 臺股期貨_所有契約_賣方_前十大交易人合計_部位數(16)
+ */
 	ADD_QUERY((*query_set), FinanceSource_StockExchangeAndVolume, 2);
 	ADD_QUERY((*query_set), FinanceSource_StockExchangeAndVolume, 4);
 	ADD_QUERY((*query_set), FinanceSource_StockExchangeAndVolume, 5);
+	ADD_QUERY((*query_set), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3);
+	ADD_QUERY((*query_set), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6);
+	ADD_QUERY((*query_set), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9);
+	ADD_QUERY((*query_set), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12);
+	ADD_QUERY((*query_set), FinanceSource_StockMarginTradingAndShortSelling, 14);
+	ADD_QUERY((*query_set), FinanceSource_StockMarginTradingAndShortSelling, 15);
+	ADD_QUERY((*query_set), FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6);
+	ADD_QUERY((*query_set), FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12);
+	ADD_QUERY((*query_set), FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18);
+	ADD_QUERY((*query_set), FinanceSource_OptionPutCallRatio, 6);
+	ADD_QUERY((*query_set), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1);
+	ADD_QUERY((*query_set), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3);
+	ADD_QUERY((*query_set), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13);
+	ADD_QUERY((*query_set), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15);
+	ADD_QUERY((*query_set), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19);
+	ADD_QUERY((*query_set), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21);
+	ADD_QUERY((*query_set), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31);
+	ADD_QUERY((*query_set), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33);
+	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 3);
+	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 7);
+	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 12);
+	ADD_QUERY((*query_set), FinanceSource_FutureTop10DealersAndLegalPersons, 16);
 	query_set->add_query_done();
 	PRESULT_SET result_set = new ResultSet();
 
@@ -124,6 +164,70 @@ unsigned short FinanceAnalyzerMgr::run_daily()
 	if (CHECK_FAILURE(ret))
 		return ret;
 
+	char filepath[32];
+	snprintf(filepath, 32, DAILY_FINANCE_FILENAME_FORMAT, year, month, day);
+	ret = write_daily(filepath, result_set);
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerMgr::write_daily(const char* filepath, const PRESULT_SET result_set)const
+{
+	assert(filepath != NULL && "filepath should NOT be NULL");
+	assert(result_set != NULL && "result_set should NOT be NULL");
+// Open the file for writing the daily financial data
+	FILE* fp = fopen(filepath, "w");
+	if (fp == NULL)
+	{
+		WRITE_FORMAT_ERROR("Fail to open file: %s, due to: %s", filepath, strerror(errno));
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+// Write the data into file
+//	fprintf(fp, "日期: %04d-%02d-%02d\n", year, month, day);
+	fprintf(fp, "發行量加權股價指數: %.2f, 漲跌點數: %.2f, 成交金額: %ld\n\n",
+		result_set->get_float_array_element(FinanceSource_StockExchangeAndVolume, 4, 0),
+		result_set->get_float_array_element(FinanceSource_StockExchangeAndVolume, 5, 0),
+		result_set->get_long_array_element(FinanceSource_StockExchangeAndVolume, 2, 0)
+		);
+	fprintf(fp, "三大法人買賣超\n外資: %ld, 投信: %ld, 自營商: %ld\n\n",
+		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 0),
+		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 0),
+		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 0) + result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 0)
+		);
+	fprintf(fp, "融資餘額(仟元): %ld, 變動: %ld\n\n",
+			result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 15, 0),
+			result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 14, 0) - result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 15, 0)
+		);
+	fprintf(fp, "三大法人期權留倉淨額\n外資: %d, 投信: %d, 自營商: %d\n\n",
+		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, 0),
+		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, 0),
+		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, 0)
+		);
+	fprintf(fp, "未平倉Put/Call Ratio: %.2f\n\n",
+		result_set->get_float_array_element(FinanceSource_OptionPutCallRatio, 6, 0)
+		);
+	fprintf(fp, "選擇權買賣權留倉口數\n外資 BuyCall: %d, BuyPut: %d, SellCall: %d, SellPut: %d\n自營商 BuyCall: %d, BuyPut: %d, SellCall: %d, SellPut: %d\n\n",
+		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, 0),
+		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, 0),
+		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, 0),
+		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, 0),
+		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, 0),
+		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, 0),
+		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, 0),
+		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, 0)
+		);
+	fprintf(fp, "十大交易人及特法留倉淨口數 近月: %d, 全月: %d\n\n",
+		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 3, 0) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 7, 0),
+		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 12, 0) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 16, 0)
+		);
+// Close the file
+	if (fp != NULL)
+	{
+		fclose(fp);
+		fp = NULL;
+	}
 	return RET_SUCCESS;
 }
 

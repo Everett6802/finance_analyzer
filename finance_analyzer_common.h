@@ -51,6 +51,8 @@ enum FinanceFieldType
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 
+extern const char* DAILY_FINANCE_FILENAME_FORMAT;
+
 extern const char* MYSQL_TABLE_NAME_BASE;
 extern const char* MYSQL_DATE_FILED_NAME;
 extern const char* MYSQL_FILED_NAME_BASE;

@@ -7,6 +7,8 @@
 
 using namespace std;
 
+const char* DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%2d%2d";
+
 const char* MYSQL_TABLE_NAME_BASE = "year";
 const char* MYSQL_DATE_FILED_NAME = "date";
 const char* MYSQL_FILED_NAME_BASE = "value";
