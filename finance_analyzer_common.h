@@ -52,6 +52,9 @@ enum FinanceFieldType
 // Global Variables
 
 extern const char* DAILY_FINANCE_FILENAME_FORMAT;
+extern const char* CONFIG_FOLDER_NAME;
+extern const char* NO_WORKDAY_CANLENDAR_CONF_FILENAME;
+extern const char* DATABASE_TIME_RANGE_CONF_FILENAME;
 
 extern const char* MYSQL_TABLE_NAME_BASE;
 extern const char* MYSQL_DATE_FILED_NAME;
@@ -97,5 +100,7 @@ extern const unsigned short RET_FAILURE_MYSQL;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions
 const char* get_ret_description(unsigned short ret);
+bool check_file_exist(const char* filepath);
+bool check_config_file_exist(const char* filepath);
 
 #endif

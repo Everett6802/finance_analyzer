@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <string>
 #include <stdexcept>
 #include <new>
@@ -8,6 +10,9 @@
 using namespace std;
 
 const char* DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%2d%2d";
+const char* CONFIG_FOLDER_NAME = "conf";
+const char* NO_WORKDAY_CANLENDAR_CONF_FILENAME = ".non_workday_canlendar.conf";
+const char* DATABASE_TIME_RANGE_CONF_FILENAME = ".database_time_range.conf";
 
 const char* MYSQL_TABLE_NAME_BASE = "year";
 const char* MYSQL_DATE_FILED_NAME = "date";
@@ -296,4 +301,21 @@ const char* get_ret_description(unsigned short ret)
 		return warn_ret_descriptions[ret - RET_WARN_BASE];
 	else
 		return success_ret_description;
+}
+
+bool check_file_exist(const char* filepath)
+{
+	assert(filepath != NULL && "filepath should NOT be NULL");
+	struct stat dummy;
+	return (stat(filepath, &dummy) == 0);
+}
+
+bool check_config_file_exist(const char* config_filename)
+{
+	static const int FILE_PATH_SIZE = 256;
+	static char file_path[FILE_PATH_SIZE];
+	char current_working_directory[FILE_PATH_SIZE];
+	getcwd(current_working_directory, FILE_PATH_SIZE);
+	snprintf(file_path, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, CONFIG_FOLDER_NAME, config_filename);
+	return check_file_exist(file_path);
 }
