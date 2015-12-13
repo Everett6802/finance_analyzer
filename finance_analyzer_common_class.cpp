@@ -11,6 +11,11 @@ DECLARE_MSG_DUMPER_PARAM()
 
 using namespace std;
 
+int TimeCfg::transform_to_value(int year, int month, int day)
+{
+	return ((year & 0xFFFF) << 16) | ((month & 0xFF) << 8) | (day & 0xFF);
+}
+
 TimeCfg::TimeCfg(const char* cur_time_str)
 {
 	static const char *DELIM = "-";
@@ -58,6 +63,7 @@ TimeCfg::TimeCfg(int cur_year, int cur_month)
 {
 	year = cur_year;
 	month = cur_month;
+	day = 0;
 	snprintf(time_str, 16, "%04d-%02d", year, month);
 	time_type = TIME_MONTH;
 }
@@ -89,7 +95,46 @@ bool TimeCfg::equal_to(const TimeCfg* another_time_cfg)const
 	return true;
 }
 
+bool TimeCfg::operator<(const TimeCfg& another_time_cfg)const
+{
+	if (this == &another_time_cfg)
+		return false;
+	return (TimeCfg::transform_to_value(year, month, day) < TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
+}
+
+bool TimeCfg::operator>(const TimeCfg& another_time_cfg)const
+{
+	if (this == &another_time_cfg)
+		return false;
+	return (TimeCfg::transform_to_value(year, month, day) > TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
+}
+
+bool TimeCfg::operator==(const TimeCfg& another_time_cfg)const
+{
+	if (this == &another_time_cfg)
+		return false;
+	return (TimeCfg::transform_to_value(year, month, day) == TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
+}
+
+bool TimeCfg::operator>=(const TimeCfg& another_time_cfg)const {return !(*this < another_time_cfg);}
+bool TimeCfg::operator<=(const TimeCfg& another_time_cfg)const {return !(*this > another_time_cfg);}
+bool TimeCfg::operator!=(const TimeCfg& another_time_cfg)const {return !(*this == another_time_cfg);}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool TimeRangeCfg::time_in_range(const TimeRangeCfg* time_range_cfg, const TimeCfg* time_cfg)
+{
+	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
+	assert(time_range_cfg->get_start_time() != NULL && "start time in time_range_cfg should NOT be NULL");
+	assert(time_range_cfg->get_end_time() != NULL && "end time in time_range_cfg should NOT be NULL");
+	return (*(time_range_cfg->get_start_time()) >= *time_cfg && *(time_range_cfg->get_end_time()) <= *time_cfg);
+}
+
+bool TimeRangeCfg::time_in_range(const TimeRangeCfg* time_range_cfg, int year, int month, int day)
+{
+	TimeCfg *time_cfg = new TimeCfg(year, month, day);
+	return time_in_range(time_range_cfg, time_cfg);
+}
 
 TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str) :
 	time_start_cfg(NULL),
@@ -193,8 +238,8 @@ const char* TimeRangeCfg::to_string()
 	return time_range_description;
 }
 
-const PTIME_CFG TimeRangeCfg::get_start_time(){return time_start_cfg;}
-const PTIME_CFG TimeRangeCfg::get_end_time(){return time_end_cfg;}
+const PTIME_CFG TimeRangeCfg::get_start_time()const{return time_start_cfg;}
+const PTIME_CFG TimeRangeCfg::get_end_time()const{return time_end_cfg;}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

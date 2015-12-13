@@ -1,9 +1,9 @@
 #ifndef FINANCE_ANALYZER_MGR_H
 #define FINANCE_ANALYZER_MGR_H
 
-
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
+
 
 class FinanceAnalyzerSqlReader;
 

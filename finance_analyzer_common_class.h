@@ -10,6 +10,7 @@ class TimeCfg
 {
 	enum TimeType{TIME_MONTH, TIME_DATE};
 private:
+	static int transform_to_value(int year, int month, int day);
 	TimeType time_type;
 	int year;
 	int month;
@@ -27,6 +28,13 @@ public:
 	const char* to_string()const;
 	bool is_month_type()const;
 	bool equal_to(const TimeCfg* another_time_cfg)const;
+
+	bool operator<(const TimeCfg& another_time_cfg)const;
+	bool operator>(const TimeCfg& another_time_cfg)const;
+	bool operator==(const TimeCfg& another_time_cfg)const;
+	bool operator>=(const TimeCfg& another_time_cfg)const;
+	bool operator<=(const TimeCfg& another_time_cfg)const;
+	bool operator!=(const TimeCfg& another_time_cfg)const;
 };
 typedef TimeCfg* PTIME_CFG;
 
@@ -41,6 +49,9 @@ protected:
 	bool type_is_month;
 
 public:
+	static bool time_in_range(const TimeRangeCfg* time_range_cfg, const TimeCfg* time_cfg);
+	static bool time_in_range(const TimeRangeCfg* time_range_cfg, int year, int month, int day);
+
 	TimeRangeCfg(const char* time_start_str, const char* time_end_str);
 	TimeRangeCfg(int year_start, int month_start, int year_end, int month_end);
 	TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end);
@@ -49,8 +60,8 @@ public:
 	bool is_month_type()const{return type_is_month;}
 	bool is_single_time()const;
 	const char* to_string();
-	const PTIME_CFG get_start_time();
-	const PTIME_CFG get_end_time();
+	const PTIME_CFG get_start_time()const;
+	const PTIME_CFG get_end_time()const;
 };
 typedef TimeRangeCfg* PTIME_RANGE_CFG;
 

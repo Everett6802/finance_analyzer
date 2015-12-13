@@ -3,6 +3,7 @@
 #include <string>
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_sql_reader.h"
+#include "finance_analyzer_workday_canlendar.h"
 
 
 using namespace std;
@@ -107,6 +108,8 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 
 unsigned short FinanceAnalyzerMgr::run_daily()
 {
+	static PFINANCE_ANALYZER_WORKDAY_CANLENDAR workday_canlendar = FinanceAnalyzerWorkdayCanlendar::get_instance();
+
 	int year = 2015;
 	int month = 9;
 	int day = 4;
