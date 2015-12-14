@@ -99,6 +99,7 @@ bool TimeCfg::operator<(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
 		return false;
+//	fprintf(stderr, "< %d, %d, %s\n", TimeCfg::transform_to_value(year, month, day), TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::transform_to_value(year, month, day) < TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
 	return (TimeCfg::transform_to_value(year, month, day) < TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
 }
 
@@ -106,6 +107,7 @@ bool TimeCfg::operator>(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
 		return false;
+//	fprintf(stderr, "> %d, %d, %s\n", TimeCfg::transform_to_value(year, month, day), TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::transform_to_value(year, month, day) > TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
 	return (TimeCfg::transform_to_value(year, month, day) > TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
 }
 
@@ -113,6 +115,7 @@ bool TimeCfg::operator==(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
 		return false;
+//	fprintf(stderr, "== %d, %d, %s\n", TimeCfg::transform_to_value(year, month, day), TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::transform_to_value(year, month, day) < TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
 	return (TimeCfg::transform_to_value(year, month, day) == TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
 }
 
@@ -127,7 +130,8 @@ bool TimeRangeCfg::time_in_range(const TimeRangeCfg* time_range_cfg, const TimeC
 	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
 	assert(time_range_cfg->get_start_time() != NULL && "start time in time_range_cfg should NOT be NULL");
 	assert(time_range_cfg->get_end_time() != NULL && "end time in time_range_cfg should NOT be NULL");
-	return (*(time_range_cfg->get_start_time()) >= *time_cfg && *(time_range_cfg->get_end_time()) <= *time_cfg);
+	assert(time_cfg != NULL && "time_cfg should NOT be NULL");
+	return (*time_cfg >= *(time_range_cfg->get_start_time()) && *time_cfg <= *(time_range_cfg->get_end_time()));
 }
 
 bool TimeRangeCfg::time_in_range(const TimeRangeCfg* time_range_cfg, int year, int month, int day)
@@ -223,7 +227,7 @@ bool TimeRangeCfg::is_single_time()const
 
 const char* TimeRangeCfg::to_string()
 {
-	if (time_range_description != NULL)
+	if (time_range_description == NULL)
 	{
 		time_range_description = new char[32];
 		if (time_range_description == NULL)

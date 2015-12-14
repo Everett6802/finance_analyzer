@@ -42,8 +42,8 @@ public:
 	int add_ref();
 	int release();
 
-	bool check_out_of_range(int year, int month, int day)const;
-	bool check_out_of_range(const PTIME_CFG time_cfg)const;
+	bool check_in_range(int year, int month, int day)const;
+	bool check_in_range(const PTIME_CFG time_cfg)const;
 	bool is_workday(int year, int month, int day);
 	bool is_workday(const PTIME_CFG time_cfg);
 

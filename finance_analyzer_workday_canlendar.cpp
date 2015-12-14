@@ -180,19 +180,19 @@ int FinanceAnalyzerWorkdayCanlendar::release()
 	return ref_cnt;
 }
 
-bool FinanceAnalyzerWorkdayCanlendar::check_out_of_range(int year, int month, int day)const
+bool FinanceAnalyzerWorkdayCanlendar::check_in_range(int year, int month, int day)const
 {
 	return TimeRangeCfg::time_in_range(time_range_cfg, year, month, day);
 }
 
-bool FinanceAnalyzerWorkdayCanlendar::check_out_of_range(const PTIME_CFG time_cfg)const
+bool FinanceAnalyzerWorkdayCanlendar::check_in_range(const PTIME_CFG time_cfg)const
 {
 	return TimeRangeCfg::time_in_range(time_range_cfg, time_cfg);
 }
 
 bool FinanceAnalyzerWorkdayCanlendar::is_workday(int year, int month, int day)
 {
-	if (check_out_of_range(year, month, day))
+	if (!check_in_range(year, month, day))
 	{
 		char errmsg[256];
 		snprintf(errmsg, 256, "The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, time_range_cfg->to_string());

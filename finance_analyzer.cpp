@@ -12,10 +12,15 @@ static FinanceAnalyzerMgr finance_analyzer_mgr;
 #include <queue>
 #include <map>
 #include <string>
+#include "finance_analyzer_workday_canlendar.h"
 using namespace std;
 
 int main()
 {
+	static PFINANCE_ANALYZER_WORKDAY_CANLENDAR workday_canlendar = FinanceAnalyzerWorkdayCanlendar::get_instance();
+	printf("%s\n", (workday_canlendar->is_workday(1999, 9, 4) ? "True" : "False"));
+	printf("%s\n", (workday_canlendar->is_workday(2015, 9, 5) ? "True" : "False"));
+
 //	typedef list<int> DAY_LIST;
 //	typedef DAY_LIST* PDAY_LIST;
 //	typedef map<int, PDAY_LIST> YEAR_MAP;
