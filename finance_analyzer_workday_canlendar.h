@@ -2,6 +2,7 @@
 #define FINANCE_ANALYZER_WORKDAY_CANLENDAR_H
 
 #include <pthread.h>
+#include <deque>
 #include <list>
 #include <map>
 #include <string>
@@ -17,10 +18,10 @@ class FinanceAnalyzerWorkdayCanlendar
 //	friend class const_iterator;
 	DECLARE_MSG_DUMPER()
 
-	typedef std::list<int> DAY_LIST;
-	typedef DAY_LIST YEAR_LIST;
-	typedef DAY_LIST* PDAY_LIST;
-	typedef std::map<int, PDAY_LIST> YEAR_MAP;
+	typedef std::deque<int> DAY_DEQUE;
+	typedef std::list<int> YEAR_LIST;
+	typedef DAY_DEQUE* PDAY_DEQUE;
+	typedef std::map<int, PDAY_DEQUE> YEAR_MAP;
 	typedef YEAR_MAP* PYEAR_MAP;
 
 private:
@@ -29,6 +30,7 @@ private:
 	PTIME_RANGE_CFG time_range_cfg;
 	YEAR_MAP non_workday_map;
 	YEAR_LIST non_workday_year_sort_list;
+//	int* workday_value_array;
 
 	FinanceAnalyzerWorkdayCanlendar();
 	FinanceAnalyzerWorkdayCanlendar(const FinanceAnalyzerWorkdayCanlendar&);
@@ -36,21 +38,30 @@ private:
 	~FinanceAnalyzerWorkdayCanlendar();
 
 	unsigned short initialize();
+	bool check_in_range(int year, int month, int day)const;
+	bool check_in_range(const PTIME_CFG time_cfg)const;
+	unsigned short find_data_pos(int year, int month, int day, int& year_key, int& month_index, int& day_index);
 
 public:
 	static FinanceAnalyzerWorkdayCanlendar* get_instance();
 	int add_ref();
 	int release();
 
-	bool check_in_range(int year, int month, int day)const;
-	bool check_in_range(const PTIME_CFG time_cfg)const;
 	bool is_workday(int year, int month, int day);
 	bool is_workday(const PTIME_CFG time_cfg);
+
+//	unsigned short get_prev_workday(int year, int month, int day, int& prev_year, int& prev_month, int& prev_day);
+//	unsigned short get_prev_workday(const PTIME_CFG time_cfg, PTIME_CFG* prev_time_cfg);
+//	unsigned short get_next_workday(int year, int month, int day, int& prev_year, int& prev_month, int& prev_day);
+//	unsigned short get_next_workday(const PTIME_CFG time_cfg, PTIME_CFG* prev_time_cfg);
 
 //	class const_iterator
 //	{
 //	private:
 //		PYEAR_MAP ptr_;
+//		int year_key;
+//		int month_index;
+//		int day_index;
 //
 //		void get_next()const
 //		{

@@ -17,8 +17,15 @@ using namespace std;
 
 int main()
 {
+//	int* array = new int[100000];
+//	printf("%d\n", sizeof(int*));
+//	if (array == NULL)
+//	{
+//		fprintf(stderr, "error occurs\n");
+//	}
+//	return 0;
 	static PFINANCE_ANALYZER_WORKDAY_CANLENDAR workday_canlendar = FinanceAnalyzerWorkdayCanlendar::get_instance();
-	printf("%s\n", (workday_canlendar->is_workday(1999, 9, 4) ? "True" : "False"));
+	printf("%s\n", (workday_canlendar->is_workday(2015, 9, 4) ? "True" : "False"));
 	printf("%s\n", (workday_canlendar->is_workday(2015, 9, 5) ? "True" : "False"));
 
 //	typedef list<int> DAY_LIST;
