@@ -39,20 +39,22 @@ FinanceAnalyzerWorkdayCanlendar* FinanceAnalyzerWorkdayCanlendar::get_instance()
 
 FinanceAnalyzerWorkdayCanlendar::FinanceAnalyzerWorkdayCanlendar() :
 	ref_cnt(0),
-	time_range_cfg(NULL)
+	time_range_cfg(NULL),
+	map_start_time_cfg(NULL),
+	map_end_time_cfg(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 }
 
 FinanceAnalyzerWorkdayCanlendar::~FinanceAnalyzerWorkdayCanlendar()
 {
-	YEAR_MAP::iterator iter = non_workday_map.begin();
-	while(iter != non_workday_map.end())
+	YEAR_MAP::iterator iter = workday_map.begin();
+	while(iter != workday_map.end())
 	{
 		PDAY_DEQUE day_deque_ptr = (PDAY_DEQUE)iter->second;
 		delete day_deque_ptr;
 	}
-	non_workday_map.clear();
+	workday_map.clear();
 
 	RELEASE_MSG_DUMPER()
 }
@@ -63,40 +65,63 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::initialize()
 	static char file_path[FILE_PATH_SIZE];
 	char current_working_directory[FILE_PATH_SIZE];
 	getcwd(current_working_directory, FILE_PATH_SIZE);
-	snprintf(file_path, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, CONFIG_FOLDER_NAME, NO_WORKDAY_CANLENDAR_CONF_FILENAME);
+	snprintf(file_path, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, CONFIG_FOLDER_NAME, WORKDAY_CANLENDAR_CONF_FILENAME);
 
 // First check if the config file exists
 	if (!check_file_exist(file_path))
 	{
 		char errmsg[256];
-		snprintf(errmsg, 256, "The %s config file does NOT exist", NO_WORKDAY_CANLENDAR_CONF_FILENAME);
+		snprintf(errmsg, 256, "The %s config file does NOT exist", WORKDAY_CANLENDAR_CONF_FILENAME);
 		WRITE_ERROR(errmsg);
 		fprintf(stderr, "%s\n", errmsg);
 		return RET_FAILURE_NOT_FOUND;
 	}
 
-	static const int BUF_SIZE = 512;
-	char buf[BUF_SIZE];
-	WRITE_FORMAT_DEBUG("Parse the config file: %s", NO_WORKDAY_CANLENDAR_CONF_FILENAME);
+	unsigned int BUF_SIZE = 1024;
+	char* buf = (char*)malloc(BUF_SIZE * sizeof(char));
+	if (buf == NULL)
+	{
+		WRITE_ERROR("Fail to allocate memoery: buf");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+
+	unsigned short ret = RET_SUCCESS;
+	WRITE_FORMAT_DEBUG("Parse the config file: %s", WORKDAY_CANLENDAR_CONF_FILENAME);
 	FILE* fp = fopen(file_path, "r");
 	if (fp == NULL)
 	{
-		WRITE_FORMAT_ERROR("Fail to open the config file: %s, due to: %s", NO_WORKDAY_CANLENDAR_CONF_FILENAME, strerror(errno));
-		return RET_FAILURE_SYSTEM_API;
+		WRITE_FORMAT_ERROR("Fail to open the config file: %s, due to: %s", WORKDAY_CANLENDAR_CONF_FILENAME, strerror(errno));
+		ret = RET_FAILURE_SYSTEM_API;
+		goto OUT;
 	}
 	while (fgets(buf, BUF_SIZE, fp) != NULL)
 	{
+// Check if the buffer size is enough
+		if (strlen(buf) == BUF_SIZE - 1 && buf[BUF_SIZE - 1] == '\0')
+		{
+			do
+			{
+				int BUF_SIZE_OLD = BUF_SIZE;
+				char* buf_old = buf;
+				BUF_SIZE <<= 1;
+				buf = (char*)realloc(buf_old, sizeof(char) * BUF_SIZE);
+				fgets(&buf[BUF_SIZE_OLD - 1], BUF_SIZE - BUF_SIZE_OLD, fp);
+//				fprintf(stderr, "buf size: %d, last char: %d\n", strlen(buf), buf[strlen(buf)]);
+//				fprintf(stderr, "buf: %s\n", buf);
+			}while(strlen(buf) == BUF_SIZE - 1 && buf[BUF_SIZE - 1] == '\0');
+		}
 		if (time_range_cfg == NULL)
 		{
 			char start_time_str[16];
 			char end_time_str[16];
 			sscanf(buf, "%s %s", start_time_str, end_time_str);
 			time_range_cfg = new TimeRangeCfg(start_time_str, end_time_str);
-			WRITE_FORMAT_DEBUG("Find the time range [%s %s] in %s", start_time_str, end_time_str, NO_WORKDAY_CANLENDAR_CONF_FILENAME);
+			WRITE_FORMAT_DEBUG("Find the time range [%s %s] in %s", start_time_str, end_time_str, WORKDAY_CANLENDAR_CONF_FILENAME);
 			if (time_range_cfg == NULL)
 			{
 				WRITE_ERROR("Fail to allocate the memory: time_range_cfg");
-				return RET_FAILURE_INSUFFICIENT_MEMORY;
+				ret = RET_FAILURE_INSUFFICIENT_MEMORY;
+				goto OUT1;
 			}
 		}
 		else
@@ -107,60 +132,69 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::initialize()
 			if (day_deque_ptr == NULL)
 			{
 				WRITE_ERROR("Fail to allocate memory: day_list_ptr");
-				return RET_FAILURE_INSUFFICIENT_MEMORY;
+				ret = RET_FAILURE_INSUFFICIENT_MEMORY;
+				goto OUT1;
 			}
-			non_workday_year_sort_list.push_back(year);
+			workday_year_sort_list.push_back(year);
 
 			strtok(buf, "]");
-			char* year_no_workday_list_str = strtok(NULL, "]");
-			char* month_no_workday_list_str =  strtok(year_no_workday_list_str, ";");
-			list<char*> month_no_workday_list;
-			while (month_no_workday_list_str != NULL)
+			char* year_workday_list_str = strtok(NULL, "]");
+			char* month_workday_list_str =  strtok(year_workday_list_str, ";");
+			list<char*> month_workday_list;
+			while (month_workday_list_str != NULL)
 			{
 				int month;
 				char month_tmp[4];
-				sscanf(month_no_workday_list_str, "%d:", &month);
+				sscanf(month_workday_list_str, "%d:", &month);
 				snprintf(month_tmp, 4, "%d:", month);
 				int month_tmp_len = strlen(month_tmp);
-				char* month_no_workday_list_str_tmp = new char[strlen(month_no_workday_list_str) - month_tmp_len + 1];
-				if (month_no_workday_list_str_tmp == NULL)
+				char* month_workday_list_str_tmp = new char[strlen(month_workday_list_str) - month_tmp_len + 1];
+				if (month_workday_list_str_tmp == NULL)
 				{
-					WRITE_ERROR("Fail to allocate memory: month_no_workday_list_str_tmp");
-					return RET_FAILURE_INSUFFICIENT_MEMORY;
+					WRITE_ERROR("Fail to allocate memory: month_workday_list_str_tmp");
+					ret = RET_FAILURE_INSUFFICIENT_MEMORY;
+					goto OUT1;
 				}
-				strcpy(month_no_workday_list_str_tmp, &month_no_workday_list_str[month_tmp_len]);
-				month_no_workday_list.push_back(month_no_workday_list_str_tmp);
-				if (month != (int)month_no_workday_list.size())
+				strcpy(month_workday_list_str_tmp, &month_workday_list_str[month_tmp_len]);
+				month_workday_list.push_back(month_workday_list_str_tmp);
+				if (month != (int)month_workday_list.size())
 				{
-					WRITE_FORMAT_ERROR("Incorrect month, expected: %d, actual: %d", month, (int)month_no_workday_list.size());
-					return RET_FAILURE_INCORRECT_CONFIG;
+					WRITE_FORMAT_ERROR("Incorrect month, expected: %d, actual: %d", month, (int)month_workday_list.size());
+					ret = RET_FAILURE_INCORRECT_CONFIG;
+					goto OUT1;
 				}
-				month_no_workday_list_str =  strtok(NULL, ";");
+				month_workday_list_str =  strtok(NULL, ";");
 			}
-			list<char*>::iterator iter = month_no_workday_list.begin();
+			list<char*>::iterator iter = month_workday_list.begin();
 			int month_count = 0;
-			while (iter != month_no_workday_list.end())
+			while (iter != month_workday_list.end())
 			{
-				char* month_no_workday_list_str = (char*)*iter;
-				char* day_no_workday_str =  strtok(month_no_workday_list_str, ",");
-				while (day_no_workday_str != NULL)
+				char* month_workday_list_str = (char*)*iter;
+				char* day_workday_str =  strtok(month_workday_list_str, ",");
+				while (day_workday_str != NULL)
 				{
-					day_deque_ptr[month_count].push_back(atoi(day_no_workday_str));
-					day_no_workday_str = strtok(NULL, ",");
+					day_deque_ptr[month_count].push_back(atoi(day_workday_str));
+					day_workday_str = strtok(NULL, ",");
 				}
-				delete month_no_workday_list_str;
+				delete month_workday_list_str;
 				iter++;
 				month_count++;
 			}
-			non_workday_map[year] = day_deque_ptr;
-			month_no_workday_list.clear();
+			workday_map[year] = day_deque_ptr;
+			month_workday_list.clear();
 		}
 	}
+OUT1:
 	fclose(fp);
 	fp = NULL;
-
-	non_workday_year_sort_list.sort();
-	return RET_SUCCESS;
+OUT:
+	if (buf != NULL)
+	{
+		free(buf);
+		buf = NULL;
+	}
+	workday_year_sort_list.sort();
+	return ret;
 }
 
 int FinanceAnalyzerWorkdayCanlendar::add_ref()
@@ -180,8 +214,28 @@ int FinanceAnalyzerWorkdayCanlendar::release()
 	return ref_cnt;
 }
 
-unsigned short FinanceAnalyzerWorkdayCanlendar::find_data_pos(int year, int month, int day, int& year_key, int& month_index, int& day_index)
+unsigned short FinanceAnalyzerWorkdayCanlendar::find_data_pos(int year, int month, int day, int& year_key, int& month_index, int& day_index, TRAVERSE_SEARCH_TYPE traverse_search_type)
 {
+// Check boundary first
+//	if (traverse_search_type == TRAVERSE_SEARCH_PREV)
+//	{
+//		if (!check_greater_than_start(year, month, day))
+//		{
+//			WRITE_FORMAT_ERROR("The date [%04d-%02d-%02d] is NOT greater than the start time [%s]", year, month, day, time_range_cfg->get_start_time()->to_string());
+//			return RET_FAILURE_INVALID_ARGUMENT;
+//		}
+//	}
+//	else if (traverse_search_type == TRAVERSE_SEARCH_NEXT)
+//	{
+//		if (!check_less_than_end(year, month, day))
+//		{
+//			WRITE_FORMAT_ERROR("The date [%04d-%02d-%02d] is NOT less than the end time [%s]", year, month, day, time_range_cfg->get_end_time()->to_string());
+//			return RET_FAILURE_INVALID_ARGUMENT;
+//		}
+//	}
+//	else
+//	{
+//	}
 	if (!check_in_range(year, month, day))
 	{
 //		char errmsg[256];
@@ -189,13 +243,114 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::find_data_pos(int year, int mont
 		WRITE_FORMAT_ERROR("The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, time_range_cfg->to_string());
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	YEAR_MAP::iterator iter = non_workday_map.find(year);
-	if (iter != non_workday_map.end())
+
+	YEAR_MAP::iterator iter = workday_map.find(year);
+	if (iter == workday_map.end())
 	{
-//		PDAY_LIST no_workday_month_array = non_workday_map[year];
-//		PDAY_LIST no_workday_list = &no_workday_month_array[month - 1];
-		PDAY_DEQUE day_deque = &non_workday_map[year][month - 1];
-		int day_deque_size = (int)day_deque->size();
+		WRITE_FORMAT_ERROR("Incorrect year: %04d", year);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+//	PDAY_LIST workday_month_array = workday_map[year];
+//	PDAY_LIST workday_list = &workday_month_array[month - 1];
+	PDAY_DEQUE day_deque = &workday_map[year][month - 1];
+	int day_deque_size = (int)day_deque->size();
+// Find the closest previous workday
+	bool found = false;
+	if (traverse_search_type == TRAVERSE_SEARCH_PREV)
+	{
+		for (int i = day_deque_size - 1 ; i >= 0 ; i--)
+		{
+			if (day >= (*day_deque)[i])
+			{
+				year_key = year;
+				month_index = month - 1;
+				day_index = i;
+				found = true;
+				break;
+			}
+		}
+// Find the last day of last month
+		if (!found)
+		{
+			if (month == 1)
+			{
+				year--;
+				month = 12;
+			}
+			else
+				month--;
+			if (workday_map.find(year) != workday_map.end())
+			{
+				WRITE_FORMAT_ERROR("The year [%04d] does NOT exist", year);
+				return RET_FAILURE_NOT_FOUND;
+			}
+			PDAY_DEQUE day_deque_prev_month = &workday_map[year][month - 1];
+			int day_deque_size = (int)day_deque_prev_month->size();
+			if (day_deque_size == 0)
+			{
+				WRITE_FORMAT_ERROR("The day list in [%04d-%02d] should NOT be Empty", year, month);
+				return RET_FAILURE_NOT_FOUND;
+			}
+			year_key = year;
+			month_index = month - 1;
+			day_index = day_deque_size - 1;
+			found = true;
+		}
+		if (!found)
+		{
+			WRITE_FORMAT_ERROR("Fails to find the closest previous workday from [%04d-%02d-%02d]", year, month, day);
+			return RET_FAILURE_NOT_FOUND;
+		}
+	}
+// Find the closest next workday
+	else if (traverse_search_type == TRAVERSE_SEARCH_NEXT)
+	{
+		for (int i = 0 ; i < day_deque_size ; i++)
+		{
+			if (day <= (*day_deque)[i])
+			{
+				year_key = year;
+				month_index = month - 1;
+				day_index = i;
+				found = true;
+				break;
+			}
+		}
+// Find the first day of next month
+		if (!found)
+		{
+			if (month == 12)
+			{
+				year++;
+				month = 1;
+			}
+			else
+				month++;
+			if (workday_map.find(year) != workday_map.end())
+			{
+				WRITE_FORMAT_ERROR("The year [%04d] does NOT exist", year);
+				return RET_FAILURE_NOT_FOUND;
+			}
+			PDAY_DEQUE day_deque_next_month = &workday_map[year][month - 1];
+			int day_deque_size = (int)day_deque_next_month->size();
+			if (day_deque_size == 0)
+			{
+				WRITE_FORMAT_ERROR("The day list in [%04d-%02d] should NOT be Empty", year, month);
+				return RET_FAILURE_NOT_FOUND;
+			}
+			year_key = year;
+			month_index = month - 1;
+			day_index = 0;
+			found = true;
+		}
+		if (!found)
+		{
+			WRITE_FORMAT_ERROR("Fails to find the closest next workday from [%04d-%02d-%02d]", year, month, day);
+			return RET_FAILURE_NOT_FOUND;
+		}
+	}
+	else
+	{
 		for (int i = 0 ; i < day_deque_size ; i++)
 		{
 			if (day == (*day_deque)[i])
@@ -203,14 +358,18 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::find_data_pos(int year, int mont
 				year_key = year;
 				month_index = month - 1;
 				day_index = i;
-				return RET_SUCCESS;
+				found = true;
 			}
 		}
 //		if (find(day_deque->begin(), day_deque->end(), day) != day_deque->end())
 //			return false;
+		if (!found)
+		{
+			WRITE_FORMAT_WARN("The date [%04d-%02d-%02d] is NOT FOUND", year, month, day);
+			return RET_FAILURE_NOT_FOUND;
+		}
 	}
-	WRITE_FORMAT_WARN("The date [%04d-%02d-%02d] is NOT FOUND", year, month, day);
-	return RET_FAILURE_NOT_FOUND;
+	return RET_SUCCESS;
 }
 
 bool FinanceAnalyzerWorkdayCanlendar::check_in_range(int year, int month, int day)const
@@ -221,6 +380,42 @@ bool FinanceAnalyzerWorkdayCanlendar::check_in_range(int year, int month, int da
 bool FinanceAnalyzerWorkdayCanlendar::check_in_range(const PTIME_CFG time_cfg)const
 {
 	return TimeRangeCfg::time_in_range(time_range_cfg, time_cfg);
+}
+
+bool FinanceAnalyzerWorkdayCanlendar::check_greater_than_start(int year, int month, int day)const
+{
+	PTIME_CFG time_cfg = new TimeCfg(year, month, day);
+	return check_greater_than_start(time_cfg);
+}
+
+bool FinanceAnalyzerWorkdayCanlendar::check_greater_than_start(const PTIME_CFG time_cfg)const
+{
+	if (time_cfg == NULL)
+	{
+		char errmsg[64];
+		snprintf(errmsg, 64, "time_cfg should NOT be NULL");
+		throw invalid_argument(errmsg);
+	}
+
+	return (*time_cfg >= *time_range_cfg->get_start_time());
+}
+
+bool FinanceAnalyzerWorkdayCanlendar::check_less_than_end(int year, int month, int day)const
+{
+	PTIME_CFG time_cfg = new TimeCfg(year, month, day);
+	return check_less_than_end(time_cfg);
+}
+
+bool FinanceAnalyzerWorkdayCanlendar::check_less_than_end(const PTIME_CFG time_cfg)const
+{
+	if (time_cfg == NULL)
+	{
+		char errmsg[64];
+		snprintf(errmsg, 64, "time_cfg should NOT be NULL");
+		throw invalid_argument(errmsg);
+	}
+
+	return (*time_cfg <= *time_range_cfg->get_end_time());
 }
 
 bool FinanceAnalyzerWorkdayCanlendar::is_workday(int year, int month, int day)

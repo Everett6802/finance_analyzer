@@ -11,7 +11,7 @@ using namespace std;
 
 const char* DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%2d%2d";
 const char* CONFIG_FOLDER_NAME = "conf";
-const char* NO_WORKDAY_CANLENDAR_CONF_FILENAME = ".non_workday_canlendar.conf";
+const char* WORKDAY_CANLENDAR_CONF_FILENAME = ".workday_canlendar.conf";
 const char* DATABASE_TIME_RANGE_CONF_FILENAME = ".database_time_range.conf";
 
 const char* MYSQL_TABLE_NAME_BASE = "year";

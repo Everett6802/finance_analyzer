@@ -18,6 +18,8 @@ class FinanceAnalyzerWorkdayCanlendar
 //	friend class const_iterator;
 	DECLARE_MSG_DUMPER()
 
+	enum TRAVERSE_SEARCH_TYPE{TRAVERSE_SEARCH_EQUAL, TRAVERSE_SEARCH_PREV, TRAVERSE_SEARCH_NEXT};
+
 	typedef std::deque<int> DAY_DEQUE;
 	typedef std::list<int> YEAR_LIST;
 	typedef DAY_DEQUE* PDAY_DEQUE;
@@ -28,8 +30,10 @@ private:
 	static FinanceAnalyzerWorkdayCanlendar* instance;
 	volatile int ref_cnt;
 	PTIME_RANGE_CFG time_range_cfg;
-	YEAR_MAP non_workday_map;
-	YEAR_LIST non_workday_year_sort_list;
+	PTIME_CFG map_start_time_cfg;
+	PTIME_CFG map_end_time_cfg;
+	YEAR_MAP workday_map;
+	YEAR_LIST workday_year_sort_list;
 //	int* workday_value_array;
 
 	FinanceAnalyzerWorkdayCanlendar();
@@ -40,7 +44,12 @@ private:
 	unsigned short initialize();
 	bool check_in_range(int year, int month, int day)const;
 	bool check_in_range(const PTIME_CFG time_cfg)const;
-	unsigned short find_data_pos(int year, int month, int day, int& year_key, int& month_index, int& day_index);
+	bool check_greater_than_start(int year, int month, int day)const;
+	bool check_greater_than_start(const PTIME_CFG time_cfg)const;
+	bool check_less_than_end(int year, int month, int day)const;
+	bool check_less_than_end(const PTIME_CFG time_cfg)const;
+
+	unsigned short find_data_pos(int year, int month, int day, int& year_key, int& month_index, int& day_index, TRAVERSE_SEARCH_TYPE traverse_search_type=TRAVERSE_SEARCH_EQUAL);
 
 public:
 	static FinanceAnalyzerWorkdayCanlendar* get_instance();
@@ -84,7 +93,7 @@ public:
 //	};
 //	const_iterator begin() const
 //	{
-//		return const_iterator(non_workday_map);
+//		return const_iterator(workday_map);
 //	}
 //	const_iterator end() const
 //	{

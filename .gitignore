@@ -8,5 +8,5 @@ msg_dumper_wrapper.h
 msg_dumper_wrapper.cpp
 finance_analyzer_common(deprecated).cpp
 .database_time_range.conf
-.non_workday_canlendar.conf
+.workday_canlendar.conf
 

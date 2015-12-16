@@ -53,7 +53,7 @@ enum FinanceFieldType
 
 extern const char* DAILY_FINANCE_FILENAME_FORMAT;
 extern const char* CONFIG_FOLDER_NAME;
-extern const char* NO_WORKDAY_CANLENDAR_CONF_FILENAME;
+extern const char* WORKDAY_CANLENDAR_CONF_FILENAME;
 extern const char* DATABASE_TIME_RANGE_CONF_FILENAME;
 
 extern const char* MYSQL_TABLE_NAME_BASE;
