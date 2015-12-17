@@ -11,7 +11,6 @@ class TimeCfg
 	DECLARE_MSG_DUMPER()
 	enum TimeType{TIME_MONTH, TIME_DATE};
 private:
-	static int transform_to_value(int year, int month, int day);
 	TimeType time_type;
 	int year;
 	int month;
@@ -19,10 +18,14 @@ private:
 	char time_str[16];
 
 public:
+	static int get_int_value(int year, int month, int day);
+	static int get_int_value(const TimeCfg* time_cfg);
+
 	TimeCfg(const char* cur_time_str); // Format: "2015-09" or "2015-09-04"
 	TimeCfg(int cur_year, int cur_month);
 	TimeCfg(int cur_year, int cur_month, int cur_day);
 	~TimeCfg();
+	TimeCfg& operator=(const TimeCfg& another);
 
 	int get_year()const;
 	int get_month()const;

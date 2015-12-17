@@ -13,6 +13,7 @@ static FinanceAnalyzerMgr finance_analyzer_mgr;
 #include <map>
 #include <string>
 #include "finance_analyzer_workday_canlendar.h"
+#include "finance_analyzer_database_time_range.h"
 using namespace std;
 
 int main()
@@ -34,11 +35,13 @@ int main()
 //	printf("%04d-%02d-%02d\n", year, month, day);
 //	workday_canlendar->get_prev_workday(2015, 1, 1, year, month, day);
 //	printf("%04d-%02d-%02d\n", year, month, day);
-	PTIME_CFG time_cfg = NULL;
-	workday_canlendar->get_next_workday(new TimeCfg(2015, 5, 30), &time_cfg);
-	printf("%04d-%02d-%02d\n", time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
+//	PTIME_CFG time_cfg = NULL;
+//	workday_canlendar->get_next_workday(new TimeCfg(2015, 5, 30), &time_cfg);
+//	printf("%04d-%02d-%02d\n", time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
 //	workday_canlendar->get_next_workday(new TimeCfg(2015, 12, 31), &time_cfg);
 //	printf("%04d-%02d-%02d\n", time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
+
+	DECLARE_DATABASE_TIME_RANGE()
 
 //	typedef list<int> DAY_LIST;
 //	typedef DAY_LIST* PDAY_LIST;

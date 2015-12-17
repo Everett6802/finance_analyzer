@@ -11,9 +11,15 @@ DECLARE_MSG_DUMPER_PARAM()
 
 using namespace std;
 
-int TimeCfg::transform_to_value(int year, int month, int day)
+int TimeCfg::get_int_value(int year, int month, int day)
 {
 	return ((year & 0xFFFF) << 16) | ((month & 0xFF) << 8) | (day & 0xFF);
+}
+
+int TimeCfg::get_int_value(const TimeCfg* time_cfg)
+{
+	assert(time_cfg != NULL && "time_cfg should NOT be NULL");
+	return get_int_value(time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
 }
 
 TimeCfg::TimeCfg(const char* cur_time_str)
@@ -85,6 +91,24 @@ TimeCfg::~TimeCfg()
 	RELEASE_MSG_DUMPER()
 }
 
+TimeCfg& TimeCfg::operator=(const TimeCfg& another)
+{
+	IMPLEMENT_MSG_DUMPER()
+
+	if (this == &another)
+		return *this;
+
+	year = another.year;
+	month = another.month;
+	day = another.day;
+	time_type = another.time_type;
+	if (time_type == TIME_MONTH)
+		snprintf(time_str, 16, "%04d-%02d", year, month);
+	else
+		snprintf(time_str, 16, "%04d-%02d-%02d", year, month, day);
+	return *this;
+}
+
 int TimeCfg::get_year()const{return year;}
 int TimeCfg::get_month()const{return month;}
 int TimeCfg::get_day()const{return day;}
@@ -107,24 +131,24 @@ bool TimeCfg::operator<(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
 		return false;
-//	fprintf(stderr, "< %d, %d, %s\n", TimeCfg::transform_to_value(year, month, day), TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::transform_to_value(year, month, day) < TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
-	return (TimeCfg::transform_to_value(year, month, day) < TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
+//	fprintf(stderr, "< %d, %d, %s\n", TimeCfg::get_int_value(year, month, day), TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::get_int_value(year, month, day) < TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
+	return (TimeCfg::get_int_value(year, month, day) < TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
 }
 
 bool TimeCfg::operator>(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
 		return false;
-//	fprintf(stderr, "> %d, %d, %s\n", TimeCfg::transform_to_value(year, month, day), TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::transform_to_value(year, month, day) > TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
-	return (TimeCfg::transform_to_value(year, month, day) > TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
+//	fprintf(stderr, "> %d, %d, %s\n", TimeCfg::get_int_value(year, month, day), TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::get_int_value(year, month, day) > TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
+	return (TimeCfg::get_int_value(year, month, day) > TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
 }
 
 bool TimeCfg::operator==(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
 		return false;
-//	fprintf(stderr, "== %d, %d, %s\n", TimeCfg::transform_to_value(year, month, day), TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::transform_to_value(year, month, day) < TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
-	return (TimeCfg::transform_to_value(year, month, day) == TimeCfg::transform_to_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
+//	fprintf(stderr, "== %d, %d, %s\n", TimeCfg::get_int_value(year, month, day), TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::get_int_value(year, month, day) < TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
+	return (TimeCfg::get_int_value(year, month, day) == TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
 }
 
 bool TimeCfg::operator>=(const TimeCfg& another_time_cfg)const {return !(*this < another_time_cfg);}
