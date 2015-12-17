@@ -15,13 +15,12 @@ static PFINANCE_ANALYZER_WORKDAY_CANLENDAR workday_canlendar = FinanceAnalyzerWo
 
 class FinanceAnalyzerWorkdayCanlendar
 {
-//	friend class const_iterator;
 	DECLARE_MSG_DUMPER()
 
 	enum TRAVERSE_SEARCH_TYPE{TRAVERSE_SEARCH_EQUAL, TRAVERSE_SEARCH_PREV, TRAVERSE_SEARCH_NEXT};
 
 	typedef std::deque<int> DAY_DEQUE;
-	typedef std::list<int> YEAR_LIST;
+	typedef DAY_DEQUE YEAR_QUEUE;
 	typedef DAY_DEQUE* PDAY_DEQUE;
 	typedef std::map<int, PDAY_DEQUE> YEAR_MAP;
 	typedef YEAR_MAP* PYEAR_MAP;
@@ -33,8 +32,8 @@ private:
 	PTIME_CFG map_start_time_cfg;
 	PTIME_CFG map_end_time_cfg;
 	YEAR_MAP workday_map;
-	YEAR_LIST workday_year_sort_list;
-//	int* workday_value_array;
+	YEAR_QUEUE workday_year_sort_queue;
+	int workday_year_sort_queue_size;
 
 	FinanceAnalyzerWorkdayCanlendar();
 	FinanceAnalyzerWorkdayCanlendar(const FinanceAnalyzerWorkdayCanlendar&);
@@ -50,6 +49,8 @@ private:
 	bool check_less_than_end(const PTIME_CFG time_cfg)const;
 
 	unsigned short find_data_pos(int year, int month, int day, int& year_key, int& month_index, int& day_index, TRAVERSE_SEARCH_TYPE traverse_search_type=TRAVERSE_SEARCH_EQUAL);
+	unsigned short get_date(int year_key, int month_index, int day_index, int& year, int& month, int& day);
+	unsigned short get_date(int year_key, int month_index, int day_index, PTIME_CFG* time_cfg);
 
 public:
 	static FinanceAnalyzerWorkdayCanlendar* get_instance();
@@ -59,46 +60,13 @@ public:
 	bool is_workday(int year, int month, int day);
 	bool is_workday(const PTIME_CFG time_cfg);
 
-//	unsigned short get_prev_workday(int year, int month, int day, int& prev_year, int& prev_month, int& prev_day);
-//	unsigned short get_prev_workday(const PTIME_CFG time_cfg, PTIME_CFG* prev_time_cfg);
-//	unsigned short get_next_workday(int year, int month, int day, int& prev_year, int& prev_month, int& prev_day);
-//	unsigned short get_next_workday(const PTIME_CFG time_cfg, PTIME_CFG* prev_time_cfg);
+	unsigned short get_prev_workday_array(int year_base, int month_base, int day_base, std::deque<PTIME_CFG>& workday_deque, int max_workday_amount=-1);
+	unsigned short get_next_workday_array(int year_base, int month_base, int day_base, std::deque<PTIME_CFG>& workday_deque, int max_workday_amount=-1);
 
-//	class const_iterator
-//	{
-//	private:
-//		PYEAR_MAP ptr_;
-//		int year_key;
-//		int month_index;
-//		int day_index;
-//
-//		void get_next()const
-//		{
-//			ptr_
-//		}
-//	public:
-//		const_iterator(PYEAR_MAP ptr) : ptr_(ptr) { }
-//		const_iterator operator++()
-//		{
-//			const_iterator i = *this;
-//			ptr_++;
-//			return i;
-//		}
-//		const_iterator operator++(int junk)
-//		{
-//			ptr_++; return *this;
-//		}
-//		const reference operator*() { return *ptr_; }
-//		const pointer operator->() { return ptr_; }
-//	};
-//	const_iterator begin() const
-//	{
-//		return const_iterator(workday_map);
-//	}
-//	const_iterator end() const
-//	{
-//		return const_iterator(NULL);
-//	}
+	unsigned short get_prev_workday(int year_base, int month_base, int day_base, int& prev_year, int& prev_month, int& prev_day);
+	unsigned short get_prev_workday(const PTIME_CFG time_cfg, PTIME_CFG* prev_time_cfg);
+	unsigned short get_next_workday(int year_base, int month_base, int day_base, int& prev_year, int& prev_month, int& prev_day);
+	unsigned short get_next_workday(const PTIME_CFG time_cfg, PTIME_CFG* prev_time_cfg);
 };
 typedef FinanceAnalyzerWorkdayCanlendar* PFINANCE_ANALYZER_WORKDAY_CANLENDAR;
 

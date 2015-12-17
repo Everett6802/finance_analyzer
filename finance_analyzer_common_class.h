@@ -8,6 +8,7 @@
 
 class TimeCfg
 {
+	DECLARE_MSG_DUMPER()
 	enum TimeType{TIME_MONTH, TIME_DATE};
 private:
 	static int transform_to_value(int year, int month, int day);
@@ -21,6 +22,7 @@ public:
 	TimeCfg(const char* cur_time_str); // Format: "2015-09" or "2015-09-04"
 	TimeCfg(int cur_year, int cur_month);
 	TimeCfg(int cur_year, int cur_month, int cur_day);
+	~TimeCfg();
 
 	int get_year()const;
 	int get_month()const;
@@ -42,6 +44,7 @@ typedef TimeCfg* PTIME_CFG;
 
 class TimeRangeCfg
 {
+	DECLARE_MSG_DUMPER()
 protected:
 	PTIME_CFG time_start_cfg;
 	PTIME_CFG time_end_cfg;

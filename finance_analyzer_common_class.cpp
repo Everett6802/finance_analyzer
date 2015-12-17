@@ -18,6 +18,7 @@ int TimeCfg::transform_to_value(int year, int month, int day)
 
 TimeCfg::TimeCfg(const char* cur_time_str)
 {
+	IMPLEMENT_MSG_DUMPER()
 	static const char *DELIM = "-";
 	if (cur_time_str == NULL)
 		throw invalid_argument(string("cur_time_str should NOT be NULL"));
@@ -61,6 +62,7 @@ TimeCfg::TimeCfg(const char* cur_time_str)
 
 TimeCfg::TimeCfg(int cur_year, int cur_month)
 {
+	IMPLEMENT_MSG_DUMPER()
 	year = cur_year;
 	month = cur_month;
 	day = 0;
@@ -70,11 +72,17 @@ TimeCfg::TimeCfg(int cur_year, int cur_month)
 
 TimeCfg::TimeCfg(int cur_year, int cur_month, int cur_day)
 {
+	IMPLEMENT_MSG_DUMPER()
 	year = cur_year;
 	month = cur_month;
 	day = cur_day;
 	snprintf(time_str, 16, "%04d-%02d-%02d", year, month, day);
 	time_type = TIME_DATE;
+}
+
+TimeCfg::~TimeCfg()
+{
+	RELEASE_MSG_DUMPER()
 }
 
 int TimeCfg::get_year()const{return year;}
@@ -146,6 +154,7 @@ TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str)
 	time_range_description(NULL),
 	type_is_month(false)
 {
+	IMPLEMENT_MSG_DUMPER()
 	if (time_start_str != NULL)
 	{
 		time_start_cfg = new TimeCfg(time_start_str);
@@ -179,6 +188,7 @@ TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str)
 
 TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int year_end, int month_end)
 {
+	IMPLEMENT_MSG_DUMPER()
 	time_start_cfg = new TimeCfg(year_start, month_start);
 	if (time_start_cfg == NULL)
 		throw bad_alloc();
@@ -190,6 +200,7 @@ TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int year_end, int mo
 
 TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
 {
+	IMPLEMENT_MSG_DUMPER()
 	time_start_cfg = new TimeCfg(year_start, month_start, day_start);
 	if (time_start_cfg == NULL)
 		throw bad_alloc();
@@ -216,6 +227,7 @@ TimeRangeCfg::~TimeRangeCfg()
 		delete time_range_description;
 		time_range_description = NULL;
 	}
+	RELEASE_MSG_DUMPER()
 }
 
 bool TimeRangeCfg::is_single_time()const

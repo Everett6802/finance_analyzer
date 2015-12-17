@@ -24,9 +24,21 @@ int main()
 //		fprintf(stderr, "error occurs\n");
 //	}
 //	return 0;
+	int year, month, day;
 	static PFINANCE_ANALYZER_WORKDAY_CANLENDAR workday_canlendar = FinanceAnalyzerWorkdayCanlendar::get_instance();
-	printf("%s\n", (workday_canlendar->is_workday(2015, 9, 4) ? "True" : "False"));
-	printf("%s\n", (workday_canlendar->is_workday(2015, 9, 5) ? "True" : "False"));
+//	printf("%s\n", (workday_canlendar->is_workday(2015, 9, 4) ? "True" : "False"));
+//	printf("%s\n", (workday_canlendar->is_workday(2015, 9, 5) ? "True" : "False"));
+//	workday_canlendar->get_prev_workday(2015, 9, 4, year, month, day);
+//	printf("%04d-%02d-%02d\n", year, month, day);
+//	workday_canlendar->get_prev_workday(2000, 1, 1, year, month, day);
+//	printf("%04d-%02d-%02d\n", year, month, day);
+//	workday_canlendar->get_prev_workday(2015, 1, 1, year, month, day);
+//	printf("%04d-%02d-%02d\n", year, month, day);
+	PTIME_CFG time_cfg = NULL;
+	workday_canlendar->get_next_workday(new TimeCfg(2015, 5, 30), &time_cfg);
+	printf("%04d-%02d-%02d\n", time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
+//	workday_canlendar->get_next_workday(new TimeCfg(2015, 12, 31), &time_cfg);
+//	printf("%04d-%02d-%02d\n", time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
 
 //	typedef list<int> DAY_LIST;
 //	typedef DAY_LIST* PDAY_LIST;
@@ -108,13 +120,14 @@ int main()
 //	char* value_str = "4901376433";
 //	long value = atol(value_str);
 //	printf("value_str: %s, value: %ld\n", value_str, value);
-	unsigned short ret = RET_SUCCESS;
-	ret = finance_analyzer_mgr.run_daily();
-	if (CHECK_FAILURE(ret))
-	{
-		fprintf(stderr, "Error occurs, due to: %d, %s\n", ret, get_ret_description(ret));
-		exit(EXIT_FAILURE);
-	}
+
+//	unsigned short ret = RET_SUCCESS;
+//	ret = finance_analyzer_mgr.run_daily();
+//	if (CHECK_FAILURE(ret))
+//	{
+//		fprintf(stderr, "Error occurs, due to: %d, %s\n", ret, get_ret_description(ret));
+//		exit(EXIT_FAILURE);
+//	}
 
 	exit(EXIT_SUCCESS);
 }
