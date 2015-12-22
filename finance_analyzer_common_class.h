@@ -6,6 +6,27 @@
 #include "msg_dumper_wrapper.h"
 
 
+template <typename T>
+class SmartPointer
+{
+private:
+	T* data_ptr;
+
+public:
+	SmartPointer();
+	SmartPointer(T* ptr);
+	~SmartPointer();
+	T& operator*();
+	const T& operator*() const;
+	T* operator->();
+	const T* operator->() const;
+	void set_new(T* ptr);
+	T* get_instance();
+};
+//typedef SmartPointer SP;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class TimeCfg
 {
 	DECLARE_MSG_DUMPER()
@@ -68,6 +89,8 @@ public:
 	const char* to_string();
 	const PTIME_CFG get_start_time()const;
 	const PTIME_CFG get_end_time()const;
+	PTIME_CFG get_start_time();
+	PTIME_CFG get_end_time();
 };
 typedef TimeRangeCfg* PTIME_RANGE_CFG;
 
@@ -141,6 +164,12 @@ do{\
 unsigned short ret = QuerySet.add_query(SourceIndex, FieldIndex);\
 if (CHECK_FAILURE(ret))\
 	return ret;\
+}while(0)
+
+#define ADD_QUERY_EX(QuerySet, SourceIndex, FieldIndex, SourceTypeIndexSet)\
+do{\
+ADD_QUERY(QuerySet, SourceIndex, FieldIndex);\
+SourceTypeIndexSet.insert(SourceIndex);\
 }while(0)
 
 class QuerySet

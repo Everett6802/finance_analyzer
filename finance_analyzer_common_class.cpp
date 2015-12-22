@@ -11,6 +11,75 @@ DECLARE_MSG_DUMPER_PARAM()
 
 using namespace std;
 
+template <typename T>
+SmartPointer<T>::SmartPointer()
+{
+	data_ptr = NULL;
+}
+
+template <typename T>
+SmartPointer<T>::SmartPointer(T* ptr)
+{
+	data_ptr = ptr;
+}
+
+template <typename T>
+SmartPointer<T>::~SmartPointer()
+{
+	if (data_ptr != NULL)
+	{
+		delete data_ptr;
+		data_ptr = NULL;
+	}
+}
+
+template <typename T>
+T& SmartPointer<T>::operator*()
+{
+	return *data_ptr;
+}
+
+template <typename T>
+const T& SmartPointer<T>::operator*() const
+{
+	return *data_ptr;
+}
+
+template <typename T>
+T* SmartPointer<T>::operator->()
+{
+	return data_ptr;
+}
+
+template <typename T>
+const T* SmartPointer<T>::operator->() const
+{
+	return data_ptr;
+}
+
+template <typename T>
+void SmartPointer<T>::set_new(T* ptr)
+{
+	if (data_ptr != NULL)
+	{
+		delete data_ptr;
+		data_ptr = NULL;
+	}
+	data_ptr = ptr;
+}
+
+template <typename T>
+T* SmartPointer<T>::get_instance()
+{
+	return data_ptr;
+}
+template class SmartPointer<TimeCfg>;
+template class SmartPointer<TimeRangeCfg>;
+template class SmartPointer<QuerySet>;
+template class SmartPointer<ResultSet>;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 int TimeCfg::get_int_value(int year, int month, int day)
 {
 	return ((year & 0xFFFF) << 16) | ((month & 0xFF) << 8) | (day & 0xFF);
@@ -179,6 +248,7 @@ TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str)
 	type_is_month(false)
 {
 	IMPLEMENT_MSG_DUMPER()
+
 	if (time_start_str != NULL)
 	{
 		time_start_cfg = new TimeCfg(time_start_str);
@@ -210,7 +280,11 @@ TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str)
 		throw invalid_argument("time_start_str and time_end_str should NOT be NULL simultaneously");
 }
 
-TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int year_end, int month_end)
+TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int year_end, int month_end) :
+	time_start_cfg(NULL),
+	time_end_cfg(NULL),
+	time_range_description(NULL),
+	type_is_month(false)
 {
 	IMPLEMENT_MSG_DUMPER()
 	time_start_cfg = new TimeCfg(year_start, month_start);
@@ -222,7 +296,11 @@ TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int year_end, int mo
 	type_is_month = true;
 }
 
-TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
+TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end) :
+	time_start_cfg(NULL),
+	time_end_cfg(NULL),
+	time_range_description(NULL),
+	type_is_month(false)
 {
 	IMPLEMENT_MSG_DUMPER()
 	time_start_cfg = new TimeCfg(year_start, month_start, day_start);
@@ -278,8 +356,29 @@ const char* TimeRangeCfg::to_string()
 	return time_range_description;
 }
 
-const PTIME_CFG TimeRangeCfg::get_start_time()const{return time_start_cfg;}
-const PTIME_CFG TimeRangeCfg::get_end_time()const{return time_end_cfg;}
+const PTIME_CFG TimeRangeCfg::get_start_time()const
+{
+//	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+	return time_start_cfg;
+}
+
+const PTIME_CFG TimeRangeCfg::get_end_time()const
+{
+//	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
+	return time_end_cfg;
+}
+
+PTIME_CFG TimeRangeCfg::get_start_time()
+{
+//	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+	return time_start_cfg;
+}
+
+PTIME_CFG TimeRangeCfg::get_end_time()
+{
+//	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
+	return time_end_cfg;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -456,7 +555,7 @@ unsigned short QuerySet::add_query_done()
 	{
 		if (query_set[i].empty())
 			continue;
-		WRITE_FORMAT_DEBUG("Transform the query data[source_index: %d]", i);
+//		WRITE_FORMAT_DEBUG("Transform the query data[source_index: %d]", i);
 		if (query_set[i][0] == -1)
 		{
 			query_set[i].clear();
@@ -783,7 +882,7 @@ unsigned short ResultSet::check_data()const
 			key = iter->first;
 			unsigned short source_index = get_upper_subindex(key);
 			unsigned short field_index = get_lower_subindex(key);
-			WRITE_FORMAT_ERROR("Incorrect data size in %d, %d, expected: %d, actual: %d", date_data_size, data_size, source_index, field_index);
+			WRITE_FORMAT_ERROR("Incorrect data size in %d, %d, expected: %d, actual: %d", source_index, field_index, date_data_size, data_size);
 			return RET_FAILURE_INCORRECT_OPERATION;
 		}
 		iter++;

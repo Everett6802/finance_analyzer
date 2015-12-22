@@ -44,6 +44,11 @@ FinanceAnalyzerDatabaseTimeRange::FinanceAnalyzerDatabaseTimeRange() :
 
 FinanceAnalyzerDatabaseTimeRange::~FinanceAnalyzerDatabaseTimeRange()
 {
+	int database_time_range_deque_size = database_time_range_deque.size();
+	for (int i = 0 ; i < database_time_range_deque_size ; i++)
+		delete[] database_time_range_deque[i];
+	database_time_range_deque.clear();
+
 	RELEASE_MSG_DUMPER()
 }
 
@@ -73,7 +78,6 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::initialize()
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
 
-	unsigned short ret = RET_SUCCESS;
 	WRITE_FORMAT_DEBUG("Parse the config file: %s", DATABASE_TIME_RANGE_CONF_FILENAME);
 	FILE* fp = fopen(file_path, "r");
 	if (fp == NULL)
@@ -82,6 +86,8 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::initialize()
 		free(buf);
 		return RET_FAILURE_SYSTEM_API;
 	}
+
+	unsigned short ret = RET_SUCCESS;
 	int source_type_index_count = 0;
 	while (fgets(buf, BUF_SIZE, fp) != NULL)
 	{
@@ -97,91 +103,30 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::initialize()
 				fgets(&buf[BUF_SIZE_OLD - 1], BUF_SIZE - BUF_SIZE_OLD, fp);
 			}while(strlen(buf) == BUF_SIZE - 1 && buf[BUF_SIZE - 1] == '\0');
 		}
-
+// Check if the source type in the config file is in order
 		char* finance_database_description = strtok(buf, ": ");
 		if (strcmp(finance_database_description, FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index_count]) != 0)
 		{
 			char errmsg[256];
-			snprintf(errmsg, 256, "The source type[%s] is NOT identical to %s in %", finance_database_description, FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index_count], DATABASE_TIME_RANGE_CONF_FILENAME);
+			snprintf(errmsg, 256, "The source type[%s] is NOT identical to %s in %s", finance_database_description, FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index_count], DATABASE_TIME_RANGE_CONF_FILENAME);
 			throw runtime_error(string(errmsg));
 		}
 		source_type_index_count++;
-		char* time_range_str =  strtok(NULL, ": ");
+		char* time_range_str =  strtok(NULL, " ");
 //		fprintf(stderr, "%s: %s\n", finance_database_description, time_range_str);
+// Find the start/end time string
+		char* start_time_str = strtok(time_range_str, ":");
+		char* end_time_str = strtok(NULL, ":");
+//		fprintf(stderr, "%s: %s:%s\n", finance_database_description, start_time_str, end_time_str);
+		PTIME_RANGE_CFG time_range_cfg = new TimeRangeCfg(start_time_str, end_time_str);
 
-//		if (time_range_cfg == NULL)
-//		{
-//			char start_time_str[16];
-//			char end_time_str[16];
-//			sscanf(buf, "%s %s", start_time_str, end_time_str);
-//			time_range_cfg = new TimeRangeCfg(start_time_str, end_time_str);
-//			WRITE_FORMAT_DEBUG("Find the time range [%s %s] in %s", start_time_str, end_time_str, WORKDAY_CANLENDAR_CONF_FILENAME);
-//			if (time_range_cfg == NULL)
-//			{
-//				WRITE_ERROR("Fail to allocate the memory: time_range_cfg");
-//				ret = RET_FAILURE_INSUFFICIENT_MEMORY;
-//				goto OUT1;
-//			}
-//		}
-//		else
-//		{
-//			int year;
-//			sscanf(buf, "[%d]", &year);
-//			PDAY_DEQUE day_deque_ptr = new DAY_DEQUE[12];
-//			if (day_deque_ptr == NULL)
-//			{
-//				WRITE_ERROR("Fail to allocate memory: day_list_ptr");
-//				ret = RET_FAILURE_INSUFFICIENT_MEMORY;
-//				goto OUT1;
-//			}
-//			workday_year_sort_queue.push_back(year);
-//
-//			strtok(buf, "]");
-//			char* year_workday_list_str = strtok(NULL, "]");
-//			char* month_workday_list_str =  strtok(year_workday_list_str, ";");
-//			list<char*> month_workday_list;
-//			while (month_workday_list_str != NULL)
-//			{
-//				int month;
-//				char month_tmp[4];
-//				sscanf(month_workday_list_str, "%d:", &month);
-//				snprintf(month_tmp, 4, "%d:", month);
-//				int month_tmp_len = strlen(month_tmp);
-//				char* month_workday_list_str_tmp = new char[strlen(month_workday_list_str) - month_tmp_len + 1];
-//				if (month_workday_list_str_tmp == NULL)
-//				{
-//					WRITE_ERROR("Fail to allocate memory: month_workday_list_str_tmp");
-//					ret = RET_FAILURE_INSUFFICIENT_MEMORY;
-//					goto OUT1;
-//				}
-//				strcpy(month_workday_list_str_tmp, &month_workday_list_str[month_tmp_len]);
-//				month_workday_list.push_back(month_workday_list_str_tmp);
-//				if (month != (int)month_workday_list.size())
-//				{
-//					WRITE_FORMAT_ERROR("Incorrect month, expected: %d, actual: %d", month, (int)month_workday_list.size());
-//					ret = RET_FAILURE_INCORRECT_CONFIG;
-//					goto OUT1;
-//				}
-//				month_workday_list_str =  strtok(NULL, ";");
-//			}
-//			list<char*>::iterator iter = month_workday_list.begin();
-//			int month_count = 0;
-//			while (iter != month_workday_list.end())
-//			{
-//				char* month_workday_list_str = (char*)*iter;
-//				char* day_workday_str =  strtok(month_workday_list_str, ",");
-//				while (day_workday_str != NULL)
-//				{
-//					day_deque_ptr[month_count].push_back(atoi(day_workday_str));
-//					day_workday_str = strtok(NULL, ",");
-//				}
-//				delete month_workday_list_str;
-//				iter++;
-//				month_count++;
-//			}
-//			workday_map[year] = day_deque_ptr;
-//			month_workday_list.clear();
-//		}
+		if (time_range_cfg == NULL)
+		{
+			WRITE_ERROR("Fail to allocate the memory: time_range_cfg");
+			ret = RET_FAILURE_INSUFFICIENT_MEMORY;
+			break;
+		}
+		database_time_range_deque.push_back(time_range_cfg);
 	}
 
 	fclose(fp);
@@ -192,8 +137,7 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::initialize()
 		free(buf);
 		buf = NULL;
 	}
-//	sort(workday_year_sort_queue.begin(), workday_year_sort_queue.end());
-//	workday_year_sort_queue_size = workday_year_sort_queue.size();
+
 	return ret;
 }
 
@@ -212,4 +156,51 @@ int FinanceAnalyzerDatabaseTimeRange::release()
 		return 0;
 	}
 	return ref_cnt;
+}
+
+unsigned short FinanceAnalyzerDatabaseTimeRange::restrict_time_range(const set<int>& source_type_index_set, PTIME_RANGE_CFG time_range_cfg)
+{
+	assert (!source_type_index_set.empty() && "source_type_index_set should NOT be empty");
+	if (time_range_cfg == NULL)
+	{
+		WRITE_ERROR("time_range_cfg should NOT be NULL");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+// Search for the max start time and min end time to make sure the MySQL data is NOT out of range
+	set<int>::iterator iter = source_type_index_set.begin();
+	int max_start_time_source_type_index = -1;
+	int max_start_time_int_value;
+	int min_end_time_source_type_index = -1;
+	int min_end_time_int_value;
+
+	while (iter != source_type_index_set.end())
+	{
+		int time_int_value = TimeCfg::get_int_value(database_time_range_deque[*iter]->get_start_time());
+		if (max_start_time_source_type_index == -1 || time_int_value > max_start_time_int_value)
+		{
+			max_start_time_source_type_index = *iter;
+			max_start_time_int_value = time_int_value;
+		}
+		if (min_end_time_source_type_index == -1 || time_int_value < min_end_time_int_value)
+		{
+			min_end_time_source_type_index = *iter;
+			min_end_time_int_value = time_int_value;
+		}
+		iter++;
+	}
+	WRITE_FORMAT_DEBUG("The available search time range:%s %s", database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string(), database_time_range_deque[min_end_time_source_type_index]->get_end_time()->to_string());
+// Check the start time boundary
+	if (*database_time_range_deque[max_start_time_source_type_index]->get_start_time() > *time_range_cfg->get_start_time())
+	{
+		WRITE_FORMAT_WARN("Start search time out of range, restrict from %s to %s", time_range_cfg->get_start_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string());
+		 *time_range_cfg->get_start_time() = *database_time_range_deque[max_start_time_source_type_index]->get_start_time();
+	}
+// Check the end time boundary
+	if (*database_time_range_deque[min_end_time_source_type_index]->get_end_time() < *time_range_cfg->get_end_time())
+	{
+		WRITE_FORMAT_WARN("End search time out of range, restrict from %s to %s", time_range_cfg->get_end_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_end_time()->to_string());
+		*time_range_cfg->get_end_time() = *database_time_range_deque[min_end_time_source_type_index]->get_end_time();
+	}
+
+	return RET_SUCCESS;
 }

@@ -337,7 +337,7 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::find_data_pos(int year, int mont
 	{
 		for (int i = day_deque_size - 1 ; i >= 0 ; i--)
 		{
-			if (day >= (*day_deque)[i])
+			if (day > (*day_deque)[i])
 			{
 				year_key = year;
 				month_index = month - 1;
@@ -384,7 +384,7 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::find_data_pos(int year, int mont
 	{
 		for (int i = 0 ; i < day_deque_size ; i++)
 		{
-			if (day <= (*day_deque)[i])
+			if (day < (*day_deque)[i])
 			{
 				year_key = year;
 				month_index = month - 1;
@@ -479,26 +479,29 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::get_date(int year_key, int month
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerWorkdayCanlendar::get_date(int year_key, int month_index, int day_index, PTIME_CFG* time_cfg)
+unsigned short FinanceAnalyzerWorkdayCanlendar::get_date(int year_key, int month_index, int day_index, SmartPointer<TimeCfg>& sp_time_cfg/*PTIME_CFG* time_cfg*/)
 {
+//	if (time_cfg == NULL)
+//	{
+//		WRITE_ERROR("time_cfg should NOT be NULL");
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
 	int year;
 	int month;
 	int day;
+//	*time_cfg = NULL;
+
 	unsigned short ret = get_date(year_key, month_index, day_index, year, month, day);
 	if (CHECK_SUCCESS(ret))
 	{
-		if (time_cfg == NULL)
-		{
-			WRITE_ERROR("time_cfg should NOT be NULL");
-			return RET_FAILURE_INVALID_ARGUMENT;
-		}
 		PTIME_CFG time_cfg_tmp = new TimeCfg(year, month, day);
 		if (time_cfg_tmp == NULL)
 		{
 			WRITE_ERROR("Fail to allocate the memory: time_cfg_tmp");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-		*time_cfg = time_cfg_tmp;
+//		*time_cfg = time_cfg_tmp;
+		sp_time_cfg.set_new(time_cfg_tmp);
 	}
 	return ret;
 }
@@ -645,14 +648,15 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::get_prev_workday(int year_base, 
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerWorkdayCanlendar::get_prev_workday(const PTIME_CFG time_cfg, PTIME_CFG* prev_time_cfg)
+unsigned short FinanceAnalyzerWorkdayCanlendar::get_prev_workday(const PTIME_CFG time_cfg, SmartPointer<TimeCfg>& sp_prev_time_cfg/*PTIME_CFG* prev_time_cfg*/)
 {
-	if (time_cfg == NULL || prev_time_cfg == NULL)
+	if (time_cfg == NULL/*|| prev_time_cfg == NULL*/)
 	{
 		WRITE_ERROR("time_cfg == NULL or prev_time_cfg == NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	int prev_year, prev_month, prev_day;
+//	*prev_time_cfg = NULL;
 	unsigned short ret = get_prev_workday(time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day(), prev_year, prev_month, prev_day);
 	if (CHECK_SUCCESS(ret))
 	{
@@ -662,10 +666,10 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::get_prev_workday(const PTIME_CFG
 			WRITE_ERROR("Fail to allocate memory: prev_time_cfg_tmp");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-		*prev_time_cfg = prev_time_cfg_tmp;
+//		*prev_time_cfg = prev_time_cfg_tmp;
+		sp_prev_time_cfg.set_new(prev_time_cfg_tmp);
 	}
-	else
-		*prev_time_cfg = NULL;
+
 	return ret;
 }
 
@@ -693,14 +697,15 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::get_next_workday(int year_base, 
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerWorkdayCanlendar::get_next_workday(const PTIME_CFG time_cfg, PTIME_CFG* next_time_cfg)
+unsigned short FinanceAnalyzerWorkdayCanlendar::get_next_workday(const PTIME_CFG time_cfg, SmartPointer<TimeCfg>& sp_next_time_cfg/*PTIME_CFG* next_time_cfg*/)
 {
-	if (time_cfg == NULL || next_time_cfg == NULL)
+	if (time_cfg == NULL/*|| next_time_cfg == NULL*/)
 	{
 		WRITE_ERROR("time_cfg == NULL or next_time_cfg == NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	int next_year, next_month, next_day;
+//	*next_time_cfg = NULL;
 	unsigned short ret = get_next_workday(time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day(), next_year, next_month, next_day);
 	if (CHECK_SUCCESS(ret))
 	{
@@ -710,9 +715,93 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::get_next_workday(const PTIME_CFG
 			WRITE_ERROR("Fail to allocate memory: next_time_cfg_tmp");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-		*next_time_cfg = next_time_cfg_tmp;
+//		*next_time_cfg = next_time_cfg_tmp;
+		sp_next_time_cfg.set_new(next_time_cfg_tmp);
 	}
-	else
-		*next_time_cfg = NULL;
+
+	return ret;
+}
+
+unsigned short FinanceAnalyzerWorkdayCanlendar::get_first_workday(int& first_year, int& first_month, int& first_day)
+{
+	first_year = *workday_year_sort_queue.begin();
+	for (int month_index = 0 ; month_index < 12 ; month_index++)
+	{
+		PDAY_DEQUE day_deque = &workday_map[first_year][month_index];
+		if (!day_deque->empty())
+		{
+			first_month = month_index + 1;
+			first_day = *day_deque->begin();
+			break;
+		}
+	}
+	WRITE_FORMAT_DEBUG("The first workday: %04d-%02d-%02d", first_year, first_month, first_day);
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerWorkdayCanlendar::get_first_workday(SmartPointer<TimeCfg>& sp_first_time_cfg/*PTIME_CFG* first_time_cfg*/)
+{
+//	if (first_time_cfg == NULL)
+//	{
+//		WRITE_ERROR("first_time_cfg should NOT be NULL");
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
+
+	int first_year, first_month, first_day;
+//	*first_time_cfg = NULL;
+	unsigned short ret = get_first_workday(first_year, first_month, first_day);
+	if (CHECK_SUCCESS(ret))
+	{
+		PTIME_CFG first_time_cfg_tmp = new TimeCfg(first_year, first_month, first_day);
+		if (first_time_cfg_tmp == NULL)
+		{
+			WRITE_ERROR("Fail to allocate memory: first_time_cfg_tmp");
+			return RET_FAILURE_INSUFFICIENT_MEMORY;
+		}
+//		*first_time_cfg = first_time_cfg_tmp;
+		sp_first_time_cfg.set_new(first_time_cfg_tmp);
+	}
+	return ret;
+}
+
+unsigned short FinanceAnalyzerWorkdayCanlendar::get_last_workday(int& last_year, int& last_month, int& last_day)
+{
+	last_year = *workday_year_sort_queue.rbegin();
+	for (int month_index = 11 ; month_index >= 0 ; month_index--)
+	{
+		PDAY_DEQUE day_deque = &workday_map[last_year][month_index];
+		if (!day_deque->empty())
+		{
+			last_month = month_index + 1;
+			last_day = *day_deque->rbegin();
+			break;
+		}
+	}
+	WRITE_FORMAT_DEBUG("The last workday: %04d-%02d-%02d", last_year, last_month, last_day);
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerWorkdayCanlendar::get_last_workday(SmartPointer<TimeCfg>& sp_last_time_cfg/*PTIME_CFG* last_time_cfg*/)
+{
+//	if (last_time_cfg == NULL)
+//	{
+//		WRITE_ERROR("last_time_cfg should NOT be NULL");
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
+
+	int last_year, last_month, last_day;
+//	*last_time_cfg = NULL;
+	unsigned short ret = get_last_workday(last_year, last_month, last_day);
+	if (CHECK_SUCCESS(ret))
+	{
+		PTIME_CFG last_time_cfg_tmp = new TimeCfg(last_year, last_month, last_day);
+		if (last_time_cfg_tmp == NULL)
+		{
+			WRITE_ERROR("Fail to allocate memory: last_time_cfg_tmp");
+			return RET_FAILURE_INSUFFICIENT_MEMORY;
+		}
+//		*last_time_cfg = last_time_cfg_tmp;
+		sp_last_time_cfg.set_new(last_time_cfg_tmp);
+	}
 	return ret;
 }

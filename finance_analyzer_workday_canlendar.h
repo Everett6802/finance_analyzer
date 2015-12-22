@@ -50,7 +50,7 @@ private:
 
 	unsigned short find_data_pos(int year, int month, int day, int& year_key, int& month_index, int& day_index, TRAVERSE_SEARCH_TYPE traverse_search_type=TRAVERSE_SEARCH_EQUAL);
 	unsigned short get_date(int year_key, int month_index, int day_index, int& year, int& month, int& day);
-	unsigned short get_date(int year_key, int month_index, int day_index, PTIME_CFG* time_cfg);
+	unsigned short get_date(int year_key, int month_index, int day_index, SmartPointer<TimeCfg>& sp_time_cfg/*PTIME_CFG* time_cfg*/);
 
 public:
 	static FinanceAnalyzerWorkdayCanlendar* get_instance();
@@ -64,9 +64,13 @@ public:
 	unsigned short get_next_workday_array(int year_base, int month_base, int day_base, std::deque<PTIME_CFG>& workday_deque, int max_workday_amount=-1);
 
 	unsigned short get_prev_workday(int year_base, int month_base, int day_base, int& prev_year, int& prev_month, int& prev_day);
-	unsigned short get_prev_workday(const PTIME_CFG time_cfg, PTIME_CFG* prev_time_cfg);
-	unsigned short get_next_workday(int year_base, int month_base, int day_base, int& prev_year, int& prev_month, int& prev_day);
-	unsigned short get_next_workday(const PTIME_CFG time_cfg, PTIME_CFG* prev_time_cfg);
+	unsigned short get_prev_workday(const PTIME_CFG time_cfg, SmartPointer<TimeCfg>& sp_prev_time_cfg/*PTIME_CFG* prev_time_cfg*/);
+	unsigned short get_next_workday(int year_base, int month_base, int day_base, int& next_year, int& next_month, int& next_day);
+	unsigned short get_next_workday(const PTIME_CFG time_cfg, SmartPointer<TimeCfg>& sp_next_time_cfg/*PTIME_CFG* next_time_cfg*/);
+	unsigned short get_first_workday(int& first_year, int& first_month, int& first_day);
+	unsigned short get_first_workday(SmartPointer<TimeCfg>& sp_first_time_cfg/*PTIME_CFG* first_time_cfg*/);
+	unsigned short get_last_workday(int& last_year, int& last_month, int& last_day);
+	unsigned short get_last_workday(SmartPointer<TimeCfg>& sp_last_time_cfg/*PTIME_CFG* last_time_cfg*/);
 };
 typedef FinanceAnalyzerWorkdayCanlendar* PFINANCE_ANALYZER_WORKDAY_CANLENDAR;
 

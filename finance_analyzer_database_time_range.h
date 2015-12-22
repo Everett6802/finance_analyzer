@@ -5,6 +5,7 @@
 #include <deque>
 #include <list>
 #include <map>
+#include <set>
 #include <string>
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
@@ -17,15 +18,12 @@ class FinanceAnalyzerDatabaseTimeRange
 {
 	DECLARE_MSG_DUMPER()
 
-	typedef std::map<int, PTIME_RANGE_CFG> TIME_RANGE_MAP;
-	typedef std::deque<int> SOURCE_TYPE_INDEX_DEQUE;
+	typedef std::deque<PTIME_RANGE_CFG> TIME_RANGE_DEQUE;
 
 private:
 	static FinanceAnalyzerDatabaseTimeRange* instance;
 	volatile int ref_cnt;
-	TIME_RANGE_MAP database_time_range_map;
-	SOURCE_TYPE_INDEX_DEQUE source_type_index_sort_queue;
-	int source_type_index_sort_queue_size;
+	TIME_RANGE_DEQUE database_time_range_deque;
 
 	FinanceAnalyzerDatabaseTimeRange();
 	FinanceAnalyzerDatabaseTimeRange(const FinanceAnalyzerDatabaseTimeRange&);
@@ -38,6 +36,8 @@ public:
 	static FinanceAnalyzerDatabaseTimeRange* get_instance();
 	int add_ref();
 	int release();
+
+	unsigned short restrict_time_range(const std::set<int>& source_type_index_set, PTIME_RANGE_CFG time_range_cfg);
 };
 typedef FinanceAnalyzerDatabaseTimeRange* PFINANCE_ANALYZER_DATABASE_TIME_RANGE;
 
