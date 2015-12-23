@@ -196,56 +196,60 @@ unsigned short FinanceAnalyzerMgr::run_daily()
 	if (CHECK_FAILURE(ret))
 		return ret;
 // Show the result
-//	ret = result_set->show_data();
-//	if (CHECK_FAILURE(ret))
-//		goto OUT;
-// Write into file
-	char filepath[32];
-	snprintf(filepath, 32, DAILY_FINANCE_FILENAME_FORMAT, year, month, day);
-	SmartPointer<TimeCfg> sp_time_cfg(new TimeCfg(year, month, day));
-	ret = write_daily(sp_time_cfg, filepath, sp_result_set.get_instance());
+#ifdef DO_DEBUG
+	ret = sp_result_set->show_data();
 	if (CHECK_FAILURE(ret))
 		return ret;
-
-//OUT:
-//	RELEASE_OBJ(result_set);
-//	RELEASE_OBJ(query_set);
+#endif
+// Write into file
+	SmartPointer<TimeCfg> sp_time_cfg(new TimeCfg(year, month, day));
+	ret = write_daily(sp_time_cfg, /*filepath, */sp_result_set.get_instance());
+	if (CHECK_FAILURE(ret))
+		return ret;
 
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerMgr::write_daily(const SmartPointer<TimeCfg>& sp_time_cfg, const char* filepath, const PRESULT_SET result_set)const
+unsigned short FinanceAnalyzerMgr::write_daily(const SmartPointer<TimeCfg>& sp_time_cfg, const PRESULT_SET result_set)const
 {
-	assert(filepath != NULL && "filepath should NOT be NULL");
+//	assert(filepath != NULL && "filepath should NOT be NULL");
 	assert(result_set != NULL && "result_set should NOT be NULL");
-// Open the file for writing the daily financial data
-	FILE* fp = fopen(filepath, "w");
-	if (fp == NULL)
-	{
-		WRITE_FORMAT_ERROR("Fail to open file: %s, due to: %s", filepath, strerror(errno));
-		return RET_FAILURE_INSUFFICIENT_MEMORY;
-	}
-// Write the data into file
-	fprintf(fp, "日期: %04d-%02d-%02d\n", sp_time_cfg->get_year(), sp_time_cfg->get_month(), sp_time_cfg->get_day());
-	fprintf(fp, "發行量加權股價指數: %.2f, 漲跌: %.2f, 成交金額(億): %.2f, 變化(億): %.2f\n\n",
+
+	static const int BUF_SIZE = 512;
+	static char buf[BUF_SIZE];
+
+	unsigned short ret = RET_SUCCESS;
+// Check the folder of keeping track of the result exist
+	ret = create_folder_in_project_if_not_exist(RESULT_FOLDER_NAME);
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	string buf_string = "";
+// Assemble the data
+	snprintf(buf, BUF_SIZE, "日期: %04d-%02d-%02d\n", sp_time_cfg->get_year(), sp_time_cfg->get_month(), sp_time_cfg->get_day());
+	buf_string += string(buf);
+	snprintf(buf, BUF_SIZE, "發行量加權股價指數: %.2f, 漲跌: %.2f, 成交金額(億): %.2f, 變化(億): %.2f\n\n",
 		result_set->get_float_array_element(FinanceSource_StockExchangeAndVolume, 4, 1),
 		result_set->get_float_array_element(FinanceSource_StockExchangeAndVolume, 5, 1),
 		result_set->get_long_array_element(FinanceSource_StockExchangeAndVolume, 2, 1) / 100000000.0,
 		(result_set->get_long_array_element(FinanceSource_StockExchangeAndVolume, 2, 1) - result_set->get_long_array_element(FinanceSource_StockExchangeAndVolume, 2, 0)) / 100000000.0
 		);
-	fprintf(fp, "三大法人買賣超\n外資及陸資: %ld, 變化: %ld\n投信: %ld, 變化: %ld\n自營商: %ld, 變化: %ld\n\n",
-		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 1),
-		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 0),
-		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 1),
-		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 0),
-		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 1) + result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 1),
-		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 1) + result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 0) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 0)
+	buf_string += string(buf);
+	snprintf(buf, BUF_SIZE, "三大法人買賣超(億)\n外資及陸資: %.2f, 變化: %.2f\n投信: %.2f, 變化: %.2f\n自營商: %.2f, 變化: %.2f\n\n",
+		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 1) / 100000000.0,
+		(result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 0))  / 100000000.0,
+		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 1) / 100000000.0,
+		(result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 0)) / 100000000.0,
+		(result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 1) + result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 1)) / 100000000.0,
+		(result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 1) + result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 0) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 0)) / 100000000.0
 		);
-	fprintf(fp, "融資餘額(仟元): %ld, 變化: %ld\n\n",
-			result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 15, 1),
-			result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 15, 1) - result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 14, 1)
+	buf_string += string(buf);
+	snprintf(buf, BUF_SIZE, "融資餘額(億): %.2f, 變化: %.2f\n\n",
+			result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 15, 1) / 100000.0,
+			(result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 15, 1) - result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 14, 1)) / 100000.0
 		);
-	fprintf(fp, "三大法人期權留倉淨額\n外資: %d, 變化: %d\n投信: %d, 變化: %d\n自營商: %d, 變化: %d\n\n",
+	buf_string += string(buf);
+	snprintf(buf, BUF_SIZE, "三大法人期權留倉淨額\n外資: %d, 變化: %d\n投信: %d, 變化: %d\n自營商: %d, 變化: %d\n\n",
 		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, 1),
 		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, 1) - result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, 0),
 		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, 1),
@@ -253,11 +257,13 @@ unsigned short FinanceAnalyzerMgr::write_daily(const SmartPointer<TimeCfg>& sp_t
 		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, 1),
 		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, 1) - result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, 0)
 		);
-	fprintf(fp, "未平倉Put/Call Ratio: %.2f, 變化: %.2f\n\n",
+	buf_string += string(buf);
+	snprintf(buf, BUF_SIZE, "未平倉Put/Call Ratio: %.2f, 變化: %.2f\n\n",
 		result_set->get_float_array_element(FinanceSource_OptionPutCallRatio, 6, 1),
 		result_set->get_float_array_element(FinanceSource_OptionPutCallRatio, 6, 1) - result_set->get_float_array_element(FinanceSource_OptionPutCallRatio, 6, 0)
 		);
-	fprintf(fp, "選擇權買賣權留倉口數\n外資 BuyCall: %d, 變化: %d, BuyPut: %d, 變化: %d, SellCall: %d, 變化: %d, SellPut: %d, 變化: %d\n自營商 BuyCall: %d, 變化: %d, BuyPut: %d, 變化: %d, SellCall: %d, 變化: %d, SellPut: %d, 變化: %d\n\n",
+	buf_string += string(buf);
+	snprintf(buf, BUF_SIZE, "選擇權買賣權留倉口數\n外資\n Buy Call: %d, 變化: %d\n Buy Put: %d, 變化: %d\n Sell Call: %d, 變化: %d\n Sell Put: %d, 變化: %d\n自營商\n Buy Call: %d, 變化: %d\n Buy Put: %d, 變化: %d\n Sell Call: %d, 變化: %d\n Sell Put: %d, 變化: %d\n\n",
 		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, 1),
 		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, 0),
 		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, 1),
@@ -275,20 +281,33 @@ unsigned short FinanceAnalyzerMgr::write_daily(const SmartPointer<TimeCfg>& sp_t
 		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, 1),
 		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, 0)
 		);
-	fprintf(fp, "十大交易人及特法留倉淨口數\n近月: %d, 變化: %d\n全月: %d, 變化: %d\n\n",
+	buf_string += string(buf);
+	snprintf(buf, BUF_SIZE, "十大交易人及特法留倉淨口數\n近月: %d, 變化: %d\n全月: %d, 變化: %d\n\n",
 		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 3, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 7, 1),
 		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 3, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 7, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 3, 0) + result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 7, 0),
 		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 12, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 16, 1),
 		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 12, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 16, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 12, 0) + result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 16, 0)
 		);
-// Close the file
-	if (fp != NULL)
-	{
-		fclose(fp);
-		fp = NULL;
-	}
+	buf_string += string(buf);
+
+// Write the data into file
+	char filename[32];
+	snprintf(filename, 32, DAILY_FINANCE_FILENAME_FORMAT, sp_time_cfg->get_year(), sp_time_cfg->get_month(), sp_time_cfg->get_day());
+	char filepath[32];
+	snprintf(filepath, 32, "%s/%s", RESULT_FOLDER_NAME, filename);
+	ret =  direct_string_to_output_stream(buf_string.c_str(), filepath);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	printf("Check the result in file: %s\n", filepath);
+#ifdef DO_DEBUG
+// Write the data into STDOUT
+	ret =  direct_string_to_output_stream(buf_string.c_str());
+	if (CHECK_FAILURE(ret))
+		return ret;
+#endif
 	return RET_SUCCESS;
 }
+
 #ifdef DO_DEBUG
 unsigned short FinanceAnalyzerMgr::test()
 {

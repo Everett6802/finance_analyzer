@@ -22,7 +22,7 @@ public:
 	unsigned short query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set)const;
 
 	unsigned short run_daily();
-	unsigned short write_daily(const SmartPointer<TimeCfg>& sp_time_cfg, const char* filepath, const PRESULT_SET result_set)const;
+	unsigned short write_daily(const SmartPointer<TimeCfg>& sp_time_cfg, const PRESULT_SET result_set)const;
 #ifdef DO_DEBUG
 	unsigned short test();
 #endif

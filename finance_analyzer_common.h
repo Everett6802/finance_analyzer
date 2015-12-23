@@ -62,6 +62,7 @@ enum FinanceFieldType
 
 extern const char* DAILY_FINANCE_FILENAME_FORMAT;
 extern const char* CONFIG_FOLDER_NAME;
+extern const char* RESULT_FOLDER_NAME;
 extern const char* WORKDAY_CANLENDAR_CONF_FILENAME;
 extern const char* DATABASE_TIME_RANGE_CONF_FILENAME;
 
@@ -111,5 +112,8 @@ extern const unsigned short RET_FAILURE_MYSQL;
 const char* get_ret_description(unsigned short ret);
 bool check_file_exist(const char* filepath);
 bool check_config_file_exist(const char* filepath);
+unsigned short create_folder_if_not_exist(const char* path, int mode=0755);
+unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_project, int mode=0755);
+unsigned short direct_string_to_output_stream(const char* data, const char* filepath=NULL);
 
 #endif
