@@ -1,7 +1,9 @@
 #ifndef FINANCE_ANALYZER_COMMON_H
 #define FINANCE_ANALYZER_COMMON_H
 
-#include "msg_dumper_wrapper.h"
+//#include <list>
+//#include <string>
+//#include "msg_dumper_wrapper.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +63,10 @@ enum FinanceFieldType
 // Global Variables
 
 extern const char* DAILY_FINANCE_FILENAME_FORMAT;
+extern const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT;
 extern const char* CONFIG_FOLDER_NAME;
 extern const char* RESULT_FOLDER_NAME;
+extern const char* FINANCE_ANALYZER_CONF_FILENAME;
 extern const char* WORKDAY_CANLENDAR_CONF_FILENAME;
 extern const char* DATABASE_TIME_RANGE_CONF_FILENAME;
 
@@ -115,5 +119,6 @@ bool check_config_file_exist(const char* filepath);
 unsigned short create_folder_if_not_exist(const char* path, int mode=0755);
 unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_project, int mode=0755);
 unsigned short direct_string_to_output_stream(const char* data, const char* filepath=NULL);
+unsigned short send_email(const char* title, const char* address, const char* content);
 
 #endif

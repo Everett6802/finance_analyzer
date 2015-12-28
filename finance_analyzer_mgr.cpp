@@ -31,6 +31,89 @@ FinanceAnalyzerMgr::~FinanceAnalyzerMgr()
 	RELEASE_MSG_DUMPER()
 }
 
+unsigned short FinanceAnalyzerMgr::parse_config()
+{
+// Open the config file
+	char filepath[32];
+	snprintf(filepath, 32, "%s/%s", CONFIG_FOLDER_NAME, FINANCE_ANALYZER_CONF_FILENAME);
+	FILE* fp = fopen(filepath, "r");
+	if (fp == NULL)
+	{
+		WRITE_FORMAT_ERROR("Fail to open the file: %s, due to: %s", filepath, strerror(errno));
+		return RET_FAILURE_SYSTEM_API;
+	}
+// Parse the config file
+	static const int BUF_SIZE = 256;
+	char buf[BUF_SIZE];
+	ConfigFieldType config_field_type = CONFIG_FIELD_UNKNOWN;
+	while (fgets(buf, BUF_SIZE, fp))
+	{
+		if (buf[0] == '[')
+		{
+			static const char* config_field[] = {"Unknown", "[email_address]"};
+			config_field_type = CONFIG_FIELD_UNKNOWN;
+			for (int i = 0 ; i < CONFIG_FIELD_SIZE ; i++)
+			{
+				if (strncmp(buf, config_field[i], strlen(config_field[i])) == 0)
+				{
+					WRITE_FORMAT_DEBUG("Parse the parameter in the filed: %s", config_field[i]);
+					config_field_type = (ConfigFieldType)i;
+					break;
+				}
+			}
+			if (config_field_type == CONFIG_FIELD_UNKNOWN)
+			{
+				WRITE_FORMAT_ERROR("Unknown field title in config[%s]: %s", filepath, buf);
+				return RET_FAILURE_INCORRECT_CONFIG;
+			}
+		}
+		else
+		{
+			int buf_len = strlen(buf);
+			if (buf_len != 0)
+			{
+				if (buf[buf_len - 1] == '\n')
+					buf[buf_len - 1] = '\0';
+			}
+			if (strlen(buf) == 0)
+				continue;
+			switch(config_field_type)
+			{
+			case CONFIG_FIELD_EMAIL_ADDRESS:
+			{
+				string address(buf);
+				email_address_list.push_back(address);
+			}
+			break;
+			default:
+			{
+				WRITE_FORMAT_ERROR("Unsupported field type: %d", config_field_type);
+				return RET_FAILURE_INCORRECT_CONFIG;
+			}
+			break;
+			}
+		}
+	}
+
+// CLose the handle of the config file
+	if (fp != NULL)
+	{
+		fclose(fp);
+		fp = NULL;
+	}
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerMgr::initialize()
+{
+	unsigned short ret = RET_SUCCESS;
+	ret = parse_config();
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	return RET_SUCCESS;
+}
+
 unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set)const
 {
 	assert(time_range_cfg != NULL && query_set != NULL && result_set != NULL);
@@ -203,14 +286,14 @@ unsigned short FinanceAnalyzerMgr::run_daily()
 #endif
 // Write into file
 	SmartPointer<TimeCfg> sp_time_cfg(new TimeCfg(year, month, day));
-	ret = write_daily(sp_time_cfg, /*filepath, */sp_result_set.get_instance());
+	ret = show_daily_result(sp_time_cfg, sp_result_set.get_instance());
 	if (CHECK_FAILURE(ret))
 		return ret;
 
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerMgr::write_daily(const SmartPointer<TimeCfg>& sp_time_cfg, const PRESULT_SET result_set)const
+unsigned short FinanceAnalyzerMgr::show_daily_result(const SmartPointer<TimeCfg>& sp_time_cfg, const PRESULT_SET result_set, int show_result_type)const
 {
 //	assert(filepath != NULL && "filepath should NOT be NULL");
 	assert(result_set != NULL && "result_set should NOT be NULL");
@@ -290,21 +373,41 @@ unsigned short FinanceAnalyzerMgr::write_daily(const SmartPointer<TimeCfg>& sp_t
 		);
 	buf_string += string(buf);
 
-// Write the data into file
-	char filename[32];
-	snprintf(filename, 32, DAILY_FINANCE_FILENAME_FORMAT, sp_time_cfg->get_year(), sp_time_cfg->get_month(), sp_time_cfg->get_day());
-	char filepath[32];
-	snprintf(filepath, 32, "%s/%s", RESULT_FOLDER_NAME, filename);
-	ret =  direct_string_to_output_stream(buf_string.c_str(), filepath);
-	if (CHECK_FAILURE(ret))
-		return ret;
-	printf("Check the result in file: %s\n", filepath);
-#ifdef DO_DEBUG
+// SHow result on the screen
+	if (show_result_type & SHOW_RESULT_STDOUT)
+	{
 // Write the data into STDOUT
-	ret =  direct_string_to_output_stream(buf_string.c_str());
-	if (CHECK_FAILURE(ret))
-		return ret;
-#endif
+		ret =  direct_string_to_output_stream(buf_string.c_str());
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+// Write the data into file
+	if (show_result_type & SHOW_RESULT_FILE)
+	{
+		char filename[32];
+		snprintf(filename, 32, DAILY_FINANCE_FILENAME_FORMAT, sp_time_cfg->get_year(), sp_time_cfg->get_month(), sp_time_cfg->get_day());
+		char filepath[32];
+		snprintf(filepath, 32, "%s/%s", RESULT_FOLDER_NAME, filename);
+		WRITE_FORMAT_DEBUG("Write daily data to file[%s]", filepath);
+		ret = direct_string_to_output_stream(buf_string.c_str(), filepath);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		printf("Check the result in file: %s\n", filepath);
+	}
+// Send the result by email
+	if (show_result_type & SHOW_RESULT_EMAIL)
+	{
+		char title[32];
+		snprintf(title, 32, DAILY_FINANCE_EMAIL_TITLE_FORMAT, sp_time_cfg->get_year(), sp_time_cfg->get_month(), sp_time_cfg->get_day());
+		for (list<string>::const_iterator iter = email_address_list.begin() ; iter != email_address_list.end() ; iter++)
+		{
+			string email_address = (string)*iter;
+			WRITE_FORMAT_DEBUG("Write daily data by email[%s] to %s", title, email_address.c_str());
+			ret = send_email(title, email_address.c_str(), buf_string.c_str());
+			if (CHECK_FAILURE(ret))
+				return ret;
+		}
+	}
 	return RET_SUCCESS;
 }
 

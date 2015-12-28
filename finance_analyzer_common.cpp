@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
 #include <string>
 #include <stdexcept>
 #include <new>
@@ -10,8 +11,10 @@
 using namespace std;
 
 const char* DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%2d%2d";
+const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%2d%2d";
 const char* CONFIG_FOLDER_NAME = "conf";
 const char* RESULT_FOLDER_NAME = "result";
+const char* FINANCE_ANALYZER_CONF_FILENAME = "finance_analyzer.conf";
 const char* WORKDAY_CANLENDAR_CONF_FILENAME = ".workday_canlendar.conf";
 const char* DATABASE_TIME_RANGE_CONF_FILENAME = ".database_time_range.conf";
 
@@ -367,5 +370,37 @@ unsigned short direct_string_to_output_stream(const char* data, const char* file
 		fclose(fp);
 		fp = NULL;
 	}
+	return RET_SUCCESS;
+}
+
+unsigned short send_email(const char* title, const char* address, const char* content)
+{
+	static int buf_size_torlerance = 128;
+	assert(title != NULL && "title should NOT be NULL");
+	assert(address != NULL && "address should NOT be NULL");
+	assert(content != NULL && "content should NOT be NULL");
+
+	int content_len = strlen(content);
+	char* buf = new char[strlen(content) + buf_size_torlerance];
+	if (buf == NULL)
+	{
+		fprintf(stderr, "Fail to allocate the memory: buf\n");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+
+	snprintf(buf, buf_size_torlerance + content_len, "echo \"%s\" | mail -s \"%s\" %s", content, title, address);
+	FILE* fp = popen(buf, "r");
+	if (fp != NULL)
+	{
+		pclose(fp);
+		fp = NULL;
+	}
+
+	if (buf != NULL)
+	{
+		delete[] buf;
+		buf = NULL;
+	}
+
 	return RET_SUCCESS;
 }
