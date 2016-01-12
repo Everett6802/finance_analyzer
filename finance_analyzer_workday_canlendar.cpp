@@ -633,8 +633,8 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::get_prev_workday(int year_base, 
 		return ret;
 	if (workday_deque.empty())
 	{
-		WRITE_WARN("No date is FOUND");
-		return RET_FAILURE_INSUFFICIENT_MEMORY;
+		WRITE_WARN("No data is FOUND");
+		return RET_FAILURE_NOT_FOUND;
 	}
 // Update the data
 	PTIME_CFG time_cfg = workday_deque[0];
@@ -682,8 +682,8 @@ unsigned short FinanceAnalyzerWorkdayCanlendar::get_next_workday(int year_base, 
 		return ret;
 	if (workday_deque.empty())
 	{
-		WRITE_WARN("No date is FOUND");
-		return RET_FAILURE_INSUFFICIENT_MEMORY;
+		WRITE_WARN("No data is FOUND");
+		return RET_FAILURE_NOT_FOUND;
 	}
 // Update the data
 	PTIME_CFG time_cfg = workday_deque[0];

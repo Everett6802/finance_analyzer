@@ -172,7 +172,7 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::restrict_time_range(const set<i
 	int max_start_time_int_value;
 	int min_end_time_source_type_index = -1;
 	int min_end_time_int_value;
-
+// Find the max start time and min end time in the current selection
 	while (iter != source_type_index_set.end())
 	{
 		int time_int_value = TimeCfg::get_int_value(database_time_range_deque[*iter]->get_start_time());

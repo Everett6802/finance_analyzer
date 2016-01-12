@@ -531,7 +531,7 @@ unsigned short QuerySet::add_query(int source_index, int field_index)
 		return RET_WARN_INDEX_DUPLICATE;
 	}
 // If all fields are selected, it's no need to add extra index
-	if (query_set[source_index][0] == -1)
+	if (!query_set[source_index].empty() && query_set[source_index][0] == -1)
 	{
 		WRITE_FORMAT_WARN("Ignore index: %d in %s", field_index, FINANCE_DATABASE_DESCRIPTION_LIST[source_index]);
 		return RET_WARN_INDEX_IGNORE;
@@ -601,7 +601,7 @@ unsigned short ResultSet::get_lower_subindex(unsigned short x)
 ResultSet::ResultSet() :
 	check_date_data_mode(false),
 //	date_data_size(0),
-	date_date_pos(0),
+	date_data_pos(0),
 	int_data_set_size(0),
 	long_data_set_size(0),
 	float_data_set_size(0)
@@ -748,15 +748,41 @@ unsigned short ResultSet::set_date(char* element_value)
 {
 	if (check_date_data_mode)
 	{
-		if (strcmp(date_data[date_date_pos], element_value) != 0)
+		if (strcmp(date_data[date_data_pos], element_value) != 0)
 		{
-			WRITE_FORMAT_ERROR("The date(%s, %s) is NOT equal", date_data[date_date_pos], element_value);
+			WRITE_FORMAT_ERROR("The date(%s, %s) is NOT equal", date_data[date_data_pos], element_value);
 			return RET_FAILURE_INCORRECT_OPERATION;
 		}
-		date_date_pos++;
+		date_data_pos++;
 	}
 	else
 		date_data.add(element_value, strlen(element_value) + 1);
+	return RET_SUCCESS;
+}
+
+unsigned short ResultSet::find_data_pos(int source_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const
+{
+	unsigned short key = get_combined_index(source_index, field_index);
+//	if (data_set_mapping.find(key) == data_set_mapping.end())
+//	{
+//		WRITE_FORMAT_ERROR("The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
+//	unsigned short value = data_set_mapping[key];
+	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);
+	if (iter == data_set_mapping.end())
+	{
+		char errmsg[64];
+		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
+		WRITE_ERROR(errmsg);
+//		throw invalid_argument(errmsg);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	unsigned short value = iter->second;
+
+	field_type_index = get_upper_subindex(value);
+	field_type_pos = get_lower_subindex(value);
+
 	return RET_SUCCESS;
 }
 
@@ -767,16 +793,12 @@ unsigned short ResultSet::set_data(int source_index, int field_index, char* data
 		WRITE_ERROR("data_string should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
+	unsigned short ret = RET_SUCCESS;
+	unsigned short field_type_index, field_type_pos;
+	ret = find_data_pos(source_index, field_index, field_type_index, field_type_pos);
+	if (CHECK_FAILURE(ret))
+		return ret;
 
-	unsigned short key = get_combined_index(source_index, field_index);
-	if (data_set_mapping.find(key) == data_set_mapping.end())
-	{
-		WRITE_FORMAT_ERROR("The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-	unsigned short value = data_set_mapping[key];
-	unsigned short field_type_index = get_upper_subindex(value);
-	unsigned short field_type_pos = get_lower_subindex(value);
 	switch(field_type_index)
 	{
 	case FinanceField_INT:
@@ -790,7 +812,8 @@ unsigned short ResultSet::set_data(int source_index, int field_index, char* data
 		break;
 	default:
 		WRITE_FORMAT_ERROR("Unsupported field_type_index: %d", field_type_index);
-		return RET_FAILURE_INVALID_ARGUMENT;
+		ret = RET_FAILURE_INVALID_ARGUMENT;
+		break;
 	}
 	return RET_SUCCESS;
 }
@@ -798,29 +821,26 @@ unsigned short ResultSet::set_data(int source_index, int field_index, char* data
 #define DEFINE_GET_ARRAY_FUNC(n, m)\
 const PFINANCE_##m##_DATA_ARRAY ResultSet::get_##n##_array(int source_index, int field_index)const\
 {\
-	unsigned short key = get_combined_index(source_index, field_index);\
-	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.find(key);\
-	if (iter == data_set_mapping.end())\
+	static const int BUF_SIZE = 64;\
+	static char errmsg[64];\
+	unsigned short ret = RET_SUCCESS;\
+	unsigned short field_type_index, field_type_pos;\
+	ret = find_data_pos(source_index, field_index, field_type_index, field_type_pos);\
+	if (CHECK_FAILURE(ret))\
 	{\
-		char errmsg[64];\
-		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);\
+		snprintf(errmsg, 64, "Fail to fail data position from (%d, %d)", source_index, field_index);\
 		WRITE_ERROR(errmsg);\
 		throw invalid_argument(errmsg);\
 	}\
-	unsigned short value = iter->second;\
-	unsigned short field_type_index = get_upper_subindex(value);\
 	if (field_type_index != FinanceField_##m)\
 	{\
-		char errmsg[64];\
-		snprintf(errmsg, 64, "The field type[%d] is NOT int", field_type_index);\
+		snprintf(errmsg, BUF_SIZE, "The field type[%d] is NOT int", field_type_index);\
 		WRITE_ERROR(errmsg);\
 		throw invalid_argument(errmsg);\
 	}\
-	unsigned short field_type_pos = get_lower_subindex(value);\
-	if (field_type_pos >= int_data_set_size || field_type_pos < 0)\
+	if (field_type_pos >= n##_data_set_size || field_type_pos < 0)\
 	{\
-		char errmsg[64];\
-		snprintf(errmsg, 64, "The field pos[%d] is out of range", field_type_pos);\
+		snprintf(errmsg, BUF_SIZE, "The field pos[%d] is out of range", field_type_pos);\
 		WRITE_ERROR(errmsg);\
 		throw out_of_range(errmsg);\
 	}\
@@ -843,7 +863,7 @@ DEFINE_GET_ARRAY_ELEMENT_FUNC(float, FLOAT)
 void ResultSet::switch_to_check_date_mode()
 {
 	check_date_data_mode = true;
-	date_date_pos = 0;
+	date_data_pos = 0;
 }
 
 unsigned short ResultSet::check_data()const

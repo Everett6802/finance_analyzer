@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "msg_dumper_wrapper.h"
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
@@ -17,13 +18,6 @@ int main(int argc, char** argv)
 	if (CHECK_FAILURE(ret))
 		return ret;
 
-//	char cmd[1024];
-//	char* title = "臺股151228";
-//	char* address = "everett6802@hotmail.com";
-//	char* content = "臺股指數及成交量 不能編中文\n成交金額(2), 發行量加權股價指數(4), 漲跌點數(5)\n";
-//
-//	send_email(title, address, content);
-//	exit(0);
 	int index = 1;
 	int offset;
 	for (; index < argc ; index += offset)

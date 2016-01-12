@@ -245,10 +245,12 @@ private:
 	std::deque<PFINANCE_FLOAT_DATA_ARRAY> float_data_set;
 	bool check_date_data_mode;
 //	int date_data_size;
-	int date_date_pos;
+	int date_data_pos;
 	int int_data_set_size;
 	int long_data_set_size;
 	int float_data_set_size;
+
+	unsigned short find_data_pos(int source_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
 
 public:
 	ResultSet();
