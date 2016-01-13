@@ -4,6 +4,7 @@
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
+#include "finance_analyzer_algorithm.h"
 
 
 static FinanceAnalyzerMgr finance_analyzer_mgr;
@@ -14,6 +15,26 @@ void show_usage();
 
 int main(int argc, char** argv)
 {
+	FinanceIntDataArray finance_data_array1, finance_data_array2;
+	finance_data_array1.add(1);
+	finance_data_array1.add(2);
+	finance_data_array1.add(3);
+	finance_data_array1.add(4);
+	finance_data_array1.add(5);
+	finance_data_array2.add(-1);
+	finance_data_array2.add(-2);
+	finance_data_array2.add(-3);
+	finance_data_array2.add(-4);
+	finance_data_array2.add(-5);
+
+	printf("Average1: %f\n", average<int>(finance_data_array1));
+	printf("Average2: %f\n", average<int>(finance_data_array2));
+	printf("StandardDeviation1: %f\n", standard_deviation<int>(finance_data_array1));
+	printf("StandardDeviation2: %f\n", standard_deviation<int>(finance_data_array2));
+	printf("Covariance: %f\n", covariance<int>(finance_data_array1, finance_data_array2));
+	printf("Correlation: %f\n", correlation<int>(finance_data_array1, finance_data_array2));
+	exit(EXIT_SUCCESS);
+
 	unsigned short ret = finance_analyzer_mgr.initialize();
 	if (CHECK_FAILURE(ret))
 		return ret;
