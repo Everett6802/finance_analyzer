@@ -10,8 +10,9 @@
 #include "finance_analyzer_common_class.h"
 
 
-#define DECLARE_WORKDAY_CANLENDAR()\
-static PFINANCE_ANALYZER_WORKDAY_CANLENDAR workday_canlendar = FinanceAnalyzerWorkdayCanlendar::get_instance();
+#define DECLARE_WORKDAY_CANLENDAR() PFINANCE_ANALYZER_WORKDAY_CANLENDAR workday_canlendar;
+#define IMPLEMENT_WORKDAY_CANLENDAR() workday_canlendar = FinanceAnalyzerWorkdayCanlendar::get_instance();
+#define RELEASE_WORKDAY_CANLENDAR() SAFE_RELEASE(workday_canlendar)
 
 class FinanceAnalyzerWorkdayCanlendar
 {

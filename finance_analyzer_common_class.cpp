@@ -80,24 +80,11 @@ template class SmartPointer<ResultSet>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int TimeCfg::get_int_value(int year, int month, int day)
+void TimeCfg::parse_time_string(const char* time_str, int&year, int&month, int& day, TimeType& time_type)
 {
-	return ((year & 0xFFFF) << 16) | ((month & 0xFF) << 8) | (day & 0xFF);
-}
-
-int TimeCfg::get_int_value(const TimeCfg* time_cfg)
-{
-	assert(time_cfg != NULL && "time_cfg should NOT be NULL");
-	return get_int_value(time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
-}
-
-TimeCfg::TimeCfg(const char* cur_time_str)
-{
-	IMPLEMENT_MSG_DUMPER()
 	static const char *DELIM = "-";
-	if (cur_time_str == NULL)
-		throw invalid_argument(string("cur_time_str should NOT be NULL"));
-	snprintf(time_str, 16, "%s", cur_time_str);
+	if (time_str == NULL)
+		throw invalid_argument(string("time_str should NOT be NULL"));
 
 	char time_tmp_str[16];
 	memset(time_tmp_str, 0x0, sizeof(char) * 16);
@@ -124,7 +111,10 @@ TimeCfg::TimeCfg(const char* cur_time_str)
 		count++;
 	}
 	if (count == 2)
+	{
+		day = 0;
 		time_type = TIME_MONTH;
+	}
 	else if (count == 3)
 		time_type = TIME_DATE;
 	else
@@ -133,6 +123,24 @@ TimeCfg::TimeCfg(const char* cur_time_str)
 		snprintf(errmsg, 64, "Incorrect time format: %s, count: %d", time_str, count);
 		throw invalid_argument(errmsg);
 	}
+}
+
+int TimeCfg::get_int_value(int year, int month, int day)
+{
+	return ((year & 0xFFFF) << 16) | ((month & 0xFF) << 8) | (day & 0xFF);
+}
+
+int TimeCfg::get_int_value(const TimeCfg* time_cfg)
+{
+	assert(time_cfg != NULL && "time_cfg should NOT be NULL");
+	return get_int_value(time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
+}
+
+TimeCfg::TimeCfg(const char* cur_time_str)
+{
+	IMPLEMENT_MSG_DUMPER()
+	parse_time_string(cur_time_str, year, month, day, time_type);
+	snprintf(time_str, 16, "%s", cur_time_str);
 }
 
 TimeCfg::TimeCfg(int cur_year, int cur_month)
@@ -153,6 +161,20 @@ TimeCfg::TimeCfg(int cur_year, int cur_month, int cur_day)
 	day = cur_day;
 	snprintf(time_str, 16, "%04d-%02d-%02d", year, month, day);
 	time_type = TIME_DATE;
+}
+
+TimeCfg::TimeCfg(const TimeCfg* another_time_cfg)
+{
+	IMPLEMENT_MSG_DUMPER()
+	assert(another_time_cfg != NULL && "another_time_cfg should NOT be NULL");
+	time_type = another_time_cfg->is_month_type() ? TIME_MONTH : TIME_DATE;
+	year = another_time_cfg->get_year();
+	month = another_time_cfg->get_month();
+	day = another_time_cfg->is_month_type() ? 0 : another_time_cfg->get_day();
+	if (time_type == TIME_MONTH)
+		snprintf(time_str, 16, "%04d-%02d", year, month);
+	else
+		snprintf(time_str, 16, "%04d-%02d-%02d", year, month, day);
 }
 
 TimeCfg::~TimeCfg()
@@ -196,10 +218,36 @@ bool TimeCfg::equal_to(const TimeCfg* another_time_cfg)const
 	return true;
 }
 
+void TimeCfg::reset(const char* new_time_str)
+{
+	assert(new_time_str != NULL && "new_time_str should NOT be NULL");
+	parse_time_string(new_time_str, year, month, day, time_type);
+	snprintf(time_str, 16, "%s", new_time_str);
+}
+
+void TimeCfg::reset(int new_year, int new_month)
+{
+	year = new_year;
+	month = new_month;
+	day = 0;
+	snprintf(time_str, 16, "%04d-%02d", year, month);
+	time_type = TIME_MONTH;
+}
+
+void TimeCfg::reset(int new_year, int new_month, int new_day)
+{
+	year = new_year;
+	month = new_month;
+	day = new_day;
+	snprintf(time_str, 16, "%04d-%02d-%02d", year, month, day);
+	time_type = TIME_DATE;
+}
+
 bool TimeCfg::operator<(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
 		return false;
+	assert(time_type == another_time_cfg.time_type && "The time_type is NOT identical");
 //	fprintf(stderr, "< %d, %d, %s\n", TimeCfg::get_int_value(year, month, day), TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::get_int_value(year, month, day) < TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
 	return (TimeCfg::get_int_value(year, month, day) < TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
 }
@@ -208,6 +256,7 @@ bool TimeCfg::operator>(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
 		return false;
+	assert(time_type == another_time_cfg.time_type && "The time_type is NOT identical");
 //	fprintf(stderr, "> %d, %d, %s\n", TimeCfg::get_int_value(year, month, day), TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::get_int_value(year, month, day) > TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
 	return (TimeCfg::get_int_value(year, month, day) > TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
 }
@@ -216,6 +265,7 @@ bool TimeCfg::operator==(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
 		return false;
+	assert(time_type == another_time_cfg.time_type && "The time_type is NOT identical");
 //	fprintf(stderr, "== %d, %d, %s\n", TimeCfg::get_int_value(year, month, day), TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day), ((TimeCfg::get_int_value(year, month, day) < TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day) ? "True" : "False")));
 	return (TimeCfg::get_int_value(year, month, day) == TimeCfg::get_int_value(another_time_cfg.year, another_time_cfg.month, another_time_cfg.day));
 }
@@ -223,6 +273,37 @@ bool TimeCfg::operator==(const TimeCfg& another_time_cfg)const
 bool TimeCfg::operator>=(const TimeCfg& another_time_cfg)const {return !(*this < another_time_cfg);}
 bool TimeCfg::operator<=(const TimeCfg& another_time_cfg)const {return !(*this > another_time_cfg);}
 bool TimeCfg::operator!=(const TimeCfg& another_time_cfg)const {return !(*this == another_time_cfg);}
+
+bool TimeCfg::operator<(const char* another_time_str)const
+{
+	TimeType another_time_type;
+	int another_year, another_month, another_day;
+	TimeCfg::parse_time_string(another_time_str, another_year, another_month, another_day, another_time_type);
+	assert(time_type == another_time_type && "The time_type is NOT identical");
+	return (TimeCfg::get_int_value(year, month, day) < TimeCfg::get_int_value(another_year, another_month, another_day));
+}
+
+bool TimeCfg::operator>(const char* another_time_str)const
+{
+	TimeType another_time_type;
+	int another_year, another_month, another_day;
+	TimeCfg::parse_time_string(another_time_str, another_year, another_month, another_day, another_time_type);
+	assert(time_type == another_time_type && "The time_type is NOT identical");
+	return (TimeCfg::get_int_value(year, month, day) > TimeCfg::get_int_value(another_year, another_month, another_day));
+}
+
+bool TimeCfg::operator==(const char* another_time_str)const
+{
+	TimeType another_time_type;
+	int another_year, another_month, another_day;
+	TimeCfg::parse_time_string(another_time_str, another_year, another_month, another_day, another_time_type);
+	assert(time_type == another_time_type && "The time_type is NOT identical");
+	return (TimeCfg::get_int_value(year, month, day) == TimeCfg::get_int_value(another_year, another_month, another_day));
+}
+
+bool TimeCfg::operator>=(const char* another_time_str)const {return !(*this < another_time_str);}
+bool TimeCfg::operator<=(const char* another_time_str)const {return !(*this > another_time_str);}
+bool TimeCfg::operator!=(const char* another_time_str)const {return !(*this == another_time_str);}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -312,6 +393,23 @@ TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int day_start, int y
 	type_is_month = false;
 }
 
+TimeRangeCfg::TimeRangeCfg(const TimeRangeCfg& another_time_range_cfg) :
+	time_start_cfg(NULL),
+	time_end_cfg(NULL),
+	time_range_description(NULL),
+	type_is_month(false)
+{
+	IMPLEMENT_MSG_DUMPER()
+	time_start_cfg = new TimeCfg(*another_time_range_cfg.get_start_time());
+	if (time_start_cfg == NULL)
+		throw bad_alloc();
+	time_end_cfg = new TimeCfg(*another_time_range_cfg.get_end_time());
+	if (time_end_cfg == NULL)
+		throw bad_alloc();
+	assert(time_start_cfg->is_month_type() != time_end_cfg->is_month_type() && "The month type of start/end time config is NOT identical");
+	type_is_month = time_start_cfg->is_month_type();
+}
+
 TimeRangeCfg::~TimeRangeCfg()
 {
 	if (time_start_cfg != NULL)
@@ -378,6 +476,14 @@ PTIME_CFG TimeRangeCfg::get_end_time()
 {
 //	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
 	return time_end_cfg;
+}
+
+void TimeRangeCfg::reset_time(const char* new_time_start_str, const char* new_time_end_str)
+{
+	if (new_time_start_str != NULL)
+		time_start_cfg->reset(new_time_start_str);
+	if (new_time_end_str != NULL)
+		time_start_cfg->reset(new_time_end_str);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

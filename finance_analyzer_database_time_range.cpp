@@ -37,7 +37,8 @@ FinanceAnalyzerDatabaseTimeRange* FinanceAnalyzerDatabaseTimeRange::get_instance
 }
 
 FinanceAnalyzerDatabaseTimeRange::FinanceAnalyzerDatabaseTimeRange() :
-	ref_cnt(0)
+	ref_cnt(0),
+	max_time_range_cfg(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 }
@@ -119,7 +120,6 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::initialize()
 		char* end_time_str = strtok(NULL, ":");
 //		fprintf(stderr, "%s: %s:%s\n", finance_database_description, start_time_str, end_time_str);
 		PTIME_RANGE_CFG time_range_cfg = new TimeRangeCfg(start_time_str, end_time_str);
-
 		if (time_range_cfg == NULL)
 		{
 			WRITE_ERROR("Fail to allocate the memory: time_range_cfg");
@@ -127,7 +127,28 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::initialize()
 			break;
 		}
 		database_time_range_deque.push_back(time_range_cfg);
+// Find the oldest start date and latest end date
+		if (max_time_range_cfg == NULL)
+		{
+			max_time_range_cfg = new TimeRangeCfg(start_time_str, end_time_str);
+			if (max_time_range_cfg == NULL)
+			{
+				WRITE_ERROR("Fail to allocate the memory: max_time_range_cfg");
+				ret = RET_FAILURE_INSUFFICIENT_MEMORY;
+				break;
+			}
+		}
+		else
+		{
+// Find the oldest start date
+			if (*max_time_range_cfg->get_start_time() < start_time_str)
+				max_time_range_cfg->reset_time(start_time_str, NULL);
+// Find the latest end date
+			if (*max_time_range_cfg->get_end_time() > end_time_str)
+				max_time_range_cfg->reset_time(NULL, end_time_str);
+		}
 	}
+	WRITE_FORMAT_DEBUG("Max database time range: %s", max_time_range_cfg->to_string());
 
 	fclose(fp);
 	fp = NULL;
@@ -139,6 +160,18 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::initialize()
 	}
 
 	return ret;
+}
+
+unsigned short FinanceAnalyzerDatabaseTimeRange::get_max_database_time_range(SmartPointer<TimeRangeCfg>& sp_max_database_time_range_cfg)
+{
+	PTIME_RANGE_CFG max_database_time_range_cfg = new TimeRangeCfg(*max_time_range_cfg);
+	if (max_database_time_range_cfg == NULL)
+	{
+		WRITE_ERROR("Fail to allocate the memory: max_database_time_range_cfg");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+	sp_max_database_time_range_cfg.set_new(max_database_time_range_cfg);
+	return RET_SUCCESS;
 }
 
 int FinanceAnalyzerDatabaseTimeRange::add_ref()

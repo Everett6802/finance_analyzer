@@ -11,8 +11,9 @@
 #include "finance_analyzer_common_class.h"
 
 
-#define DECLARE_DATABASE_TIME_RANGE()\
-static PFINANCE_ANALYZER_DATABASE_TIME_RANGE database_time_range = FinanceAnalyzerDatabaseTimeRange::get_instance();
+#define DECLARE_DATABASE_TIME_RANGE() PFINANCE_ANALYZER_DATABASE_TIME_RANGE database_time_range;
+#define IMPLEMENT_DATABASE_TIME_RANGE() database_time_range = FinanceAnalyzerDatabaseTimeRange::get_instance();
+#define RELEASE_DATABASE_TIME_RANGE() SAFE_RELEASE(database_time_range)
 
 class FinanceAnalyzerDatabaseTimeRange
 {
@@ -24,6 +25,7 @@ private:
 	static FinanceAnalyzerDatabaseTimeRange* instance;
 	volatile int ref_cnt;
 	TIME_RANGE_DEQUE database_time_range_deque;
+	PTIME_RANGE_CFG max_time_range_cfg;
 
 	FinanceAnalyzerDatabaseTimeRange();
 	FinanceAnalyzerDatabaseTimeRange(const FinanceAnalyzerDatabaseTimeRange&);
@@ -31,6 +33,7 @@ private:
 	~FinanceAnalyzerDatabaseTimeRange();
 
 	unsigned short initialize();
+	unsigned short get_max_database_time_range(SmartPointer<TimeRangeCfg>& sp_max_database_time_range_cfg);
 
 public:
 	static FinanceAnalyzerDatabaseTimeRange* get_instance();

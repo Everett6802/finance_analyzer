@@ -32,6 +32,8 @@ class TimeCfg
 	DECLARE_MSG_DUMPER()
 	enum TimeType{TIME_MONTH, TIME_DATE};
 private:
+	static void parse_time_string(const char* time_str, int&year, int&month, int& day, TimeType& time_type);
+
 	TimeType time_type;
 	int year;
 	int month;
@@ -45,8 +47,9 @@ public:
 	TimeCfg(const char* cur_time_str); // Format: "2015-09" or "2015-09-04"
 	TimeCfg(int cur_year, int cur_month);
 	TimeCfg(int cur_year, int cur_month, int cur_day);
-	~TimeCfg();
+	TimeCfg(const TimeCfg* another_time_cfg);
 	TimeCfg& operator=(const TimeCfg& another);
+	~TimeCfg();
 
 	int get_year()const;
 	int get_month()const;
@@ -55,12 +58,22 @@ public:
 	bool is_month_type()const;
 	bool equal_to(const TimeCfg* another_time_cfg)const;
 
+	void reset(const char* new_time_str); // Format: "2015-09" or "2015-09-04"
+	void reset(int new_year, int new_month);
+	void reset(int new_year, int new_month, int cur_day);
+
 	bool operator<(const TimeCfg& another_time_cfg)const;
 	bool operator>(const TimeCfg& another_time_cfg)const;
 	bool operator==(const TimeCfg& another_time_cfg)const;
 	bool operator>=(const TimeCfg& another_time_cfg)const;
 	bool operator<=(const TimeCfg& another_time_cfg)const;
 	bool operator!=(const TimeCfg& another_time_cfg)const;
+	bool operator<(const char* another_time_str)const;
+	bool operator>(const char* another_time_str)const;
+	bool operator==(const char* another_time_str)const;
+	bool operator>=(const char* another_time_str)const;
+	bool operator<=(const char* another_time_str)const;
+	bool operator!=(const char* another_time_str)const;
 };
 typedef TimeCfg* PTIME_CFG;
 
@@ -82,8 +95,9 @@ public:
 	TimeRangeCfg(const char* time_start_str, const char* time_end_str);
 	TimeRangeCfg(int year_start, int month_start, int year_end, int month_end);
 	TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end);
-
+	TimeRangeCfg(const TimeRangeCfg& another_time_range_cfg);
 	~TimeRangeCfg();
+
 	bool is_month_type()const{return type_is_month;}
 	bool is_single_time()const;
 	const char* to_string();
@@ -91,6 +105,7 @@ public:
 	const PTIME_CFG get_end_time()const;
 	PTIME_CFG get_start_time();
 	PTIME_CFG get_end_time();
+	void reset_time(const char* new_time_start_str, const char* new_time_end_str);
 };
 typedef TimeRangeCfg* PTIME_RANGE_CFG;
 
@@ -275,5 +290,7 @@ public:
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(float)
 };
 typedef ResultSet* PRESULT_SET;
+//typedef std::map<unsigned short, unsigned short> MAP_SHORT;
+//typedef MAP_SHORT* PMAP_SHORT
 
 #endif

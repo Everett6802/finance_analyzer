@@ -4,6 +4,7 @@
 #include <set>
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_sql_reader.h"
+#include "finance_analyzer_calculator.h"
 #include "finance_analyzer_workday_canlendar.h"
 #include "finance_analyzer_database_time_range.h"
 
@@ -13,21 +14,31 @@ using namespace std;
 DECLARE_MSG_DUMPER_PARAM()
 
 FinanceAnalyzerMgr::FinanceAnalyzerMgr() :
-	finance_analyzer_sql_reader(NULL)
+	finance_analyzer_sql_reader(NULL),
+	finance_analyzer_calculator(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
-	finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
-	if (finance_analyzer_sql_reader == NULL)
-		throw bad_alloc();
+	IMPLEMENT_WORKDAY_CANLENDAR()
+	IMPLEMENT_DATABASE_TIME_RANGE()
+//	finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
+//	if (finance_analyzer_sql_reader == NULL)
+//		throw bad_alloc();
 }
 
 FinanceAnalyzerMgr::~FinanceAnalyzerMgr()
 {
+	if (finance_analyzer_calculator != NULL)
+	{
+		delete finance_analyzer_calculator;
+		finance_analyzer_calculator = NULL;
+	}
 	if (finance_analyzer_sql_reader != NULL)
 	{
 		delete finance_analyzer_sql_reader;
 		finance_analyzer_sql_reader = NULL;
 	}
+	RELEASE_DATABASE_TIME_RANGE()
+	RELEASE_WORKDAY_CANLENDAR()
 	RELEASE_MSG_DUMPER()
 }
 
@@ -106,6 +117,20 @@ unsigned short FinanceAnalyzerMgr::parse_config()
 
 unsigned short FinanceAnalyzerMgr::initialize()
 {
+	finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
+	if (finance_analyzer_sql_reader == NULL)
+	{
+		WRITE_ERROR("Fail to allocate memory: finance_analyzer_sql_reader");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+
+	finance_analyzer_calculator = new FinanceAnalyzerCalculator();
+	if (finance_analyzer_calculator == NULL)
+	{
+		WRITE_ERROR("Fail to allocate memory: finance_analyzer_calculator");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+
 	unsigned short ret = RET_SUCCESS;
 	ret = parse_config();
 	if (CHECK_FAILURE(ret))
@@ -133,7 +158,22 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 
+// Collect the information that what kind of the data source will be queried
+	set<int> source_type_index_set;
+	for (int i = 0 ; i < FinanceSourceSize ; i++)
+	{
+		if (!(*query_set)[i].empty())
+			source_type_index_set.insert(i);
+	}
+
 	unsigned short ret = RET_SUCCESS;
+// Check the boundary of each database
+	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
+	ret = database_time_range->restrict_time_range(source_type_index_set, sp_restricted_time_range_cfg.get_instance());
+	if (CHECK_FAILURE(ret))
+		return ret;
+	//	printf("The new search time range: %s\n", sp_restricted_time_range_cfg->to_string());
+
 //	for (QuerySet::iterator iter = query_set.begin() ; iter < query_set.end() ; iter++)
 	for (int source_index = 0 ; source_index < FinanceSourceSize ; source_index++)
 	{
@@ -152,8 +192,8 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 		string field_cmd = string("");
 		FinanceAnalyzerSqlReader::get_sql_field_command(source_index, query_field, field_cmd);
 // Query the data in each table
-		int start_year = time_range_cfg->get_start_time()->get_year();
-		int end_year = time_range_cfg->get_end_time()->get_year();
+		int start_year = sp_restricted_time_range_cfg->get_start_time()->get_year();
+		int end_year = sp_restricted_time_range_cfg->get_end_time()->get_year();
 // Search for each table year by year
 		for (int year = start_year ; year <= end_year ; year++)
 		{
@@ -163,11 +203,11 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 			if (year == start_year || year == end_year)
 			{
 				if (start_year == end_year)
-					time_range_cfg_in_year = new TimeRangeCfg(time_range_cfg->get_start_time()->to_string(), time_range_cfg->get_end_time()->to_string());
+					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), sp_restricted_time_range_cfg->get_end_time()->to_string());
 				else if (year == start_year)
-					time_range_cfg_in_year = new TimeRangeCfg(time_range_cfg->get_start_time()->to_string(), NULL);
+					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), NULL);
 				else
-					time_range_cfg_in_year = new TimeRangeCfg(NULL, time_range_cfg->get_end_time()->to_string());
+					time_range_cfg_in_year = new TimeRangeCfg(NULL, sp_restricted_time_range_cfg->get_end_time()->to_string());
 				if (time_range_cfg_in_year == NULL)
 				{
 					WRITE_ERROR("Fail to allocate memory: time_range_cfg_in_year");
@@ -191,11 +231,28 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 	return ret;
 }
 
+unsigned short FinanceAnalyzerMgr::correlate(const PTIME_RANGE_CFG time_range_cfg, FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation)const
+{
+	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
+	SmartPointer<QuerySet> sp_query_set(new QuerySet());
+	SmartPointer<TimeRangeCfg> sp_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
+	SmartPointer<ResultSet> sp_result_set(new ResultSet());
+	ADD_QUERY((*sp_query_set.get_instance()), finance_source_type1, finance_field_no1);
+	ADD_QUERY((*sp_query_set.get_instance()), finance_source_type2, finance_field_no2);
+	sp_query_set->add_query_done();
+
+	unsigned short ret = RET_SUCCESS;
+// Query the data from MySQL
+	ret = query(sp_time_range_cfg.get_instance(), sp_query_set.get_instance(), sp_result_set.get_instance());
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+
+	return ret;
+}
+
 unsigned short FinanceAnalyzerMgr::run_daily()
 {
-	DECLARE_WORKDAY_CANLENDAR();
-	DECLARE_DATABASE_TIME_RANGE();
-
 	unsigned short ret = RET_SUCCESS;
 //	int year = 2016, month = 9, day = 4;
 	int year, month, day;
@@ -226,7 +283,6 @@ unsigned short FinanceAnalyzerMgr::run_daily()
 	臺股期貨_到期月份_買方_前十大交易人合計_部位數(3), 臺股期貨_到期月份_賣方_前十大交易人合計_部位數(7), 臺股期貨_所有契約_買方_前十大交易人合計_部位數(12), 臺股期貨_所有契約_賣方_前十大交易人合計_部位數(16)
  */
 //	PQUERY_SET query_set = new QuerySet();
-//	PSINGLE_TIME_RANGE_CFG time_range_cfg = new SingleTimeRangeCfg(year, month, day);
 //	PTIME_RANGE_CFG time_range_cfg = new TimeRangeCfg(prev_year, prev_month, prev_day, year, month, day);
 //	PRESULT_SET result_set = new ResultSet();
 	SmartPointer<QuerySet> sp_query_set(new QuerySet());
@@ -286,14 +342,14 @@ unsigned short FinanceAnalyzerMgr::run_daily()
 #endif
 // Write into file
 	SmartPointer<TimeCfg> sp_time_cfg(new TimeCfg(year, month, day));
-	ret = show_daily_result(sp_time_cfg, sp_result_set.get_instance());
+	ret = show_daily(sp_time_cfg, sp_result_set.get_instance());
 	if (CHECK_FAILURE(ret))
 		return ret;
 
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerMgr::show_daily_result(const SmartPointer<TimeCfg>& sp_time_cfg, const PRESULT_SET result_set, int show_result_type)const
+unsigned short FinanceAnalyzerMgr::show_daily(const SmartPointer<TimeCfg>& sp_time_cfg, const PRESULT_SET result_set, int show_result_type)const
 {
 //	assert(filepath != NULL && "filepath should NOT be NULL");
 	assert(result_set != NULL && "result_set should NOT be NULL");
