@@ -11,13 +11,13 @@ class FinanceAnalyzerCalculator
 	DECLARE_MSG_DUMPER()
 
 private:
-//	DECLARE_DATABASE_TIME_RANGE();
+	DECLARE_DATABASE_TIME_RANGE();
 
 public:
 	FinanceAnalyzerCalculator();
 	~FinanceAnalyzerCalculator();
 
-	unsigned short correlate(const PRESULT_SET result_set, float& correlation_coeffient);
+	unsigned short correlate(const PRESULT_SET result_set, float& correlation_value);
 };
 
 #endif

@@ -20,9 +20,6 @@ FinanceAnalyzerMgr::FinanceAnalyzerMgr() :
 	IMPLEMENT_MSG_DUMPER()
 	IMPLEMENT_WORKDAY_CANLENDAR()
 	IMPLEMENT_DATABASE_TIME_RANGE()
-//	finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
-//	if (finance_analyzer_sql_reader == NULL)
-//		throw bad_alloc();
 }
 
 FinanceAnalyzerMgr::~FinanceAnalyzerMgr()
@@ -67,7 +64,7 @@ unsigned short FinanceAnalyzerMgr::parse_config()
 			{
 				if (strncmp(buf, config_field[i], strlen(config_field[i])) == 0)
 				{
-					WRITE_FORMAT_DEBUG("Parse the parameter in the filed: %s", config_field[i]);
+					WRITE_FORMAT_DEBUG("Parse the parameter in the file: %s", config_field[i]);
 					config_field_type = (ConfigFieldType)i;
 					break;
 				}
@@ -231,22 +228,32 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 	return ret;
 }
 
-unsigned short FinanceAnalyzerMgr::correlate(const PTIME_RANGE_CFG time_range_cfg, FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation)const
+unsigned short FinanceAnalyzerMgr::correlate(FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation, const PTIME_RANGE_CFG time_range_cfg)const
 {
-	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
+	assert(database_time_range != NULL && "database_time_range should NOT be NULL");
+//	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
+
 	SmartPointer<QuerySet> sp_query_set(new QuerySet());
-	SmartPointer<TimeRangeCfg> sp_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
 	SmartPointer<ResultSet> sp_result_set(new ResultSet());
 	ADD_QUERY((*sp_query_set.get_instance()), finance_source_type1, finance_field_no1);
 	ADD_QUERY((*sp_query_set.get_instance()), finance_source_type2, finance_field_no2);
 	sp_query_set->add_query_done();
+// Setup the time range
+	SmartPointer<TimeRangeCfg> sp_time_range_cfg;
+	if (time_range_cfg != NULL)
+		sp_time_range_cfg.set_new(new TimeRangeCfg(*time_range_cfg));
+	else
+		database_time_range->get_max_database_time_range(sp_time_range_cfg);
 
 	unsigned short ret = RET_SUCCESS;
 // Query the data from MySQL
 	ret = query(sp_time_range_cfg.get_instance(), sp_query_set.get_instance(), sp_result_set.get_instance());
 	if (CHECK_FAILURE(ret))
 		return ret;
-
+// Find the correlation
+	ret = finance_analyzer_calculator->correlate(sp_result_set.get_instance(), correlation);
+	if (CHECK_FAILURE(ret))
+		return ret;
 
 	return ret;
 }
@@ -465,6 +472,18 @@ unsigned short FinanceAnalyzerMgr::show_daily(const SmartPointer<TimeCfg>& sp_ti
 		}
 	}
 	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerMgr::analyze_daily()
+{
+	unsigned short ret = RET_SUCCESS;
+	float correlation;
+
+	ret = correlate(FinanceSource_StockExchangeAndVolume, 4, FinanceSource_StockExchangeAndVolume, 2, correlation);
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	return ret;
 }
 
 #ifdef DO_DEBUG

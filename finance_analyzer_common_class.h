@@ -244,10 +244,15 @@ typedef QuerySet* PQUERY_SET;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+typedef std::map<unsigned short, unsigned short> MAP_SHORT;
+typedef MAP_SHORT* PMAP_SHORT;
+typedef MAP_SHORT::iterator MAP_SHORT_ITER;
+typedef MAP_SHORT_ITER* PMAP_SHORT_ITER;
 class ResultSet
 {
 	DECLARE_MSG_DUMPER()
 
+public:
 	static unsigned short get_combined_index(int x, int y);
 	static unsigned short get_upper_subindex(unsigned short x);
 	static unsigned short get_lower_subindex(unsigned short x);
@@ -260,6 +265,7 @@ private:
 	std::deque<PFINANCE_FLOAT_DATA_ARRAY> float_data_set;
 	bool check_date_data_mode;
 //	int date_data_size;
+	int data_set_mapping_size;
 	int date_data_pos;
 	int int_data_set_size;
 	int long_data_set_size;
@@ -271,6 +277,37 @@ public:
 	ResultSet();
 	~ResultSet();
 
+	class iterator
+	{
+	private:
+		MAP_SHORT_ITER iter;
+
+	public:
+		iterator(MAP_SHORT_ITER iterator) : iter(iterator){}
+		iterator operator++()
+		{
+			iter++;
+			return *this;
+		}
+		iterator operator++(int junk)
+		{
+			iterator i = *this;
+			iter++;
+			return i;
+		}
+		bool operator==(const iterator& another)
+		{
+			if (this == &another)
+				return true;
+			return iter == another.iter;
+		}
+		bool operator!=(const iterator& another){return !(*this == another);}
+		const MAP_SHORT_ITER operator->(){return iter;}
+	};
+
+	iterator begin() {return iterator(data_set_mapping.begin());}
+	iterator end() {return iterator(data_set_mapping.end());}
+
 	unsigned short add_set(int source_index, int field_index);
 	unsigned short add_set(int source_index, const DEQUE_INT& field_set);
 	unsigned short set_date(char* element_value);
@@ -279,6 +316,9 @@ public:
 	void switch_to_check_date_mode();
 	unsigned short check_data()const;
 	unsigned short show_data()const;
+
+	int get_data_dimension()const;
+	int get_data_size()const;
 
 #define DECLARE_GET_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array(int source_index, int field_index)const;
 	DECLARE_GET_ARRAY_FUNC(int, INT)
@@ -290,7 +330,5 @@ public:
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(float)
 };
 typedef ResultSet* PRESULT_SET;
-//typedef std::map<unsigned short, unsigned short> MAP_SHORT;
-//typedef MAP_SHORT* PMAP_SHORT
 
 #endif

@@ -406,7 +406,7 @@ TimeRangeCfg::TimeRangeCfg(const TimeRangeCfg& another_time_range_cfg) :
 	time_end_cfg = new TimeCfg(*another_time_range_cfg.get_end_time());
 	if (time_end_cfg == NULL)
 		throw bad_alloc();
-	assert(time_start_cfg->is_month_type() != time_end_cfg->is_month_type() && "The month type of start/end time config is NOT identical");
+	assert(time_start_cfg->is_month_type() == time_end_cfg->is_month_type() && "The month type of start/end time config is NOT identical");
 	type_is_month = time_start_cfg->is_month_type();
 }
 
@@ -706,6 +706,7 @@ unsigned short ResultSet::get_lower_subindex(unsigned short x)
 
 ResultSet::ResultSet() :
 	check_date_data_mode(false),
+	data_set_mapping_size(0),
 //	date_data_size(0),
 	date_data_pos(0),
 	int_data_set_size(0),
@@ -832,6 +833,7 @@ unsigned short ResultSet::add_set(int source_index, int field_index)
 			return RET_FAILURE_INVALID_ARGUMENT;
 		}
 		data_set_mapping[key] = value;
+		data_set_mapping_size++;
 		iter++;
 	}
 	return RET_SUCCESS;
@@ -1078,3 +1080,6 @@ unsigned short ResultSet::show_data()const
 	}
 	return RET_SUCCESS;
 }
+
+int ResultSet::get_data_dimension()const{return data_set_mapping_size;}
+int ResultSet::get_data_size()const{return date_data_pos;}

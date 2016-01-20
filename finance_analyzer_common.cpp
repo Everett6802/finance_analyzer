@@ -10,8 +10,8 @@
 
 using namespace std;
 
-const char* DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%2d%2d";
-const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%2d%2d";
+const char* DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
+const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%02d%02d";
 const char* CONFIG_FOLDER_NAME = "conf";
 const char* RESULT_FOLDER_NAME = "result";
 const char* FINANCE_ANALYZER_CONF_FILENAME = "finance_analyzer.conf";

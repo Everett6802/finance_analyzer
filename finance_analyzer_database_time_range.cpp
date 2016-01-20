@@ -47,7 +47,7 @@ FinanceAnalyzerDatabaseTimeRange::~FinanceAnalyzerDatabaseTimeRange()
 {
 	int database_time_range_deque_size = database_time_range_deque.size();
 	for (int i = 0 ; i < database_time_range_deque_size ; i++)
-		delete[] database_time_range_deque[i];
+		delete database_time_range_deque[i];
 	database_time_range_deque.clear();
 
 	RELEASE_MSG_DUMPER()

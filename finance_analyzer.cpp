@@ -15,6 +15,7 @@ void show_usage();
 
 int main(int argc, char** argv)
 {
+//	finance_analyzer_mgr.analyze_daily();
 //	FinanceIntDataArray finance_data_array1, finance_data_array2;
 //	finance_data_array1.add(1);
 //	finance_data_array1.add(2);
@@ -41,6 +42,9 @@ int main(int argc, char** argv)
 
 	int index = 1;
 	int offset;
+	bool run_daily = false;
+	bool analyze_daily = true;
+
 	for (; index < argc ; index += offset)
 	{
 		if (strcmp(argv[index], "--help") == 0)
@@ -50,14 +54,13 @@ int main(int argc, char** argv)
 		}
 		else if (strcmp(argv[index], "--run_daily") == 0)
 		{
-			unsigned short ret = RET_SUCCESS;
-			ret = finance_analyzer_mgr.run_daily();
-			if (CHECK_FAILURE(ret))
-			{
-				fprintf(stderr, "Error occurs, due to: %d, %s\n", ret, get_ret_description(ret));
-				exit(EXIT_FAILURE);
-			}
-			exit(EXIT_SUCCESS);
+			run_daily = true;
+			offset = 2;
+		}
+		else if (strcmp(argv[index], "--analyze_daily") == 0)
+		{
+			analyze_daily = true;
+			offset = 2;
 		}
 		else
 		{
@@ -65,8 +68,30 @@ int main(int argc, char** argv)
 			exit(EXIT_FAILURE);
 		}
 	}
+	if (run_daily)
+	{
+		printf("Run daily data......\n");
+		ret = finance_analyzer_mgr.run_daily();
+		if (CHECK_FAILURE(ret))
+		{
+			fprintf(stderr, "Fails to run daily, due to: %d, %s\n", ret, get_ret_description(ret));
+			goto FAIL;
+		}
+	}
+	if (analyze_daily)
+	{
+		printf("Analyze daily data......\n");
+		ret = finance_analyzer_mgr.analyze_daily();
+		if (CHECK_FAILURE(ret))
+		{
+			fprintf(stderr, "Fails to analyze daily, due to: %d, %s\n", ret, get_ret_description(ret));
+			goto FAIL;
+		}
+	}
 
 	exit(EXIT_SUCCESS);
+FAIL:
+	exit(EXIT_FAILURE);
 }
 
 void show_usage()
@@ -74,5 +99,6 @@ void show_usage()
 	printf("====================== Usage ======================\n");
 	printf("-h|--help\nDescription: The usage\nCaution: Other flags are ignored\n");
 	printf("--run_daily\nDescription: Run daily data\nCaution: Other flags are ignored\n");
+	printf("--analyze_daily\nDescription: Analyze daily data\nCaution: Other flags are ignored\n");
 	printf("===================================================\n");
 }

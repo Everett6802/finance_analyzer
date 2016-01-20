@@ -49,11 +49,10 @@ FinanceAnalyzerWorkdayCanlendar::FinanceAnalyzerWorkdayCanlendar() :
 
 FinanceAnalyzerWorkdayCanlendar::~FinanceAnalyzerWorkdayCanlendar()
 {
-	YEAR_MAP::iterator iter = workday_map.begin();
-	while(iter != workday_map.end())
+	for(YEAR_MAP::iterator iter = workday_map.begin() ; iter != workday_map.end() ; iter++)
 	{
 		PDAY_DEQUE day_deque_ptr = (PDAY_DEQUE)iter->second;
-		delete day_deque_ptr;
+		delete[] day_deque_ptr;
 	}
 	workday_map.clear();
 
