@@ -55,12 +55,17 @@ int main(int argc, char** argv)
 		else if (strcmp(argv[index], "--run_daily") == 0)
 		{
 			run_daily = true;
-			offset = 2;
+			offset = 1;
 		}
 		else if (strcmp(argv[index], "--analyze_daily") == 0)
 		{
 			analyze_daily = true;
-			offset = 2;
+			offset = 1;
+		}
+		else if (strcmp(argv[index], "--show_console") == 0)
+		{
+			SHOW_CONSOLE = true;
+			offset = 1;
 		}
 		else
 		{
@@ -100,5 +105,6 @@ void show_usage()
 	printf("-h|--help\nDescription: The usage\nCaution: Other flags are ignored\n");
 	printf("--run_daily\nDescription: Run daily data\nCaution: Other flags are ignored\n");
 	printf("--analyze_daily\nDescription: Analyze daily data\nCaution: Other flags are ignored\n");
+	printf("--show_console\nDescription: Print the runtime info on STDOUT/STDERR\n");
 	printf("===================================================\n");
 }

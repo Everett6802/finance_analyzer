@@ -43,6 +43,8 @@ unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set
 	int source_index2 = ResultSet::get_upper_subindex(key[1]);
 	int field_index2 = ResultSet::get_lower_subindex(key[1]);
 
-//	correlation_value = correlation();
-	return RET_SUCCESS;
+	WRITE_FORMAT_DEBUG("Find the correlation between [%s,%d] and [%s,%d]", FINANCE_DATABASE_DESCRIPTION_LIST[source_index1], field_index1, FINANCE_DATABASE_DESCRIPTION_LIST[source_index2], field_index2);
+	unsigned short ret = RET_SUCCESS;
+	correlation_value = correlation(result_set->get_array(source_index1, field_index1), result_set->get_array(source_index2, field_index2));
+	return ret;
 }

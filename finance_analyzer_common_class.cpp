@@ -7,18 +7,20 @@
 #include "finance_analyzer_common_class.h"
 
 
-DECLARE_MSG_DUMPER_PARAM()
-
 using namespace std;
 
+DECLARE_MSG_DUMPER_PARAM()
+
 template <typename T>
-SmartPointer<T>::SmartPointer()
+SmartPointer<T>::SmartPointer() :
+	need_release(true)
 {
 	data_ptr = NULL;
 }
 
 template <typename T>
-SmartPointer<T>::SmartPointer(T* ptr)
+SmartPointer<T>::SmartPointer(T* ptr) :
+	need_release(true)
 {
 	data_ptr = ptr;
 }
@@ -26,7 +28,7 @@ SmartPointer<T>::SmartPointer(T* ptr)
 template <typename T>
 SmartPointer<T>::~SmartPointer()
 {
-	if (data_ptr != NULL)
+	if (need_release && data_ptr != NULL)
 	{
 		delete data_ptr;
 		data_ptr = NULL;
@@ -73,10 +75,17 @@ T* SmartPointer<T>::get_instance()
 {
 	return data_ptr;
 }
+
+template <typename T>
+void SmartPointer<T>::disable_release(){need_release = false;}
+
 template class SmartPointer<TimeCfg>;
 template class SmartPointer<TimeRangeCfg>;
 template class SmartPointer<QuerySet>;
 template class SmartPointer<ResultSet>;
+template class SmartPointer<FinanceIntDataArray>;
+template class SmartPointer<FinanceLongDataArray>;
+template class SmartPointer<FinanceFloatDataArray>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -494,33 +503,48 @@ SingleTimeRangeCfg::SingleTimeRangeCfg(int year, int month, int day) : TimeRange
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <typename T>
-int FinanceDataArrayBase<T>::DEF_ARRAY_SIZE = 512;
+FinanceDataArrayBase::FinanceDataArrayBase() :
+	array_type(FinanceField_UNKNOWN)
+{
+	IMPLEMENT_MSG_DUMPER()
+}
+
+FinanceDataArrayBase::~FinanceDataArrayBase()
+{
+	RELEASE_MSG_DUMPER()
+}
+
+void FinanceDataArrayBase::set_type(FinanceFieldType type){array_type = type;}
+FinanceFieldType FinanceDataArrayBase::get_type()const{return array_type;}
+
 
 template <typename T>
-FinanceDataArrayBase<T>::FinanceDataArrayBase() :
+int FinanceDataArrayTemplate<T>::DEF_ARRAY_SIZE = 512;
+
+template <typename T>
+FinanceDataArrayTemplate<T>::FinanceDataArrayTemplate() :
 	array_size(DEF_ARRAY_SIZE),
 	array_pos(0)
 {
-	IMPLEMENT_MSG_DUMPER()
+//	IMPLEMENT_MSG_DUMPER()
 	array_data = (T*)calloc(array_size, sizeof(T));
 	if (array_data == NULL)
 		throw bad_alloc();
 }
 
 template <typename T>
-FinanceDataArrayBase<T>::~FinanceDataArrayBase()
+FinanceDataArrayTemplate<T>::~FinanceDataArrayTemplate()
 {
 	if (array_data != NULL)
 	{
 		free(array_data);
 		array_data = NULL;
 	}
-	RELEASE_MSG_DUMPER()
+//	RELEASE_MSG_DUMPER()
 }
 
 template <typename T>
-void FinanceDataArrayBase<T>::alloc_new()
+void FinanceDataArrayTemplate<T>::alloc_new()
 {
 	T* array_data_old = array_data;
 	array_size <<= 1;
@@ -530,19 +554,19 @@ void FinanceDataArrayBase<T>::alloc_new()
 }
 
 template <typename T>
-bool FinanceDataArrayBase<T>::is_empty()const{return (array_pos == 0);}
+bool FinanceDataArrayTemplate<T>::is_empty()const{return (array_pos == 0);}
 
 template <typename T>
-int FinanceDataArrayBase<T>::get_size()const{return array_pos;}
+int FinanceDataArrayTemplate<T>::get_size()const{return array_pos;}
 
 template <typename T>
-int FinanceDataArrayBase<T>::get_array_size()const{return array_size;}
+int FinanceDataArrayTemplate<T>::get_array_size()const{return array_size;}
 
 template <typename T>
-const T* FinanceDataArrayBase<T>::get_data_array()const{return array_data;}
+const T* FinanceDataArrayTemplate<T>::get_data_array()const{return array_data;}
 
 template <typename T>
-void FinanceDataArrayBase<T>::add(T data)
+void FinanceDataArrayTemplate<T>::add(T data)
 {
 	if (array_pos + 1 >= array_size)
 		alloc_new();
@@ -551,7 +575,7 @@ void FinanceDataArrayBase<T>::add(T data)
 }
 
 template <typename T>
-const T FinanceDataArrayBase<T>::operator[](int index)const
+const T FinanceDataArrayTemplate<T>::operator[](int index)const
 {
 	assert(array_data != NULL && "array_data == NULL");
 	if(index < 0 && index >= array_pos)
@@ -567,29 +591,29 @@ const T FinanceDataArrayBase<T>::operator[](int index)const
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-FinanceDataPtrArrayBase<T>::~FinanceDataPtrArrayBase()
+FinanceDataPtrArrayTemplate<T>::~FinanceDataPtrArrayTemplate()
 {
-	if (FinanceDataArrayBase<T>::array_data != NULL)
+	if (FinanceDataArrayTemplate<T>::array_data != NULL)
 	{
-		for (int i = 0 ; i < FinanceDataArrayBase<T>::array_pos ; i++)
+		for (int i = 0 ; i < FinanceDataArrayTemplate<T>::array_pos ; i++)
 		{
-			free(FinanceDataArrayBase<T>::array_data[i]);
-			FinanceDataArrayBase<T>::array_data[i] = NULL;
+			free(FinanceDataArrayTemplate<T>::array_data[i]);
+			FinanceDataArrayTemplate<T>::array_data[i] = NULL;
 		}
 	}
 }
 
 template <typename T>
-void FinanceDataPtrArrayBase<T>::add(T data, size_t data_size)
+void FinanceDataPtrArrayTemplate<T>::add(T data, size_t data_size)
 {
-	if (FinanceDataArrayBase<T>::array_pos + 1 >= FinanceDataArrayBase<T>::array_size)
-		FinanceDataArrayBase<T>::alloc_new();
+	if (FinanceDataArrayTemplate<T>::array_pos + 1 >= FinanceDataArrayTemplate<T>::array_size)
+		FinanceDataArrayTemplate<T>::alloc_new();
 
 	T data_new = (T)calloc(data_size, sizeof(char));
 	if (data_new == NULL)
 		throw bad_alloc();
 	memcpy((void*)data_new, (void*)data, sizeof(char) * data_size);
-	FinanceDataArrayBase<T>::array_data[FinanceDataArrayBase<T>::array_pos++] = data_new;
+	FinanceDataArrayTemplate<T>::array_data[FinanceDataArrayTemplate<T>::array_pos++] = data_new;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -793,6 +817,7 @@ unsigned short ResultSet::add_set(int source_index, int field_index)
 		switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index])
 		{
 		case FinanceField_INT:
+		{
 //			PFINANCE_INT_DATA_ARRAY new_finance_int_data = new FinanceIntDataArray();
 //			if (new_finance_int_data == NULL)
 //			{
@@ -800,10 +825,15 @@ unsigned short ResultSet::add_set(int source_index, int field_index)
 //				return RET_FAILURE_INSUFFICIENT_MEMORY;
 //			}
 			value = get_combined_index(FinanceField_INT, int_data_set.size());
-			int_data_set.push_back(new FinanceIntDataArray());
+			PFINANCE_INT_DATA_ARRAY new_array = new FinanceIntDataArray();
+			assert(new_array != NULL && "Fail to allocate the FinanceIntDataArray object");
+			new_array->set_type(FinanceField_INT);
+			int_data_set.push_back(new_array);
 			int_data_set_size = int_data_set.size();
+		}
 			break;
 		case FinanceField_LONG:
+		{
 //			PFINANCE_LONG_DATA_ARRAY new_finance_long_data = new FinanceLongDataArray();
 //			if (new_finance_long_data == NULL)
 //			{
@@ -811,10 +841,15 @@ unsigned short ResultSet::add_set(int source_index, int field_index)
 //				return RET_FAILURE_INSUFFICIENT_MEMORY;
 //			}
 			value = get_combined_index(FinanceField_LONG, long_data_set.size());
-			long_data_set.push_back(new FinanceLongDataArray());
+			PFINANCE_LONG_DATA_ARRAY new_array = new FinanceLongDataArray();
+			assert(new_array != NULL && "Fail to allocate the FinanceLongDataArray object");
+			new_array->set_type(FinanceField_LONG);
+			long_data_set.push_back(new_array);
 			long_data_set_size = long_data_set.size();
+		}
 			break;
 		case FinanceField_FLOAT:
+		{
 //			PFINANCE_FLOAT_DATA_ARRAY new_finance_float_data = new FinanceFloatDataArray();
 //			if (new_finance_float_data == NULL)
 //			{
@@ -822,8 +857,12 @@ unsigned short ResultSet::add_set(int source_index, int field_index)
 //				return RET_FAILURE_INSUFFICIENT_MEMORY;
 //			}
 			value = get_combined_index(FinanceField_FLOAT, float_data_set.size());
-			float_data_set.push_back(new FinanceFloatDataArray());
+			PFINANCE_FLOAT_DATA_ARRAY new_array = new FinanceFloatDataArray();
+			assert(new_array != NULL && "Fail to allocate the FinanceFloatDataArray object");
+			new_array->set_type(FinanceField_FLOAT);
+			float_data_set.push_back(new_array);
 			float_data_set_size = float_data_set.size();
+		}
 			break;
 		case FinanceField_DATE:
 			WRITE_ERROR("The DATE field type is NOT supported");
@@ -957,6 +996,29 @@ const PFINANCE_##m##_DATA_ARRAY ResultSet::get_##n##_array(int source_index, int
 DEFINE_GET_ARRAY_FUNC(int, INT)
 DEFINE_GET_ARRAY_FUNC(long, LONG)
 DEFINE_GET_ARRAY_FUNC(float, FLOAT)
+
+const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array(int source_index, int field_index)const
+{
+	int field_type = FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index];
+	switch (field_type)
+	{
+	case FinanceField_INT:
+		return get_int_array(source_index, field_index);
+	case FinanceField_LONG:
+		return get_long_array(source_index, field_index);
+	case FinanceField_FLOAT:
+		return get_float_array(source_index, field_index);
+	default:
+	{
+		char errmsg[32];
+		snprintf(errmsg, 32, "Unknown field type: %d", field_type);
+		WRITE_ERROR(errmsg);
+		throw invalid_argument(errmsg);
+	}
+	break;
+	}
+	return NULL	;
+}
 
 #define DEFINE_GET_ARRAY_ELEMENT_FUNC(n, m)\
 n ResultSet::get_##n##_array_element(int source_index, int field_index, int index)const\

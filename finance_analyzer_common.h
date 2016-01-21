@@ -59,6 +59,7 @@ enum FinanceSourceType
 
 enum FinanceFieldType
 {
+	FinanceField_UNKNOWN = -1,
 	FinanceField_INT,
 	FinanceField_LONG,
 	FinanceField_FLOAT,
@@ -117,6 +118,10 @@ extern const unsigned short RET_FAILURE_IO_OPERATION;
 extern const unsigned short RET_FAILURE_HANDLE_THREAD;
 extern const unsigned short RET_FAILURE_SYSTEM_API;
 extern const unsigned short RET_FAILURE_MYSQL;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Variables
+extern bool SHOW_CONSOLE;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions

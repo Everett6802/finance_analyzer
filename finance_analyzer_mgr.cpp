@@ -254,6 +254,7 @@ unsigned short FinanceAnalyzerMgr::correlate(FinanceSourceType finance_source_ty
 	ret = finance_analyzer_calculator->correlate(sp_result_set.get_instance(), correlation);
 	if (CHECK_FAILURE(ret))
 		return ret;
+	printf("The correlation: %.2f\n", correlation);
 
 	return ret;
 }

@@ -6,55 +6,56 @@
 
 
 template <typename T>
-float average(const FinanceDataArrayBase<T>& finance_data_array);
+float average(const FinanceDataArrayTemplate<T>& finance_data_array);
 
-extern template float average<int>(const FinanceDataArrayBase<int>& finance_data_array);
-extern template float average<long>(const FinanceDataArrayBase<long>& finance_data_array);
-extern template float average<float>(const FinanceDataArrayBase<float>& finance_data_array);
-
-
-template <typename T>
-float variance(const FinanceDataArrayBase<T>& finance_data_array);
-
-extern template float variance<int>(const FinanceDataArrayBase<int>& finance_data_array);
-extern template float variance<long>(const FinanceDataArrayBase<long>& finance_data_array);
-extern template float variance<float>(const FinanceDataArrayBase<float>& finance_data_array);
+extern template float average<int>(const FinanceDataArrayTemplate<int>& finance_data_array);
+extern template float average<long>(const FinanceDataArrayTemplate<long>& finance_data_array);
+extern template float average<float>(const FinanceDataArrayTemplate<float>& finance_data_array);
 
 
 template <typename T>
-float standard_deviation(const FinanceDataArrayBase<T>& finance_data_array);
+float variance(const FinanceDataArrayTemplate<T>& finance_data_array);
 
-extern template float standard_deviation<int>(const FinanceDataArrayBase<int>& finance_data_array);
-extern template float standard_deviation<long>(const FinanceDataArrayBase<long>& finance_data_array);
-extern template float standard_deviation<float>(const FinanceDataArrayBase<float>& finance_data_array);
+extern template float variance<int>(const FinanceDataArrayTemplate<int>& finance_data_array);
+extern template float variance<long>(const FinanceDataArrayTemplate<long>& finance_data_array);
+extern template float variance<float>(const FinanceDataArrayTemplate<float>& finance_data_array);
 
 
-template <typename T1, typename T2>
-float covariance(const FinanceDataArrayBase<T1>& finance_data_array1, const FinanceDataArrayBase<T2>& finance_data_array2);
+template <typename T>
+float standard_deviation(const FinanceDataArrayTemplate<T>& finance_data_array);
 
-extern template float covariance<int, int>(const FinanceDataArrayBase<int>& finance_data_array1, const FinanceDataArrayBase<int>& finance_data_array2);
-extern template float covariance<int, long>(const FinanceDataArrayBase<int>& finance_data_array1, const FinanceDataArrayBase<long>& finance_data_array2);
-extern template float covariance<int, float>(const FinanceDataArrayBase<int>& finance_data_array1, const FinanceDataArrayBase<float>& finance_data_array2);
-extern template float covariance<long, int>(const FinanceDataArrayBase<long>& finance_data_array1, const FinanceDataArrayBase<int>& finance_data_array2);
-extern template float covariance<long, long>(const FinanceDataArrayBase<long>& finance_data_array1, const FinanceDataArrayBase<long>& finance_data_array2);
-extern template float covariance<long, float>(const FinanceDataArrayBase<long>& finance_data_array1, const FinanceDataArrayBase<float>& finance_data_array2);
-extern template float covariance<float, int>(const FinanceDataArrayBase<float>& finance_data_array1, const FinanceDataArrayBase<int>& finance_data_array2);
-extern template float covariance<float, long>(const FinanceDataArrayBase<float>& finance_data_array1, const FinanceDataArrayBase<long>& finance_data_array2);
-extern template float covariance<float, float>(const FinanceDataArrayBase<float>& finance_data_array1, const FinanceDataArrayBase<float>& finance_data_array2);
+extern template float standard_deviation<int>(const FinanceDataArrayTemplate<int>& finance_data_array);
+extern template float standard_deviation<long>(const FinanceDataArrayTemplate<long>& finance_data_array);
+extern template float standard_deviation<float>(const FinanceDataArrayTemplate<float>& finance_data_array);
 
 
 template <typename T1, typename T2>
-float correlation(const FinanceDataArrayBase<T1>& finance_data_array1, const FinanceDataArrayBase<T2>& finance_data_array2);
+float covariance(const FinanceDataArrayTemplate<T1>& finance_data_array1, const FinanceDataArrayTemplate<T2>& finance_data_array2);
 
-extern template float correlation<int, int>(const FinanceDataArrayBase<int>& finance_data_array1, const FinanceDataArrayBase<int>& finance_data_array2);
-extern template float correlation<int, long>(const FinanceDataArrayBase<int>& finance_data_array1, const FinanceDataArrayBase<long>& finance_data_array2);
-extern template float correlation<int, float>(const FinanceDataArrayBase<int>& finance_data_array1, const FinanceDataArrayBase<float>& finance_data_array2);
-extern template float correlation<long, int>(const FinanceDataArrayBase<long>& finance_data_array1, const FinanceDataArrayBase<int>& finance_data_array2);
-extern template float correlation<long, long>(const FinanceDataArrayBase<long>& finance_data_array1, const FinanceDataArrayBase<long>& finance_data_array2);
-extern template float correlation<long, float>(const FinanceDataArrayBase<long>& finance_data_array1, const FinanceDataArrayBase<float>& finance_data_array2);
-extern template float correlation<float, int>(const FinanceDataArrayBase<float>& finance_data_array1, const FinanceDataArrayBase<int>& finance_data_array2);
-extern template float correlation<float, long>(const FinanceDataArrayBase<float>& finance_data_array1, const FinanceDataArrayBase<long>& finance_data_array2);
-extern template float correlation<float, float>(const FinanceDataArrayBase<float>& finance_data_array1, const FinanceDataArrayBase<float>& finance_data_array2);
+extern template float covariance<int, int>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2);
+extern template float covariance<int, long>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2);
+extern template float covariance<int, float>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2);
+extern template float covariance<long, int>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2);
+extern template float covariance<long, long>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2);
+extern template float covariance<long, float>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2);
+extern template float covariance<float, int>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2);
+extern template float covariance<float, long>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2);
+extern template float covariance<float, float>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2);
 
+
+template <typename T1, typename T2>
+float correlation(const FinanceDataArrayTemplate<T1>& finance_data_array1, const FinanceDataArrayTemplate<T2>& finance_data_array2);
+
+extern template float correlation<int, int>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2);
+extern template float correlation<int, long>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2);
+extern template float correlation<int, float>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2);
+extern template float correlation<long, int>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2);
+extern template float correlation<long, long>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2);
+extern template float correlation<long, float>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2);
+extern template float correlation<float, int>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2);
+extern template float correlation<float, long>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2);
+extern template float correlation<float, float>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2);
+
+float correlation(const PFINANCE_DATA_ARRAY_BASE finance_data_array1, PFINANCE_DATA_ARRAY_BASE finance_data_array2);
 
 #endif

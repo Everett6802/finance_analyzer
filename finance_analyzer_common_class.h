@@ -10,6 +10,7 @@ template <typename T>
 class SmartPointer
 {
 private:
+	bool need_release;
 	T* data_ptr;
 
 public:
@@ -22,6 +23,7 @@ public:
 	const T* operator->() const;
 	void set_new(T* ptr);
 	T* get_instance();
+	void disable_release();
 };
 //typedef SmartPointer SP;
 
@@ -122,10 +124,25 @@ typedef SingleTimeRangeCfg* PSINGLE_TIME_RANGE_CFG;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <typename T>
 class FinanceDataArrayBase
 {
+protected:
 	DECLARE_MSG_DUMPER()
+	FinanceFieldType array_type;
+
+public:
+	FinanceDataArrayBase();
+	~FinanceDataArrayBase();
+
+	void set_type(FinanceFieldType type);
+	FinanceFieldType get_type()const;
+};
+typedef FinanceDataArrayBase* PFINANCE_DATA_ARRAY_BASE;
+
+template <typename T>
+class FinanceDataArrayTemplate : public FinanceDataArrayBase
+{
+//	DECLARE_MSG_DUMPER()
 protected:
 	static int DEF_ARRAY_SIZE;
 
@@ -136,8 +153,8 @@ protected:
 	void alloc_new();
 
 public:
-	FinanceDataArrayBase();
-	virtual ~FinanceDataArrayBase();
+	FinanceDataArrayTemplate();
+	virtual ~FinanceDataArrayTemplate();
 
 	bool is_empty()const;
 	int get_size()const;
@@ -149,24 +166,24 @@ public:
 };
 
 template <typename T>
-class FinanceDataPtrArrayBase : public FinanceDataArrayBase<T>
+class FinanceDataPtrArrayTemplate : public FinanceDataArrayTemplate<T>
 {
 public:
-	virtual ~FinanceDataPtrArrayBase();
+	virtual ~FinanceDataPtrArrayTemplate();
 
 	void add(T data, size_t data_size);
 };
 
-typedef FinanceDataArrayBase<int> FinanceIntDataArray;
+typedef FinanceDataArrayTemplate<int> FinanceIntDataArray;
 typedef FinanceIntDataArray* PFINANCE_INT_DATA_ARRAY;
 
-typedef FinanceDataArrayBase<long> FinanceLongDataArray;
+typedef FinanceDataArrayTemplate<long> FinanceLongDataArray;
 typedef FinanceLongDataArray* PFINANCE_LONG_DATA_ARRAY;
 
-typedef FinanceDataArrayBase<float> FinanceFloatDataArray;
+typedef FinanceDataArrayTemplate<float> FinanceFloatDataArray;
 typedef FinanceFloatDataArray* PFINANCE_FLOAT_DATA_ARRAY;
 
-typedef FinanceDataPtrArrayBase<char*> FinanceCharDataPtrArray;
+typedef FinanceDataPtrArrayTemplate<char*> FinanceCharDataPtrArray;
 typedef FinanceCharDataPtrArray* PFINANCE_CHAR_DATA_PTR_ARRAY;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -324,6 +341,7 @@ public:
 	DECLARE_GET_ARRAY_FUNC(int, INT)
 	DECLARE_GET_ARRAY_FUNC(long, LONG)
 	DECLARE_GET_ARRAY_FUNC(float, FLOAT)
+	const PFINANCE_DATA_ARRAY_BASE get_array(int source_index, int field_index)const;
 #define DECLARE_GET_ARRAY_ELEMENT_FUNC(n) n get_##n##_array_element(int source_index, int field_index, int index)const;
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(int)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(long)
