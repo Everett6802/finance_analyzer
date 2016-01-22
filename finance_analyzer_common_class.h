@@ -154,6 +154,7 @@ protected:
 
 public:
 	FinanceDataArrayTemplate();
+	FinanceDataArrayTemplate(const FinanceDataArrayTemplate& another);
 	virtual ~FinanceDataArrayTemplate();
 
 	bool is_empty()const;
@@ -161,6 +162,11 @@ public:
 	int get_array_size()const;
 	const T* get_data_array()const;
 	const T operator[](int index)const;
+
+// Caution: It's illegal to override the operator function in the template
+//	FinanceDataArrayTemplate<T>& operator=(const FinanceDataArrayTemplate& another);
+//	FinanceDataArrayTemplate<T>& operator+=(const FinanceDataArrayTemplate& another);
+//	FinanceDataArrayTemplate<T> operator+(const FinanceDataArrayTemplate& another);
 
 	void add(T data);
 };
@@ -174,13 +180,35 @@ public:
 	void add(T data, size_t data_size);
 };
 
-typedef FinanceDataArrayTemplate<int> FinanceIntDataArray;
+#define DECLARE_DATA_ARRAY_OPERATOR(m)\
+Finance##m##DataArray& operator=(const Finance##m##DataArray& another);\
+Finance##m##DataArray& operator+=(const Finance##m##DataArray& another);\
+Finance##m##DataArray operator+(const Finance##m##DataArray& another);\
+Finance##m##DataArray& operator-=(const Finance##m##DataArray& another);\
+Finance##m##DataArray operator-(const Finance##m##DataArray& another);
+
+//typedef FinanceDataArrayTemplate<int> FinanceIntDataArray;
+class FinanceIntDataArray : public FinanceDataArrayTemplate<int>
+{
+public:
+	DECLARE_DATA_ARRAY_OPERATOR(Int)
+};
 typedef FinanceIntDataArray* PFINANCE_INT_DATA_ARRAY;
 
-typedef FinanceDataArrayTemplate<long> FinanceLongDataArray;
+//typedef FinanceDataArrayTemplate<long> FinanceLongDataArray;
+class FinanceLongDataArray : public FinanceDataArrayTemplate<long>
+{
+public:
+	DECLARE_DATA_ARRAY_OPERATOR(Long)
+};
 typedef FinanceLongDataArray* PFINANCE_LONG_DATA_ARRAY;
 
-typedef FinanceDataArrayTemplate<float> FinanceFloatDataArray;
+//typedef FinanceDataArrayTemplate<float> FinanceFloatDataArray;
+class FinanceFloatDataArray : public FinanceDataArrayTemplate<float>
+{
+public:
+	DECLARE_DATA_ARRAY_OPERATOR(Float)
+};
 typedef FinanceFloatDataArray* PFINANCE_FLOAT_DATA_ARRAY;
 
 typedef FinanceDataPtrArrayTemplate<char*> FinanceCharDataPtrArray;

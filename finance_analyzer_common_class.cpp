@@ -517,6 +517,7 @@ FinanceDataArrayBase::~FinanceDataArrayBase()
 void FinanceDataArrayBase::set_type(FinanceFieldType type){array_type = type;}
 FinanceFieldType FinanceDataArrayBase::get_type()const{return array_type;}
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 int FinanceDataArrayTemplate<T>::DEF_ARRAY_SIZE = 512;
@@ -530,6 +531,19 @@ FinanceDataArrayTemplate<T>::FinanceDataArrayTemplate() :
 	array_data = (T*)calloc(array_size, sizeof(T));
 	if (array_data == NULL)
 		throw bad_alloc();
+}
+
+template <typename T>
+FinanceDataArrayTemplate<T>::FinanceDataArrayTemplate(const FinanceDataArrayTemplate& another) :
+	array_size(DEF_ARRAY_SIZE),
+	array_pos(0)
+{
+	array_size = another.array_size;
+	array_data = (T*)malloc(sizeof(T) * array_size);
+	if (array_data == NULL)
+		throw bad_alloc();
+	array_pos = another.array_pos;
+	memcpy(array_data, another.array_data, sizeof(T) * array_pos);
 }
 
 template <typename T>
@@ -615,6 +629,66 @@ void FinanceDataPtrArrayTemplate<T>::add(T data, size_t data_size)
 	memcpy((void*)data_new, (void*)data, sizeof(char) * data_size);
 	FinanceDataArrayTemplate<T>::array_data[FinanceDataArrayTemplate<T>::array_pos++] = data_new;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define IMPLEMENT_DATA_ARRAY_OPERATOR(m, n)\
+Finance##m##DataArray& Finance##m##DataArray::operator=(const Finance##m##DataArray& another)\
+{\
+	if (this == &another)\
+		return *this;\
+	if (array_data != NULL)\
+		delete[] array_data;\
+	array_size = another.array_size;\
+	array_data = (n*)malloc(sizeof(n) * array_size);\
+	if (array_data == NULL)\
+		throw bad_alloc();\
+	array_pos = another.array_pos;\
+	memcpy(array_data, another.array_data, sizeof(n) * array_pos);\
+	return *this;\
+}\
+Finance##m##DataArray& Finance##m##DataArray::operator+=(const Finance##m##DataArray& another)\
+{\
+	if (this == &another)\
+		return *this;\
+	assert(array_data != NULL && "array_data should NOT be NULL");\
+	if (array_pos != another.array_pos)\
+	{\
+		char errmsg[64];\
+		snprintf(errmsg, 64, "The dimension is NOT identical, expected: %d, actual: %d", array_pos, another.array_pos);\
+		throw invalid_argument(errmsg);\
+	}\
+	for (int i = 0 ; i < array_pos ; i++)\
+		array_data[i] += another.array_data[i];\
+	return *this;\
+}\
+Finance##m##DataArray Finance##m##DataArray::operator+(const Finance##m##DataArray& another)\
+{\
+	return Finance##m##DataArray(*this) += another;\
+}\
+Finance##m##DataArray& Finance##m##DataArray::operator-=(const Finance##m##DataArray& another)\
+{\
+	if (this == &another)\
+		return *this;\
+	assert(array_data != NULL && "array_data should NOT be NULL");\
+	if (array_pos != another.array_pos)\
+	{\
+		char errmsg[64];\
+		snprintf(errmsg, 64, "The dimension is NOT identical, expected: %d, actual: %d", array_pos, another.array_pos);\
+		throw invalid_argument(errmsg);\
+	}\
+	for (int i = 0 ; i < array_pos ; i++)\
+		array_data[i] -= another.array_data[i];\
+	return *this;\
+}\
+Finance##m##DataArray Finance##m##DataArray::operator-(const Finance##m##DataArray& another)\
+{\
+	return Finance##m##DataArray(*this) -= another;\
+}
+
+IMPLEMENT_DATA_ARRAY_OPERATOR(Int, int)
+IMPLEMENT_DATA_ARRAY_OPERATOR(Long, long)
+IMPLEMENT_DATA_ARRAY_OPERATOR(Float, float)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
