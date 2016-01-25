@@ -27,6 +27,52 @@ int main(int argc, char** argv)
 //	finance_data_array2.add(-3);
 //	finance_data_array2.add(-4);
 //	finance_data_array2.add(-5);
+//	for (int i = 0 ; i < finance_data_array1.get_size() ; i++)
+//		printf("%d ", finance_data_array1[i]);
+//	printf("\n");
+//	for (int i = 0 ; i < finance_data_array2.get_size() ; i++)
+//		printf("%d ", finance_data_array2[i]);
+//	printf("\n");
+//	finance_data_array1 += finance_data_array2;
+//	for (int i = 0 ; i < finance_data_array1.get_size() ; i++)
+//		printf("%d ", finance_data_array1[i]);
+//	printf("\n");
+//	FinanceIntDataArray finance_data_array3;
+//	finance_data_array3 = finance_data_array1 + finance_data_array2;
+//	for (int i = 0 ; i < finance_data_array3.get_size() ; i++)
+//		printf("%d ", finance_data_array3[i]);
+//	printf("\n");
+//	FinanceIntDataArray finance_data_array4;
+//	finance_data_array3.get_sub_array(finance_data_array4, 1, 5);
+//	for (int i = 0 ; i < finance_data_array4.get_size() ; i++)
+//		printf("%d ", finance_data_array4[i]);
+//	printf("\n");
+//	FinanceIntDataArray finance_data_array5;
+//	finance_data_array3.get_diff_array(finance_data_array5, 1, 5);
+//	for (int i = 0 ; i < finance_data_array5.get_size() ; i++)
+//		printf("%d ", finance_data_array5[i]);
+//	printf("\n");
+
+	FinanceIntDataArray finance_data_array6;
+	finance_data_array6.add(1);
+	finance_data_array6.add(2);
+//	finance_data_array6.add(3);
+//	finance_data_array6.add(4);
+//	finance_data_array6.add(5);
+//	finance_data_array6.add(6);
+//	finance_data_array6.add(7);
+//	finance_data_array6.add(8);
+	for (int i = 0 ; i < finance_data_array6.get_size() ; i++)
+		printf("%d ", finance_data_array6[i]);
+	printf("\n");
+	FinanceFloatDataArray finance_data_array7;
+	finance_data_array6.get_avg_array(finance_data_array7, 3, 0);
+	for (int i = 0 ; i < finance_data_array7.get_size() ; i++)
+		printf("%.2f ", finance_data_array7[i]);
+	printf("\n");
+
+	exit(EXIT_SUCCESS);
+
 //
 //	printf("Average1: %f\n", average<int>(finance_data_array1));
 //	printf("Average2: %f\n", average<int>(finance_data_array2));

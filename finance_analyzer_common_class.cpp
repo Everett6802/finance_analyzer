@@ -602,6 +602,88 @@ const T FinanceDataArrayTemplate<T>::operator[](int index)const
 	return array_data[index];
 }
 
+//template <typename T>
+//unsigned short FinanceDataArrayTemplate<T>::get_sub_array(FinanceDataArrayTemplate& new_data_array, int start_index, int end_index)
+//{
+//	unsigned short ret = RET_SUCCESS;
+////	if (sub_int_data_array == NULL)
+////	{
+////		WRITE_ERROR("sub_int_data_array should NOT be NULL");
+////		return RET_FAILURE_INVALID_ARGUMENT;
+////	}
+//// Semi-open interval
+//	if (end_index == -1)
+//		end_index = array_pos;
+//	if (start_index < 0 || start_index >= array_pos)
+//	{
+//		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
+//	if (end_index < 0 || end_index >= array_pos)
+//	{
+//		WRITE_FORMAT_ERROR("end_index is NOT in the range[0, %d)", array_pos);
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
+//	if ((end_index - start_index) < 1)
+//	{
+//		WRITE_ERROR("The array size is NOT more than 1");
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
+////	FinanceDataArrayTemplate* sub_int_data_array_tmp = new FinanceDataArrayTemplate();
+////	if (sub_int_data_array_tmp == NULL)
+////	{
+////		WRITE_ERROR("Fail to allocate memory: sub_int_data_array_tmp");
+////		return RET_FAILURE_INSUFFICIENT_MEMORY;
+////	}
+//
+//	for (int i = start_index + 1 ; i < end_index ; i++)
+//		new_data_array.add(array_data[i]);
+////	sub_int_data_array = &sub_int_data_array_tmp;
+//
+//	return ret;
+//}
+//
+//template <typename T>
+//unsigned short FinanceDataArrayTemplate<T>::get_diff_array(FinanceDataArrayTemplate& new_data_array, int start_index, int end_index)
+//{
+//	unsigned short ret = RET_SUCCESS;
+////	if (sub_int_data_array == NULL)
+////	{
+////		WRITE_ERROR("sub_int_data_array should NOT be NULL");
+////		return RET_FAILURE_INVALID_ARGUMENT;
+////	}
+//// Semi-open interval
+//	if (end_index == -1)
+//		end_index = array_pos;
+//	if (start_index < 0 || start_index >= array_pos)
+//	{
+//		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
+//	if (end_index < 0 || end_index >= array_pos)
+//	{
+//		WRITE_FORMAT_ERROR("end_index is NOT in the range[0, %d)", array_pos);
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
+//	if ((end_index - start_index) < 2)
+//	{
+//		WRITE_ERROR("The array size is NOT more than 2");
+//		return RET_FAILURE_INVALID_ARGUMENT;
+//	}
+////	FinanceDataArrayTemplate* sub_int_data_array_tmp = new FinanceDataArrayTemplate();
+////	if (sub_int_data_array_tmp == NULL)
+////	{
+////		WRITE_ERROR("Fail to allocate memory: sub_int_data_array_tmp");
+////		return RET_FAILURE_INSUFFICIENT_MEMORY;
+////	}
+//
+//	for (int i = start_index + 1 ; i < end_index ; i++)
+//		new_data_array.add(array_data[i] - array_data[i - 1]);
+////	sub_int_data_array = &sub_int_data_array_tmp;
+//
+//	return ret;
+//}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
@@ -684,6 +766,122 @@ Finance##m##DataArray& Finance##m##DataArray::operator-=(const Finance##m##DataA
 Finance##m##DataArray Finance##m##DataArray::operator-(const Finance##m##DataArray& another)\
 {\
 	return Finance##m##DataArray(*this) -= another;\
+}
+
+unsigned short FinanceIntDataArray::get_sub_array(FinanceIntDataArray& new_data_array, int start_index, int length)
+{
+// Semi-open interval
+// Check the start index
+	if (start_index < 0 || start_index >= array_pos)
+	{
+		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+// Find the end index
+	int end_index;
+	if (length == -1)
+		end_index = array_pos;
+	else
+		end_index = MIN(start_index + length, array_pos);
+// Check the data range
+	if ((end_index - start_index) < 1)
+	{
+		WRITE_ERROR("The array size is NOT more than 1");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+// Semi-open interval
+	for (int i = start_index ; i < end_index ; i++)
+		new_data_array.add(array_data[i]);
+
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceIntDataArray::get_diff_array(FinanceIntDataArray& new_data_array, int start_index, int length)
+{
+// Semi-open interval
+// Check the start index
+	if (start_index < 0 || start_index >= array_pos)
+	{
+		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+// Find the end index
+	int end_index;
+	if (length == -1)
+		end_index = array_pos;
+	else
+		end_index = MIN(start_index + length, array_pos);
+// Check the data range
+	if ((end_index - start_index) < 2)
+	{
+		WRITE_ERROR("The array size is NOT more than 2");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+// Semi-open interval
+	for (int i = start_index + 1; i < end_index ; i++)
+		new_data_array.add(array_data[i] - array_data[i - 1]);
+
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceIntDataArray::get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length)
+{
+// Semi-open interval
+// Check the start index
+	if (start_index < 0 || start_index >= array_pos)
+	{
+		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+// Find the end index
+	int end_index;
+	if (length == -1)
+		end_index = array_pos;
+	else
+		end_index = MIN(start_index + length, array_pos);
+// Check the data range
+	if ((end_index - start_index) < n)
+	{
+		WRITE_FORMAT_ERROR("The array size is NOT more than %d", n);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+// Semi-open interval
+//	int index = 0;
+	int *buffer = new int[n];
+	if (buffer == NULL)
+	{
+		WRITE_ERROR("Fail to allocate memory: buffer");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+
+	int sum = 0;
+	for (int i = 0 ; i < n ; i++)
+	{
+		buffer[i] = array_data[start_index + i];
+		sum += buffer[i];
+	}
+	int buffer_pos = 0;
+	float average;
+	int i = start_index + n;
+	do{
+		average = (float)sum / n;
+		new_data_array.add(average);
+		sum -= buffer[buffer_pos];
+		buffer[buffer_pos] = array_data[i];
+		sum += buffer[buffer_pos];
+// Go to next
+		buffer_pos ++;
+		if (buffer_pos == n)
+			buffer_pos = 0;
+		i++;
+	}while (i < end_index);
+
+	if (buffer != NULL)
+	{
+		delete[] buffer;
+		buffer = NULL;
+ 	}
+	return RET_SUCCESS;
 }
 
 IMPLEMENT_DATA_ARRAY_OPERATOR(Int, int)

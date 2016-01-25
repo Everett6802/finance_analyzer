@@ -162,6 +162,8 @@ public:
 	int get_array_size()const;
 	const T* get_data_array()const;
 	const T operator[](int index)const;
+//	unsigned short get_sub_array(FinanceDataArrayTemplate& new_data_array, int start_index, int end_index=-1);
+//	unsigned short get_diff_array(FinanceDataArrayTemplate& new_data_array, int start_index, int end_index=-1);
 
 // Caution: It's illegal to override the operator function in the template
 //	FinanceDataArrayTemplate<T>& operator=(const FinanceDataArrayTemplate& another);
@@ -187,11 +189,19 @@ Finance##m##DataArray operator+(const Finance##m##DataArray& another);\
 Finance##m##DataArray& operator-=(const Finance##m##DataArray& another);\
 Finance##m##DataArray operator-(const Finance##m##DataArray& another);
 
+
+class FinanceIntDataArray;
+class FinanceLongDataArray;
+class FinanceFloatDataArray;
+
 //typedef FinanceDataArrayTemplate<int> FinanceIntDataArray;
 class FinanceIntDataArray : public FinanceDataArrayTemplate<int>
 {
 public:
 	DECLARE_DATA_ARRAY_OPERATOR(Int)
+	unsigned short get_sub_array(FinanceIntDataArray& new_data_array, int start_index, int length=-1);
+	unsigned short get_diff_array(FinanceIntDataArray& new_data_array, int start_index, int length=-1);
+	unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length=-1);
 };
 typedef FinanceIntDataArray* PFINANCE_INT_DATA_ARRAY;
 

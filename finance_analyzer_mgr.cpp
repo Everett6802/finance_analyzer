@@ -484,6 +484,14 @@ unsigned short FinanceAnalyzerMgr::analyze_daily()
 	if (CHECK_FAILURE(ret))
 		return ret;
 
+	PFINANCE_INT_DATA_ARRAY int_data_array;
+	ret = correlate(FinanceSource_StockExchangeAndVolume, 4, FinanceSource_StockExchangeAndVolume, 2, correlation);
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+//	(result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 0))  / 100000000.0,
+
+
 	return ret;
 }
 
