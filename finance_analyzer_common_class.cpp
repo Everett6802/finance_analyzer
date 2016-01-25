@@ -768,125 +768,107 @@ Finance##m##DataArray Finance##m##DataArray::operator-(const Finance##m##DataArr
 	return Finance##m##DataArray(*this) -= another;\
 }
 
-unsigned short FinanceIntDataArray::get_sub_array(FinanceIntDataArray& new_data_array, int start_index, int length)
-{
-// Semi-open interval
-// Check the start index
-	if (start_index < 0 || start_index >= array_pos)
-	{
-		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-// Find the end index
-	int end_index;
-	if (length == -1)
-		end_index = array_pos;
-	else
-		end_index = MIN(start_index + length, array_pos);
-// Check the data range
-	if ((end_index - start_index) < 1)
-	{
-		WRITE_ERROR("The array size is NOT more than 1");
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-// Semi-open interval
-	for (int i = start_index ; i < end_index ; i++)
-		new_data_array.add(array_data[i]);
-
-	return RET_SUCCESS;
-}
-
-unsigned short FinanceIntDataArray::get_diff_array(FinanceIntDataArray& new_data_array, int start_index, int length)
-{
-// Semi-open interval
-// Check the start index
-	if (start_index < 0 || start_index >= array_pos)
-	{
-		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-// Find the end index
-	int end_index;
-	if (length == -1)
-		end_index = array_pos;
-	else
-		end_index = MIN(start_index + length, array_pos);
-// Check the data range
-	if ((end_index - start_index) < 2)
-	{
-		WRITE_ERROR("The array size is NOT more than 2");
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-// Semi-open interval
-	for (int i = start_index + 1; i < end_index ; i++)
-		new_data_array.add(array_data[i] - array_data[i - 1]);
-
-	return RET_SUCCESS;
-}
-
-unsigned short FinanceIntDataArray::get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length)
-{
-// Semi-open interval
-// Check the start index
-	if (start_index < 0 || start_index >= array_pos)
-	{
-		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-// Find the end index
-	int end_index;
-	if (length == -1)
-		end_index = array_pos;
-	else
-		end_index = MIN(start_index + length, array_pos);
-// Check the data range
-	if ((end_index - start_index) < n)
-	{
-		WRITE_FORMAT_ERROR("The array size is NOT more than %d", n);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-// Semi-open interval
-//	int index = 0;
-	int *buffer = new int[n];
-	if (buffer == NULL)
-	{
-		WRITE_ERROR("Fail to allocate memory: buffer");
-		return RET_FAILURE_INSUFFICIENT_MEMORY;
-	}
-
-	int sum = 0;
-	for (int i = 0 ; i < n ; i++)
-	{
-		buffer[i] = array_data[start_index + i];
-		sum += buffer[i];
-	}
-	int buffer_pos = 0;
-	float average;
-	int i = start_index + n;
-	do{
-		average = (float)sum / n;
-		new_data_array.add(average);
-		sum -= buffer[buffer_pos];
-		buffer[buffer_pos] = array_data[i];
-		sum += buffer[buffer_pos];
-// Go to next
-		buffer_pos ++;
-		if (buffer_pos == n)
-			buffer_pos = 0;
-		i++;
-	}while (i < end_index);
-
-	if (buffer != NULL)
-	{
-		delete[] buffer;
-		buffer = NULL;
- 	}
-	return RET_SUCCESS;
+#define IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(m)\
+unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int length)\
+{\
+	if (start_index < 0 || start_index >= array_pos)\
+	{\
+		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	int end_index;\
+	if (length == -1)\
+		end_index = array_pos;\
+	else\
+		end_index = MIN(start_index + length, array_pos);\
+	if ((end_index - start_index) < 1)\
+	{\
+		WRITE_ERROR("The array size is NOT more than 1");\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	for (int i = start_index ; i < end_index ; i++)\
+		new_data_array.add(array_data[i]);\
+	return RET_SUCCESS;\
+}\
+unsigned short Finance##m##DataArray::get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int length)\
+{\
+	if (start_index < 0 || start_index >= array_pos)\
+	{\
+		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	int end_index;\
+	if (length == -1)\
+		end_index = array_pos;\
+	else\
+		end_index = MIN(start_index + length, array_pos);\
+	if ((end_index - start_index) < 2)\
+	{\
+		WRITE_ERROR("The array size is NOT more than 2");\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	for (int i = start_index + 1; i < end_index ; i++)\
+		new_data_array.add(array_data[i] - array_data[i - 1]);\
+	return RET_SUCCESS;\
+}\
+unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length)\
+{\
+	if (start_index < 0 || start_index >= array_pos)\
+	{\
+		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	int end_index;\
+	if (length == -1)\
+		end_index = array_pos;\
+	else\
+		end_index = MIN(start_index + length, array_pos);\
+	if ((end_index - start_index) < n)\
+	{\
+		WRITE_FORMAT_ERROR("The array size is NOT more than %d", n);\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	int *buffer = new int[n];\
+	if (buffer == NULL)\
+	{\
+		WRITE_ERROR("Fail to allocate memory: buffer");\
+		return RET_FAILURE_INSUFFICIENT_MEMORY;\
+	}\
+	int sum = 0;\
+	for (int i = 0 ; i < n ; i++)\
+	{\
+		buffer[i] = array_data[start_index + i];\
+		sum += buffer[i];\
+	}\
+	int buffer_pos = 0;\
+	float average;\
+	int i = start_index + n;\
+	do{\
+		average = (float)sum / n;\
+		new_data_array.add(average);\
+		sum -= buffer[buffer_pos];\
+		buffer[buffer_pos] = array_data[i];\
+		sum += buffer[buffer_pos];\
+		buffer_pos ++;\
+		if (buffer_pos == n)\
+			buffer_pos = 0;\
+		i++;\
+	}while (i < end_index);\
+	if (buffer != NULL)\
+	{\
+		delete[] buffer;\
+		buffer = NULL;\
+ 	}\
+	return RET_SUCCESS;\
 }
 
 IMPLEMENT_DATA_ARRAY_OPERATOR(Int, int)
 IMPLEMENT_DATA_ARRAY_OPERATOR(Long, long)
 IMPLEMENT_DATA_ARRAY_OPERATOR(Float, float)
+
+IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Int)
+IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Long)
+IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Float)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

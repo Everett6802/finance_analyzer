@@ -189,6 +189,11 @@ Finance##m##DataArray operator+(const Finance##m##DataArray& another);\
 Finance##m##DataArray& operator-=(const Finance##m##DataArray& another);\
 Finance##m##DataArray operator-(const Finance##m##DataArray& another);
 
+#define DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(m)\
+unsigned short get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int length=-1);\
+unsigned short get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int length=-1);\
+unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length=-1);
+
 
 class FinanceIntDataArray;
 class FinanceLongDataArray;
@@ -199,9 +204,10 @@ class FinanceIntDataArray : public FinanceDataArrayTemplate<int>
 {
 public:
 	DECLARE_DATA_ARRAY_OPERATOR(Int)
-	unsigned short get_sub_array(FinanceIntDataArray& new_data_array, int start_index, int length=-1);
-	unsigned short get_diff_array(FinanceIntDataArray& new_data_array, int start_index, int length=-1);
-	unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length=-1);
+	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Int)
+//	unsigned short get_sub_array(FinanceIntDataArray& new_data_array, int start_index, int length=-1);
+//	unsigned short get_diff_array(FinanceIntDataArray& new_data_array, int start_index, int length=-1);
+//	unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length=-1);
 };
 typedef FinanceIntDataArray* PFINANCE_INT_DATA_ARRAY;
 
@@ -210,6 +216,7 @@ class FinanceLongDataArray : public FinanceDataArrayTemplate<long>
 {
 public:
 	DECLARE_DATA_ARRAY_OPERATOR(Long)
+	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Long)
 };
 typedef FinanceLongDataArray* PFINANCE_LONG_DATA_ARRAY;
 
@@ -218,6 +225,7 @@ class FinanceFloatDataArray : public FinanceDataArrayTemplate<float>
 {
 public:
 	DECLARE_DATA_ARRAY_OPERATOR(Float)
+	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Float)
 };
 typedef FinanceFloatDataArray* PFINANCE_FLOAT_DATA_ARRAY;
 
