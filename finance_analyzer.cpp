@@ -4,7 +4,7 @@
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
-//#include "finance_analyzer_algorithm.h"
+#include "finance_analyzer_algorithm.h"
 
 
 static FinanceAnalyzerMgr finance_analyzer_mgr;
@@ -67,6 +67,7 @@ int main(int argc, char** argv)
 	printf("\n");
 	FinanceFloatDataArray finance_data_array7;
 	finance_data_array6.get_avg_array(finance_data_array7, 3, 0);
+//	get_avg_array(finance_data_array7, finance_data_array6, 3, 0);
 	for (int i = 0 ; i < finance_data_array7.get_size() ; i++)
 		printf("%.2f ", finance_data_array7[i]);
 	printf("\n");

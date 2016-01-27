@@ -516,6 +516,9 @@ FinanceDataArrayBase::~FinanceDataArrayBase()
 
 void FinanceDataArrayBase::set_type(FinanceFieldType type){array_type = type;}
 FinanceFieldType FinanceDataArrayBase::get_type()const{return array_type;}
+//void FinanceDataArrayBase::set_array_element_action(ArrayElementActionType action_type){array_element_action_type = action_type;}
+//ArrayElementActionType FinanceDataArrayBase::get_array_element_action()const{return array_element_action_type;}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -972,6 +975,13 @@ unsigned short ResultSet::get_combined_index(int x, int y)
 	return (unsigned short)(((x & 0xFF) << 8) | (y & 0xFF));
 }
 
+unsigned long ResultSet::get_combined_index_ex(int x, int y, ArrayElementCalculationType calculation_type)
+{
+	if (calculation_type == ArrayElementCalculation_None)
+		return get_combined_index(x, y);
+	return (unsigned long)(((calculation_type & 0xFFFF) << 16) | (get_combined_index(x, y) & 0xFFFF));
+}
+
 unsigned short ResultSet::get_upper_subindex(unsigned short x)
 {
 	return (unsigned short)((x >> 8) & 0xFF);
@@ -980,6 +990,11 @@ unsigned short ResultSet::get_upper_subindex(unsigned short x)
 unsigned short ResultSet::get_lower_subindex(unsigned short x)
 {
 	return (unsigned short)(x & 0xFF);
+}
+
+unsigned short ResultSet::get_calculation_subindex(unsigned long x)
+{
+	return (unsigned short)((x >> 16) & 0xFF);
 }
 
 ResultSet::ResultSet() :
@@ -1145,6 +1160,176 @@ unsigned short ResultSet::add_set(int source_index, const DEQUE_INT& field_set)
 	return ret;
 }
 
+unsigned short ResultSet::add_set_ex_calculation_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex)
+{
+	assert("No need to do the element calculation");
+	return RET_SUCCESS;
+}
+
+unsigned short ResultSet::add_set_ex_calculation_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex)
+{
+	assert(data_array_base != NULL && "data_array_base should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	unsigned short value;
+	switch (data_array_base->get_type())
+	{
+	case FinanceField_INT:
+	{
+		PFINANCE_INT_DATA_ARRAY new_array = new FinanceIntDataArray();
+		assert(new_array != NULL && "Fail to allocate the FinanceIntDataArray object");
+		new_array->set_type(FinanceField_INT);
+
+		value = get_combined_index(FinanceField_INT, int_data_set.size());
+
+		PFINANCE_INT_DATA_ARRAY data_array = (PFINANCE_INT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_diff_array(*new_array, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		int_data_set.push_back(new_array);
+		int_data_set_size = int_data_set.size();
+	}
+	break;
+	case FinanceField_LONG:
+	{
+		PFINANCE_LONG_DATA_ARRAY new_array = new FinanceLongDataArray();
+		assert(new_array != NULL && "Fail to allocate the FinanceLongDataArray object");
+		new_array->set_type(FinanceField_LONG);
+
+		value = get_combined_index(FinanceField_LONG, long_data_set.size());
+
+		PFINANCE_LONG_DATA_ARRAY data_array = (PFINANCE_LONG_DATA_ARRAY)data_array_base;
+		ret = data_array->get_diff_array(*new_array, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		long_data_set.push_back(new_array);
+		long_data_set_size = long_data_set.size();
+	}
+	break;
+	case FinanceField_FLOAT:
+	{
+		PFINANCE_FLOAT_DATA_ARRAY new_array = new FinanceFloatDataArray();
+		assert(new_array != NULL && "Fail to allocate the FinanceFloatDataArray object");
+		new_array->set_type(FinanceField_FLOAT);
+
+		value = get_combined_index(FinanceField_FLOAT, float_data_set.size());
+
+		PFINANCE_FLOAT_DATA_ARRAY data_array = (PFINANCE_FLOAT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_diff_array(*new_array, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		float_data_set.push_back(new_array);
+		float_data_set_size = float_data_set.size();
+	}
+	break;
+	default:
+		WRITE_FORMAT_ERROR("The unsupported field type: %d", data_array_base->get_type());
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	data_calculation_set_mapping[key_ex] = value;
+	return ret;
+}
+
+unsigned short ResultSet::add_set_ex_calculation_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n)
+{
+	assert(data_array_base != NULL && "data_array_base should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	PFINANCE_FLOAT_DATA_ARRAY new_array = new FinanceFloatDataArray();
+	assert(new_array != NULL && "Fail to allocate the FinanceFloatDataArray object");
+	new_array->set_type(FinanceField_FLOAT);
+
+	unsigned short value = get_combined_index(FinanceField_INT, float_data_set.size());
+
+	switch (data_array_base->get_type())
+	{
+	case FinanceField_INT:
+	{
+		PFINANCE_INT_DATA_ARRAY data_array = (PFINANCE_INT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_avg_array(*new_array, n, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	break;
+	case FinanceField_LONG:
+	{
+		PFINANCE_LONG_DATA_ARRAY data_array = (PFINANCE_LONG_DATA_ARRAY)data_array_base;
+		ret = data_array->get_avg_array(*new_array, n, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	break;
+	case FinanceField_FLOAT:
+	{
+		PFINANCE_FLOAT_DATA_ARRAY data_array = (PFINANCE_FLOAT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_avg_array(*new_array, n, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	break;
+	default:
+		WRITE_FORMAT_ERROR("The unsupported field type: %d", data_array_base->get_type());
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	float_data_set.push_back(new_array);
+	float_data_set_size = float_data_set.size();
+
+	data_calculation_set_mapping[key_ex] = value;
+	return ret;
+}
+
+unsigned short ResultSet::add_set_ex_calculation_avg5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_set_ex_calculation_avg(data_array_base, key_ex, 5);}
+unsigned short ResultSet::add_set_ex_calculation_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_set_ex_calculation_avg(data_array_base, key_ex, 10);}
+unsigned short ResultSet::add_set_ex_calculation_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_set_ex_calculation_avg(data_array_base, key_ex, 20);}
+unsigned short ResultSet::add_set_ex_calculation_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_set_ex_calculation_avg(data_array_base, key_ex, 60);}
+
+unsigned short ResultSet::add_set_ex(int source_index, int field_index, ArrayElementCalculationType calculation_type)
+{
+	typedef unsigned short (ResultSet::*add_set_ex_calculation_func_ptr)(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	static add_set_ex_calculation_func_ptr add_set_ex_calculation_func_array[] =
+	{
+		&ResultSet::add_set_ex_calculation_dummy,
+		&ResultSet::add_set_ex_calculation_diff,
+		&ResultSet::add_set_ex_calculation_avg5,
+		&ResultSet::add_set_ex_calculation_avg10,
+		&ResultSet::add_set_ex_calculation_avg20,
+		&ResultSet::add_set_ex_calculation_avg60
+	};
+
+	if (calculation_type == ArrayElementCalculation_None)
+		return add_set(source_index, field_index);
+// Check the index boundary
+	if(source_index < 0 && source_index >= FinanceSourceSize)
+	{
+		WRITE_ERROR("source_index is out of range in ResultSet");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	if(field_index < 0 && field_index >= FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index])
+	{
+		WRITE_ERROR("field_index is out of range in ResultSet");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	if(calculation_type < 0 && calculation_type >= ArrayElementCalculationSize)
+	{
+		WRITE_ERROR("calculation_type is out of range in ResultSet");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+// Make sure the array should NOT exist
+	unsigned long key_ex = get_combined_index_ex(source_index, field_index, calculation_type);
+	if (data_calculation_set_mapping.find(key_ex) != data_calculation_set_mapping.end())
+	{
+		WRITE_FORMAT_ERROR("The key[%ld] from (%d, %d, %d) is duplicate", key_ex, source_index, field_index, calculation_type);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+
+// Find the original array
+	PFINANCE_DATA_ARRAY_BASE data_array_base = get_array(source_index, field_index);
+	if (data_array_base == NULL)
+	{
+		WRITE_FORMAT_ERROR("The array from (%d, %d) should EXIST", source_index, field_index);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	return (this->*(add_set_ex_calculation_func_array[calculation_type]))(data_array_base, key_ex);
+}
+
 unsigned short ResultSet::set_date(char* element_value)
 {
 	if (check_date_data_mode)
@@ -1219,20 +1404,11 @@ unsigned short ResultSet::set_data(int source_index, int field_index, char* data
 	return RET_SUCCESS;
 }
 
-#define DEFINE_GET_ARRAY_FUNC(n, m)\
-const PFINANCE_##m##_DATA_ARRAY ResultSet::get_##n##_array(int source_index, int field_index)const\
+#define DEFINE_GET_ARRAY_FUNC_BY_POS(n, m)\
+const PFINANCE_##m##_DATA_ARRAY ResultSet::get_##n##_array_by_position(unsigned short field_type_index, unsigned short field_type_pos)const\
 {\
 	static const int BUF_SIZE = 64;\
-	static char errmsg[64];\
-	unsigned short ret = RET_SUCCESS;\
-	unsigned short field_type_index, field_type_pos;\
-	ret = find_data_pos(source_index, field_index, field_type_index, field_type_pos);\
-	if (CHECK_FAILURE(ret))\
-	{\
-		snprintf(errmsg, 64, "Fail to fail data position from (%d, %d)", source_index, field_index);\
-		WRITE_ERROR(errmsg);\
-		throw invalid_argument(errmsg);\
-	}\
+	static char errmsg[BUF_SIZE];\
 	if (field_type_index != FinanceField_##m)\
 	{\
 		snprintf(errmsg, BUF_SIZE, "The field type[%d] is NOT int", field_type_index);\
@@ -1247,6 +1423,28 @@ const PFINANCE_##m##_DATA_ARRAY ResultSet::get_##n##_array(int source_index, int
 	}\
 	return n##_data_set[field_type_pos];\
 }
+
+DEFINE_GET_ARRAY_FUNC_BY_POS(int, INT)
+DEFINE_GET_ARRAY_FUNC_BY_POS(long, LONG)
+DEFINE_GET_ARRAY_FUNC_BY_POS(float, FLOAT)
+
+#define DEFINE_GET_ARRAY_FUNC(n, m)\
+const PFINANCE_##m##_DATA_ARRAY ResultSet::get_##n##_array(int source_index, int field_index)const\
+{\
+	static const int BUF_SIZE = 64;\
+	static char errmsg[BUF_SIZE];\
+	unsigned short ret = RET_SUCCESS;\
+	unsigned short field_type_index, field_type_pos;\
+	ret = find_data_pos(source_index, field_index, field_type_index, field_type_pos);\
+	if (CHECK_FAILURE(ret))\
+	{\
+		snprintf(errmsg, BUF_SIZE, "Fail to fail data position from (%d, %d)", source_index, field_index);\
+		WRITE_ERROR(errmsg);\
+		throw invalid_argument(errmsg);\
+	}\
+	return get_##n##_array_by_position(field_type_index, field_type_pos);\
+}
+
 DEFINE_GET_ARRAY_FUNC(int, INT)
 DEFINE_GET_ARRAY_FUNC(long, LONG)
 DEFINE_GET_ARRAY_FUNC(float, FLOAT)
@@ -1266,6 +1464,50 @@ const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array(int source_index, int field_
 	{
 		char errmsg[32];
 		snprintf(errmsg, 32, "Unknown field type: %d", field_type);
+		WRITE_ERROR(errmsg);
+		throw invalid_argument(errmsg);
+	}
+	break;
+	}
+	return NULL	;
+}
+
+const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array_ex(int source_index, int field_index, ArrayElementCalculationType calculation_type)
+{
+	static const int BUF_SIZE = 32;
+	static char errmsg[BUF_SIZE];
+
+	if (calculation_type == ArrayElementCalculation_None)
+		return get_array(source_index, field_index);
+
+	unsigned short ret = RET_SUCCESS;
+	unsigned long key_ex = get_combined_index_ex(source_index, field_index, calculation_type);
+// If the array should NOT exist, create the array
+	if (data_calculation_set_mapping.find(key_ex) == data_calculation_set_mapping.end())
+	{
+		ret = add_set_ex(source_index, field_index, calculation_type);
+		if (CHECK_FAILURE(ret))
+		{
+			snprintf(errmsg, BUF_SIZE, "Fail to set array from (%d, %d, %d), due to: %s", source_index, field_index, calculation_type, get_ret_description(ret));
+			WRITE_ERROR(errmsg);
+			throw runtime_error(string(errmsg));
+		}
+	}
+
+	unsigned short value = data_calculation_set_mapping[key_ex];
+	unsigned short field_type_index = get_upper_subindex(value);
+	unsigned short field_type_pos = get_lower_subindex(value);
+	switch (field_type_index)
+	{
+	case FinanceField_INT:
+		return int_data_set[field_type_pos];
+	case FinanceField_LONG:
+		return long_data_set[field_type_pos];
+	case FinanceField_FLOAT:
+		return float_data_set[field_type_pos];
+	default:
+	{
+		snprintf(errmsg, BUF_SIZE, "Unknown field type: %d", field_index);
 		WRITE_ERROR(errmsg);
 		throw invalid_argument(errmsg);
 	}

@@ -129,6 +129,7 @@ class FinanceDataArrayBase
 protected:
 	DECLARE_MSG_DUMPER()
 	FinanceFieldType array_type;
+//	ArrayElementActionType array_element_action_type;
 
 public:
 	FinanceDataArrayBase();
@@ -136,13 +137,14 @@ public:
 
 	void set_type(FinanceFieldType type);
 	FinanceFieldType get_type()const;
+//	void set_array_element_action(ArrayElementActionType action_type);
+//	ArrayElementActionType get_array_element_action()const;
 };
 typedef FinanceDataArrayBase* PFINANCE_DATA_ARRAY_BASE;
 
 template <typename T>
 class FinanceDataArrayTemplate : public FinanceDataArrayBase
 {
-//	DECLARE_MSG_DUMPER()
 protected:
 	static int DEF_ARRAY_SIZE;
 
@@ -194,7 +196,6 @@ unsigned short get_sub_array(Finance##m##DataArray& new_data_array, int start_in
 unsigned short get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int length=-1);\
 unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length=-1);
 
-
 class FinanceIntDataArray;
 class FinanceLongDataArray;
 class FinanceFloatDataArray;
@@ -205,9 +206,6 @@ class FinanceIntDataArray : public FinanceDataArrayTemplate<int>
 public:
 	DECLARE_DATA_ARRAY_OPERATOR(Int)
 	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Int)
-//	unsigned short get_sub_array(FinanceIntDataArray& new_data_array, int start_index, int length=-1);
-//	unsigned short get_diff_array(FinanceIntDataArray& new_data_array, int start_index, int length=-1);
-//	unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length=-1);
 };
 typedef FinanceIntDataArray* PFINANCE_INT_DATA_ARRAY;
 
@@ -317,11 +315,14 @@ class ResultSet
 
 public:
 	static unsigned short get_combined_index(int x, int y);
+	static unsigned long get_combined_index_ex(int x, int y, ArrayElementCalculationType calculation_type=ArrayElementCalculation_None);
 	static unsigned short get_upper_subindex(unsigned short x);
 	static unsigned short get_lower_subindex(unsigned short x);
+	static unsigned short get_calculation_subindex(unsigned long x);
 
 private:
 	std::map<unsigned short, unsigned short> data_set_mapping;
+	std::map<unsigned long, unsigned long> data_calculation_set_mapping;
 	FinanceCharDataPtrArray date_data;
 	std::deque<PFINANCE_INT_DATA_ARRAY> int_data_set;
 	std::deque<PFINANCE_LONG_DATA_ARRAY> long_data_set;
@@ -335,6 +336,13 @@ private:
 	int float_data_set_size;
 
 	unsigned short find_data_pos(int source_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
+	unsigned short add_set_ex_calculation_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_set_ex_calculation_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_set_ex_calculation_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n);
+	unsigned short add_set_ex_calculation_avg5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_set_ex_calculation_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_set_ex_calculation_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_set_ex_calculation_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 
 public:
 	ResultSet();
@@ -373,6 +381,7 @@ public:
 
 	unsigned short add_set(int source_index, int field_index);
 	unsigned short add_set(int source_index, const DEQUE_INT& field_set);
+	unsigned short add_set_ex(int source_index, int field_index, ArrayElementCalculationType calculation_type=ArrayElementCalculation_None);
 	unsigned short set_date(char* element_value);
 	unsigned short set_data(int source_index, int field_index, char* data_string);
 
@@ -383,11 +392,16 @@ public:
 	int get_data_dimension()const;
 	int get_data_size()const;
 
+#define DECLARE_GET_ARRAY_FUNC_BY_POS(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array_by_position(unsigned short field_type_index, unsigned short field_type_pos)const;
+	DECLARE_GET_ARRAY_FUNC_BY_POS(int, INT)
+	DECLARE_GET_ARRAY_FUNC_BY_POS(long, LONG)
+	DECLARE_GET_ARRAY_FUNC_BY_POS(float, FLOAT)
 #define DECLARE_GET_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array(int source_index, int field_index)const;
 	DECLARE_GET_ARRAY_FUNC(int, INT)
 	DECLARE_GET_ARRAY_FUNC(long, LONG)
 	DECLARE_GET_ARRAY_FUNC(float, FLOAT)
 	const PFINANCE_DATA_ARRAY_BASE get_array(int source_index, int field_index)const;
+	const PFINANCE_DATA_ARRAY_BASE get_array_ex(int source_index, int field_index, ArrayElementCalculationType calculation_type=ArrayElementCalculation_None);
 #define DECLARE_GET_ARRAY_ELEMENT_FUNC(n) n get_##n##_array_element(int source_index, int field_index, int index)const;
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(int)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(long)

@@ -76,6 +76,17 @@ enum FinanceFieldType
 	FinanceFieldSize,
 };
 
+enum ArrayElementCalculationType
+{
+	ArrayElementCalculation_None,
+	ArrayElementCalculation_Diff,
+	ArrayElementCalculation_Avg5,
+	ArrayElementCalculation_Avg10,
+	ArrayElementCalculation_Avg20,
+	ArrayElementCalculation_Avg60,
+	ArrayElementCalculationSize,
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 
