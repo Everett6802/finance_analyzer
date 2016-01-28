@@ -16,27 +16,33 @@ void show_usage();
 int main(int argc, char** argv)
 {
 //	finance_analyzer_mgr.analyze_daily();
-//	FinanceIntDataArray finance_data_array1, finance_data_array2;
-//	finance_data_array1.add(1);
-//	finance_data_array1.add(2);
-//	finance_data_array1.add(3);
-//	finance_data_array1.add(4);
-//	finance_data_array1.add(5);
-//	finance_data_array2.add(-1);
-//	finance_data_array2.add(-2);
-//	finance_data_array2.add(-3);
-//	finance_data_array2.add(-4);
-//	finance_data_array2.add(-5);
-//	for (int i = 0 ; i < finance_data_array1.get_size() ; i++)
-//		printf("%d ", finance_data_array1[i]);
-//	printf("\n");
-//	for (int i = 0 ; i < finance_data_array2.get_size() ; i++)
-//		printf("%d ", finance_data_array2[i]);
-//	printf("\n");
-//	finance_data_array1 += finance_data_array2;
-//	for (int i = 0 ; i < finance_data_array1.get_size() ; i++)
-//		printf("%d ", finance_data_array1[i]);
-//	printf("\n");
+	FinanceIntDataArray finance_data_array1, finance_data_array2;
+	finance_data_array1.add(1);
+	finance_data_array1.add(2);
+	finance_data_array1.add(3);
+	finance_data_array1.add(4);
+	finance_data_array1.add(5);
+	finance_data_array2.add(-1);
+	finance_data_array2.add(-2);
+	finance_data_array2.add(-3);
+	finance_data_array2.add(-4);
+	finance_data_array2.add(-5);
+	for (int i = 0 ; i < finance_data_array1.get_size() ; i++)
+		printf("%d ", finance_data_array1[i]);
+	printf("\n");
+	for (int i = 0 ; i < finance_data_array2.get_size() ; i++)
+		printf("%d ", finance_data_array2[i]);
+	printf("\n");
+	printf("Avg1: %.2f\n", average(finance_data_array1, 1, 4));
+	printf("Avg2: %.2f\n", average(finance_data_array2, 1, 4));
+	printf("Var1: %.2f\n", variance(finance_data_array1, 1, 4));
+	printf("Var2: %.2f\n", variance(finance_data_array2, 1, 4));
+	printf("Cov: %.2f\n", covariance(finance_data_array1, finance_data_array2, 1, 1, 4, 4));
+	printf("Cor: %.2f\n", correlation(finance_data_array1, finance_data_array2, 1, 1, 4, 4));
+	finance_data_array1 += finance_data_array2;
+	for (int i = 0 ; i < finance_data_array1.get_size() ; i++)
+		printf("%d ", finance_data_array1[i]);
+	printf("\n");
 //	FinanceIntDataArray finance_data_array3;
 //	finance_data_array3 = finance_data_array1 + finance_data_array2;
 //	for (int i = 0 ; i < finance_data_array3.get_size() ; i++)
@@ -56,15 +62,18 @@ int main(int argc, char** argv)
 	FinanceIntDataArray finance_data_array6;
 	finance_data_array6.add(1);
 	finance_data_array6.add(2);
-//	finance_data_array6.add(3);
-//	finance_data_array6.add(4);
-//	finance_data_array6.add(5);
-//	finance_data_array6.add(6);
-//	finance_data_array6.add(7);
-//	finance_data_array6.add(8);
+	finance_data_array6.add(3);
+	finance_data_array6.add(4);
+	finance_data_array6.add(5);
+	finance_data_array6.add(6);
+	finance_data_array6.add(7);
+	finance_data_array6.add(8);
+	finance_data_array6.add(9);
 	for (int i = 0 ; i < finance_data_array6.get_size() ; i++)
 		printf("%d ", finance_data_array6[i]);
 	printf("\n");
+	printf("Avg: %.2f\n", average(finance_data_array6, 4, 5));
+	printf("Var: %.2f\n", variance(finance_data_array6, 4, 5));
 	FinanceFloatDataArray finance_data_array7;
 	finance_data_array6.get_avg_array(finance_data_array7, 3, 0);
 //	get_avg_array(finance_data_array7, finance_data_array6, 3, 0);
@@ -73,15 +82,6 @@ int main(int argc, char** argv)
 	printf("\n");
 
 	exit(EXIT_SUCCESS);
-
-//
-//	printf("Average1: %f\n", average<int>(finance_data_array1));
-//	printf("Average2: %f\n", average<int>(finance_data_array2));
-//	printf("StandardDeviation1: %f\n", standard_deviation<int>(finance_data_array1));
-//	printf("StandardDeviation2: %f\n", standard_deviation<int>(finance_data_array2));
-//	printf("Covariance: %f\n", covariance<int>(finance_data_array1, finance_data_array2));
-//	printf("Correlation: %f\n", correlation<int>(finance_data_array1, finance_data_array2));
-//	exit(EXIT_SUCCESS);
 
 	unsigned short ret = finance_analyzer_mgr.initialize();
 	if (CHECK_FAILURE(ret))
