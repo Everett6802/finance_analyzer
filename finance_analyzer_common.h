@@ -116,6 +116,7 @@ extern const int FINANCE_DATABASE_NAME_LIST_LEN;
 extern const char* FINANCE_DATABASE_DESCRIPTION_LIST[];
 extern const int* FINANCE_DATABASE_FIELD_TYPE_LIST[];
 extern const int FINANCE_DATABASE_FIELD_AMOUNT_LIST[];
+extern const char* FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[];
 
 // Return values
 extern const unsigned short RET_SUCCESS;

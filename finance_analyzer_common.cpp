@@ -246,7 +246,15 @@ const int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] =
 	sizeof(OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION) / sizeof(OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION[0]),
 	sizeof(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION) / sizeof(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[0])
 };
-
+const char* FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[] =
+{
+	"None",
+	"Diff",
+	"Avg5",
+	"Avg10",
+	"Avg20",
+	"Avg60"
+};
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Return values
 
