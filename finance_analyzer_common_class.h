@@ -336,13 +336,14 @@ private:
 	int float_data_set_size;
 
 	unsigned short find_data_pos(int source_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
-	unsigned short add_set_ex_calculation_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
-	unsigned short add_set_ex_calculation_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
-	unsigned short add_set_ex_calculation_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n);
-	unsigned short add_set_ex_calculation_avg5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
-	unsigned short add_set_ex_calculation_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
-	unsigned short add_set_ex_calculation_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
-	unsigned short add_set_ex_calculation_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n);
+	unsigned short add_calculation_set_avg5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set(int source_index, int field_index, ArrayElementCalculationType calculation_type);
 
 public:
 	ResultSet();
@@ -381,7 +382,6 @@ public:
 
 	unsigned short add_set(int source_index, int field_index);
 	unsigned short add_set(int source_index, const DEQUE_INT& field_set);
-	unsigned short add_set_ex(int source_index, int field_index, ArrayElementCalculationType calculation_type=ArrayElementCalculation_None);
 	unsigned short set_date(char* element_value);
 	unsigned short set_data(int source_index, int field_index, char* data_string);
 
@@ -401,7 +401,7 @@ public:
 	DECLARE_GET_ARRAY_FUNC(long, LONG)
 	DECLARE_GET_ARRAY_FUNC(float, FLOAT)
 	const PFINANCE_DATA_ARRAY_BASE get_array(int source_index, int field_index)const;
-	const PFINANCE_DATA_ARRAY_BASE get_array_ex(int source_index, int field_index, ArrayElementCalculationType calculation_type=ArrayElementCalculation_None);
+	const PFINANCE_DATA_ARRAY_BASE get_array(int source_index, int field_index, ArrayElementCalculationType calculation_type);
 #define DECLARE_GET_ARRAY_ELEMENT_FUNC(n) n get_##n##_array_element(int source_index, int field_index, int index)const;
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(int)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(long)

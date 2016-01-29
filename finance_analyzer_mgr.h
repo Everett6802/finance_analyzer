@@ -36,6 +36,7 @@ public:
 
 	unsigned short initialize();
 	unsigned short query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set)const;
+	unsigned short correlate(FinanceSourceType finance_source_type1, int finance_field_no1, ArrayElementCalculationType calculation_type1, FinanceSourceType finance_source_type2, int finance_field_no2, ArrayElementCalculationType calculation_type2, float& correlation, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
 	unsigned short correlate(FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
 
 	unsigned short run_daily();

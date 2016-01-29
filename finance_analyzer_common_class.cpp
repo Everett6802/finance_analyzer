@@ -1160,13 +1160,13 @@ unsigned short ResultSet::add_set(int source_index, const DEQUE_INT& field_set)
 	return ret;
 }
 
-unsigned short ResultSet::add_set_ex_calculation_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex)
+unsigned short ResultSet::add_calculation_set_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex)
 {
 	assert("No need to do the element calculation");
 	return RET_SUCCESS;
 }
 
-unsigned short ResultSet::add_set_ex_calculation_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex)
+unsigned short ResultSet::add_calculation_set_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex)
 {
 	assert(data_array_base != NULL && "data_array_base should NOT be NULL");
 	unsigned short ret = RET_SUCCESS;
@@ -1229,7 +1229,7 @@ unsigned short ResultSet::add_set_ex_calculation_diff(const PFINANCE_DATA_ARRAY_
 	return ret;
 }
 
-unsigned short ResultSet::add_set_ex_calculation_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n)
+unsigned short ResultSet::add_calculation_set_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n)
 {
 	assert(data_array_base != NULL && "data_array_base should NOT be NULL");
 	unsigned short ret = RET_SUCCESS;
@@ -1276,26 +1276,30 @@ unsigned short ResultSet::add_set_ex_calculation_avg(const PFINANCE_DATA_ARRAY_B
 	return ret;
 }
 
-unsigned short ResultSet::add_set_ex_calculation_avg5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_set_ex_calculation_avg(data_array_base, key_ex, 5);}
-unsigned short ResultSet::add_set_ex_calculation_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_set_ex_calculation_avg(data_array_base, key_ex, 10);}
-unsigned short ResultSet::add_set_ex_calculation_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_set_ex_calculation_avg(data_array_base, key_ex, 20);}
-unsigned short ResultSet::add_set_ex_calculation_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_set_ex_calculation_avg(data_array_base, key_ex, 60);}
+unsigned short ResultSet::add_calculation_set_avg5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 5);}
+unsigned short ResultSet::add_calculation_set_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 10);}
+unsigned short ResultSet::add_calculation_set_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 20);}
+unsigned short ResultSet::add_calculation_set_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 60);}
 
-unsigned short ResultSet::add_set_ex(int source_index, int field_index, ArrayElementCalculationType calculation_type)
+unsigned short ResultSet::add_calculation_set(int source_index, int field_index, ArrayElementCalculationType calculation_type)
 {
-	typedef unsigned short (ResultSet::*add_set_ex_calculation_func_ptr)(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
-	static add_set_ex_calculation_func_ptr add_set_ex_calculation_func_array[] =
+	typedef unsigned short (ResultSet::*add_calculation_set_func_ptr)(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	static add_calculation_set_func_ptr add_calculation_set_func_array[] =
 	{
-		&ResultSet::add_set_ex_calculation_dummy,
-		&ResultSet::add_set_ex_calculation_diff,
-		&ResultSet::add_set_ex_calculation_avg5,
-		&ResultSet::add_set_ex_calculation_avg10,
-		&ResultSet::add_set_ex_calculation_avg20,
-		&ResultSet::add_set_ex_calculation_avg60
+		&ResultSet::add_calculation_set_dummy,
+		&ResultSet::add_calculation_set_diff,
+		&ResultSet::add_calculation_set_avg5,
+		&ResultSet::add_calculation_set_avg10,
+		&ResultSet::add_calculation_set_avg20,
+		&ResultSet::add_calculation_set_avg60
 	};
 
 	if (calculation_type == ArrayElementCalculation_None)
-		return add_set(source_index, field_index);
+	{
+		WRITE_ERROR("Incorrect calculation type: ArrayElementCalculation_None");
+		return RET_FAILURE_INVALID_ARGUMENT;
+//		return add_set(source_index, field_index);
+	}
 // Check the index boundary
 	if(source_index < 0 && source_index >= FinanceSourceSize)
 	{
@@ -1327,7 +1331,7 @@ unsigned short ResultSet::add_set_ex(int source_index, int field_index, ArrayEle
 		WRITE_FORMAT_ERROR("The array from (%d, %d) should EXIST", source_index, field_index);
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	return (this->*(add_set_ex_calculation_func_array[calculation_type]))(data_array_base, key_ex);
+	return (this->*(add_calculation_set_func_array[calculation_type]))(data_array_base, key_ex);
 }
 
 unsigned short ResultSet::set_date(char* element_value)
@@ -1472,7 +1476,7 @@ const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array(int source_index, int field_
 	return NULL	;
 }
 
-const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array_ex(int source_index, int field_index, ArrayElementCalculationType calculation_type)
+const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array(int source_index, int field_index, ArrayElementCalculationType calculation_type)
 {
 	static const int BUF_SIZE = 32;
 	static char errmsg[BUF_SIZE];
@@ -1485,7 +1489,7 @@ const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array_ex(int source_index, int fie
 // If the array should NOT exist, create the array
 	if (data_calculation_set_mapping.find(key_ex) == data_calculation_set_mapping.end())
 	{
-		ret = add_set_ex(source_index, field_index, calculation_type);
+		ret = add_calculation_set(source_index, field_index, calculation_type);
 		if (CHECK_FAILURE(ret))
 		{
 			snprintf(errmsg, BUF_SIZE, "Fail to set array from (%d, %d, %d), due to: %s", source_index, field_index, calculation_type, get_ret_description(ret));
@@ -1493,7 +1497,7 @@ const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array_ex(int source_index, int fie
 			throw runtime_error(string(errmsg));
 		}
 	}
-
+// Access the calculation array
 	unsigned short value = data_calculation_set_mapping[key_ex];
 	unsigned short field_type_index = get_upper_subindex(value);
 	unsigned short field_type_pos = get_lower_subindex(value);
