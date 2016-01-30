@@ -503,8 +503,12 @@ SingleTimeRangeCfg::SingleTimeRangeCfg(int year, int month, int day) : TimeRange
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+int FinanceDataArrayBase::DEF_ARRAY_SIZE = 512;
+
 FinanceDataArrayBase::FinanceDataArrayBase() :
-	array_type(FinanceField_UNKNOWN)
+	array_type(FinanceField_UNKNOWN),
+	array_size(DEF_ARRAY_SIZE),
+	array_pos(0)
 {
 	IMPLEMENT_MSG_DUMPER()
 }
@@ -516,30 +520,29 @@ FinanceDataArrayBase::~FinanceDataArrayBase()
 
 void FinanceDataArrayBase::set_type(FinanceFieldType type){array_type = type;}
 FinanceFieldType FinanceDataArrayBase::get_type()const{return array_type;}
-//void FinanceDataArrayBase::set_array_element_action(ArrayElementActionType action_type){array_element_action_type = action_type;}
-//ArrayElementActionType FinanceDataArrayBase::get_array_element_action()const{return array_element_action_type;}
+bool FinanceDataArrayBase::is_empty()const{return (array_pos == 0);}
+int FinanceDataArrayBase::get_size()const{return array_pos;}
+int FinanceDataArrayBase::get_array_size()const{return array_size;}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <typename T>
-int FinanceDataArrayTemplate<T>::DEF_ARRAY_SIZE = 512;
+//template <typename T>
+//int FinanceDataArrayTemplate<T>::DEF_ARRAY_SIZE = 512;
 
 template <typename T>
-FinanceDataArrayTemplate<T>::FinanceDataArrayTemplate() :
-	array_size(DEF_ARRAY_SIZE),
-	array_pos(0)
+FinanceDataArrayTemplate<T>::FinanceDataArrayTemplate()
 {
 //	IMPLEMENT_MSG_DUMPER()
+	array_size = DEF_ARRAY_SIZE;
+	array_pos = 0;
 	array_data = (T*)calloc(array_size, sizeof(T));
 	if (array_data == NULL)
 		throw bad_alloc();
 }
 
 template <typename T>
-FinanceDataArrayTemplate<T>::FinanceDataArrayTemplate(const FinanceDataArrayTemplate& another) :
-	array_size(DEF_ARRAY_SIZE),
-	array_pos(0)
+FinanceDataArrayTemplate<T>::FinanceDataArrayTemplate(const FinanceDataArrayTemplate& another)
 {
 	array_size = another.array_size;
 	array_data = (T*)malloc(sizeof(T) * array_size);
@@ -569,15 +572,6 @@ void FinanceDataArrayTemplate<T>::alloc_new()
 	if (array_data == NULL)
 		throw bad_alloc();
 }
-
-template <typename T>
-bool FinanceDataArrayTemplate<T>::is_empty()const{return (array_pos == 0);}
-
-template <typename T>
-int FinanceDataArrayTemplate<T>::get_size()const{return array_pos;}
-
-template <typename T>
-int FinanceDataArrayTemplate<T>::get_array_size()const{return array_size;}
 
 template <typename T>
 const T* FinanceDataArrayTemplate<T>::get_data_array()const{return array_data;}

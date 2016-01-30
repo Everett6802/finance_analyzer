@@ -128,8 +128,10 @@ class FinanceDataArrayBase
 {
 protected:
 	DECLARE_MSG_DUMPER()
+	static int DEF_ARRAY_SIZE;
 	FinanceFieldType array_type;
-//	ArrayElementActionType array_element_action_type;
+	int array_size;
+	int array_pos;
 
 public:
 	FinanceDataArrayBase();
@@ -137,8 +139,10 @@ public:
 
 	void set_type(FinanceFieldType type);
 	FinanceFieldType get_type()const;
-//	void set_array_element_action(ArrayElementActionType action_type);
-//	ArrayElementActionType get_array_element_action()const;
+	bool is_empty()const;
+	int get_size()const;
+	int get_array_size()const;
+
 };
 typedef FinanceDataArrayBase* PFINANCE_DATA_ARRAY_BASE;
 
@@ -146,11 +150,7 @@ template <typename T>
 class FinanceDataArrayTemplate : public FinanceDataArrayBase
 {
 protected:
-	static int DEF_ARRAY_SIZE;
-
 	T* array_data;
-	int array_size;
-	int array_pos;
 
 	void alloc_new();
 
@@ -159,9 +159,6 @@ public:
 	FinanceDataArrayTemplate(const FinanceDataArrayTemplate& another);
 	virtual ~FinanceDataArrayTemplate();
 
-	bool is_empty()const;
-	int get_size()const;
-	int get_array_size()const;
 	const T* get_data_array()const;
 	const T operator[](int index)const;
 //	unsigned short get_sub_array(FinanceDataArrayTemplate& new_data_array, int start_index, int end_index=-1);

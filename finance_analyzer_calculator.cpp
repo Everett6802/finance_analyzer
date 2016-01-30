@@ -57,7 +57,39 @@ unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set
 
 	WRITE_FORMAT_DEBUG("Find the correlation between [%s,%d,%s] and [%s,%d,%s]", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type1], finance_field_no1, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type1], FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type2], finance_field_no2, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type2]);
 	unsigned short ret = RET_SUCCESS;
-	correlation_value = correlation(result_set->get_array(finance_source_type1, finance_field_no1, calculation_type1), result_set->get_array(finance_source_type2, finance_field_no2, calculation_type2));
+	PFINANCE_DATA_ARRAY_BASE finance_data_array1 = result_set->get_array(finance_source_type1, finance_field_no1);
+	assert(finance_data_array1 != NULL && "finance_data_array1 should NOT be NULL");
+	PFINANCE_DATA_ARRAY_BASE finance_data_array2 = result_set->get_array(finance_source_type2, finance_field_no2);
+	assert(finance_data_array2 != NULL && "finance_data_array2 should NOT be NULL");
+// Check if the original data size is identical
+	assert(finance_data_array1->get_size() == finance_data_array2->get_size() && "The array size of finance_data_array1 and finance_data_array2 is NOT identical");
+
+	int start_index1 = 0, start_index2 = 0;
+	if (calculation_type1 != ArrayElementCalculation_None || calculation_type2 != ArrayElementCalculation_None)
+	{
+// Do array calculation. The size of the array is changed
+		if (calculation_type1 != ArrayElementCalculation_None)
+			finance_data_array1 = result_set->get_array(finance_source_type1, finance_field_no1, calculation_type1);
+		if (calculation_type2 != ArrayElementCalculation_None)
+			finance_data_array2 = result_set->get_array(finance_source_type2, finance_field_no2, calculation_type2);
+		int finance_data_array_size1 = finance_data_array1->get_size();
+		int finance_data_array_size2 = finance_data_array2->get_size();
+		if (finance_data_array_size1 > finance_data_array_size2)
+		{
+			int data_aray_size_diff = finance_data_array_size1 - finance_data_array_size2;
+			start_index1 = data_aray_size_diff;
+			WRITE_FORMAT_DEBUG("Modify the start index of the array [%s,%d,%s]: %d", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type1], finance_field_no1, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type1], start_index1);
+		}
+		else if (finance_data_array_size2 > finance_data_array_size1)
+		{
+			int data_aray_size_diff = finance_data_array_size2 - finance_data_array_size1;
+			start_index1 = data_aray_size_diff;
+			WRITE_FORMAT_DEBUG("Modify the start index of the array [%s,%d,%s]: %d", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type2], finance_field_no2, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type2], start_index2);
+		}
+	}
+	correlation_value = correlation(finance_data_array1, finance_data_array2, start_index1, start_index2);
+	WRITE_FORMAT_INFO("The correlation between [%s,%d,%s] and [%s,%d,%s]: %.2f", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type1], finance_field_no1, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type1], FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type2], finance_field_no2, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type2], correlation_value);
+
 	return ret;
 }
 
