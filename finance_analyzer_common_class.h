@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <map>
+#include <iostream>
 #include "msg_dumper_wrapper.h"
 
 
@@ -189,9 +190,12 @@ Finance##m##DataArray& operator-=(const Finance##m##DataArray& another);\
 Finance##m##DataArray operator-(const Finance##m##DataArray& another);
 
 #define DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(m)\
-unsigned short get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int length=-1);\
-unsigned short get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int length=-1);\
-unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length=-1);
+unsigned short get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
+unsigned short get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
+unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int end_index=-1);
+
+#define DECLARE_DATA_ARRAY_OSTREAM(m, n)\
+std::ostream& operator<<(std::ostream &out, const Finance##m##DataArray &finance_##n##_data_array);
 
 class FinanceIntDataArray;
 class FinanceLongDataArray;
@@ -205,6 +209,7 @@ public:
 	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Int)
 };
 typedef FinanceIntDataArray* PFINANCE_INT_DATA_ARRAY;
+DECLARE_DATA_ARRAY_OSTREAM(Int, int)
 
 //typedef FinanceDataArrayTemplate<long> FinanceLongDataArray;
 class FinanceLongDataArray : public FinanceDataArrayTemplate<long>
@@ -214,6 +219,7 @@ public:
 	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Long)
 };
 typedef FinanceLongDataArray* PFINANCE_LONG_DATA_ARRAY;
+DECLARE_DATA_ARRAY_OSTREAM(Long, long)
 
 //typedef FinanceDataArrayTemplate<float> FinanceFloatDataArray;
 class FinanceFloatDataArray : public FinanceDataArrayTemplate<float>
@@ -223,6 +229,9 @@ public:
 	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Float)
 };
 typedef FinanceFloatDataArray* PFINANCE_FLOAT_DATA_ARRAY;
+DECLARE_DATA_ARRAY_OSTREAM(Float, float)
+
+std::ostream& operator<<(std::ostream &out, const FinanceDataArrayBase &finance_data_array);
 
 typedef FinanceDataPtrArrayTemplate<char*> FinanceCharDataPtrArray;
 typedef FinanceCharDataPtrArray* PFINANCE_CHAR_DATA_PTR_ARRAY;

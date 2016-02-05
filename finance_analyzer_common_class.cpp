@@ -766,18 +766,14 @@ Finance##m##DataArray Finance##m##DataArray::operator-(const Finance##m##DataArr
 }
 
 #define IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(m)\
-unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int length)\
+unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index)\
 {\
 	if (start_index < 0 || start_index >= array_pos)\
 	{\
 		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);\
 		return RET_FAILURE_INVALID_ARGUMENT;\
 	}\
-	int end_index;\
-	if (length == -1)\
-		end_index = array_pos;\
-	else\
-		end_index = MIN(start_index + length, array_pos);\
+	end_index = get_end_index_ex(end_index, array_pos);\
 	if ((end_index - start_index) < 1)\
 	{\
 		WRITE_ERROR("The array size is NOT more than 1");\
@@ -787,18 +783,14 @@ unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_d
 		new_data_array.add(array_data[i]);\
 	return RET_SUCCESS;\
 }\
-unsigned short Finance##m##DataArray::get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int length)\
+unsigned short Finance##m##DataArray::get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int end_index)\
 {\
 	if (start_index < 0 || start_index >= array_pos)\
 	{\
 		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);\
 		return RET_FAILURE_INVALID_ARGUMENT;\
 	}\
-	int end_index;\
-	if (length == -1)\
-		end_index = array_pos;\
-	else\
-		end_index = MIN(start_index + length, array_pos);\
+	end_index = get_end_index_ex(end_index, array_pos);\
 	if ((end_index - start_index) < 2)\
 	{\
 		WRITE_ERROR("The array size is NOT more than 2");\
@@ -808,18 +800,14 @@ unsigned short Finance##m##DataArray::get_diff_array(Finance##m##DataArray& new_
 		new_data_array.add(array_data[i] - array_data[i - 1]);\
 	return RET_SUCCESS;\
 }\
-unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int length)\
+unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int end_index)\
 {\
 	if (start_index < 0 || start_index >= array_pos)\
 	{\
 		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);\
 		return RET_FAILURE_INVALID_ARGUMENT;\
 	}\
-	int end_index;\
-	if (length == -1)\
-		end_index = array_pos;\
-	else\
-		end_index = MIN(start_index + length, array_pos);\
+	end_index = get_end_index_ex(end_index, array_pos);\
 	if ((end_index - start_index) < n)\
 	{\
 		WRITE_FORMAT_ERROR("The array size is NOT more than %d", n);\
@@ -832,10 +820,10 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 		return RET_FAILURE_INSUFFICIENT_MEMORY;\
 	}\
 	int sum = 0;\
-	for (int i = 0 ; i < n ; i++)\
+	for (int i = start_index ; i < start_index + n ; i++)\
 	{\
-		buffer[i] = array_data[start_index + i];\
-		sum += buffer[i];\
+		buffer[i - start_index] = array_data[i];\
+		sum += buffer[i - start_index];\
 	}\
 	int buffer_pos = 0;\
 	float average;\
@@ -843,6 +831,8 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 	do{\
 		average = (float)sum / n;\
 		new_data_array.add(average);\
+		if (i >= end_index)\
+			break;\
 		sum -= buffer[buffer_pos];\
 		buffer[buffer_pos] = array_data[i];\
 		sum += buffer[buffer_pos];\
@@ -850,13 +840,22 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 		if (buffer_pos == n)\
 			buffer_pos = 0;\
 		i++;\
-	}while (i < end_index);\
+	}while (true);\
 	if (buffer != NULL)\
 	{\
 		delete[] buffer;\
 		buffer = NULL;\
  	}\
 	return RET_SUCCESS;\
+}
+
+#define IMPLEMENT_DATA_ARRAY_OSTREAM(m, n)\
+ostream& operator<< (ostream &out, const Finance##m##DataArray &finance_##n##_data_array)\
+{\
+	int finance_##n##_data_array_len = finance_##n##_data_array.get_size();\
+	for (int i = 0 ; i < finance_##n##_data_array_len ; i++)\
+		out << finance_##n##_data_array[i] << " ";\
+	return out;\
 }
 
 IMPLEMENT_DATA_ARRAY_OPERATOR(Int, int)
@@ -866,6 +865,29 @@ IMPLEMENT_DATA_ARRAY_OPERATOR(Float, float)
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Int)
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Long)
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Float)
+
+IMPLEMENT_DATA_ARRAY_OSTREAM(Int, int)
+IMPLEMENT_DATA_ARRAY_OSTREAM(Long, long)
+IMPLEMENT_DATA_ARRAY_OSTREAM(Float, float)
+
+ostream& operator<<(ostream &out, const FinanceDataArrayBase &finance_data_array)
+{
+	switch (finance_data_array.get_type())
+	{
+	case FinanceField_INT:
+		return operator<<(out, *(PFINANCE_INT_DATA_ARRAY)&finance_data_array);
+	case FinanceField_LONG:
+		return operator<<(out, *(PFINANCE_LONG_DATA_ARRAY)&finance_data_array);
+	case FinanceField_FLOAT:
+		return operator<<(out, *(PFINANCE_FLOAT_DATA_ARRAY)&finance_data_array);
+	default:
+		break;
+	}
+	char errmsg[64];
+	snprintf(errmsg, 64, "Unknown type value: %d", finance_data_array.get_type());
+	throw invalid_argument(errmsg);
+	return out;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1231,7 +1253,7 @@ unsigned short ResultSet::add_calculation_set_avg(const PFINANCE_DATA_ARRAY_BASE
 	assert(new_array != NULL && "Fail to allocate the FinanceFloatDataArray object");
 	new_array->set_type(FinanceField_FLOAT);
 
-	unsigned short value = get_combined_index(FinanceField_INT, float_data_set.size());
+	unsigned short value = get_combined_index(FinanceField_FLOAT, float_data_set.size());
 
 	switch (data_array_base->get_type())
 	{

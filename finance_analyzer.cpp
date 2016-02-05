@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "msg_dumper_wrapper.h"
+#include <assert.h>
+#include <iostream>
+#include <stdexcept>
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
-#include "finance_analyzer_algorithm.h"
+#include "finance_analyzer_test.h"
 
 
 static FinanceAnalyzerMgr finance_analyzer_mgr;
@@ -12,81 +14,10 @@ static FinanceAnalyzerMgr finance_analyzer_mgr;
 using namespace std;
 
 void show_usage();
+void run_test(const char* test_case_list, bool show_detail);
 
 int main(int argc, char** argv)
 {
-//	finance_analyzer_mgr.analyze_daily();
-	FinanceIntDataArray finance_data_array1, finance_data_array2;
-	finance_data_array1.add(1);
-	finance_data_array1.add(2);
-	finance_data_array1.add(3);
-	finance_data_array1.add(4);
-	finance_data_array1.add(5);
-	finance_data_array2.add(-1);
-	finance_data_array2.add(-2);
-	finance_data_array2.add(-3);
-	finance_data_array2.add(-4);
-	finance_data_array2.add(-5);
-	for (int i = 0 ; i < finance_data_array1.get_size() ; i++)
-		printf("%d ", finance_data_array1[i]);
-	printf("\n");
-	for (int i = 0 ; i < finance_data_array2.get_size() ; i++)
-		printf("%d ", finance_data_array2[i]);
-	printf("\n");
-	printf("Avg1: %.2f\n", average(finance_data_array1, 1, 4));
-	printf("Avg2: %.2f\n", average(finance_data_array2, 1, 4));
-	printf("Var1: %.2f\n", variance(finance_data_array1, 1, 4));
-	printf("Var2: %.2f\n", variance(finance_data_array2, 1, 4));
-	printf("Cov: %.2f\n", covariance(finance_data_array1, finance_data_array2, 1, 1, 4, 4));
-	printf("Cor: %.2f\n", correlation(finance_data_array1, finance_data_array2, 1, 1, 4, 4));
-	finance_data_array1 += finance_data_array2;
-	for (int i = 0 ; i < finance_data_array1.get_size() ; i++)
-		printf("%d ", finance_data_array1[i]);
-	printf("\n");
-//	FinanceIntDataArray finance_data_array3;
-//	finance_data_array3 = finance_data_array1 + finance_data_array2;
-//	for (int i = 0 ; i < finance_data_array3.get_size() ; i++)
-//		printf("%d ", finance_data_array3[i]);
-//	printf("\n");
-//	FinanceIntDataArray finance_data_array4;
-//	finance_data_array3.get_sub_array(finance_data_array4, 1, 5);
-//	for (int i = 0 ; i < finance_data_array4.get_size() ; i++)
-//		printf("%d ", finance_data_array4[i]);
-//	printf("\n");
-//	FinanceIntDataArray finance_data_array5;
-//	finance_data_array3.get_diff_array(finance_data_array5, 1, 5);
-//	for (int i = 0 ; i < finance_data_array5.get_size() ; i++)
-//		printf("%d ", finance_data_array5[i]);
-//	printf("\n");
-
-	FinanceIntDataArray finance_data_array6;
-	finance_data_array6.add(1);
-	finance_data_array6.add(2);
-	finance_data_array6.add(3);
-	finance_data_array6.add(4);
-	finance_data_array6.add(5);
-	finance_data_array6.add(6);
-	finance_data_array6.add(7);
-	finance_data_array6.add(8);
-	finance_data_array6.add(9);
-	for (int i = 0 ; i < finance_data_array6.get_size() ; i++)
-		printf("%d ", finance_data_array6[i]);
-	printf("\n");
-	printf("Avg: %.2f\n", average(finance_data_array6, 4, 5));
-	printf("Var: %.2f\n", variance(finance_data_array6, 4, 5));
-	FinanceFloatDataArray finance_data_array7;
-	finance_data_array6.get_avg_array(finance_data_array7, 3, 0);
-//	get_avg_array(finance_data_array7, finance_data_array6, 3, 0);
-	for (int i = 0 ; i < finance_data_array7.get_size() ; i++)
-		printf("%.2f ", finance_data_array7[i]);
-	printf("\n");
-
-	exit(EXIT_SUCCESS);
-
-	unsigned short ret = finance_analyzer_mgr.initialize();
-	if (CHECK_FAILURE(ret))
-		return ret;
-
 	int index = 1;
 	int offset;
 	bool run_daily = false;
@@ -97,6 +28,24 @@ int main(int argc, char** argv)
 		if (strcmp(argv[index], "--help") == 0)
 		{
 			show_usage();
+			exit(EXIT_SUCCESS);
+		}
+		else if (strcmp(argv[index], "--test") == 0)
+		{
+			if (index + 1 >= argc)
+			{
+				fprintf(stderr, "Select the test case first\n");
+			}
+			run_test(argv[index + 1], false);
+			exit(EXIT_SUCCESS);
+		}
+		else if (strcmp(argv[index], "--test_verbose") == 0)
+		{
+			if (index + 1 >= argc)
+			{
+				fprintf(stderr, "Select the test case first\n");
+			}
+			run_test(argv[index + 1], true);
 			exit(EXIT_SUCCESS);
 		}
 		else if (strcmp(argv[index], "--run_daily") == 0)
@@ -120,6 +69,11 @@ int main(int argc, char** argv)
 			exit(EXIT_FAILURE);
 		}
 	}
+
+// Start to run
+	unsigned short ret = finance_analyzer_mgr.initialize();
+	if (CHECK_FAILURE(ret))
+		return ret;
 	if (run_daily)
 	{
 		printf("Run daily data......\n");
@@ -150,8 +104,52 @@ void show_usage()
 {
 	printf("====================== Usage ======================\n");
 	printf("-h|--help\nDescription: The usage\nCaution: Other flags are ignored\n");
+	printf("-test\nDescription: Run test case\nCaution: Other flags are ignored\n");
+	printf("-test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
+	printf(" Test case list: ");
+	for (int i = 0 ; i < TestSize ; i++)
+		printf("%s[%d] ", TEST_TYPE_DESCRIPTION[i], i);
+	printf("\n");
+	printf("  Format: 1,2,4 (Start from 0)\n");
+	printf("  all: All types\n");
 	printf("--run_daily\nDescription: Run daily data\nCaution: Other flags are ignored\n");
 	printf("--analyze_daily\nDescription: Analyze daily data\nCaution: Other flags are ignored\n");
 	printf("--show_console\nDescription: Print the runtime info on STDOUT/STDERR\n");
 	printf("===================================================\n");
+}
+
+void run_test(const char* test_case_list, bool show_detail)
+{
+	assert(test_case_list != NULL && "test_case_list should NOT be NULL");
+
+	FinanceAnalyzerTest finance_analyzer_test;
+	finance_analyzer_test.set_show_detail(show_detail);
+	if (strcmp(test_case_list, "all") == 0)
+	{
+		for (int i = 0 ; i < TestSize ; i++)
+		{
+			finance_analyzer_test.test((TestType)i);
+		}
+	}
+	else
+	{
+		char* test_case_list_tmp = new char[strlen(test_case_list) + 1];
+		assert(test_case_list_tmp != NULL && "Fail to allocate memory: test_case_list_tmp");
+		memset(test_case_list_tmp, 0x0, sizeof(char) * strlen(test_case_list) + 1);
+		memcpy(test_case_list_tmp, test_case_list, sizeof(char) * strlen(test_case_list));
+		char* test_case_no_str = strtok(test_case_list_tmp, ",");
+		while (test_case_no_str != NULL)
+		{
+			int test_case_no = atoi(test_case_no_str);
+			if (test_case_no < 0 || test_case_no >= TestSize)
+			{
+				char errmsg[64];
+				snprintf(errmsg, 64, "Unknown test case no: %d", test_case_no);
+				throw invalid_argument(errmsg);
+			}
+			finance_analyzer_test.test((TestType)test_case_no);
+			test_case_no_str =  strtok(NULL, ",");
+		}
+		delete[] test_case_list_tmp;
+	}
 }

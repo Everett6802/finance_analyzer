@@ -416,3 +416,6 @@ unsigned short send_email(const char* title, const char* address, const char* co
 
 	return RET_SUCCESS;
 }
+
+// End index range: Positive: (0, data_size-1); Negative: (-1, -data_size)
+int get_end_index_ex(int end_index, int data_size){return ((end_index < 0) ? end_index = data_size + end_index + 1 : end_index);}

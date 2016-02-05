@@ -144,7 +144,7 @@ extern const unsigned short RET_FAILURE_MYSQL;
 // Variables
 extern bool SHOW_CONSOLE;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////ArrayElementCalculation_Diff///////////////////////////////////////////////////////////////////////////////////
 // Functions
 const char* get_ret_description(unsigned short ret);
 bool check_file_exist(const char* filepath);
@@ -153,5 +153,6 @@ unsigned short create_folder_if_not_exist(const char* path, int mode=0755);
 unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_project, int mode=0755);
 unsigned short direct_string_to_output_stream(const char* data, const char* filepath=NULL);
 unsigned short send_email(const char* title, const char* address, const char* content);
+int get_end_index_ex(int end_index, int data_size);
 
 #endif
