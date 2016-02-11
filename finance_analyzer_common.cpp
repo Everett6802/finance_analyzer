@@ -255,6 +255,25 @@ const char* FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[] =
 	"Avg20",
 	"Avg60"
 };
+
+const int SHOW_RES_STDOUT = 0x1;
+const int SHOW_RES_EMAIL = 0x2;
+const int SHOW_RES_FILE = 0x4;
+const int SHOW_RES_SYSLOG = 0x8;
+const int SHOW_RES_DEFAULT = SHOW_RES_STDOUT | SHOW_RES_EMAIL;
+const int SHOW_RES_ALL = SHOW_RES_STDOUT | SHOW_RES_EMAIL | SHOW_RES_FILE | SHOW_RES_SYSLOG;
+
+const char* SHOW_RES_TYPE_DESCRIPTION[] =
+{
+	"Stdout",
+	"Email",
+	"File",
+	"Syslog",
+	"Default(Stdout/Email)",
+	"All(Stdout/Email/File/Syslog)",
+};
+const int SHOW_RES_TYPE_SIZE = sizeof(SHOW_RES_TYPE_DESCRIPTION) / sizeof(SHOW_RES_TYPE_DESCRIPTION[0]);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Return values
 

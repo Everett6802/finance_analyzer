@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <string>
 #include <stdexcept>
 #include <new>
@@ -589,13 +590,28 @@ template <typename T>
 const T FinanceDataArrayTemplate<T>::operator[](int index)const
 {
 	assert(array_data != NULL && "array_data == NULL");
-	if(index < 0 && index >= array_pos)
+	if (index >= 0)
 	{
-		char errmsg[64];
-		snprintf(errmsg, 64, "index[%d] is out of range: (0, %d)", index, array_pos);
-		WRITE_ERROR(errmsg);
-		throw out_of_range(errmsg);
+		if (index >= array_pos)
+		{
+			char errmsg[64];
+			snprintf(errmsg, 64, "positive index[%d] is out of range: [0, %d)", index, array_pos);
+			WRITE_ERROR(errmsg);
+			throw out_of_range(errmsg);
+		}
 	}
+	else if (index < 0)
+	{
+		if (abs(index) > abs(array_pos))
+		{
+			char errmsg[64];
+			snprintf(errmsg, 64, "negative index[%d] is out of range: (0, %d]", index, array_pos);
+			WRITE_ERROR(errmsg);
+			throw out_of_range(errmsg);
+		}
+		index = get_end_index_ex(index, array_pos);
+	}
+
 	return array_data[index];
 }
 
@@ -1016,8 +1032,8 @@ unsigned short ResultSet::get_calculation_subindex(unsigned long x)
 ResultSet::ResultSet() :
 	check_date_data_mode(false),
 	data_set_mapping_size(0),
-//	date_data_size(0),
-	date_data_pos(0),
+	date_data_size(0),
+	date_data_cur_pos(0),
 	int_data_set_size(0),
 	long_data_set_size(0),
 	float_data_set_size(0)
@@ -1354,15 +1370,18 @@ unsigned short ResultSet::set_date(char* element_value)
 {
 	if (check_date_data_mode)
 	{
-		if (strcmp(date_data[date_data_pos], element_value) != 0)
+		if (strcmp(date_data[date_data_cur_pos], element_value) != 0)
 		{
-			WRITE_FORMAT_ERROR("The date(%s, %s) is NOT equal", date_data[date_data_pos], element_value);
+			WRITE_FORMAT_ERROR("The date(%s, %s) is NOT equal", date_data[date_data_cur_pos], element_value);
 			return RET_FAILURE_INCORRECT_OPERATION;
 		}
-		date_data_pos++;
+		date_data_cur_pos++;
 	}
 	else
+	{
 		date_data.add(element_value, strlen(element_value) + 1);
+		date_data_size++;
+	}
 	return RET_SUCCESS;
 }
 
@@ -1536,6 +1555,11 @@ const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array(int source_index, int field_
 	return NULL	;
 }
 
+const PFINANCE_CHAR_DATA_PTR_ARRAY ResultSet::get_date_array()const
+{
+	return (const PFINANCE_CHAR_DATA_PTR_ARRAY)&date_data;
+}
+
 #define DEFINE_GET_ARRAY_ELEMENT_FUNC(n, m)\
 n ResultSet::get_##n##_array_element(int source_index, int field_index, int index)const\
 {\
@@ -1546,15 +1570,21 @@ DEFINE_GET_ARRAY_ELEMENT_FUNC(int, INT)
 DEFINE_GET_ARRAY_ELEMENT_FUNC(long, LONG)
 DEFINE_GET_ARRAY_ELEMENT_FUNC(float, FLOAT)
 
+const char* ResultSet::get_date_array_element(int index)const
+{
+	return date_data[index];
+}
+
 void ResultSet::switch_to_check_date_mode()
 {
 	check_date_data_mode = true;
-	date_data_pos = 0;
+	date_data_cur_pos = 0;
 }
 
 unsigned short ResultSet::check_data()const
 {
-	int date_data_size = date_data.get_size();
+	assert(date_data_size == date_data.get_size() && "The date_data_size is NOT identical");
+//	int date_data_size_tmp = date_data.get_size();
 	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.begin();
 
 	unsigned short key;
@@ -1606,6 +1636,8 @@ unsigned short ResultSet::show_data()const
 	unsigned short field_type_index;
 	unsigned short field_type_pos;
 
+	assert(date_data_size == date_data.get_size() && "The date_data_size is NOT identical");
+
 // Show the database:field info
 	for(int i = 0 ; i < STAR_LEN ; i++)
 		putchar('*');
@@ -1618,7 +1650,6 @@ unsigned short ResultSet::show_data()const
 		source_index = get_upper_subindex(key);
 		field_index = get_lower_subindex(key);
 		printf(" %s:%s%d |", FINANCE_DATABASE_DESCRIPTION_LIST[source_index], MYSQL_FILED_NAME_BASE, field_index);
-
 		iter++;
 	}
 	printf("\n");
@@ -1627,7 +1658,7 @@ unsigned short ResultSet::show_data()const
 	printf("\n\n");
 
 // Show the data info
-	int date_data_size = date_data.get_size();
+//	int date_data_size_tmp = date_data.get_size();
 	for(int i = 0 ; i < date_data_size ; i++)
 	{
 		printf("| %s |", date_data[i]);
@@ -1660,4 +1691,4 @@ unsigned short ResultSet::show_data()const
 }
 
 int ResultSet::get_data_dimension()const{return data_set_mapping_size;}
-int ResultSet::get_data_size()const{return date_data_pos;}
+int ResultSet::get_data_size()const{return date_data_size;}

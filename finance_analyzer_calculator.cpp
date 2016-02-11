@@ -8,16 +8,28 @@ using namespace std;
 
 DECLARE_MSG_DUMPER_PARAM()
 
-FinanceAnalyzerCalculator::FinanceAnalyzerCalculator()
+FinanceAnalyzerCalculator::FinanceAnalyzerCalculator() :
+	need_res_info(true)
 {
 	IMPLEMENT_MSG_DUMPER()
 	IMPLEMENT_DATABASE_TIME_RANGE()
+	res_info[0] = '\0';
 }
 
 FinanceAnalyzerCalculator::~FinanceAnalyzerCalculator()
 {
 	RELEASE_DATABASE_TIME_RANGE()
 	RELEASE_MSG_DUMPER()
+}
+
+void FinanceAnalyzerCalculator::enable_res_info(bool enable)
+{
+	need_res_info = enable;
+}
+
+const char* FinanceAnalyzerCalculator::get_last_res_info()const
+{
+	return res_info;
 }
 
 unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, FinanceSourceType finance_source_type1, int finance_field_no1, ArrayElementCalculationType calculation_type1, FinanceSourceType finance_source_type2, int finance_field_no2, ArrayElementCalculationType calculation_type2, float& correlation_value)
@@ -53,13 +65,30 @@ unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set
 		else if (finance_data_array_size2 > finance_data_array_size1)
 		{
 			int data_aray_size_diff = finance_data_array_size2 - finance_data_array_size1;
-			start_index1 = data_aray_size_diff;
+			start_index2 = data_aray_size_diff;
 			WRITE_FORMAT_DEBUG("Modify the start index of the array [%s,%d,%s]: %d", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type2], finance_field_no2, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type2], start_index2);
 		}
 	}
 	correlation_value = correlation(finance_data_array1, finance_data_array2, start_index1, start_index2);
 	WRITE_FORMAT_INFO("The correlation between [%s,%d,%s] and [%s,%d,%s]: %.2f", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type1], finance_field_no1, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type1], FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type2], finance_field_no2, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type2], correlation_value);
 
+	if (need_res_info)
+	{
+		int res_info_start_index = start_index1 > start_index2 ? start_index1 : start_index2;
+		int res_info_end_index = get_end_index_ex(-1, result_set->get_data_size());
+		snprintf(res_info, RES_INFO_LENGTH, "[%s:%d:%s] and [%s:%d:%s] [%s %s] %d",
+			FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type1],
+			finance_field_no1,
+			FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type1],
+			FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type2],
+			finance_field_no2,
+			FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type2],
+			result_set->get_date_array_element(res_info_start_index),
+			result_set->get_date_array_element(res_info_end_index - 1),
+			res_info_end_index - res_info_start_index
+		);
+		WRITE_FORMAT_DEBUG("Correlation Detail: %s", res_info);
+	}
 	return ret;
 }
 

@@ -334,9 +334,9 @@ private:
 	std::deque<PFINANCE_LONG_DATA_ARRAY> long_data_set;
 	std::deque<PFINANCE_FLOAT_DATA_ARRAY> float_data_set;
 	bool check_date_data_mode;
-//	int date_data_size;
 	int data_set_mapping_size;
-	int date_data_pos;
+	int date_data_size;
+	int date_data_cur_pos;
 	int int_data_set_size;
 	int long_data_set_size;
 	int float_data_set_size;
@@ -408,10 +408,12 @@ public:
 	DECLARE_GET_ARRAY_FUNC(float, FLOAT)
 	const PFINANCE_DATA_ARRAY_BASE get_array(int source_index, int field_index)const;
 	const PFINANCE_DATA_ARRAY_BASE get_array(int source_index, int field_index, ArrayElementCalculationType calculation_type);
+	const PFINANCE_CHAR_DATA_PTR_ARRAY get_date_array()const;
 #define DECLARE_GET_ARRAY_ELEMENT_FUNC(n) n get_##n##_array_element(int source_index, int field_index, int index)const;
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(int)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(long)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(float)
+	const char* get_date_array_element(int index)const;
 };
 typedef ResultSet* PRESULT_SET;
 

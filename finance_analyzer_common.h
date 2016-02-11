@@ -118,6 +118,16 @@ extern const int* FINANCE_DATABASE_FIELD_TYPE_LIST[];
 extern const int FINANCE_DATABASE_FIELD_AMOUNT_LIST[];
 extern const char* FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[];
 
+extern const int SHOW_RES_STDOUT;
+extern const int SHOW_RES_EMAIL;
+extern const int SHOW_RES_FILE;
+extern const int SHOW_RES_SYSLOG;
+extern const int SHOW_RES_DEFAULT;
+extern const int SHOW_RES_ALL;
+
+extern const char* SHOW_RES_TYPE_DESCRIPTION[];
+extern const int SHOW_RES_TYPE_SIZE;
+
 // Return values
 extern const unsigned short RET_SUCCESS;
 
@@ -144,7 +154,7 @@ extern const unsigned short RET_FAILURE_MYSQL;
 // Variables
 extern bool SHOW_CONSOLE;
 
-/////////////////////////////////////////////////////////ArrayElementCalculation_Diff///////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions
 const char* get_ret_description(unsigned short ret);
 bool check_file_exist(const char* filepath);

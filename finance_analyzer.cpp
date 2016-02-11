@@ -14,14 +14,21 @@ static FinanceAnalyzerMgr finance_analyzer_mgr;
 using namespace std;
 
 void show_usage();
+void print_errmsg_and_exit(const char* errmsg);
 void run_test(const char* test_case_list, bool show_detail);
+int parse_show_res_type(const char* show_res_type_string);
 
 int main(int argc, char** argv)
 {
+	static const int ERRMSG_SIZE = 256;
+
+	char errmsg[ERRMSG_SIZE];
 	int index = 1;
 	int offset;
 	bool run_daily = false;
+	int show_run_daily_res_type = 0x0;
 	bool analyze_daily = true;
+	int show_analyze_daily_res_type = 0x0;
 
 	for (; index < argc ; index += offset)
 	{
@@ -33,30 +40,32 @@ int main(int argc, char** argv)
 		else if (strcmp(argv[index], "--test") == 0)
 		{
 			if (index + 1 >= argc)
-			{
-				fprintf(stderr, "Select the test case first\n");
-			}
+				print_errmsg_and_exit("No argument found in 'test' attribute");
 			run_test(argv[index + 1], false);
 			exit(EXIT_SUCCESS);
 		}
 		else if (strcmp(argv[index], "--test_verbose") == 0)
 		{
 			if (index + 1 >= argc)
-			{
-				fprintf(stderr, "Select the test case first\n");
-			}
+				print_errmsg_and_exit("No argument found in 'test_verbose' attribute");
 			run_test(argv[index + 1], true);
 			exit(EXIT_SUCCESS);
 		}
 		else if (strcmp(argv[index], "--run_daily") == 0)
 		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'run_daily' attribute");
 			run_daily = true;
-			offset = 1;
+			show_run_daily_res_type = parse_show_res_type(argv[index + 1]);
+			offset = 2;
 		}
 		else if (strcmp(argv[index], "--analyze_daily") == 0)
 		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'analyze_daily' attribute");
 			analyze_daily = true;
-			offset = 1;
+			show_analyze_daily_res_type = parse_show_res_type(argv[index + 1]);
+			offset = 2;
 		}
 		else if (strcmp(argv[index], "--show_console") == 0)
 		{
@@ -77,27 +86,19 @@ int main(int argc, char** argv)
 	if (run_daily)
 	{
 		printf("Run daily data......\n");
-		ret = finance_analyzer_mgr.run_daily();
+		ret = finance_analyzer_mgr.run_daily(show_run_daily_res_type);
 		if (CHECK_FAILURE(ret))
-		{
-			fprintf(stderr, "Fails to run daily, due to: %d, %s\n", ret, get_ret_description(ret));
-			goto FAIL;
-		}
+			snprintf(errmsg, ERRMSG_SIZE, "Fails to run daily, due to: %d, %s", ret, get_ret_description(ret));
 	}
 	if (analyze_daily)
 	{
 		printf("Analyze daily data......\n");
-		ret = finance_analyzer_mgr.analyze_daily();
+		ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type);
 		if (CHECK_FAILURE(ret))
-		{
-			fprintf(stderr, "Fails to analyze daily, due to: %d, %s\n", ret, get_ret_description(ret));
-			goto FAIL;
-		}
+			snprintf(errmsg, ERRMSG_SIZE, "Fails to analyze daily, due to: %d, %s", ret, get_ret_description(ret));
 	}
 
 	exit(EXIT_SUCCESS);
-FAIL:
-	exit(EXIT_FAILURE);
 }
 
 void show_usage()
@@ -114,8 +115,19 @@ void show_usage()
 	printf("  all: All types\n");
 	printf("--run_daily\nDescription: Run daily data\nCaution: Other flags are ignored\n");
 	printf("--analyze_daily\nDescription: Analyze daily data\nCaution: Other flags are ignored\n");
+	printf(" Show Result Type list: ");
+	for (int i = 0 ; i < SHOW_RES_TYPE_SIZE ; i++)
+		printf("%s[%d] ", SHOW_RES_TYPE_DESCRIPTION[i], i);
+	printf("\n");
 	printf("--show_console\nDescription: Print the runtime info on STDOUT/STDERR\n");
 	printf("===================================================\n");
+}
+
+void print_errmsg_and_exit(const char* errmsg)
+{
+	assert(errmsg != NULL && "errmsg != NULL");
+	fprintf(stderr, "%s\n", errmsg);
+	exit(EXIT_FAILURE);
 }
 
 void run_test(const char* test_case_list, bool show_detail)
@@ -152,4 +164,20 @@ void run_test(const char* test_case_list, bool show_detail)
 		}
 		delete[] test_case_list_tmp;
 	}
+}
+
+int parse_show_res_type(const char* show_res_type_string)
+{
+	static const int SHOW_RES_TYPE[] = {SHOW_RES_STDOUT, SHOW_RES_EMAIL, SHOW_RES_FILE, SHOW_RES_SYSLOG, SHOW_RES_DEFAULT, SHOW_RES_ALL};
+	assert(show_res_type_string != NULL && "show_res_type_string should NOT be NULL");
+	int show_res_type_string_len = strlen(show_res_type_string);
+	for (int i = 0 ; i < SHOW_RES_TYPE_SIZE ; i++)
+	{
+		if (strncmp(show_res_type_string, SHOW_RES_TYPE_DESCRIPTION[i], show_res_type_string_len) == 0)
+			return SHOW_RES_TYPE[i];
+	}
+	char errmsg[256];
+	snprintf(errmsg, 256, "Unknown show result type: %s", show_res_type_string);
+	print_errmsg_and_exit(errmsg);
+	return 0;
 }

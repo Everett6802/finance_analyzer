@@ -6,6 +6,7 @@
 
 using namespace std;
 
+//#define DO_DEBUG
 #define IMPLEMENT_SINGLE_INPUT_FORMULA_FUNCTION(X)\
 float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array, int start_index, int end_index)\
 {\
@@ -125,6 +126,9 @@ float average(const FinanceDataArrayTemplate<T>& finance_data_array, int start_i
 	for (int i = start_index ; i < end_index ; i++)
 		sum += finance_data_array[i];
 	average_value = sum / data_length;
+#ifdef DO_DEBUG
+	printf("**average** start_index: %d, end_index: %d, data_length: %d, sum: %.2f\n", start_index, end_index, data_length, sum);
+#endif
 	return average_value;
 }
 
@@ -140,14 +144,16 @@ float variance(const FinanceDataArrayTemplate<T>& finance_data_array, int start_
 	end_index = get_end_index_ex(end_index, finance_data_array.get_size());
 	check_index(start_index, end_index, finance_data_array.get_size());
 
-	float average_value = average(finance_data_array, start_index, end_index);
 	int data_length = end_index - start_index;
+	float average_value = average(finance_data_array, start_index, end_index);
 	float variance_value = 0.0;
 	float sum = 0.0;
 	for (int i = start_index ; i < end_index ; i++)
 		sum += pow((finance_data_array[i] - average_value), 2);
 	variance_value = sum / data_length;
-
+#ifdef DO_DEBUG
+	printf("**variance** start_index: %d, end_index: %d, data_length: %d, average_value: %.2f, sum: %.2f\n", start_index, end_index, data_length, average_value, sum);
+#endif
 	return variance_value;
 }
 
@@ -188,7 +194,9 @@ float covariance(const FinanceDataArrayTemplate<T1>& finance_data_array1, const 
 	}
 	covariance_value = sum / data_length1;
 //	fprintf(stderr, "%.2f %.2f\n", sum, covariance_value);
-
+#ifdef DO_DEBUG
+	printf("**covariance** start_index1: %d, start_index2: %d, end_index1: %d, end_index2: %d, data_length: %d, average_value1: %.2f, average_value2: %.2f, sum: %.2f\n", start_index1, start_index2, end_index1, end_index2, data_length1, average_value1, average_value2, sum);
+#endif
 	return covariance_value;
 }
 
