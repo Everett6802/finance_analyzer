@@ -37,7 +37,6 @@ public:
 	unsigned short correlate(FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
 
 	unsigned short run_daily(int show_result_type);
-//	unsigned short show_daily(const SmartPointer<TimeCfg>& sp_time_cfg, const PRESULT_SET result_set, int show_result_type=SHOW_RESULT_FILE|SHOW_RESULT_EMAIL)const;
 	unsigned short analyze_daily(int show_result_type);
 
 #ifdef DO_DEBUG

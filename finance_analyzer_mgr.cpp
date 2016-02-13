@@ -487,123 +487,12 @@ unsigned short FinanceAnalyzerMgr::run_daily(int show_result_type)
 	return RET_SUCCESS;
 }
 
-//unsigned short FinanceAnalyzerMgr::show_daily(const SmartPointer<TimeCfg>& sp_time_cfg, const PRESULT_SET result_set, int show_result_type)const
-//{
-////	assert(filepath != NULL && "filepath should NOT be NULL");
-//	assert(result_set != NULL && "result_set should NOT be NULL");
-//
-//	static const int BUF_SIZE = 512;
-//	static char buf[BUF_SIZE];
-//
-//	unsigned short ret = RET_SUCCESS;
-//// Check the folder of keeping track of the result exist
-//	ret = create_folder_in_project_if_not_exist(RESULT_FOLDER_NAME);
-//	if (CHECK_FAILURE(ret))
-//		return ret;
-//
-//	string buf_string = "";
-//// Assemble the data
-//	snprintf(buf, BUF_SIZE, "日期: %04d-%02d-%02d\n", sp_time_cfg->get_year(), sp_time_cfg->get_month(), sp_time_cfg->get_day());
-//	buf_string += string(buf);
-//	snprintf(buf, BUF_SIZE, "發行量加權股價指數: %.2f, 漲跌: %.2f, 成交金額(億): %.2f, 變化(億): %.2f\n\n",
-//		result_set->get_float_array_element(FinanceSource_StockExchangeAndVolume, 4, 1),
-//		result_set->get_float_array_element(FinanceSource_StockExchangeAndVolume, 5, 1),
-//		result_set->get_long_array_element(FinanceSource_StockExchangeAndVolume, 2, 1) / 100000000.0,
-//		(result_set->get_long_array_element(FinanceSource_StockExchangeAndVolume, 2, 1) - result_set->get_long_array_element(FinanceSource_StockExchangeAndVolume, 2, 0)) / 100000000.0
-//		);
-//	buf_string += string(buf);
-//	snprintf(buf, BUF_SIZE, "三大法人買賣超(億)\n外資及陸資: %.2f, 變化: %.2f\n投信: %.2f, 變化: %.2f\n自營商: %.2f, 變化: %.2f\n\n",
-//		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 1) / 100000000.0,
-//		(result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, 0))  / 100000000.0,
-//		result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 1) / 100000000.0,
-//		(result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, 0)) / 100000000.0,
-//		(result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 1) + result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 1)) / 100000000.0,
-//		(result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 1) + result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 1) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, 0) - result_set->get_long_array_element(FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, 0)) / 100000000.0
-//		);
-//	buf_string += string(buf);
-//	snprintf(buf, BUF_SIZE, "融資餘額(億): %.2f, 變化: %.2f\n\n",
-//			result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 15, 1) / 100000.0,
-//			(result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 15, 1) - result_set->get_long_array_element(FinanceSource_StockMarginTradingAndShortSelling, 14, 1)) / 100000.0
-//		);
-//	buf_string += string(buf);
-//	snprintf(buf, BUF_SIZE, "三大法人期權留倉淨額\n外資: %d, 變化: %d\n投信: %d, 變化: %d\n自營商: %d, 變化: %d\n\n",
-//		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, 1),
-//		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, 1) - result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, 0),
-//		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, 1),
-//		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, 1) - result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, 0),
-//		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, 1),
-//		result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, 1) - result_set->get_int_array_element(FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, 0)
-//		);
-//	buf_string += string(buf);
-//	snprintf(buf, BUF_SIZE, "未平倉Put/Call Ratio: %.2f, 變化: %.2f\n\n",
-//		result_set->get_float_array_element(FinanceSource_OptionPutCallRatio, 6, 1),
-//		result_set->get_float_array_element(FinanceSource_OptionPutCallRatio, 6, 1) - result_set->get_float_array_element(FinanceSource_OptionPutCallRatio, 6, 0)
-//		);
-//	buf_string += string(buf);
-//	snprintf(buf, BUF_SIZE, "選擇權買賣權留倉口數\n外資\n Buy Call: %d, 變化: %d\n Buy Put: %d, 變化: %d\n Sell Call: %d, 變化: %d\n Sell Put: %d, 變化: %d\n自營商\n Buy Call: %d, 變化: %d\n Buy Put: %d, 變化: %d\n Sell Call: %d, 變化: %d\n Sell Put: %d, 變化: %d\n\n",
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, 1),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, 0),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, 1),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, 0),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, 1),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, 0),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, 1),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, 0),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, 1),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, 0),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, 1),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, 0),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, 1),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, 0),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, 1),
-//		result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, 1) - result_set->get_int_array_element(FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, 0)
-//		);
-//	buf_string += string(buf);
-//	snprintf(buf, BUF_SIZE, "十大交易人及特法留倉淨口數\n近月: %d, 變化: %d\n全月: %d, 變化: %d\n\n",
-//		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 3, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 7, 1),
-//		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 3, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 7, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 3, 0) + result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 7, 0),
-//		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 12, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 16, 1),
-//		result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 12, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 16, 1) - result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 12, 0) + result_set->get_int_array_element(FinanceSource_FutureTop10DealersAndLegalPersons, 16, 0)
-//		);
-//	buf_string += string(buf);
-//
-//// SHow result on the screen
-//	if (show_result_type & SHOW_RES_STDOUT)
-//	{
-//// Write the data into STDOUT
-//		ret =  direct_string_to_output_stream(buf_string.c_str());
-//		if (CHECK_FAILURE(ret))
-//			return ret;
-//	}
-//// Write the data into file
-//	if (show_result_type & SHOW_RES_FILE)
-//	{
-//		char filename[32];
-//		snprintf(filename, 32, DAILY_FINANCE_FILENAME_FORMAT, sp_time_cfg->get_year(), sp_time_cfg->get_month(), sp_time_cfg->get_day());
-//		char filepath[32];
-//		snprintf(filepath, 32, "%s/%s", RESULT_FOLDER_NAME, filename);
-//		WRITE_FORMAT_DEBUG("Write daily data to file[%s]", filepath);
-//		ret = direct_string_to_output_stream(buf_string.c_str(), filepath);
-//		if (CHECK_FAILURE(ret))
-//			return ret;
-//		printf("Check the result in file: %s\n", filepath);
-//	}
-//// Send the result by email
-//	if (show_result_type & SHOW_RES_EMAIL)
-//	{
-//		char title[32];
-//		snprintf(title, 32, DAILY_FINANCE_EMAIL_TITLE_FORMAT, sp_time_cfg->get_year(), sp_time_cfg->get_month(), sp_time_cfg->get_day());
-//		for (list<string>::const_iterator iter = email_address_list.begin() ; iter != email_address_list.end() ; iter++)
-//		{
-//			string email_address = (string)*iter;
-//			WRITE_FORMAT_DEBUG("Write daily data by email[%s] to %s", title, email_address.c_str());
-//			ret = send_email(title, email_address.c_str(), buf_string.c_str());
-//			if (CHECK_FAILURE(ret))
-//				return ret;
-//		}
-//	}
-//	return RET_SUCCESS;
-//}
+#define ANALYZE_CORRELATION(S1, F1, C1, S2, F2, C2)\
+ret = correlate(S1, F1, C1, S2, F2, C2, correlation);\
+if (CHECK_FAILURE(ret))\
+	return ret;\
+snprintf(buf, BUF_SIZE, "Correlation: %.2f Detail: %s\n", correlation, finance_analyzer_calculator->get_last_res_info());\
+buf_string += string(buf);
 
 unsigned short FinanceAnalyzerMgr::analyze_daily(int show_result_type)
 {
@@ -620,14 +509,79 @@ unsigned short FinanceAnalyzerMgr::analyze_daily(int show_result_type)
 	WRITE_FORMAT_DEBUG("The workday: %04d-%02d-%02d", year, month, day);
 
 	string buf_string = "";
+// 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／自營商(避險)買賣超
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／投信買賣超
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_None)
 // 發行量加權股價指數漲跌／外資及陸資買賣超
-	ret = correlate(FinanceSource_StockExchangeAndVolume, 5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, correlation);
-	if (CHECK_FAILURE(ret))
-		return ret;
-	snprintf(buf, BUF_SIZE, "Correlation: %.2f Detail: %s", correlation, finance_analyzer_calculator->get_last_res_info());
-	buf_string += string(buf);
-
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_None)
 	buf_string += string("\n");
+// 發行量加權股價指數漲跌／融資餘額變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockMarginTradingAndShortSelling, 15, ArrayElementCalculation_Diff)
+	buf_string += string("\n");
+// 發行量加權股價指數漲跌／外資期權留倉淨額
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／外資期權留倉淨額變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／投信期權留倉淨額
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／投信期權留倉淨額變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／自營商期權留倉淨額
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／自營商期權留倉淨額變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, ArrayElementCalculation_Diff)
+	buf_string += string("\n");
+// 發行量加權股價指數漲跌／未平倉Put/Call Ratio
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionPutCallRatio, 6, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／未平倉Put/Call Ratio變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionPutCallRatio, 6, ArrayElementCalculation_Diff)
+	buf_string += string("\n");
+// 發行量加權股價指數漲跌／外資Buy Call留倉口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／外資Buy Call留倉口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／外資Buy Put留倉口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／外資Buy Put留倉口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／外資Sell Call留倉口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／外資Sell Call留倉口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／外資Sell Put留倉口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／外資Sell Put留倉口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／自營商Buy Call留倉口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／自營商Buy Call留倉口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／自營商Buy Put留倉口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／自營商Buy Put留倉口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／自營商Sell Call留倉口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／自營商Sell Call留倉口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／自營商Sell Put留倉口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／自營商Sell Put留倉口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, ArrayElementCalculation_Diff)
+	buf_string += string("\n");
+// 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 3, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 3, ArrayElementCalculation_Diff)
+// 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 12, ArrayElementCalculation_None)
+// 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數變化
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 12, ArrayElementCalculation_Diff)
+	buf_string += string("\n");
+
 // Show result in different way
 	SmartPointer<TimeCfg> sp_time_cfg(new TimeCfg(year, month, day));
 	ret = show_result(buf_string, sp_time_cfg.get_instance(), show_result_type);
