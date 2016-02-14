@@ -438,3 +438,17 @@ unsigned short send_email(const char* title, const char* address, const char* co
 
 // End index range: Positive: (0, data_size-1); Negative: (-1, -data_size)
 int get_end_index_ex(int end_index, int data_size){return ((end_index < 0) ? end_index = data_size + end_index + 1 : end_index);}
+
+bool check_start_index_in_range(int start_index, int range_start, int range_end)
+{
+	assert(range_start >= 0 && "range_start should be larger than 0");
+	assert(range_end >= 1 && "range_end should be larger than 0");
+	return ((start_index >= 0 && start_index < range_end) ? true : false);
+}
+
+bool check_end_index_in_range(int end_index, int range_start, int range_end)
+{
+	assert(range_start >= 0 && "range_start should be larger than 0");
+	assert(range_end >= 1 && "range_end should be larger than 0");
+	return ((end_index > 0 && end_index <= range_end) ? true : false);
+}

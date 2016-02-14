@@ -166,10 +166,11 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 	unsigned short ret = RET_SUCCESS;
 // Check the boundary of each database
 	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
+	WRITE_FORMAT_DEBUG("The original search time range: %s", sp_restricted_time_range_cfg->to_string());
 	ret = database_time_range->restrict_time_range(source_type_index_set, sp_restricted_time_range_cfg.get_instance());
 	if (CHECK_FAILURE(ret))
 		return ret;
-	//	printf("The new search time range: %s\n", sp_restricted_time_range_cfg->to_string());
+	WRITE_FORMAT_DEBUG("The new search time range: %s", sp_restricted_time_range_cfg->to_string());
 
 //	for (QuerySet::iterator iter = query_set.begin() ; iter < query_set.end() ; iter++)
 	for (int source_index = 0 ; source_index < FinanceSourceSize ; source_index++)

@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 	int offset;
 	bool run_daily = false;
 	int show_run_daily_res_type = 0x0;
-	bool analyze_daily = true;
+	bool analyze_daily = false;
 	int show_analyze_daily_res_type = 0x0;
 
 	for (; index < argc ; index += offset)

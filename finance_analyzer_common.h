@@ -49,6 +49,23 @@ if (X != NULL)\
 #define MAX(X,Y) (X >= Y ? X : Y)
 #endif
 
+#ifndef INDEX_IN_RANGE
+#define INDEX_IN_RANGE(SI, EI, RS, RE)\
+do{\
+	char errmsg[256];\
+	if (!check_start_index_in_range(SI, RS, RE))\
+	{\
+		snprintf(errmsg, 256, "start index[%d] is NOT in [%d, %d)", SI, RS, RE);\
+		throw out_of_range(errmsg);\
+	}\
+	if (!check_end_index_in_range(EI, RS, RE))\
+	{\
+		snprintf(errmsg, 256, "end index[%d] is NOT in (%d, %d]", EI, RS, RE);\
+		throw out_of_range(errmsg);\
+	}\
+}while(0)
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Enumeration
@@ -164,5 +181,7 @@ unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_p
 unsigned short direct_string_to_output_stream(const char* data, const char* filepath=NULL);
 unsigned short send_email(const char* title, const char* address, const char* content);
 int get_end_index_ex(int end_index, int data_size);
+bool check_start_index_in_range(int index, int range_start, int range_end);
+bool check_end_index_in_range(int index, int range_start, int range_end);
 
 #endif

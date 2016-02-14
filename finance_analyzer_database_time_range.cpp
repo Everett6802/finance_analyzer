@@ -141,10 +141,10 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::initialize()
 		else
 		{
 // Find the oldest start date
-			if (*max_time_range_cfg->get_start_time() < start_time_str)
+			if (*max_time_range_cfg->get_start_time() > start_time_str)
 				max_time_range_cfg->reset_time(start_time_str, NULL);
 // Find the latest end date
-			if (*max_time_range_cfg->get_end_time() > end_time_str)
+			if (*max_time_range_cfg->get_end_time() < end_time_str)
 				max_time_range_cfg->reset_time(NULL, end_time_str);
 		}
 	}
