@@ -282,10 +282,17 @@ unsigned short FinanceAnalyzerMgr::show_result(string result_str, const PTIME_CF
 // Show result on the screen
 	if (show_result_type & SHOW_RES_STDOUT)
 	{
+		if (!SHOW_CONSOLE)
+		{
+			WRITE_WARN("Disabled; No data will be shown on STDOUT/STDERR");
+		}
+		else
+		{
 // Write the data into STDOUT
-		ret =  direct_string_to_output_stream(result_str.c_str());
-		if (CHECK_FAILURE(ret))
-			return ret;
+			ret =  direct_string_to_output_stream(result_str.c_str());
+			if (CHECK_FAILURE(ret))
+				return ret;
+		}
 	}
 // Send the result by email
 	if (show_result_type & SHOW_RES_EMAIL)
@@ -312,7 +319,7 @@ unsigned short FinanceAnalyzerMgr::show_result(string result_str, const PTIME_CF
 		ret = direct_string_to_output_stream(result_str.c_str(), filepath);
 		if (CHECK_FAILURE(ret))
 			return ret;
-		printf("Check the result in file: %s\n", filepath);
+		PRINT("Check the result in file: %s\n", filepath);
 	}
 // Show result on syslog
 	if (show_result_type & SHOW_RES_SYSLOG)

@@ -18,6 +18,8 @@ void print_errmsg_and_exit(const char* errmsg);
 void run_test(const char* test_case_list, bool show_detail);
 int parse_show_res_type(const char* show_res_type_string);
 
+//#define PRINT(...) printf(__VA_ARGS__)
+
 int main(int argc, char** argv)
 {
 	static const int ERRMSG_SIZE = 256;
@@ -67,9 +69,9 @@ int main(int argc, char** argv)
 			show_analyze_daily_res_type = parse_show_res_type(argv[index + 1]);
 			offset = 2;
 		}
-		else if (strcmp(argv[index], "--show_console") == 0)
+		else if (strcmp(argv[index], "--disable_console") == 0)
 		{
-			SHOW_CONSOLE = true;
+			SHOW_CONSOLE = false;
 			offset = 1;
 		}
 		else
@@ -85,14 +87,14 @@ int main(int argc, char** argv)
 		return ret;
 	if (run_daily)
 	{
-		printf("Run daily data......\n");
+		PRINT("Run daily data......\n");
 		ret = finance_analyzer_mgr.run_daily(show_run_daily_res_type);
 		if (CHECK_FAILURE(ret))
 			snprintf(errmsg, ERRMSG_SIZE, "Fails to run daily, due to: %d, %s", ret, get_ret_description(ret));
 	}
 	if (analyze_daily)
 	{
-		printf("Analyze daily data......\n");
+		PRINT("Analyze daily data......\n");
 		ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type);
 		if (CHECK_FAILURE(ret))
 			snprintf(errmsg, ERRMSG_SIZE, "Fails to analyze daily, due to: %d, %s", ret, get_ret_description(ret));
@@ -103,24 +105,24 @@ int main(int argc, char** argv)
 
 void show_usage()
 {
-	printf("====================== Usage ======================\n");
-	printf("-h|--help\nDescription: The usage\nCaution: Other flags are ignored\n");
-	printf("-test\nDescription: Run test case\nCaution: Other flags are ignored\n");
-	printf("-test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
-	printf(" Test case list: ");
+	PRINT("====================== Usage ======================\n");
+	PRINT("-h|--help\nDescription: The usage\nCaution: Other flags are ignored\n");
+	PRINT("-test\nDescription: Run test case\nCaution: Other flags are ignored\n");
+	PRINT("-test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
+	PRINT(" Test case list: ");
 	for (int i = 0 ; i < TestSize ; i++)
-		printf("%s[%d] ", TEST_TYPE_DESCRIPTION[i], i);
-	printf("\n");
-	printf("  Format: 1,2,4 (Start from 0)\n");
-	printf("  all: All types\n");
-	printf("--run_daily\nDescription: Run daily data\nCaution: Other flags are ignored\n");
-	printf("--analyze_daily\nDescription: Analyze daily data\nCaution: Other flags are ignored\n");
-	printf(" Show Result Type list: ");
+		PRINT("%s[%d] ", TEST_TYPE_DESCRIPTION[i], i);
+	PRINT("\n");
+	PRINT("  Format: 1,2,4 (Start from 0)\n");
+	PRINT("  all: All types\n");
+	PRINT("--run_daily\nDescription: Run daily data\nCaution: Other flags are ignored\n");
+	PRINT("--analyze_daily\nDescription: Analyze daily data\nCaution: Other flags are ignored\n");
+	PRINT(" Show Result Type list: ");
 	for (int i = 0 ; i < SHOW_RES_TYPE_SIZE ; i++)
-		printf("%s[%d] ", SHOW_RES_TYPE_DESCRIPTION[i], i);
-	printf("\n");
-	printf("--show_console\nDescription: Print the runtime info on STDOUT/STDERR\n");
-	printf("===================================================\n");
+		PRINT("%s[%d] ", SHOW_RES_TYPE_DESCRIPTION[i], i);
+	PRINT("\n");
+	PRINT("--disable_console\nDescription: Disable printing the runtime info on STDOUT/STDERR\n");
+	PRINT("===================================================\n");
 }
 
 void print_errmsg_and_exit(const char* errmsg)

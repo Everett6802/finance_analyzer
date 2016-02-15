@@ -1629,6 +1629,11 @@ unsigned short ResultSet::check_data()const
 unsigned short ResultSet::show_data()const
 {
 	static int STAR_LEN = 120;
+	if (!SHOW_CONSOLE)
+	{
+		WRITE_WARN("Disabled; No data will be shown on STDOUT/STDERR");
+		return RET_SUCCESS;
+	}
 	unsigned short key;
 	unsigned short value;
 	unsigned short source_index;
