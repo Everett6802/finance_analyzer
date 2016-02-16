@@ -311,6 +311,37 @@ typedef QuerySet* PQUERY_SET;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class ResultSetAccessParam
+{
+private:
+	FinanceSourceType finance_source_type;
+	int finance_field_no;
+	ArrayElementCalculationType calculation_type;
+	int start_index;
+	int end_index;
+
+public:
+	ResultSetAccessParam(FinanceSourceType new_finance_source_type, int new_finance_field_no, ArrayElementCalculationType new_calculation_type=ArrayElementCalculation_None, int new_start_index=0, int new_end_index=-1);
+
+	void set_finance_source_type(FinanceSourceType new_finance_source_type);
+	FinanceSourceType get_finance_source_type()const;
+
+	void set_finance_field_no(int new_finance_field_no);
+	int get_finance_field_no()const;
+
+	void set_calculation_type(ArrayElementCalculationType new_calculation_type);
+	ArrayElementCalculationType get_calculation_type()const;
+
+	void set_start_index(int new_start_index);
+	int get_start_index()const;
+
+	void set_end_index(int new_end_index);
+	int get_end_index()const;
+};
+typedef ResultSetAccessParam* PRESULT_SET_ACCESS_PARAM;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 typedef std::map<unsigned short, unsigned short> MAP_SHORT;
 typedef MAP_SHORT* PMAP_SHORT;
 typedef MAP_SHORT::iterator MAP_SHORT_ITER;

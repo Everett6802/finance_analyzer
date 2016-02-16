@@ -52,6 +52,8 @@ unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set
 // Check the data length
 	int finance_data_len1 = end_index1 - start_index1;
 	int finance_data_len2 = end_index2 - start_index2;
+	WRITE_FORMAT_DEBUG("Array1 start_index: %d, end_index: %d, length: %d", start_index1, end_index1, finance_data_len1);
+	WRITE_FORMAT_DEBUG("Array2 start_index: %d, end_index: %d, length: %d", start_index2, end_index2, finance_data_len2);
 	assert(finance_data_len1 == finance_data_len2 && "The lengths of two data array are NOT identical");
 // Get the correlation
 	correlation_value = correlation(finance_data_array1, finance_data_array2, start_index1, start_index2, end_index1, end_index2);
@@ -77,9 +79,27 @@ unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set
 	return ret;
 }
 
-unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, FinanceSourceType finance_source_type1, int finance_field_no1, ArrayElementCalculationType calculation_type1, FinanceSourceType finance_source_type2, int finance_field_no2, ArrayElementCalculationType calculation_type2, int start_index1, int start_index2, float& correlation_value)
+unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation_value)
 {
+// Get each parameter
+	FinanceSourceType finance_source_type1 = access_param1->get_finance_source_type(), finance_source_type2 = access_param2->get_finance_source_type();
+	int finance_field_no1 = access_param1->get_finance_field_no(), finance_field_no2 = access_param2->get_finance_field_no();
+	ArrayElementCalculationType calculation_type1 = access_param1->get_calculation_type(), calculation_type2 = access_param2->get_calculation_type();
+	int start_index1 = access_param1->get_start_index(), start_index2 = access_param2->get_start_index();
+	int end_index1 = access_param1->get_end_index(), end_index2 = access_param2->get_end_index();
+
+	return correlate(result_set, finance_source_type1, finance_field_no1, calculation_type1, finance_source_type2, finance_field_no2, calculation_type2, start_index1, start_index2, end_index1, end_index2, correlation_value);
+}
+
+unsigned short FinanceAnalyzerCalculator::correlate_auto_alignment(const PRESULT_SET result_set, const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation_value)
+{
+// Auto Alignment: Modify the end index of the larger array
 	assert(result_set != NULL && "result_set should NOT be NULL");
+// Get each parameter
+	FinanceSourceType finance_source_type1 = access_param1->get_finance_source_type(), finance_source_type2 = access_param2->get_finance_source_type();
+	int finance_field_no1 = access_param1->get_finance_field_no(), finance_field_no2 = access_param2->get_finance_field_no();
+	ArrayElementCalculationType calculation_type1 = access_param1->get_calculation_type(), calculation_type2 = access_param2->get_calculation_type();
+	int start_index1 = access_param1->get_start_index(), start_index2 = access_param2->get_start_index();
 
 	PFINANCE_DATA_ARRAY_BASE finance_data_array1 = result_set->get_array(finance_source_type1, finance_field_no1, calculation_type1);
 	assert(finance_data_array1 != NULL && "finance_data_array1 should NOT be NULL");
@@ -94,30 +114,34 @@ unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set
 	if (finance_data_array_len1 > finance_data_array_len2)
 	{
 		int data_aray_size_diff = finance_data_array_len1 - finance_data_array_len2;
-		start_index1 += data_aray_size_diff;
-		WRITE_FORMAT_DEBUG("Modify the start index1 of the array [%s,%d,%s]: %d", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type1], finance_field_no1, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type1], start_index1);
+//		start_index1 += data_aray_size_diff;
+//		WRITE_FORMAT_DEBUG("Modify the start index1 of the array [%s,%d,%s]: %d", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type1], finance_field_no1, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type1], start_index1);
+		end_index1 -= data_aray_size_diff;
+		WRITE_FORMAT_DEBUG("Modify the end index1 of the array [%s,%d,%s]: %d", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type1], finance_field_no1, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type1], end_index1);
 	}
 	else if (finance_data_array_len2 > finance_data_array_len1)
 	{
 		int data_aray_size_diff = finance_data_array_len2 - finance_data_array_len1;
-		start_index2 += data_aray_size_diff;
-		WRITE_FORMAT_DEBUG("Modify the start index2 of the array [%s,%d,%s]: %d", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type2], finance_field_no2, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type2], start_index2);
+//		start_index2 += data_aray_size_diff;
+//		WRITE_FORMAT_DEBUG("Modify the start index2 of the array [%s,%d,%s]: %d", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type2], finance_field_no2, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type2], start_index2);
+		end_index2 -= data_aray_size_diff;
+		WRITE_FORMAT_DEBUG("Modify the end index2 of the array [%s,%d,%s]: %d", FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type1], finance_field_no1, FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[calculation_type1], end_index2);
 	}
 
 	return correlate(result_set, finance_source_type1, finance_field_no1, calculation_type1, finance_source_type2, finance_field_no2, calculation_type2, start_index1, start_index2, end_index1, end_index2, correlation_value);
 }
 
-unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, FinanceSourceType finance_source_type1, int finance_field_no1, ArrayElementCalculationType calculation_type1, FinanceSourceType finance_source_type2, int finance_field_no2, ArrayElementCalculationType calculation_type2, float& correlation_value)
-{
-	int start_index1 = 0;
-	int start_index2 = 0;
-	return correlate(result_set, finance_source_type1, finance_field_no1, calculation_type1, finance_source_type2, finance_field_no2, calculation_type2, start_index1, start_index2, correlation_value);
-}
-
-unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation_value)
-{
-	return correlate(result_set, finance_source_type1, finance_field_no1, ArrayElementCalculation_None, finance_source_type2, finance_field_no2, ArrayElementCalculation_None, correlation_value);
-}
+//unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, FinanceSourceType finance_source_type1, int finance_field_no1, ArrayElementCalculationType calculation_type1, FinanceSourceType finance_source_type2, int finance_field_no2, ArrayElementCalculationType calculation_type2, float& correlation_value)
+//{
+//	int start_index1 = 0;
+//	int start_index2 = 0;
+//	return correlate(result_set, finance_source_type1, finance_field_no1, calculation_type1, finance_source_type2, finance_field_no2, calculation_type2, start_index1, start_index2, correlation_value);
+//}
+//
+//unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation_value)
+//{
+//	return correlate(result_set, finance_source_type1, finance_field_no1, ArrayElementCalculation_None, finance_source_type2, finance_field_no2, ArrayElementCalculation_None, correlation_value);
+//}
 
 //unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, float& correlation_value)
 //{

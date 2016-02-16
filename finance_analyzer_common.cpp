@@ -442,13 +442,13 @@ int get_end_index_ex(int end_index, int data_size){return ((end_index < 0) ? end
 bool check_start_index_in_range(int start_index, int range_start, int range_end)
 {
 	assert(range_start >= 0 && "range_start should be larger than 0");
-	assert(range_end >= 1 && "range_end should be larger than 0");
+	assert(range_end >= 1 && "range_end should be larger than 1");
 	return ((start_index >= 0 && start_index < range_end) ? true : false);
 }
 
 bool check_end_index_in_range(int end_index, int range_start, int range_end)
 {
 	assert(range_start >= 0 && "range_start should be larger than 0");
-	assert(range_end >= 1 && "range_end should be larger than 0");
+	assert(range_end >= 1 && "range_end should be larger than 1");
 	return ((end_index > 0 && end_index <= range_end) ? true : false);
 }

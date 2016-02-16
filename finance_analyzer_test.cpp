@@ -213,30 +213,42 @@ void FinanceAnalyzerTest::test_check_calculator()
 
 	unsigned short ret = RET_SUCCESS;
 	float correlation_value;
-
+	SmartPointer<ResultSetAccessParam> sp_access_param1(NULL);
+	SmartPointer<ResultSetAccessParam> sp_access_param2(NULL);
 // Check Different type of array
-	ret = calculator.correlate(&result_set, FinanceSource_StockExchangeAndVolume, 2, FinanceSource_StockExchangeAndVolume, 3, correlation_value);
+	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
+	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3));
+	ret = calculator.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail in [2,3] correlation_value, due to: %s", get_ret_description(ret));
 		throw runtime_error(string(errmsg));
 	}
 	if (show_test_case_detail) printf("[2,3] correlation_value: %.2f\n", correlation_value);
-	ret = calculator.correlate(&result_set, FinanceSource_StockExchangeAndVolume, 2, FinanceSource_StockExchangeAndVolume, 4, correlation_value);
+
+	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
+	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
+	ret = calculator.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail in [2,4] correlation_value, due to: %s", get_ret_description(ret));
 		throw runtime_error(string(errmsg));
 	}
 	if (show_test_case_detail) printf("[2,4] correlation_value: %.2f\n", correlation_value);
-	ret = calculator.correlate(&result_set, FinanceSource_StockExchangeAndVolume, 1, FinanceSource_StockExchangeAndVolume, 4, correlation_value);
+
+	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
+	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
+	ret = calculator.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail in [1,4] correlation_value, due to: %s", get_ret_description(ret));
 		throw runtime_error(string(errmsg));
 	}
 	if (show_test_case_detail) printf("[1,4] correlation_value: %.2f\n", correlation_value);
-	ret = calculator.correlate(&result_set, FinanceSource_StockExchangeAndVolume, 1, FinanceSource_StockExchangeAndVolume, 5, correlation_value);
+
+	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
+	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5));
+	ret = calculator.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail in [1,5] correlation_value, due to: %s", get_ret_description(ret));

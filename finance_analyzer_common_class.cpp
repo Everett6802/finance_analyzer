@@ -84,6 +84,7 @@ template class SmartPointer<TimeCfg>;
 template class SmartPointer<TimeRangeCfg>;
 template class SmartPointer<QuerySet>;
 template class SmartPointer<ResultSet>;
+template class SmartPointer<ResultSetAccessParam>;
 template class SmartPointer<FinanceIntDataArray>;
 template class SmartPointer<FinanceLongDataArray>;
 template class SmartPointer<FinanceFloatDataArray>;
@@ -999,6 +1000,32 @@ const DEQUE_INT& QuerySet::operator[](int index)const
 	}
 	return query_set[index];
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ResultSetAccessParam::ResultSetAccessParam(FinanceSourceType new_finance_source_type, int new_finance_field_no, ArrayElementCalculationType new_calculation_type, int new_start_index, int new_end_index)
+{
+	finance_source_type = new_finance_source_type;
+	finance_field_no = new_finance_field_no;
+	calculation_type = new_calculation_type;
+	start_index = new_start_index;
+	end_index = new_end_index;
+}
+
+void ResultSetAccessParam::set_finance_source_type(FinanceSourceType new_finance_source_type){finance_source_type = new_finance_source_type;}
+FinanceSourceType ResultSetAccessParam::get_finance_source_type()const{return finance_source_type;}
+
+void ResultSetAccessParam::set_finance_field_no(int new_finance_field_no){finance_field_no = new_finance_field_no;}
+int ResultSetAccessParam::get_finance_field_no()const{return finance_field_no;}
+
+void ResultSetAccessParam::set_calculation_type(ArrayElementCalculationType new_calculation_type){calculation_type = new_calculation_type;}
+ArrayElementCalculationType ResultSetAccessParam::get_calculation_type()const{return calculation_type;}
+
+void ResultSetAccessParam::set_start_index(int new_start_index){start_index = new_start_index;}
+int ResultSetAccessParam::get_start_index()const{return start_index;}
+
+void ResultSetAccessParam::set_end_index(int new_end_index){end_index = new_end_index;}
+int ResultSetAccessParam::get_end_index()const{return end_index;}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

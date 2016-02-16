@@ -229,15 +229,16 @@ unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, c
 	return ret;
 }
 
-unsigned short FinanceAnalyzerMgr::correlate(FinanceSourceType finance_source_type1, int finance_field_no1, ArrayElementCalculationType calculation_type1, FinanceSourceType finance_source_type2, int finance_field_no2, ArrayElementCalculationType calculation_type2, float& correlation, const PTIME_RANGE_CFG time_range_cfg)const
+//unsigned short FinanceAnalyzerMgr::correlate(FinanceSourceType finance_source_type1, int finance_field_no1, ArrayElementCalculationType calculation_type1, FinanceSourceType finance_source_type2, int finance_field_no2, ArrayElementCalculationType calculation_type2, float& correlation, const PTIME_RANGE_CFG time_range_cfg)const
+unsigned short FinanceAnalyzerMgr::correlate(const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation, const PTIME_RANGE_CFG time_range_cfg)const
 {
 	assert(database_time_range != NULL && "database_time_range should NOT be NULL");
 //	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
 
 	SmartPointer<QuerySet> sp_query_set(new QuerySet());
 	SmartPointer<ResultSet> sp_result_set(new ResultSet());
-	ADD_QUERY((*sp_query_set.get_instance()), finance_source_type1, finance_field_no1);
-	ADD_QUERY((*sp_query_set.get_instance()), finance_source_type2, finance_field_no2);
+	ADD_QUERY((*sp_query_set.get_instance()), access_param1->get_finance_source_type(), access_param1->get_finance_field_no());
+	ADD_QUERY((*sp_query_set.get_instance()), access_param2->get_finance_source_type(), access_param2->get_finance_field_no());
 	sp_query_set->add_query_done();
 // Setup the time range
 	SmartPointer<TimeRangeCfg> sp_time_range_cfg;
@@ -252,7 +253,7 @@ unsigned short FinanceAnalyzerMgr::correlate(FinanceSourceType finance_source_ty
 	if (CHECK_FAILURE(ret))
 		return ret;
 // Find the correlation
-	ret = finance_analyzer_calculator->correlate(sp_result_set.get_instance(), finance_source_type1, finance_field_no1, calculation_type1, finance_source_type2, finance_field_no2, calculation_type2, correlation);
+	ret = finance_analyzer_calculator->correlate_auto_alignment(sp_result_set.get_instance(), access_param1, access_param2, correlation);
 	if (CHECK_FAILURE(ret))
 		return ret;
 //	printf("The correlation: %.2f\n", correlation);
@@ -260,10 +261,10 @@ unsigned short FinanceAnalyzerMgr::correlate(FinanceSourceType finance_source_ty
 	return ret;
 }
 
-unsigned short FinanceAnalyzerMgr::correlate(FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation, const PTIME_RANGE_CFG time_range_cfg)const
-{
-	return correlate(finance_source_type1, finance_field_no1, ArrayElementCalculation_None, finance_source_type2, finance_field_no2, ArrayElementCalculation_None, correlation, time_range_cfg);
-}
+//unsigned short FinanceAnalyzerMgr::correlate(FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation, const PTIME_RANGE_CFG time_range_cfg)const
+//{
+//	return correlate(finance_source_type1, finance_field_no1, ArrayElementCalculation_None, finance_source_type2, finance_field_no2, ArrayElementCalculation_None, correlation, time_range_cfg);
+//}
 
 unsigned short FinanceAnalyzerMgr::show_result(string result_str, const PTIME_CFG time_cfg, int show_result_type)const
 {
@@ -495,14 +496,20 @@ unsigned short FinanceAnalyzerMgr::run_daily(int show_result_type)
 	return RET_SUCCESS;
 }
 
-#define ANALYZE_CORRELATION(S1, F1, C1, S2, F2, C2)\
-ret = correlate(S1, F1, C1, S2, F2, C2, correlation);\
+#define ANALYZE_CORRELATION(S1, F1, C1, S2, F2, C2, O1)\
+do{\
+SmartPointer<ResultSetAccessParam> sp_access_param1(new ResultSetAccessParam(S1, F1, C1, O1));\
+SmartPointer<ResultSetAccessParam> sp_access_param2(new ResultSetAccessParam(S2, F2, C2));\
+ret = correlate(sp_access_param1, sp_access_param2, correlation);\
 if (CHECK_FAILURE(ret))\
 	return ret;\
+}while(0);\
 snprintf(buf, BUF_SIZE, "Correlation: %.2f Detail: %s\n", correlation, finance_analyzer_calculator->get_last_res_info());\
 buf_string += string(buf);
 
-unsigned short FinanceAnalyzerMgr::analyze_daily(int show_result_type)
+#define ANALYZE_CORRELATION_DIFF(S1, F1, C1, S2, F2, C2, O1) ANALYZE_CORRELATION(S1, F1, C1, S2, F2, C2, O1 + 1)
+
+unsigned short FinanceAnalyzerMgr::analyze_daily(int show_result_type, int offset)
 {
 	static const int BUF_SIZE = 512;
 	static char buf[BUF_SIZE];
@@ -518,76 +525,76 @@ unsigned short FinanceAnalyzerMgr::analyze_daily(int show_result_type)
 
 	string buf_string = "";
 // 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／自營商(避險)買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／投信買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／外資及陸資買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_None, offset)
 	buf_string += string("\n");
 // 發行量加權股價指數漲跌／融資餘額變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockMarginTradingAndShortSelling, 15, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockMarginTradingAndShortSelling, 15, ArrayElementCalculation_Diff, offset)
 	buf_string += string("\n");
 // 發行量加權股價指數漲跌／外資期權留倉淨額
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／外資期權留倉淨額變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／投信期權留倉淨額
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／投信期權留倉淨額變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／自營商期權留倉淨額
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／自營商期權留倉淨額變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, ArrayElementCalculation_Diff, offset)
 	buf_string += string("\n");
 // 發行量加權股價指數漲跌／未平倉Put/Call Ratio
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionPutCallRatio, 6, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionPutCallRatio, 6, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／未平倉Put/Call Ratio變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionPutCallRatio, 6, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionPutCallRatio, 6, ArrayElementCalculation_Diff, offset)
 	buf_string += string("\n");
 // 發行量加權股價指數漲跌／外資Buy Call留倉口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／外資Buy Call留倉口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／外資Buy Put留倉口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／外資Buy Put留倉口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／外資Sell Call留倉口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／外資Sell Call留倉口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／外資Sell Put留倉口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／外資Sell Put留倉口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／自營商Buy Call留倉口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／自營商Buy Call留倉口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／自營商Buy Put留倉口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／自營商Buy Put留倉口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／自營商Sell Call留倉口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／自營商Sell Call留倉口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／自營商Sell Put留倉口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／自營商Sell Put留倉口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, ArrayElementCalculation_Diff, offset)
 	buf_string += string("\n");
 // 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 3, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 3, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 3, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 3, ArrayElementCalculation_Diff, offset)
 // 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 12, ArrayElementCalculation_None)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 12, ArrayElementCalculation_None, offset)
 // 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數變化
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 12, ArrayElementCalculation_Diff)
+	ANALYZE_CORRELATION_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 12, ArrayElementCalculation_Diff, offset)
 	buf_string += string("\n");
 
 // Show result in different way

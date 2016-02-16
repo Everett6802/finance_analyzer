@@ -18,8 +18,6 @@ void print_errmsg_and_exit(const char* errmsg);
 void run_test(const char* test_case_list, bool show_detail);
 int parse_show_res_type(const char* show_res_type_string);
 
-//#define PRINT(...) printf(__VA_ARGS__)
-
 int main(int argc, char** argv)
 {
 	static const int ERRMSG_SIZE = 256;
@@ -30,7 +28,7 @@ int main(int argc, char** argv)
 	bool run_daily = false;
 	int show_run_daily_res_type = 0x0;
 	bool analyze_daily = false;
-	int show_analyze_daily_res_type = 0x0;
+	int show_analyze_daily_res_type =  0x0; //SHOW_RES_DEFAULT;
 
 	for (; index < argc ; index += offset)
 	{
@@ -95,7 +93,7 @@ int main(int argc, char** argv)
 	if (analyze_daily)
 	{
 		PRINT("Analyze daily data......\n");
-		ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type);
+		ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type, 0);
 		if (CHECK_FAILURE(ret))
 			snprintf(errmsg, ERRMSG_SIZE, "Fails to analyze daily, due to: %d, %s", ret, get_ret_description(ret));
 	}
