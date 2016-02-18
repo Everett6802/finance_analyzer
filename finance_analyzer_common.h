@@ -99,6 +99,10 @@ enum ArrayElementCalculationType
 {
 	ArrayElementCalculation_None,
 	ArrayElementCalculation_Diff,
+	ArrayElementCalculation_Sum5,
+	ArrayElementCalculation_Sum10,
+	ArrayElementCalculation_Sum20,
+	ArrayElementCalculation_Sum60,
 	ArrayElementCalculation_Avg5,
 	ArrayElementCalculation_Avg10,
 	ArrayElementCalculation_Avg20,

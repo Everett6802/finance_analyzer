@@ -192,7 +192,8 @@ Finance##m##DataArray operator-(const Finance##m##DataArray& another);
 #define DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(m)\
 unsigned short get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
 unsigned short get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
-unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int end_index=-1);
+unsigned short get_sum_array(Finance##m##DataArray& new_data_array, int N, int start_index, int end_index=-1);\
+unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int N, int start_index, int end_index=-1);
 
 #define DECLARE_DATA_ARRAY_OSTREAM(m, n)\
 std::ostream& operator<<(std::ostream &out, const Finance##m##DataArray &finance_##n##_data_array);
@@ -375,6 +376,11 @@ private:
 	unsigned short find_data_pos(int source_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
 	unsigned short add_calculation_set_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_sum(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n);
+	unsigned short add_calculation_set_sum5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_sum10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_sum20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_sum60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n);
 	unsigned short add_calculation_set_avg5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);

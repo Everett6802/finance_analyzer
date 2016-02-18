@@ -782,7 +782,7 @@ Finance##m##DataArray Finance##m##DataArray::operator-(const Finance##m##DataArr
 	return Finance##m##DataArray(*this) -= another;\
 }
 
-#define IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(m)\
+#define IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(m, n)\
 unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index)\
 {\
 	if (start_index < 0 || start_index >= array_pos)\
@@ -817,36 +817,74 @@ unsigned short Finance##m##DataArray::get_diff_array(Finance##m##DataArray& new_
 		new_data_array.add(array_data[i] - array_data[i - 1]);\
 	return RET_SUCCESS;\
 }\
-unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_data_array, int n, int start_index, int end_index)\
+unsigned short Finance##m##DataArray::get_sum_array(Finance##m##DataArray& new_data_array, int N, int start_index, int end_index)\
 {\
-	if (start_index < 0 || start_index >= array_pos)\
-	{\
-		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);\
-		return RET_FAILURE_INVALID_ARGUMENT;\
-	}\
 	end_index = get_end_index_ex(end_index, array_pos);\
-	if ((end_index - start_index) < n)\
+	INDEX_IN_RANGE(start_index, end_index, 0, array_pos);\
+	if ((end_index - start_index) < N)\
 	{\
-		WRITE_FORMAT_ERROR("The array size is NOT more than %d", n);\
+		WRITE_FORMAT_ERROR("The array size is NOT more than %d", N);\
 		return RET_FAILURE_INVALID_ARGUMENT;\
 	}\
-	int *buffer = new int[n];\
+	n *buffer = new n[N];\
 	if (buffer == NULL)\
 	{\
 		WRITE_ERROR("Fail to allocate memory: buffer");\
 		return RET_FAILURE_INSUFFICIENT_MEMORY;\
 	}\
 	int sum = 0;\
-	for (int i = start_index ; i < start_index + n ; i++)\
+	for (int i = start_index ; i < start_index + N ; i++)\
+	{\
+		buffer[i - start_index] = array_data[i];\
+		sum += buffer[i - start_index];\
+	}\
+	int buffer_pos = 0;\
+	int i = start_index + N;\
+	do{\
+		new_data_array.add(sum);\
+		if (i >= end_index)\
+			break;\
+		sum -= buffer[buffer_pos];\
+		buffer[buffer_pos] = array_data[i];\
+		sum += buffer[buffer_pos];\
+		buffer_pos ++;\
+		if (buffer_pos == N)\
+			buffer_pos = 0;\
+		i++;\
+	}while (true);\
+	if (buffer != NULL)\
+	{\
+		delete[] buffer;\
+		buffer = NULL;\
+ 	}\
+	return RET_SUCCESS;\
+}\
+unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_data_array, int N, int start_index, int end_index)\
+{\
+	end_index = get_end_index_ex(end_index, array_pos);\
+	INDEX_IN_RANGE(start_index, end_index, 0, array_pos);\
+	if ((end_index - start_index) < N)\
+	{\
+		WRITE_FORMAT_ERROR("The array size is NOT more than %d", N);\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	n *buffer = new n[N];\
+	if (buffer == NULL)\
+	{\
+		WRITE_ERROR("Fail to allocate memory: buffer");\
+		return RET_FAILURE_INSUFFICIENT_MEMORY;\
+	}\
+	int sum = 0;\
+	for (int i = start_index ; i < start_index + N ; i++)\
 	{\
 		buffer[i - start_index] = array_data[i];\
 		sum += buffer[i - start_index];\
 	}\
 	int buffer_pos = 0;\
 	float average;\
-	int i = start_index + n;\
+	int i = start_index + N;\
 	do{\
-		average = (float)sum / n;\
+		average = (float)sum / N;\
 		new_data_array.add(average);\
 		if (i >= end_index)\
 			break;\
@@ -854,7 +892,7 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 		buffer[buffer_pos] = array_data[i];\
 		sum += buffer[buffer_pos];\
 		buffer_pos ++;\
-		if (buffer_pos == n)\
+		if (buffer_pos == N)\
 			buffer_pos = 0;\
 		i++;\
 	}while (true);\
@@ -879,9 +917,9 @@ IMPLEMENT_DATA_ARRAY_OPERATOR(Int, int)
 IMPLEMENT_DATA_ARRAY_OPERATOR(Long, long)
 IMPLEMENT_DATA_ARRAY_OPERATOR(Float, float)
 
-IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Int)
-IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Long)
-IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Float)
+IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Int, int)
+IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Long, long)
+IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Float, float)
 
 IMPLEMENT_DATA_ARRAY_OSTREAM(Int, int)
 IMPLEMENT_DATA_ARRAY_OSTREAM(Long, long)
@@ -1288,6 +1326,75 @@ unsigned short ResultSet::add_calculation_set_diff(const PFINANCE_DATA_ARRAY_BAS
 	return ret;
 }
 
+unsigned short ResultSet::add_calculation_set_sum(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n)
+{
+	assert(data_array_base != NULL && "data_array_base should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	unsigned short value;
+
+	switch (data_array_base->get_type())
+	{
+	case FinanceField_INT:
+	{
+		PFINANCE_INT_DATA_ARRAY new_array = new FinanceIntDataArray();
+		assert(new_array != NULL && "Fail to allocate the FinanceIntDataArray object");
+		new_array->set_type(FinanceField_INT);
+
+		value = get_combined_index(FinanceField_INT, int_data_set.size());
+
+		PFINANCE_INT_DATA_ARRAY data_array = (PFINANCE_INT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_sum_array(*new_array, n, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		int_data_set.push_back(new_array);
+		int_data_set_size = int_data_set.size();
+	}
+	break;
+	case FinanceField_LONG:
+	{
+		PFINANCE_LONG_DATA_ARRAY new_array = new FinanceLongDataArray();
+		assert(new_array != NULL && "Fail to allocate the FinanceLongDataArray object");
+		new_array->set_type(FinanceField_LONG);
+
+		value = get_combined_index(FinanceField_LONG, long_data_set.size());
+
+		PFINANCE_LONG_DATA_ARRAY data_array = (PFINANCE_LONG_DATA_ARRAY)data_array_base;
+		ret = data_array->get_sum_array(*new_array, n, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		long_data_set.push_back(new_array);
+		long_data_set_size = long_data_set.size();
+	}
+	break;
+	case FinanceField_FLOAT:
+	{
+		PFINANCE_FLOAT_DATA_ARRAY new_array = new FinanceFloatDataArray();
+		assert(new_array != NULL && "Fail to allocate the FinanceFloatDataArray object");
+		new_array->set_type(FinanceField_FLOAT);
+
+		value = get_combined_index(FinanceField_FLOAT, float_data_set.size());
+
+		PFINANCE_FLOAT_DATA_ARRAY data_array = (PFINANCE_FLOAT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_sum_array(*new_array, n, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		float_data_set.push_back(new_array);
+		float_data_set_size = float_data_set.size();
+	}
+	break;
+	default:
+		WRITE_FORMAT_ERROR("The unsupported field type: %d", data_array_base->get_type());
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	data_calculation_set_mapping[key_ex] = value;
+	return ret;
+}
+
+unsigned short ResultSet::add_calculation_set_sum5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 5);}
+unsigned short ResultSet::add_calculation_set_sum10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 10);}
+unsigned short ResultSet::add_calculation_set_sum20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 20);}
+unsigned short ResultSet::add_calculation_set_sum60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 60);}
+
 unsigned short ResultSet::add_calculation_set_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n)
 {
 	assert(data_array_base != NULL && "data_array_base should NOT be NULL");
@@ -1347,6 +1454,10 @@ unsigned short ResultSet::add_calculation_set(int source_index, int field_index,
 	{
 		&ResultSet::add_calculation_set_dummy,
 		&ResultSet::add_calculation_set_diff,
+		&ResultSet::add_calculation_set_sum5,
+		&ResultSet::add_calculation_set_sum10,
+		&ResultSet::add_calculation_set_sum20,
+		&ResultSet::add_calculation_set_sum60,
 		&ResultSet::add_calculation_set_avg5,
 		&ResultSet::add_calculation_set_avg10,
 		&ResultSet::add_calculation_set_avg20,

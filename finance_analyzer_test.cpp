@@ -10,6 +10,7 @@ using namespace std;
 const char* TEST_TYPE_DESCRIPTION[] =
 {
 	"Check Formula",
+	"Check Array",
 	"Check Calculator"
 };
 
@@ -176,6 +177,44 @@ void FinanceAnalyzerTest::test_check_formula()
 	printf("Check Formula... Pass\n");
 }
 
+void FinanceAnalyzerTest::test_check_array()
+{
+	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
+	static const char* field1[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}; // Long
+	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long; Dummy
+	static const char* field3[] = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10"}; // Int
+	static const char* field4[] = {"10.0", "20.0", "30.0", "40.0", "50.0", "60.0", "70.0", "80.0", "90.0", "100.0"}; // Float
+	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
+
+	static const int ERRMSG_SIZE = 256;
+	static char errmsg[ERRMSG_SIZE];
+
+	printf("Check Array...\n");
+
+	ResultSet result_set;
+	for (int i = 0 ; i < 6 ; i++)
+		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
+	char data[32];
+	for (int i = 0 ; i < 10 ; i++)
+	{
+		snprintf(data, 32, "%s", date[i]);
+		result_set.set_date(data);
+		snprintf(data, 32, "%s", field1[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
+		snprintf(data, 32, "%s", field2[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
+		snprintf(data, 32, "%s", field3[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
+		snprintf(data, 32, "%s", field4[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
+		snprintf(data, 32, "%s", field5[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
+	}
+
+	unsigned short ret = RET_SUCCESS;
+	printf("Check Array... Pass\n");
+}
+
 void FinanceAnalyzerTest::test_check_calculator()
 {
 	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
@@ -265,6 +304,7 @@ void FinanceAnalyzerTest::test(TestType test_type)
 	static test_func_ptr test_func_array[] =
 	{
 		&FinanceAnalyzerTest::test_check_formula,
+		&FinanceAnalyzerTest::test_check_array,
 		&FinanceAnalyzerTest::test_check_calculator
 	};
 
