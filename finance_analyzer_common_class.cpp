@@ -525,6 +525,7 @@ FinanceFieldType FinanceDataArrayBase::get_type()const{return array_type;}
 bool FinanceDataArrayBase::is_empty()const{return (array_pos == 0);}
 int FinanceDataArrayBase::get_size()const{return array_pos;}
 int FinanceDataArrayBase::get_array_size()const{return array_size;}
+void FinanceDataArrayBase::reset_array(){array_pos = 0;}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -780,6 +781,45 @@ Finance##m##DataArray& Finance##m##DataArray::operator-=(const Finance##m##DataA
 Finance##m##DataArray Finance##m##DataArray::operator-(const Finance##m##DataArray& another)\
 {\
 	return Finance##m##DataArray(*this) -= another;\
+}\
+bool Finance##m##DataArray::operator==(const Finance##m##DataArray& another)\
+{\
+	if (array_pos != another.array_pos)\
+		return false;\
+	return this->operator==(another.get_data_array());\
+}\
+bool Finance##m##DataArray::operator!=(const n* another_array)\
+{\
+	return !this->operator==(another_array);\
+}\
+bool Finance##m##DataArray::operator!=(const Finance##m##DataArray& another)\
+{\
+	return !this->operator==(another);\
+}
+
+#define IMPLEMENT_DATA_ARRAY_INTEGER_EQUAL_OPERATOR(m, n)\
+bool Finance##m##DataArray::operator==(const n* another_array)\
+{\
+	assert(another_array != NULL && "another_array should NOT be NULL");\
+	for (int i = 0 ; i < array_pos ; i++)\
+	{\
+		if (array_data[i] != another_array[i])\
+			return false;\
+	}\
+	return true;\
+}
+
+#define IMPLEMENT_DATA_ARRAY_FLOAT_EQUAL_OPERATOR(m, n)\
+bool Finance##m##DataArray::operator==(const n* another_array)\
+{\
+	static const float TOLERANCE = 0.01f;\
+	assert(another_array != NULL && "another_array should NOT be NULL");\
+	for (int i = 0 ; i < array_pos ; i++)\
+	{\
+		if ((array_data[i] - another_array[i]) > TOLERANCE)\
+			return false;\
+	}\
+	return true;\
 }
 
 #define IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(m, n)\
@@ -832,7 +872,7 @@ unsigned short Finance##m##DataArray::get_sum_array(Finance##m##DataArray& new_d
 		WRITE_ERROR("Fail to allocate memory: buffer");\
 		return RET_FAILURE_INSUFFICIENT_MEMORY;\
 	}\
-	int sum = 0;\
+	n sum = 0;\
 	for (int i = start_index ; i < start_index + N ; i++)\
 	{\
 		buffer[i - start_index] = array_data[i];\
@@ -874,7 +914,7 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 		WRITE_ERROR("Fail to allocate memory: buffer");\
 		return RET_FAILURE_INSUFFICIENT_MEMORY;\
 	}\
-	int sum = 0;\
+	n sum = 0;\
 	for (int i = start_index ; i < start_index + N ; i++)\
 	{\
 		buffer[i - start_index] = array_data[i];\
@@ -884,7 +924,7 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 	float average;\
 	int i = start_index + N;\
 	do{\
-		average = (float)sum / N;\
+		average = sum / N;\
 		new_data_array.add(average);\
 		if (i >= end_index)\
 			break;\
@@ -914,8 +954,11 @@ ostream& operator<< (ostream &out, const Finance##m##DataArray &finance_##n##_da
 }
 
 IMPLEMENT_DATA_ARRAY_OPERATOR(Int, int)
+IMPLEMENT_DATA_ARRAY_INTEGER_EQUAL_OPERATOR(Int, int)
 IMPLEMENT_DATA_ARRAY_OPERATOR(Long, long)
+IMPLEMENT_DATA_ARRAY_INTEGER_EQUAL_OPERATOR(Long, long)
 IMPLEMENT_DATA_ARRAY_OPERATOR(Float, float)
+IMPLEMENT_DATA_ARRAY_FLOAT_EQUAL_OPERATOR(Float, float)
 
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Int, int)
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Long, long)

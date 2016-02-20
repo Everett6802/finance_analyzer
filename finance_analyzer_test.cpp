@@ -9,12 +9,10 @@ using namespace std;
 
 const char* TEST_TYPE_DESCRIPTION[] =
 {
-	"Check Formula",
 	"Check Array",
+	"Check Formula",
 	"Check Calculator"
 };
-
-
 //DECLARE_MSG_DUMPER_PARAM()
 
 FinanceAnalyzerTest::FinanceAnalyzerTest() :
@@ -49,6 +47,197 @@ void FinanceAnalyzerTest::set_show_detail(bool show_detail)
 	show_test_case_detail = show_detail;
 }
 
+
+void FinanceAnalyzerTest::test_check_array()
+{
+	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
+	static const char* field1[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}; // Long
+	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long; Dummy
+	static const char* field3[] = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10"}; // Int
+	static const char* field4[] = {"10.1", "20.1", "30.1", "40.1", "50.1", "60.1", "70.1", "80.1", "90.1", "100.1"}; // Float
+	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float; Dummy
+
+	static const int ERRMSG_SIZE = 256;
+	static char errmsg[ERRMSG_SIZE];
+
+	printf("Check Array...\n");
+
+	unsigned short ret = RET_SUCCESS;
+	ResultSet result_set;
+	for (int i = 0 ; i < 6 ; i++)
+		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
+	char data[32];
+	for (int i = 0 ; i < 10 ; i++)
+	{
+		snprintf(data, 32, "%s", date[i]);
+		result_set.set_date(data);
+		snprintf(data, 32, "%s", field1[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
+		snprintf(data, 32, "%s", field2[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
+		snprintf(data, 32, "%s", field3[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
+		snprintf(data, 32, "%s", field4[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
+		snprintf(data, 32, "%s", field5[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
+	}
+
+	SmartPointer<FinanceIntDataArray> sp_int_data_array(new FinanceIntDataArray());
+	SmartPointer<FinanceLongDataArray> sp_long_data_array(new FinanceLongDataArray());
+	SmartPointer<FinanceFloatDataArray> sp_float_data_array(new FinanceFloatDataArray());
+	sp_int_data_array->set_type(FinanceField_INT);
+	sp_long_data_array->set_type(FinanceField_LONG);
+	sp_float_data_array->set_type(FinanceField_FLOAT);
+
+// Check Avg/Diff array
+//	if (show_test_case_detail) cout << "2 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff) << endl;
+//	if (show_test_case_detail) cout << "2 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5) << endl;
+//	if (show_test_case_detail) cout << "2 Avg10: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg10) << endl;
+//	if (show_test_case_detail) cout << "4 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff) << endl;
+//	if (show_test_case_detail) cout << "4 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5) << endl;
+
+	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1);
+	ret = data_array1->get_diff_array(*sp_long_data_array, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [1 Diff], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "1 Diff: " << *sp_long_data_array << endl;
+	static const long ARRAY1_DIFF[] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+	if (*sp_long_data_array != ARRAY1_DIFF)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[1 Diff] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_long_data_array->reset_array();
+
+	ret = data_array1->get_sum_array(*sp_long_data_array, 5, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [1 Sum5], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "1 Sum5: " << *sp_long_data_array << endl;
+	static const long ARRAY1_SUM5[] = {15, 20, 25, 30, 35, 40};
+	if (*sp_long_data_array != ARRAY1_SUM5)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[1 Sum5] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_long_data_array->reset_array();
+
+	ret = data_array1->get_avg_array(*sp_float_data_array, 5, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [1 Avg5], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "1 Avg5: " << *sp_float_data_array << endl;
+	static const float ARRAY1_AVG5[] = {3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+	if (*sp_float_data_array != ARRAY1_AVG5)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[1 Avg5] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_float_data_array->reset_array();
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 3);
+	ret = data_array3->get_diff_array(*sp_int_data_array, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [3 Diff], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "3 Diff: " << *sp_int_data_array << endl;
+	static const int ARRAY3_DIFF[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1};
+	if (*sp_int_data_array != ARRAY3_DIFF)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 Diff] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_int_data_array->reset_array();
+
+	ret = data_array3->get_sum_array(*sp_int_data_array, 5, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [3 Sum5], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "3 Sum5: " << *sp_int_data_array << endl;
+	static const int ARRAY3_SUM5[] = {-15, -20, -25, -30, -35, -40};
+	if (*sp_int_data_array != ARRAY3_SUM5)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 Sum5] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_int_data_array->reset_array();
+
+	ret = data_array3->get_avg_array(*sp_float_data_array, 5, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [3 Avg5], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "3 Avg5: " << *sp_float_data_array << endl;
+	static const float ARRAY3_AVG5[] = {-3.0, -4.0, -5.0, -6.0, -7.0, -8.0};
+	if (*sp_float_data_array != ARRAY3_AVG5)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 Avg5] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_float_data_array->reset_array();
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	PFINANCE_FLOAT_DATA_ARRAY data_array4 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 4);
+	ret = data_array4->get_diff_array(*sp_float_data_array, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [4 Sum5], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "4 Diff: " << *sp_float_data_array << endl;
+	static const float ARRAY4_DIFF[] = {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0};
+	if (*sp_float_data_array != ARRAY4_DIFF)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[4 Diff] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_float_data_array->reset_array();
+
+	ret = data_array4->get_sum_array(*sp_float_data_array, 5, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [4 Sum5], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "4 Sum5: " << *sp_float_data_array << endl;
+	static const float ARRAY4_SUM5[] = {150.5, 200.5, 250.5, 300.5, 350.5, 400.5};
+	if (*sp_float_data_array != ARRAY4_SUM5)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[4 Sum5] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_float_data_array->reset_array();
+
+	ret = data_array4->get_avg_array(*sp_float_data_array, 5, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [4 Avg5], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "4 Avg5: " << *sp_float_data_array << endl;
+	static const float ARRAY4_AVG5[] = {30.1, 40.1, 50.1, 60.1, 70.1, 80.1};
+	if (*sp_float_data_array != ARRAY4_AVG5)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[4 Avg5] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_float_data_array->reset_array();
+
+	printf("Check Array... Pass\n");
+}
+
 void FinanceAnalyzerTest::test_check_formula()
 {
 	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
@@ -59,7 +248,7 @@ void FinanceAnalyzerTest::test_check_formula()
 	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
 
 	printf("Check Formula...\n");
-	FinanceAnalyzerCalculator calculator;
+//	FinanceAnalyzerCalculator calculator;
 //	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
 //	float correlation_value;
@@ -114,12 +303,6 @@ void FinanceAnalyzerTest::test_check_formula()
 	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2));
 	check_float_value_equal(0.15, value);
 	if (show_test_case_detail) printf("[1,2] correlation: %.2f\n", value);
-// Check Avg/Diff array
-	if (show_test_case_detail) cout << "2 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff) << endl;
-	if (show_test_case_detail) cout << "2 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5) << endl;
-	if (show_test_case_detail) cout << "2 Avg10: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg10) << endl;
-	if (show_test_case_detail) cout << "4 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff) << endl;
-	if (show_test_case_detail) cout << "4 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5) << endl;
 // Check Diff average, variance, standard deviation
 	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff));
 	check_float_value_equal(1.22, value);
@@ -175,44 +358,6 @@ void FinanceAnalyzerTest::test_check_formula()
 	if (show_test_case_detail) printf("[2(Diff 2:4),2(Avg5 3:5)] correlation: %.2f\n", value);
 
 	printf("Check Formula... Pass\n");
-}
-
-void FinanceAnalyzerTest::test_check_array()
-{
-	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
-	static const char* field1[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}; // Long
-	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long; Dummy
-	static const char* field3[] = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10"}; // Int
-	static const char* field4[] = {"10.0", "20.0", "30.0", "40.0", "50.0", "60.0", "70.0", "80.0", "90.0", "100.0"}; // Float
-	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
-
-	static const int ERRMSG_SIZE = 256;
-	static char errmsg[ERRMSG_SIZE];
-
-	printf("Check Array...\n");
-
-	ResultSet result_set;
-	for (int i = 0 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
-	char data[32];
-	for (int i = 0 ; i < 10 ; i++)
-	{
-		snprintf(data, 32, "%s", date[i]);
-		result_set.set_date(data);
-		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
-		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
-		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
-		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
-		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-	}
-
-	unsigned short ret = RET_SUCCESS;
-	printf("Check Array... Pass\n");
 }
 
 void FinanceAnalyzerTest::test_check_calculator()
@@ -303,8 +448,8 @@ void FinanceAnalyzerTest::test(TestType test_type)
 	typedef void (FinanceAnalyzerTest::*test_func_ptr)();
 	static test_func_ptr test_func_array[] =
 	{
-		&FinanceAnalyzerTest::test_check_formula,
 		&FinanceAnalyzerTest::test_check_array,
+		&FinanceAnalyzerTest::test_check_formula,
 		&FinanceAnalyzerTest::test_check_calculator
 	};
 

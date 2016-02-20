@@ -143,7 +143,7 @@ public:
 	bool is_empty()const;
 	int get_size()const;
 	int get_array_size()const;
-
+	void reset_array();
 };
 typedef FinanceDataArrayBase* PFINANCE_DATA_ARRAY_BASE;
 
@@ -182,12 +182,16 @@ public:
 	void add(T data, size_t data_size);
 };
 
-#define DECLARE_DATA_ARRAY_OPERATOR(m)\
+#define DECLARE_DATA_ARRAY_OPERATOR(m, n)\
 Finance##m##DataArray& operator=(const Finance##m##DataArray& another);\
 Finance##m##DataArray& operator+=(const Finance##m##DataArray& another);\
 Finance##m##DataArray operator+(const Finance##m##DataArray& another);\
 Finance##m##DataArray& operator-=(const Finance##m##DataArray& another);\
-Finance##m##DataArray operator-(const Finance##m##DataArray& another);
+Finance##m##DataArray operator-(const Finance##m##DataArray& another);\
+bool operator==(const n* another_array);\
+bool operator==(const Finance##m##DataArray& another);\
+bool operator!=(const n* another_array);\
+bool operator!=(const Finance##m##DataArray& another);
 
 #define DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(m)\
 unsigned short get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
@@ -206,7 +210,7 @@ class FinanceFloatDataArray;
 class FinanceIntDataArray : public FinanceDataArrayTemplate<int>
 {
 public:
-	DECLARE_DATA_ARRAY_OPERATOR(Int)
+	DECLARE_DATA_ARRAY_OPERATOR(Int, int)
 	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Int)
 };
 typedef FinanceIntDataArray* PFINANCE_INT_DATA_ARRAY;
@@ -216,7 +220,7 @@ DECLARE_DATA_ARRAY_OSTREAM(Int, int)
 class FinanceLongDataArray : public FinanceDataArrayTemplate<long>
 {
 public:
-	DECLARE_DATA_ARRAY_OPERATOR(Long)
+	DECLARE_DATA_ARRAY_OPERATOR(Long, long)
 	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Long)
 };
 typedef FinanceLongDataArray* PFINANCE_LONG_DATA_ARRAY;
@@ -226,7 +230,7 @@ DECLARE_DATA_ARRAY_OSTREAM(Long, long)
 class FinanceFloatDataArray : public FinanceDataArrayTemplate<float>
 {
 public:
-	DECLARE_DATA_ARRAY_OPERATOR(Float)
+	DECLARE_DATA_ARRAY_OPERATOR(Float, float)
 	DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(Float)
 };
 typedef FinanceFloatDataArray* PFINANCE_FLOAT_DATA_ARRAY;
