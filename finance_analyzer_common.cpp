@@ -250,6 +250,10 @@ const char* FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[] =
 {
 	"None",
 	"Diff",
+	"Sum5",
+	"Sum10",
+	"Sum20",
+	"Sum60",
 	"Avg5",
 	"Avg10",
 	"Avg20",

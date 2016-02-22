@@ -914,7 +914,7 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 		WRITE_ERROR("Fail to allocate memory: buffer");\
 		return RET_FAILURE_INSUFFICIENT_MEMORY;\
 	}\
-	n sum = 0;\
+	n sum = (n)0;\
 	for (int i = start_index ; i < start_index + N ; i++)\
 	{\
 		buffer[i - start_index] = array_data[i];\
@@ -924,7 +924,7 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 	float average;\
 	int i = start_index + N;\
 	do{\
-		average = sum / N;\
+		average = (float)sum / N;\
 		new_data_array.add(average);\
 		if (i >= end_index)\
 			break;\

@@ -1,3 +1,4 @@
+#include <math.h>
 #include <assert.h>
 #include <stdexcept>
 #include "finance_analyzer_test.h"
@@ -6,6 +7,8 @@
 
 
 using namespace std;
+
+#define ABS(X) (X < 0 ? -X : X)
 
 const char* TEST_TYPE_DESCRIPTION[] =
 {
@@ -28,16 +31,19 @@ FinanceAnalyzerTest::~FinanceAnalyzerTest()
 
 void FinanceAnalyzerTest::check_float_value_equal(float expected_value, float actual_value)
 {
-	static const int VALUE_SIZE = 16;
-	static char expected_value_str[VALUE_SIZE];
-	static char actual_value_str[VALUE_SIZE];
-	snprintf(expected_value_str, VALUE_SIZE, "%.2f", expected_value);
-	snprintf(actual_value_str, VALUE_SIZE, "%.2f", actual_value);
-	if (strcmp(expected_value_str, actual_value_str) != 0)
+	static const float TOLERANCE = 0.01f;
+//	static const int VALUE_SIZE = 16;
+//	static char expected_value_str[VALUE_SIZE];
+//	static char actual_value_str[VALUE_SIZE];
+//	snprintf(expected_value_str, VALUE_SIZE, "%.2f", expected_value);
+//	snprintf(actual_value_str, VALUE_SIZE, "%.2f", actual_value);
+//	if (strcmp(expected_value_str, actual_value_str) != 0)
+	if (ABS(expected_value - actual_value) >= TOLERANCE)
 	{
 		static const int ERRMSG_SIZE = 64;
 		static char errmsg[ERRMSG_SIZE];
-		snprintf(errmsg, ERRMSG_SIZE, "Value is NOT equal; Expected: %s, Actual: %s", expected_value_str, actual_value_str);
+//		snprintf(errmsg, ERRMSG_SIZE, "Value is NOT equal; Expected: %s, Actual: %s", expected_value_str, actual_value_str);
+		snprintf(errmsg, ERRMSG_SIZE, "Value is NOT equal; Expected: %.2f, Actual: %.2f", expected_value, actual_value);
 		throw runtime_error(errmsg);
 	}
 }
@@ -46,7 +52,6 @@ void FinanceAnalyzerTest::set_show_detail(bool show_detail)
 {
 	show_test_case_detail = show_detail;
 }
-
 
 void FinanceAnalyzerTest::test_check_array()
 {
@@ -248,7 +253,6 @@ void FinanceAnalyzerTest::test_check_formula()
 	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
 
 	printf("Check Formula...\n");
-//	FinanceAnalyzerCalculator calculator;
 //	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
 //	float correlation_value;
@@ -273,9 +277,9 @@ void FinanceAnalyzerTest::test_check_formula()
 
 	float value;
 // Check Formula
-// Show array
-	if (show_test_case_detail) cout << "1: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 1) << endl;
-	if (show_test_case_detail) cout << "2: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2) << endl;
+//// Show array
+//	if (show_test_case_detail) cout << "1: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 1) << endl;
+//	if (show_test_case_detail) cout << "2: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2) << endl;
 // Check average, variance, standard deviation
 	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1));
 	check_float_value_equal(5.5, value);
@@ -335,7 +339,7 @@ void FinanceAnalyzerTest::test_check_formula()
 	if (show_test_case_detail) printf("[2 Avg5] standard deviation: %.2f\n", value);
 // Check Diff average, variance, standard deviation
 	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
-	check_float_value_equal(-12.60, value);
+	check_float_value_equal(-12.62, value);
 	if (show_test_case_detail) printf("[4 Avg5] average: %.2f\n", value);
 	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
 	check_float_value_equal(750.47, value);
