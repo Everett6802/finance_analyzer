@@ -11,6 +11,12 @@ float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array, int start_index=0, in
 #define DECLARE_DOUBLE_INPUT_FORMULA_FUNCTION(X)\
 float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array1, const PFINANCE_DATA_ARRAY_BASE finance_data_array2, int start_index1=0, int start_index2=0, int end_index1=-1, int end_index2=-1);
 
+template <typename T>
+T sum(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index=0, int end_index=-1);
+
+extern template int sum<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int start_index, int end_index);
+extern template long sum<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int start_index, int end_index);
+extern template float sum<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int start_index, int end_index);
 
 template <typename T>
 float average(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index=0, int end_index=-1);

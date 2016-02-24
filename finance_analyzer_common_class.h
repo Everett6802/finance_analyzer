@@ -197,7 +197,8 @@ bool operator!=(const Finance##m##DataArray& another);
 unsigned short get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
 unsigned short get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
 unsigned short get_sum_array(Finance##m##DataArray& new_data_array, int N, int start_index, int end_index=-1);\
-unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int N, int start_index, int end_index=-1);
+unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int N, int start_index, int end_index=-1);\
+unsigned short get_weighted_avg_array(FinanceFloatDataArray& new_data_array, int N, int start_index, int end_index=-1);
 
 #define DECLARE_DATA_ARRAY_OSTREAM(m, n)\
 std::ostream& operator<<(std::ostream &out, const Finance##m##DataArray &finance_##n##_data_array);
@@ -390,6 +391,11 @@ private:
 	unsigned short add_calculation_set_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_weighted_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n);
+	unsigned short add_calculation_set_weighted_avg5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_weighted_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_weighted_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_weighted_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set(int source_index, int field_index, ArrayElementCalculationType calculation_type);
 
 public:

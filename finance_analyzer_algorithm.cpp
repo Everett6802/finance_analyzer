@@ -115,6 +115,26 @@ static void check_index(int start_index, int end_index, int data_size, const cha
 }
 
 template <typename T>
+T sum(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index=0, int end_index=-1)
+{
+	end_index = get_end_index_ex(end_index, finance_data_array.get_size());
+	check_index(start_index, end_index, finance_data_array.get_size());
+
+	T sum_value = (T)0;
+	for (int i = start_index ; i < end_index ; i++)
+		sum_value += finance_data_array[i];
+#ifdef DO_DEBUG
+	printf("**sum** start_index: %d, end_index: %d, data_length: %d, sum: %.2f\n", start_index, end_index, data_length, (float)sum_value);
+#endif
+	return sum_value;
+}
+
+template int sum<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int start_index, int end_index);
+template long sum<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int start_index, int end_index);
+template float sum<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int start_index, int end_index);
+
+
+template <typename T>
 float average(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index, int end_index)
 {
 	end_index = get_end_index_ex(end_index, finance_data_array.get_size());

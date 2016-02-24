@@ -942,6 +942,58 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 		buffer = NULL;\
  	}\
 	return RET_SUCCESS;\
+}\
+unsigned short Finance##m##DataArray::get_weighted_avg_array(FinanceFloatDataArray& new_data_array, int N, int start_index, int end_index)\
+{\
+	static const int WEIGHTED_AVG_TYPE[] = {5, 10, 20, 60};\
+	static const int WEIGHTED_AVG_TYPE_SIZE = sizeof(WEIGHTED_AVG_TYPE)/sizeof(WEIGHTED_AVG_TYPE[0]);\
+	static const int N_5_WEIGHTED_PARAM[] = {1, 1, 2, 2, 3};\
+	static const int N_10_WEIGHTED_PARAM[] = {1, 1, 1, 1, 2, 2, 2, 2, 3, 3};\
+	static const int N_20_WEIGHTED_PARAM[] = {1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 4};\
+	static const int N_60_WEIGHTED_PARAM[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4};\
+	static const int N_5_WEIGHTED_PARAM_SUM = get_array_sum(N_5_WEIGHTED_PARAM, WEIGHTED_AVG_TYPE[0]);\
+	static const int N_10_WEIGHTED_PARAM_SUM =get_array_sum(N_10_WEIGHTED_PARAM, WEIGHTED_AVG_TYPE[1]);\
+	static const int N_20_WEIGHTED_PARAM_SUM = get_array_sum(N_20_WEIGHTED_PARAM, WEIGHTED_AVG_TYPE[2]);\
+	static const int N_60_WEIGHTED_PARAM_SUM = get_array_sum(N_60_WEIGHTED_PARAM, WEIGHTED_AVG_TYPE[3]);\
+	static const int* WEIGHTED_PARAM[] = {N_5_WEIGHTED_PARAM, N_10_WEIGHTED_PARAM, N_20_WEIGHTED_PARAM, N_60_WEIGHTED_PARAM};\
+	static const int WEIGHTED_PARAM_SUM[] = {N_5_WEIGHTED_PARAM_SUM, N_10_WEIGHTED_PARAM_SUM, N_20_WEIGHTED_PARAM_SUM, N_60_WEIGHTED_PARAM_SUM};\
+	int weighted_index = get_array_index(N, WEIGHTED_AVG_TYPE, WEIGHTED_AVG_TYPE_SIZE);\
+	if (weighted_index == -1)\
+	{\
+		WRITE_FORMAT_ERROR("Unsupported argument for weighted average: %d", N);\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	end_index = get_end_index_ex(end_index, array_pos);\
+	INDEX_IN_RANGE(start_index, end_index, 0, array_pos);\
+	if ((end_index - start_index) < N)\
+	{\
+		WRITE_FORMAT_ERROR("The array size is NOT more than %d", N);\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	n *buffer = new n[N];\
+	if (buffer == NULL)\
+	{\
+		WRITE_ERROR("Fail to allocate memory: buffer");\
+		return RET_FAILURE_INSUFFICIENT_MEMORY;\
+	}\
+	float weighted_average;\
+	n sum;\
+	for (int i = start_index ; i < end_index - N + 1 ; i++)\
+	{\
+		sum = (n)0;\
+		for (int j = 0 ; j < N ; j++)\
+		{\
+			sum += WEIGHTED_PARAM[weighted_index][j] * array_data[i + j];\
+		}\
+		weighted_average = (float)sum / WEIGHTED_PARAM_SUM[weighted_index];\
+		new_data_array.add(weighted_average);\
+	}\
+	if (buffer != NULL)\
+	{\
+		delete[] buffer;\
+		buffer = NULL;\
+ 	}\
+	return RET_SUCCESS;\
 }
 
 #define IMPLEMENT_DATA_ARRAY_OSTREAM(m, n)\
@@ -1490,6 +1542,58 @@ unsigned short ResultSet::add_calculation_set_avg10(const PFINANCE_DATA_ARRAY_BA
 unsigned short ResultSet::add_calculation_set_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 20);}
 unsigned short ResultSet::add_calculation_set_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 60);}
 
+unsigned short ResultSet::add_calculation_set_weighted_avg(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n)
+{
+	assert(data_array_base != NULL && "data_array_base should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	PFINANCE_FLOAT_DATA_ARRAY new_array = new FinanceFloatDataArray();
+	assert(new_array != NULL && "Fail to allocate the FinanceFloatDataArray object");
+	new_array->set_type(FinanceField_FLOAT);
+
+	unsigned short value = get_combined_index(FinanceField_FLOAT, float_data_set.size());
+
+	switch (data_array_base->get_type())
+	{
+	case FinanceField_INT:
+	{
+		PFINANCE_INT_DATA_ARRAY data_array = (PFINANCE_INT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_weighted_avg_array(*new_array, n, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	break;
+	case FinanceField_LONG:
+	{
+		PFINANCE_LONG_DATA_ARRAY data_array = (PFINANCE_LONG_DATA_ARRAY)data_array_base;
+		ret = data_array->get_weighted_avg_array(*new_array, n, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	break;
+	case FinanceField_FLOAT:
+	{
+		PFINANCE_FLOAT_DATA_ARRAY data_array = (PFINANCE_FLOAT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_weighted_avg_array(*new_array, n, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	break;
+	default:
+		WRITE_FORMAT_ERROR("The unsupported field type: %d", data_array_base->get_type());
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	float_data_set.push_back(new_array);
+	float_data_set_size = float_data_set.size();
+
+	data_calculation_set_mapping[key_ex] = value;
+	return ret;
+}
+
+unsigned short ResultSet::add_calculation_set_weighted_avg5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 5);}
+unsigned short ResultSet::add_calculation_set_weighted_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 10);}
+unsigned short ResultSet::add_calculation_set_weighted_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 20);}
+unsigned short ResultSet::add_calculation_set_weighted_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex){return add_calculation_set_avg(data_array_base, key_ex, 60);}
+
 unsigned short ResultSet::add_calculation_set(int source_index, int field_index, ArrayElementCalculationType calculation_type)
 {
 	typedef unsigned short (ResultSet::*add_calculation_set_func_ptr)(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
@@ -1504,7 +1608,11 @@ unsigned short ResultSet::add_calculation_set(int source_index, int field_index,
 		&ResultSet::add_calculation_set_avg5,
 		&ResultSet::add_calculation_set_avg10,
 		&ResultSet::add_calculation_set_avg20,
-		&ResultSet::add_calculation_set_avg60
+		&ResultSet::add_calculation_set_avg60,
+		&ResultSet::add_calculation_set_weighted_avg5,
+		&ResultSet::add_calculation_set_weighted_avg10,
+		&ResultSet::add_calculation_set_weighted_avg20,
+		&ResultSet::add_calculation_set_weighted_avg60
 	};
 
 	if (calculation_type == ArrayElementCalculation_None)

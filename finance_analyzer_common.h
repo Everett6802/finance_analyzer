@@ -107,6 +107,10 @@ enum ArrayElementCalculationType
 	ArrayElementCalculation_Avg10,
 	ArrayElementCalculation_Avg20,
 	ArrayElementCalculation_Avg60,
+	ArrayElementCalculation_WAvg5,
+	ArrayElementCalculation_WAvg10,
+	ArrayElementCalculation_WAvg20,
+	ArrayElementCalculation_WAvg60,
 	ArrayElementCalculationSize,
 };
 
@@ -189,5 +193,7 @@ unsigned short send_email(const char* title, const char* address, const char* co
 int get_end_index_ex(int end_index, int data_size);
 bool check_start_index_in_range(int index, int range_start, int range_end);
 bool check_end_index_in_range(int index, int range_start, int range_end);
+int get_array_index(int value, const int array[], int array_size);
+int get_array_sum(const int array[], int array_size);
 
 #endif
