@@ -543,22 +543,22 @@ unsigned short FinanceAnalyzerMgr::analyze_daily(int show_result_type, int offse
 	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_Sum5, 5 - 1 + offset)
 	buf_string += string("\n");
 // 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Avg5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_Avg5, offset)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_Avg5, offset)
 // 發行量加權股價指數漲跌／自營商(避險)買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Avg5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_Avg5, offset)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_Avg5, offset)
 // 發行量加權股價指數漲跌／投信買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Avg5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_Avg5, offset)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_Avg5, offset)
 // 發行量加權股價指數漲跌／外資及陸資買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Avg5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_Avg5, offset)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_Avg5, offset)
 	buf_string += string("\n");
 // 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Avg10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_Sum10, offset)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_Sum10, offset)
 // 發行量加權股價指數漲跌／自營商(避險)買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Avg10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_Sum10, offset)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_Sum10, offset)
 // 發行量加權股價指數漲跌／投信買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Avg10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_Sum10, offset)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_Sum10, offset)
 // 發行量加權股價指數漲跌／外資及陸資買賣超
-	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Avg10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_Sum10, offset)
+	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_Sum10, offset)
 	buf_string += string("\n");
 // 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
 	ANALYZE_CORRELATION(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_Sum20, 20 - 1 + offset)
