@@ -136,7 +136,7 @@ protected:
 
 public:
 	FinanceDataArrayBase();
-	~FinanceDataArrayBase();
+	virtual ~FinanceDataArrayBase();
 
 	void set_type(FinanceFieldType type);
 	FinanceFieldType get_type()const;
@@ -158,7 +158,7 @@ protected:
 public:
 	FinanceDataArrayTemplate();
 	FinanceDataArrayTemplate(const FinanceDataArrayTemplate& another);
-	virtual ~FinanceDataArrayTemplate();
+	~FinanceDataArrayTemplate();
 
 	const T* get_data_array()const;
 	const T operator[](int index)const;
@@ -206,6 +206,7 @@ std::ostream& operator<<(std::ostream &out, const Finance##m##DataArray &finance
 class FinanceIntDataArray;
 class FinanceLongDataArray;
 class FinanceFloatDataArray;
+class FinanceBoolDataArray;
 
 //typedef FinanceDataArrayTemplate<int> FinanceIntDataArray;
 class FinanceIntDataArray : public FinanceDataArrayTemplate<int>
@@ -237,7 +238,23 @@ public:
 typedef FinanceFloatDataArray* PFINANCE_FLOAT_DATA_ARRAY;
 DECLARE_DATA_ARRAY_OSTREAM(Float, float)
 
-std::ostream& operator<<(std::ostream &out, const FinanceDataArrayBase &finance_data_array);
+//std::ostream& operator<<(std::ostream &out, const FinanceDataArrayBase &finance_data_array);
+
+class FinanceBoolDataArray : public FinanceDataArrayTemplate<bool>
+{
+private:
+	int true_cnt;
+
+public:
+	FinanceBoolDataArray();
+
+	void add(bool data);
+	float get_probability()const;
+};
+typedef FinanceBoolDataArray* PFINANCE_BOOL_DATA_ARRAY;
+DECLARE_DATA_ARRAY_OSTREAM(Bool, bool)
+
+std::ostream& operator<<(std::ostream &out, const FinanceBoolDataArray &finance_data_array);
 
 typedef FinanceDataPtrArrayTemplate<char*> FinanceCharDataPtrArray;
 typedef FinanceCharDataPtrArray* PFINANCE_CHAR_DATA_PTR_ARRAY;

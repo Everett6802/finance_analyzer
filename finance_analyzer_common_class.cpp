@@ -1016,9 +1016,27 @@ IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Int, int)
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Long, long)
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Float, float)
 
+FinanceBoolDataArray::FinanceBoolDataArray() :
+	true_cnt(0)
+{
+}
+
+void FinanceBoolDataArray::add(bool data)
+{
+	FinanceDataArrayTemplate<bool>::add(data);
+	if (data)
+		true_cnt++;
+}
+
+float FinanceBoolDataArray::get_probability()const
+{
+	return (float)true_cnt / array_pos;
+}
+
 IMPLEMENT_DATA_ARRAY_OSTREAM(Int, int)
 IMPLEMENT_DATA_ARRAY_OSTREAM(Long, long)
 IMPLEMENT_DATA_ARRAY_OSTREAM(Float, float)
+IMPLEMENT_DATA_ARRAY_OSTREAM(Bool, bool)
 
 ostream& operator<<(ostream &out, const FinanceDataArrayBase &finance_data_array)
 {
