@@ -249,6 +249,7 @@ public:
 	FinanceBoolDataArray();
 
 	void add(bool data);
+	int get_true_cnt()const;
 	float get_probability()const;
 };
 typedef FinanceBoolDataArray* PFINANCE_BOOL_DATA_ARRAY;

@@ -6,6 +6,9 @@
 
 using namespace std;
 
+static const int BUF_SIZE = 256;
+static char errmsg[BUF_SIZE];
+
 //#define DO_DEBUG
 #define IMPLEMENT_SINGLE_INPUT_FORMULA_FUNCTION(X)\
 float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array, int start_index, int end_index)\
@@ -94,9 +97,6 @@ float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array1, PFINANCE_DATA_ARRAY_
 
 static void check_index(int start_index, int end_index, int data_size, const char* array_name="")
 {
-	static const int BUF_SIZE = 64;
-	static char errmsg[BUF_SIZE];
-
 	if (start_index < 0 || start_index >= data_size)
 	{
 		snprintf(errmsg, BUF_SIZE, "%sstart index is out of range[0, %d)", array_name, data_size);
@@ -115,19 +115,43 @@ static void check_index(int start_index, int end_index, int data_size, const cha
 }
 
 template <typename T>
-T sum(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index=0, int end_index=-1)
+T sum(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index=0, int end_index=-1)
 {
 	end_index = get_end_index_ex(end_index, finance_data_array.get_size());
 	check_index(start_index, end_index, finance_data_array.get_size());
 
+	int data_length = end_index - start_index;
+	if (filter_array != NULL)
+	{
+		if (data_length != filter_array->get_size())
+		{
+			snprintf(errmsg, BUF_SIZE, "The filter array size is NOT correct, expected: %d, actual: %d", data_length, filter_array->get_size());
+			throw invalid_argument(errmsg);
+		}
+	}
 	T sum_value = (T)0;
 	for (int i = start_index ; i < end_index ; i++)
+	{
+		if (filter_array != NULL && !(*filter_array)[i - start_index])
+			continue;
 		sum_value += finance_data_array[i];
+	}
 #ifdef DO_DEBUG
-	printf("**sum** start_index: %d, end_index: %d, data_length: %d, sum: %.2f\n", start_index, end_index, data_length, (float)sum_value);
+	printf("**sum** start_index: %d, end_index: %d, data_length: %d, sum: %.2f", start_index, end_index, data_length, (float)sum_value);
+	if (filter_array != NULL) printf(", true_cnt: %d", filter_array->get_true_cnt());
+	printf("\n");
 #endif
 	return sum_value;
 }
+template <typename T>
+T sum(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index=0, int end_index=-1)
+{
+	return sum<T>(finance_data_array, NULL, start_index, end_index);
+}
+
+template int sum<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
+template long sum<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
+template float sum<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
 
 template int sum<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int start_index, int end_index);
 template long sum<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int start_index, int end_index);
@@ -135,22 +159,45 @@ template float sum<float>(const FinanceDataArrayTemplate<float>& finance_data_ar
 
 
 template <typename T>
-float average(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index, int end_index)
+float average(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index)
 {
 	end_index = get_end_index_ex(end_index, finance_data_array.get_size());
 	check_index(start_index, end_index, finance_data_array.get_size());
 
 	int data_length = end_index - start_index;
+	if (filter_array != NULL)
+	{
+		if (data_length != filter_array->get_size())
+		{
+			snprintf(errmsg, BUF_SIZE, "The filter array size is NOT correct, expected: %d, actual: %d", data_length, filter_array->get_size());
+			throw invalid_argument(errmsg);
+		}
+	}
 	float average_value = 0.0f;
 	float sum = 0.0;
 	for (int i = start_index ; i < end_index ; i++)
+	{
+		if (filter_array != NULL && !(*filter_array)[i - start_index])
+			continue;
 		sum += finance_data_array[i];
-	average_value = sum / data_length;
+	}
+	average_value = ((filter_array == NULL) ? (sum / data_length) : (sum / filter_array->get_true_cnt()));
 #ifdef DO_DEBUG
-	printf("**average** start_index: %d, end_index: %d, data_length: %d, sum: %.2f\n", start_index, end_index, data_length, sum);
+	printf("**average** start_index: %d, end_index: %d, data_length: %d, sum: %.2f", start_index, end_index, data_length, sum);
+	if (filter_array != NULL) printf(", true_cnt: %d", filter_array->get_true_cnt());
+	printf("\n");
 #endif
 	return average_value;
 }
+template <typename T>
+float average(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index=0, int end_index=-1)
+{
+	return average<T>(finance_data_array, NULL, start_index, end_index);
+}
+
+template float average<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
+template float average<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
+template float average<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
 
 template float average<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int start_index, int end_index);
 template float average<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int start_index, int end_index);
@@ -159,23 +206,46 @@ template float average<float>(const FinanceDataArrayTemplate<float>& finance_dat
 IMPLEMENT_SINGLE_INPUT_FORMULA_FUNCTION(average)
 
 template <typename T>
-float variance(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index, int end_index)
+float variance(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index)
 {
 	end_index = get_end_index_ex(end_index, finance_data_array.get_size());
 	check_index(start_index, end_index, finance_data_array.get_size());
 
 	int data_length = end_index - start_index;
-	float average_value = average(finance_data_array, start_index, end_index);
+	if (filter_array != NULL)
+	{
+		if (data_length != filter_array->get_size())
+		{
+			snprintf(errmsg, BUF_SIZE, "The filter array size is NOT correct, expected: %d, actual: %d", data_length, filter_array->get_size());
+			throw invalid_argument(errmsg);
+		}
+	}
+	float average_value = average(finance_data_array, filter_array, start_index, end_index);
 	float variance_value = 0.0;
 	float sum = 0.0;
 	for (int i = start_index ; i < end_index ; i++)
+	{
+		if (filter_array != NULL && !(*filter_array)[i - start_index])
+			continue;
 		sum += pow((finance_data_array[i] - average_value), 2);
-	variance_value = sum / data_length;
+	}
+	variance_value = ((filter_array == NULL) ? (sum / data_length) : (sum / filter_array->get_true_cnt()));
 #ifdef DO_DEBUG
-	printf("**variance** start_index: %d, end_index: %d, data_length: %d, average_value: %.2f, sum: %.2f\n", start_index, end_index, data_length, average_value, sum);
+	printf("**variance** start_index: %d, end_index: %d, data_length: %d, average_value: %.2f, sum: %.2f", start_index, end_index, data_length, average_value, sum);
+	if (filter_array != NULL) printf(", true_cnt: %d", filter_array->get_true_cnt());
+	printf("\n");
 #endif
 	return variance_value;
 }
+template <typename T>
+float variance(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index=0, int end_index=-1)
+{
+	return variance<T>(finance_data_array, NULL, start_index, end_index);
+}
+
+template float variance<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
+template float variance<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
+template float variance<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
 
 template float variance<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int start_index, int end_index);
 template float variance<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int start_index, int end_index);
@@ -184,7 +254,13 @@ template float variance<float>(const FinanceDataArrayTemplate<float>& finance_da
 IMPLEMENT_SINGLE_INPUT_FORMULA_FUNCTION(variance)
 
 template <typename T>
-float standard_deviation(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index, int end_index){return sqrt(variance(finance_data_array, start_index, end_index));}
+float standard_deviation(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index){return sqrt(variance(finance_data_array, start_index, end_index));}
+template <typename T>
+float standard_deviation(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index, int end_index){return standard_deviation(finance_data_array, NULL, start_index, end_index);}
+
+template float standard_deviation<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
+template float standard_deviation<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
+template float standard_deviation<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index);
 
 template float standard_deviation<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int start_index, int end_index);
 template float standard_deviation<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int start_index, int end_index);
@@ -193,7 +269,7 @@ template float standard_deviation<float>(const FinanceDataArrayTemplate<float>& 
 IMPLEMENT_SINGLE_INPUT_FORMULA_FUNCTION(standard_deviation)
 
 template <typename T1, typename T2>
-float covariance(const FinanceDataArrayTemplate<T1>& finance_data_array1, const FinanceDataArrayTemplate<T2>& finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2)
+float covariance(const FinanceDataArrayTemplate<T1>& finance_data_array1, const FinanceDataArrayTemplate<T2>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2)
 {
 	end_index1 = get_end_index_ex(end_index1, finance_data_array1.get_size());
 	check_index(start_index1, end_index1, finance_data_array1.get_size(), "array1");
@@ -203,22 +279,49 @@ float covariance(const FinanceDataArrayTemplate<T1>& finance_data_array1, const 
 	int data_length1 = end_index1 - start_index1;
 	int data_length2 = end_index2 - start_index2;
 	assert(data_length1 == data_length2 && "The array sizes are NOT identical");
-	float average_value1 = average(finance_data_array1, start_index1, end_index1);
-	float average_value2 = average(finance_data_array2, start_index2, end_index2);
+	if (filter_array != NULL)
+	{
+		if (data_length1 != filter_array->get_size())
+		{
+			snprintf(errmsg, BUF_SIZE, "The filter array size is NOT correct, expected: %d, actual: %d", data_length1, filter_array->get_size());
+			throw invalid_argument(errmsg);
+		}
+	}
+	float average_value1 = average(finance_data_array1, filter_array, start_index1, end_index1);
+	float average_value2 = average(finance_data_array2, filter_array, start_index2, end_index2);
 	float covariance_value = 0.0;
 	float sum = 0.0;
 	for (int i = 0 ; i < data_length1 ; i++)
 	{
+		if (filter_array != NULL && !(*filter_array)[i])
+			continue;
 		sum += (finance_data_array1[i + start_index1] - average_value1) * (finance_data_array2[i + start_index2] - average_value2);
 //		fprintf(stderr, "%.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", (float)finance_data_array1[i + start_index1], (float)average_value1, (float)finance_data_array2[i + start_index2], (float)average_value2, (float)(finance_data_array1[i + start_index1] - average_value1), (float)(finance_data_array2[i + start_index2] - average_value2), (float)(finance_data_array1[i + start_index1] - average_value1) * (finance_data_array2[i + start_index2] - average_value2));
 	}
-	covariance_value = sum / data_length1;
+	covariance_value = ((filter_array == NULL) ? (sum / data_length1) : (sum / filter_array->get_true_cnt()));
 //	fprintf(stderr, "%.2f %.2f\n", sum, covariance_value);
 #ifdef DO_DEBUG
-	printf("**covariance** start_index1: %d, start_index2: %d, end_index1: %d, end_index2: %d, data_length: %d, average_value1: %.2f, average_value2: %.2f, sum: %.2f\n", start_index1, start_index2, end_index1, end_index2, data_length1, average_value1, average_value2, sum);
+	printf("**covariance** start_index1: %d, start_index2: %d, end_index1: %d, end_index2: %d, data_length: %d, average_value1: %.2f, average_value2: %.2f, sum: %.2f", start_index1, start_index2, end_index1, end_index2, data_length1, average_value1, average_value2, sum);
+	if (filter_array != NULL) printf(", true_cnt: %d", filter_array->get_true_cnt());
+	printf("\n");
 #endif
 	return covariance_value;
 }
+template <typename T1, typename T2>
+float covariance(const FinanceDataArrayTemplate<T1>& finance_data_array1, const FinanceDataArrayTemplate<T2>& finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2)
+{
+	return covariance(finance_data_array1, finance_data_array2, NULL, start_index1, start_index2, end_index1, end_index2);
+}
+
+template float covariance<int, int>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float covariance<int, long>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float covariance<int, float>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float covariance<long, int>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float covariance<long, long>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float covariance<long, float>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float covariance<float, int>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float covariance<float, long>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float covariance<float, float>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
 
 template float covariance<int, int>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2);
 template float covariance<int, long>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2);
@@ -234,10 +337,25 @@ IMPLEMENT_DOUBLE_INPUT_FORMULA_FUNCTION(covariance)
 
 
 template <typename T1, typename T2>
+float correlation(const FinanceDataArrayTemplate<T1>& finance_data_array1, const FinanceDataArrayTemplate<T2>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2)
+{
+	return covariance(finance_data_array1, finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2) / sqrt(variance(finance_data_array1, filter_array, start_index1, end_index1) * variance(finance_data_array2, filter_array, start_index2, end_index2));
+}
+template <typename T1, typename T2>
 float correlation(const FinanceDataArrayTemplate<T1>& finance_data_array1, const FinanceDataArrayTemplate<T2>& finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2)
 {
-	return covariance(finance_data_array1, finance_data_array2, start_index1, start_index2, end_index1, end_index2) / sqrt(variance(finance_data_array1, start_index1, end_index1) * variance(finance_data_array2, start_index2, end_index2));
+	return correlation(finance_data_array1, finance_data_array2, NULL, start_index1, start_index2, end_index1, end_index2);
 }
+
+template float correlation<int, int>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float correlation<int, long>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float correlation<int, float>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float correlation<long, int>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float correlation<long, long>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float correlation<long, float>(const FinanceDataArrayTemplate<long>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float correlation<float, int>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float correlation<float, long>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
+template float correlation<float, float>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2);
 
 template float correlation<int, int>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<int>& finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2);
 template float correlation<int, long>(const FinanceDataArrayTemplate<int>& finance_data_array1, const FinanceDataArrayTemplate<long>& finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2);

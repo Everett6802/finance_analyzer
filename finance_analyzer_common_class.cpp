@@ -1028,6 +1028,8 @@ void FinanceBoolDataArray::add(bool data)
 		true_cnt++;
 }
 
+int FinanceBoolDataArray::get_true_cnt()const{return true_cnt;}
+
 float FinanceBoolDataArray::get_probability()const
 {
 	return (float)true_cnt / array_pos;
