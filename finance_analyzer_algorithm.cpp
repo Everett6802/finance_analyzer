@@ -11,20 +11,20 @@ static char errmsg[BUF_SIZE];
 
 //#define DO_DEBUG
 #define IMPLEMENT_SINGLE_INPUT_FORMULA_FUNCTION(X)\
-float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array, int start_index, int end_index)\
+float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index)\
 {\
 	assert(finance_data_array != NULL && "finance_data_array should NOT be NULL");\
 	float value;\
 	switch (finance_data_array->get_type())\
 	{\
 	case FinanceField_INT:\
-		value = X(*(PFINANCE_INT_DATA_ARRAY)finance_data_array, start_index, end_index);\
+		value = X(*(PFINANCE_INT_DATA_ARRAY)finance_data_array, filter_array, start_index, end_index);\
 		break;\
 	case FinanceField_LONG:\
-		value = X(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array, start_index, end_index);\
+		value = X(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array, filter_array, start_index, end_index);\
 		break;\
 	case FinanceField_FLOAT:\
-		value = X(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array, start_index, end_index);\
+		value = X(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array, filter_array, start_index, end_index);\
 		break;\
 	default:\
 	{\
@@ -35,12 +35,16 @@ float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array, int start_index, int 
 		break;\
 	}\
 	return value;\
+}\
+float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array, int start_index, int end_index)\
+{\
+	return X(finance_data_array, NULL, start_index, end_index);\
 }
 
 #define GET_COMBINED_VALUE(type1, type2) (type1 * 256 + type2)
 
 #define IMPLEMENT_DOUBLE_INPUT_FORMULA_FUNCTION(X)\
-float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array1, PFINANCE_DATA_ARRAY_BASE finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2)\
+float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array1, const PFINANCE_DATA_ARRAY_BASE finance_data_array2, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index1, int start_index2, int end_index1, int end_index2)\
 {\
 	static const int FinanceField_INT_INT = GET_COMBINED_VALUE(FinanceField_INT, FinanceField_INT);\
 	static const int FinanceField_INT_LONG = GET_COMBINED_VALUE(FinanceField_INT, FinanceField_LONG);\
@@ -58,31 +62,31 @@ float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array1, PFINANCE_DATA_ARRAY_
 	switch (combined_value)\
 	{\
 	case FinanceField_INT_INT:\
-		value = X(*(PFINANCE_INT_DATA_ARRAY)finance_data_array1, *(PFINANCE_INT_DATA_ARRAY)finance_data_array2, start_index1, start_index2, end_index1, end_index2);\
+		value = X(*(PFINANCE_INT_DATA_ARRAY)finance_data_array1, *(PFINANCE_INT_DATA_ARRAY)finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2);\
 		break;\
 	case FinanceField_INT_LONG:\
-		value = X(*(PFINANCE_INT_DATA_ARRAY)finance_data_array1, *(PFINANCE_LONG_DATA_ARRAY)finance_data_array2, start_index1, start_index2, end_index1, end_index2);\
+		value = X(*(PFINANCE_INT_DATA_ARRAY)finance_data_array1, *(PFINANCE_LONG_DATA_ARRAY)finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2);\
 		break;\
 	case FinanceField_INT_FLOAT:\
-		value = X(*(PFINANCE_INT_DATA_ARRAY)finance_data_array1, *(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array2, start_index1, start_index2, end_index1, end_index2);\
+		value = X(*(PFINANCE_INT_DATA_ARRAY)finance_data_array1, *(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2);\
 		break;\
 	case FinanceField_LONG_INT:\
-		value = X(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array1, *(PFINANCE_INT_DATA_ARRAY)finance_data_array2, start_index1, start_index2, end_index1, end_index2);\
+		value = X(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array1, *(PFINANCE_INT_DATA_ARRAY)finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2);\
 		break;\
 	case FinanceField_LONG_LONG:\
-		value = X(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array1, *(PFINANCE_LONG_DATA_ARRAY)finance_data_array2, start_index1, start_index2, end_index1, end_index2);\
+		value = X(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array1, *(PFINANCE_LONG_DATA_ARRAY)finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2);\
 		break;\
 	case FinanceField_LONG_FLOAT:\
-		value = X(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array1, *(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array2, start_index1, start_index2, end_index1, end_index2);\
+		value = X(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array1, *(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2);\
 		break;\
 	case FinanceField_FLOAT_INT:\
-		value = X(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array1, *(PFINANCE_INT_DATA_ARRAY)finance_data_array2, start_index1, start_index2, end_index1, end_index2);\
+		value = X(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array1, *(PFINANCE_INT_DATA_ARRAY)finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2);\
 		break;\
 	case FinanceField_FLOAT_LONG:\
-		value = X(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array1, *(PFINANCE_LONG_DATA_ARRAY)finance_data_array2, start_index1, start_index2, end_index1, end_index2);\
+		value = X(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array1, *(PFINANCE_LONG_DATA_ARRAY)finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2);\
 		break;\
 	case FinanceField_FLOAT_FLOAT:\
-		value = X(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array1, *(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array2, start_index1, start_index2, end_index1, end_index2);\
+		value = X(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array1, *(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array2, filter_array, start_index1, start_index2, end_index1, end_index2);\
 		break;\
 	default:\
 	{\
@@ -93,6 +97,10 @@ float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array1, PFINANCE_DATA_ARRAY_
 		break;\
 	}\
 	return value;\
+}\
+float X(const PFINANCE_DATA_ARRAY_BASE finance_data_array1, const PFINANCE_DATA_ARRAY_BASE finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2)\
+{\
+	return X(finance_data_array1, finance_data_array2, NULL, start_index1, start_index2, end_index1, end_index2);\
 }
 
 static void check_index(int start_index, int end_index, int data_size, const char* array_name="")
@@ -254,7 +262,7 @@ template float variance<float>(const FinanceDataArrayTemplate<float>& finance_da
 IMPLEMENT_SINGLE_INPUT_FORMULA_FUNCTION(variance)
 
 template <typename T>
-float standard_deviation(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index){return sqrt(variance(finance_data_array, start_index, end_index));}
+float standard_deviation(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int start_index, int end_index){return sqrt(variance(finance_data_array, filter_array, start_index, end_index));}
 template <typename T>
 float standard_deviation(const FinanceDataArrayTemplate<T>& finance_data_array, int start_index, int end_index){return standard_deviation(finance_data_array, NULL, start_index, end_index);}
 

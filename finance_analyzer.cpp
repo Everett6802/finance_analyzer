@@ -7,7 +7,7 @@
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
 #include "finance_analyzer_test.h"
-#include "finance_analyzer_algorithm.h"
+//#include "finance_analyzer_algorithm.h"
 
 
 static FinanceAnalyzerMgr finance_analyzer_mgr;
@@ -21,23 +21,25 @@ int parse_show_res_type(const char* show_res_type_string);
 
 int main(int argc, char** argv)
 {
-	FinanceBoolDataArray filter_data_array;
-	filter_data_array.add(true);
-	filter_data_array.add(false);
-	filter_data_array.add(true);
-	filter_data_array.add(true);
-	filter_data_array.add(false);
-	FinanceIntDataArray data_array;
-	data_array.add(1);
-	data_array.add(2);
-	data_array.add(3);
-	data_array.add(4);
-	data_array.add(5);
-	cout << sum(data_array) << endl;
-	cout << sum(data_array, &filter_data_array) << endl;
-	cout << average(data_array) << endl;
-	cout << average(data_array, &filter_data_array) << endl;
-	exit(0);
+//	run_test("2", true);
+//	exit(0);
+//	FinanceBoolDataArray filter_data_array;
+//	filter_data_array.add(true);
+//	filter_data_array.add(false);
+//	filter_data_array.add(true);
+//	filter_data_array.add(true);
+//	filter_data_array.add(false);
+//	FinanceIntDataArray data_array;
+//	data_array.add(1);
+//	data_array.add(2);
+//	data_array.add(3);
+//	data_array.add(4);
+//	data_array.add(5);
+//	cout << sum(data_array) << endl;
+//	cout << sum(data_array, &filter_data_array) << endl;
+//	cout << average(data_array) << endl;
+//	cout << average(data_array, &filter_data_array) << endl;
+//	exit(0);
 
 	static const int ERRMSG_SIZE = 256;
 

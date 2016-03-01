@@ -8,12 +8,11 @@
 
 using namespace std;
 
-#define ABS(X) (X < 0 ? -X : X)
-
 const char* TEST_TYPE_DESCRIPTION[] =
 {
 	"Check Array",
 	"Check Formula",
+	"Check Formula Filter",
 	"Check Calculator"
 };
 //DECLARE_MSG_DUMPER_PARAM()
@@ -38,7 +37,10 @@ void FinanceAnalyzerTest::check_float_value_equal(float expected_value, float ac
 //	snprintf(expected_value_str, VALUE_SIZE, "%.2f", expected_value);
 //	snprintf(actual_value_str, VALUE_SIZE, "%.2f", actual_value);
 //	if (strcmp(expected_value_str, actual_value_str) != 0)
-	if (ABS(expected_value - actual_value) >= TOLERANCE)
+	float abs_diff = expected_value - actual_value;
+	if(abs_diff < 0)
+		abs_diff = -abs_diff;
+	if (abs_diff >= TOLERANCE)
 	{
 		static const int ERRMSG_SIZE = 64;
 		static char errmsg[ERRMSG_SIZE];
@@ -64,15 +66,14 @@ void FinanceAnalyzerTest::test_check_array()
 
 	static const int ERRMSG_SIZE = 256;
 	static char errmsg[ERRMSG_SIZE];
-
-	printf("Check Array...\n");
+	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
 
 	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
 	for (int i = 0 ; i < 6 ; i++)
 		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
 	char data[32];
-	for (int i = 0 ; i < 10 ; i++)
+	for (int i = 0 ; i < DATA_SIZE ; i++)
 	{
 		snprintf(data, 32, "%s", date[i]);
 		result_set.set_date(data);
@@ -329,7 +330,6 @@ void FinanceAnalyzerTest::test_check_array()
 		throw runtime_error(string(errmsg));
 	}
 	sp_float_data_array->reset_array();
-	printf("Check Array... Pass\n");
 }
 
 void FinanceAnalyzerTest::test_check_formula()
@@ -341,14 +341,15 @@ void FinanceAnalyzerTest::test_check_formula()
 	static const char* field4[] = {"-2.1", "8.2", "-100.3", "20.4", "-88.5", "100.6", "-107.7", "100.8", "-202.9", "300.0"}; // Float
 	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
 
-	printf("Check Formula...\n");
+	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
+
 //	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
 //	float correlation_value;
 	for (int i = 0 ; i < 6 ; i++)
 		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
 	char data[32];
-	for (int i = 0 ; i < 10 ; i++)
+	for (int i = 0 ; i < DATA_SIZE ; i++)
 	{
 		snprintf(data, 32, "%s", date[i]);
 		result_set.set_date(data);
@@ -431,17 +432,17 @@ void FinanceAnalyzerTest::test_check_formula()
 	check_float_value_equal(-12.62, value);
 	if (show_test_case_detail) printf("[4 Avg5] average: %.2f\n", value);
 	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
-	check_float_value_equal(750.47, value);
+	check_float_value_equal(752.91, value);
 	if (show_test_case_detail) printf("[4 Avg5] variance: %.2f\n", value);
 	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
-	check_float_value_equal(27.39, value);
+	check_float_value_equal(27.44, value);
 	if (show_test_case_detail) printf("[4 Avg5] standard deviation: %.2f\n", value);
 // Check Diff/Avg5 correlation
 	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff), result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
 	check_float_value_equal(0.97, value);
 	if (show_test_case_detail) printf("[2(Diff),4(Diff)] correlation: %.2f\n", value);
 	value = covariance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
-	check_float_value_equal(29.11, value);
+	check_float_value_equal(29.19, value);
 	if (show_test_case_detail) printf("[2(Avg5),4(Avg5)] covariance: %.2f\n", value);
 	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
 	check_float_value_equal(0.93, value);
@@ -449,8 +450,80 @@ void FinanceAnalyzerTest::test_check_formula()
 	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), 2, 3, 4, 5);
 	check_float_value_equal(1, value);
 	if (show_test_case_detail) printf("[2(Diff 2:4),2(Avg5 3:5)] correlation: %.2f\n", value);
+}
 
-	printf("Check Formula... Pass\n");
+
+void FinanceAnalyzerTest::test_check_filter_formula()
+{
+	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15", "2016-01-18", "2016-01-19", "2016-01-20", "2016-01-21", "2016-01-22", "2016-01-25", "2016-01-26", "2016-01-27", "2016-01-28", "2016-01-29"};
+	static const char* field1[] = {"1", "0", "2", "0", "3", "0", "4", "0", "5", "0", "6", "0", "7", "0", "8", "0", "9", "0", "10", "0"}; // Long
+	static const char* field2[] = {"-1", "0", "2", "0", "-3", "0", "4", "0", "-5", "0", "6", "0", "-7", "0", "8", "0", "-9", "0", "10", "0"}; // Long; Dummy
+	static const char* field3[] = {"-1", "0", "-2", "0", "-3", "0", "-4", "0", "-5", "0", "-6", "0", "-7", "0", "-8", "0", "-9", "0", "-10", "0"}; // Int
+	static const char* field4[] = {"10.1", "0.0", "20.1", "0.0", "30.1", "0.0", "40.1", "0.0", "50.1", "0.0", "60.1", "0.0", "70.1", "0.0", "80.1", "0.0", "90.1", "0.0", "100.1", "0.0"}; // Float
+	static const char* field5[] = {"1.1", "0.0", "21.2", "0.0", "122.3", "0.0", "199.4", "0.0", "200.5", "0.0", "300.6", "0.0", "420.7", "0.0", "435.8", "0.0", "599.4", "0.0", "600.0", "0.0"}; // Float; Dummy
+	static const bool filter[] = {true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false};
+
+//	static const int ERRMSG_SIZE = 256;
+//	static char errmsg[ERRMSG_SIZE];
+	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
+
+	FinanceBoolDataArray filter_data_array;
+
+//	unsigned short ret = RET_SUCCESS;
+	ResultSet result_set;
+	for (int i = 0 ; i < 6 ; i++)
+		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
+	char data[32];
+	for (int i = 0 ; i < DATA_SIZE ; i++)
+	{
+		snprintf(data, 32, "%s", date[i]);
+		result_set.set_date(data);
+		snprintf(data, 32, "%s", field1[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
+		snprintf(data, 32, "%s", field2[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
+		snprintf(data, 32, "%s", field3[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
+		snprintf(data, 32, "%s", field4[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
+		snprintf(data, 32, "%s", field5[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
+
+		filter_data_array.add(filter[i]);
+	}
+
+	float value;
+// Check Formula
+//// Show array
+//	if (show_test_case_detail) cout << "1: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 1) << endl;
+//	if (show_test_case_detail) cout << "2: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2) << endl;
+// Check average, variance, standard deviation
+	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), &filter_data_array);
+	check_float_value_equal(5.5, value);
+	if (show_test_case_detail) printf("[1] average: %.2f\n", value);
+	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), &filter_data_array);
+	check_float_value_equal(8.25, value);
+	if (show_test_case_detail) printf("[1] variance: %.2f\n", value);
+	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), &filter_data_array);
+	check_float_value_equal(2.87, value);
+	if (show_test_case_detail) printf("[1] standard deviation: %.2f\n", value);
+// Check average, variance, standard deviation
+	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	check_float_value_equal(0.5, value);
+	if (show_test_case_detail) printf("[2] average: %.2f\n", value);
+	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	check_float_value_equal(38.25, value);
+	if (show_test_case_detail) printf("[2] variance: %.2f\n", value);
+	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	check_float_value_equal(6.18, value);
+	if (show_test_case_detail) printf("[2] standard deviation: %.2f\n", value);
+// Check covariance, correlation
+	value = covariance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	check_float_value_equal(2.75, value);
+	if (show_test_case_detail) printf("[1,2] covariance: %.2f\n", value);
+	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	check_float_value_equal(0.15, value);
+	if (show_test_case_detail) printf("[1,2] correlation: %.2f\n", value);
 }
 
 void FinanceAnalyzerTest::test_check_calculator()
@@ -464,15 +537,15 @@ void FinanceAnalyzerTest::test_check_calculator()
 
 	static const int ERRMSG_SIZE = 256;
 	static char errmsg[ERRMSG_SIZE];
+	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
 
-	printf("Check Calculator...\n");
 	FinanceAnalyzerCalculator calculator;
 
 	ResultSet result_set;
 	for (int i = 0 ; i < 6 ; i++)
 		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
 	char data[32];
-	for (int i = 0 ; i < 10 ; i++)
+	for (int i = 0 ; i < DATA_SIZE ; i++)
 	{
 		snprintf(data, 32, "%s", date[i]);
 		result_set.set_date(data);
@@ -532,8 +605,6 @@ void FinanceAnalyzerTest::test_check_calculator()
 		throw runtime_error(string(errmsg));
 	}
 	if (show_test_case_detail) printf("[1,5] correlation_value: %.2f\n", correlation_value);
-
-	printf("Check Calculator... Pass\n");
 }
 
 void FinanceAnalyzerTest::test(TestType test_type)
@@ -543,8 +614,18 @@ void FinanceAnalyzerTest::test(TestType test_type)
 	{
 		&FinanceAnalyzerTest::test_check_array,
 		&FinanceAnalyzerTest::test_check_formula,
+		&FinanceAnalyzerTest::test_check_filter_formula,
 		&FinanceAnalyzerTest::test_check_calculator
 	};
 
-	(this->*(test_func_array[test_type]))();
+	printf("Run Test Case: %s\n", TEST_TYPE_DESCRIPTION[test_type]);
+	try
+	{
+		(this->*(test_func_array[test_type]))();
+		printf("Test Case: %s... Pass\n", TEST_TYPE_DESCRIPTION[test_type]);
+	}
+	catch(exception& e)
+	{
+		printf("Test Case: %s... FAILED, due to: %s\n", TEST_TYPE_DESCRIPTION[test_type], e.what());
+	}
 }
