@@ -182,6 +182,11 @@ public:
 	void add(T data, size_t data_size);
 };
 
+class FinanceIntDataArray;
+class FinanceLongDataArray;
+class FinanceFloatDataArray;
+class FinanceBoolDataArray;
+
 #define DECLARE_DATA_ARRAY_OPERATOR(m, n)\
 Finance##m##DataArray& operator=(const Finance##m##DataArray& another);\
 Finance##m##DataArray& operator+=(const Finance##m##DataArray& another);\
@@ -194,6 +199,7 @@ bool operator!=(const n* another_array);\
 bool operator!=(const Finance##m##DataArray& another);
 
 #define DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(m)\
+unsigned short get_sub_array(Finance##m##DataArray& new_data_array, const FinanceBoolDataArray* filter_array, int start_index, int end_index=-1);\
 unsigned short get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
 unsigned short get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
 unsigned short get_sum_array(Finance##m##DataArray& new_data_array, int N, int start_index, int end_index=-1);\
@@ -202,11 +208,6 @@ unsigned short get_weighted_avg_array(FinanceFloatDataArray& new_data_array, int
 
 #define DECLARE_DATA_ARRAY_OSTREAM(m, n)\
 std::ostream& operator<<(std::ostream &out, const Finance##m##DataArray &finance_##n##_data_array);
-
-class FinanceIntDataArray;
-class FinanceLongDataArray;
-class FinanceFloatDataArray;
-class FinanceBoolDataArray;
 
 //typedef FinanceDataArrayTemplate<int> FinanceIntDataArray;
 class FinanceIntDataArray : public FinanceDataArrayTemplate<int>

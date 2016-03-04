@@ -823,7 +823,7 @@ bool Finance##m##DataArray::operator==(const n* another_array)\
 }
 
 #define IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(m, n)\
-unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index)\
+unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_data_array, const FinanceBoolDataArray* filter_array, int start_index, int end_index)\
 {\
 	if (start_index < 0 || start_index >= array_pos)\
 	{\
@@ -836,9 +836,25 @@ unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_d
 		WRITE_ERROR("The array size is NOT more than 1");\
 		return RET_FAILURE_INVALID_ARGUMENT;\
 	}\
+	if (filter_array != NULL)\
+	{\
+		if (filter_array->get_size() != (end_index - start_index))\
+		{\
+			WRITE_FORMAT_ERROR("The filter array size is NOT identical to the array size, filter array: %d, array: %d", filter_array->get_size(), (end_index - start_index));\
+			return RET_FAILURE_INVALID_ARGUMENT;\
+		}\
+	}\
 	for (int i = start_index ; i < end_index ; i++)\
+	{\
+		if (filter_array != NULL && !(*filter_array)[i])\
+			continue;\
 		new_data_array.add(array_data[i]);\
+	}\
 	return RET_SUCCESS;\
+}\
+unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index)\
+{\
+	return get_sub_array(new_data_array, NULL, start_index, end_index);\
 }\
 unsigned short Finance##m##DataArray::get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int end_index)\
 {\
