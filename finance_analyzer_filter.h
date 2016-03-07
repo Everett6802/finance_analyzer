@@ -17,17 +17,29 @@ enum FilterRuleType
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class FilterActionBase
+class FilterRuleThresholdBase
 {
 private:
 	FilterRuleType filter_rule_type;
 
 protected:
-	FilterActionBase();
+	FilterRuleThresholdBase();
 
 public:
-	virtual ~FilterActionBase();
-	FilterRuleType get_type()const;
+	virtual ~FilterRuleThresholdBase();
+	FilterRuleThresholdType get_type()const;
+};
+typedef FilterRuleThresholdBase* PFILTER_RULE_THRESHOLD_BASE;
+
+template <typename T>
+class FilterRuleThresholdSingleTemplate : public FilterRuleThresholdBase
+{
+private:
+	T threshold;
+
+public:
+	FilterRuleThresholdSingleTemplate(FilterRuleType rule_type, T threshold_value);
+	T get_threshold()const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,5 +78,7 @@ bool filter_rule_less_equal_than(T data, T threshold);
 extern template bool filter_rule_less_equal_than<int>(int data, int threshold);
 extern template bool filter_rule_less_equal_than<long>(long data, long threshold);
 extern template bool filter_rule_less_equal_than<float>(float data, float threshold);
+
+unsigned short filter();
 
 #endif

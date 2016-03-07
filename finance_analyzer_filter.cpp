@@ -28,9 +28,20 @@ using namespace std;
 //	}
 //}
 
-FilterActionBase::FilterActionBase(){}
-FilterActionBase::~FilterActionBase(){}
-FilterRuleType FilterActionBase::get_type()const{return filter_rule_type;}
+FilterRuleThresholdBase::FilterRuleThresholdBase(FilterRuleType rule_type){filter_rule_type = rule_type;}
+FilterRuleThresholdBase::~FilterRuleThresholdBase(){}
+FilterRuleType FilterRuleThresholdBase::get_type()const{return filter_rule_type;}
+
+template <typename T>
+FilterRuleThresholdSingleTemplate::FilterRuleThresholdSingleTemplate(FilterRuleType rule_type, T threshold_value) :
+	FilterRuleThresholdBase(rule_type)
+{
+	threshold = threshold_value;
+}
+
+template <typename T>
+T FilterRuleThresholdSingleTemplate::get_threshold()const{return threshold_value;}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
