@@ -62,6 +62,35 @@ FilterRuleThresholdFloat::FilterRuleThresholdFloat(FilterRuleType rule_type, flo
 {
 }
 
+template <typename T>
+FilterRuleThresholdRangeTemplate<T>::FilterRuleThresholdRangeTemplate(FinanceFieldType data_type, FilterRuleType rule_type, T l_threshold_value, T r_threshold_value) :
+	FilterRuleThresholdBase(data_type, rule_type)
+{
+	l_threshold = l_threshold_value;
+	r_threshold = r_threshold_value;
+}
+
+template <typename T>
+T FilterRuleThresholdRangeTemplate<T>::get_left_threshold()const{return l_threshold;}
+template <typename T>
+T FilterRuleThresholdRangeTemplate<T>::get_right_threshold()const{return r_threshold;}
+
+FilterRuleThresholdRangeInt::FilterRuleThresholdRangeInt(FilterRuleType rule_type, int l_threshold_value, int r_threshold_value) :
+	FilterRuleThresholdRangeTemplate<int>(FinanceField_INT, rule_type, l_threshold_value, r_threshold_value)
+{
+}
+
+FilterRuleThresholdRangeLong::FilterRuleThresholdRangeLong(FilterRuleType rule_type, long l_threshold_value, long r_threshold_value) :
+	FilterRuleThresholdRangeTemplate<long>(FinanceField_LONG, rule_type, l_threshold_value, r_threshold_value)
+{
+}
+
+FilterRuleThresholdRangeFloat::FilterRuleThresholdRangeFloat(FilterRuleType rule_type, float l_threshold_value, float r_threshold_value) :
+	FilterRuleThresholdRangeTemplate<float>(FinanceField_FLOAT, rule_type, l_threshold_value, r_threshold_value)
+{
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
@@ -106,6 +135,86 @@ template bool filter_rule_less_equal_than<int>(int data, int threshold);
 template bool filter_rule_less_equal_than<long>(long data, long threshold);
 template bool filter_rule_less_equal_than<float>(float data, float threshold);
 
+template <typename T>
+bool filter_rule_in_range_LCRC(T data, T l_threshold, T r_threshold)
+{
+	return filter_rule_greater_equal_than<T>(data, l_threshold) && filter_rule_less_equal_than<T>(data, r_threshold);
+}
+
+template bool filter_rule_in_range_LCRC<int>(int data, int l_threshold, int r_threshold);
+template bool filter_rule_in_range_LCRC<long>(long data, long l_threshold, long r_threshold);
+template bool filter_rule_in_range_LCRC<float>(float data, float l_threshold, float r_threshold);
+
+template <typename T>
+bool filter_rule_in_range_LORO(T data, T l_threshold, T r_threshold)
+{
+	return filter_rule_greater_than<T>(data, l_threshold) && filter_rule_less_than<T>(data, r_threshold);
+}
+
+template bool filter_rule_in_range_LORO<int>(int data, int l_threshold, int r_threshold);
+template bool filter_rule_in_range_LORO<long>(long data, long l_threshold, long r_threshold);
+template bool filter_rule_in_range_LORO<float>(float data, float l_threshold, float r_threshold);
+
+template <typename T>
+bool filter_rule_in_range_LCRO(T data, T l_threshold, T r_threshold)
+{
+	return filter_rule_greater_equal_than<T>(data, l_threshold) && filter_rule_less_than<T>(data, r_threshold);
+}
+
+template bool filter_rule_in_range_LCRO<int>(int data, int l_threshold, int r_threshold);
+template bool filter_rule_in_range_LCRO<long>(long data, long l_threshold, long r_threshold);
+template bool filter_rule_in_range_LCRO<float>(float data, float l_threshold, float r_threshold);
+
+template <typename T>
+bool filter_rule_in_range_LORC(T data, T l_threshold, T r_threshold)
+{
+	return filter_rule_greater_than<T>(data, l_threshold) && filter_rule_less_equal_than<T>(data, r_threshold);
+}
+
+template bool filter_rule_in_range_LORC<int>(int data, int l_threshold, int r_threshold);
+template bool filter_rule_in_range_LORC<long>(long data, long l_threshold, long r_threshold);
+template bool filter_rule_in_range_LORC<float>(float data, float l_threshold, float r_threshold);
+
+template <typename T>
+bool filter_rule_out_of_range_LCRC(T data, T l_threshold, T r_threshold)
+{
+	return filter_rule_less_equal_than<T>(data, l_threshold) || filter_rule_greater_equal_than<T>(data, r_threshold);
+}
+
+template bool filter_rule_out_of_range_LCRC<int>(int data, int l_threshold, int r_threshold);
+template bool filter_rule_out_of_range_LCRC<long>(long data, long l_threshold, long r_threshold);
+template bool filter_rule_out_of_range_LCRC<float>(float data, float l_threshold, float r_threshold);
+
+template <typename T>
+bool filter_rule_out_of_range_LORO(T data, T l_threshold, T r_threshold)
+{
+	return filter_rule_less_than<T>(data, l_threshold) || filter_rule_greater_than<T>(data, r_threshold);
+}
+
+template bool filter_rule_out_of_range_LORO<int>(int data, int l_threshold, int r_threshold);
+template bool filter_rule_out_of_range_LORO<long>(long data, long l_threshold, long r_threshold);
+template bool filter_rule_out_of_range_LORO<float>(float data, float l_threshold, float r_threshold);
+
+template <typename T>
+bool filter_rule_out_of_range_LCRO(T data, T l_threshold, T r_threshold)
+{
+	return filter_rule_less_equal_than<T>(data, l_threshold) || filter_rule_greater_than<T>(data, r_threshold);
+}
+
+template bool filter_rule_out_of_range_LCRO<int>(int data, int l_threshold, int r_threshold);
+template bool filter_rule_out_of_range_LCRO<long>(long data, long l_threshold, long r_threshold);
+template bool filter_rule_out_of_range_LCRO<float>(float data, float l_threshold, float r_threshold);
+
+template <typename T>
+bool filter_rule_out_of_range_LORC(T data, T l_threshold, T r_threshold)
+{
+	return filter_rule_less_than<T>(data, l_threshold) || filter_rule_greater_equal_than<T>(data, r_threshold);
+}
+
+template bool filter_rule_out_of_range_LORC<int>(int data, int l_threshold, int r_threshold);
+template bool filter_rule_out_of_range_LORC<long>(long data, long l_threshold, long r_threshold);
+template bool filter_rule_out_of_range_LORC<float>(float data, float l_threshold, float r_threshold);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool check_operator_and_exit(bool filter_result){return (filter_result ? false : true);}
@@ -125,6 +234,13 @@ unsigned short filter(
 	static PFUNC_FILTER_RULE_INT filter_rule_int_array[] = {filter_rule_equal<int>, filter_rule_not_equal<int>, filter_rule_greater_than<int>, filter_rule_greater_equal_than<int>, filter_rule_less_than<int>, filter_rule_less_equal_than<int>};
 	static PFUNC_FILTER_RULE_LONG filter_rule_long_array[] = {filter_rule_equal<long>, filter_rule_not_equal<long>, filter_rule_greater_than<long>, filter_rule_greater_equal_than<long>, filter_rule_less_than<long>, filter_rule_less_equal_than<long>};
 	static PFUNC_FILTER_RULE_FLOAT filter_rule_float_array[] = {filter_rule_equal<float>, filter_rule_not_equal<float>, filter_rule_greater_than<float>, filter_rule_greater_equal_than<float>, filter_rule_less_than<float>, filter_rule_less_equal_than<float>};
+
+	typedef bool (*PFUNC_FILTER_RULE_RANGE_INT)(int data, int l_threshold, int r_threshold);
+	typedef bool (*PFUNC_FILTER_RULE_RANGE_LONG)(long data, long l_threshold, long r_threshold);
+	typedef bool (*PFUNC_FILTER_RULE_RANGE_FLOAT)(float data, float l_threshold, float r_threshold);
+	static PFUNC_FILTER_RULE_RANGE_INT filter_rule_range_int_array[] = {filter_rule_in_range_LCRC<int>, filter_rule_in_range_LORO<int>, filter_rule_in_range_LCRO<int>, filter_rule_in_range_LORC<int>, filter_rule_out_of_range_LCRC<int>, filter_rule_out_of_range_LORO<int>, filter_rule_out_of_range_LCRO<int>, filter_rule_out_of_range_LORC<int>};
+	static PFUNC_FILTER_RULE_RANGE_LONG filter_rule_range_long_array[] = {filter_rule_in_range_LCRC<long>, filter_rule_in_range_LORO<long>, filter_rule_in_range_LCRO<long>, filter_rule_in_range_LORC<long>, filter_rule_out_of_range_LCRC<long>, filter_rule_out_of_range_LORO<long>, filter_rule_out_of_range_LCRO<long>, filter_rule_out_of_range_LORC<long>};
+	static PFUNC_FILTER_RULE_RANGE_FLOAT filter_rule_range_float_array[] = {filter_rule_in_range_LCRC<float>, filter_rule_in_range_LORO<float>, filter_rule_in_range_LCRO<float>, filter_rule_in_range_LORC<float>, filter_rule_out_of_range_LCRC<float>, filter_rule_out_of_range_LORO<float>, filter_rule_out_of_range_LCRO<float>, filter_rule_out_of_range_LORC<float>};
 
 	typedef bool (*PFUNC_CHECK_OPERATOR_EXIT)(bool filter_result);
 	static PFUNC_CHECK_OPERATOR_EXIT check_operator_exit_array[] = {check_operator_and_exit, check_operator_or_exit};
@@ -152,19 +268,28 @@ unsigned short filter(
 			case FinanceField_INT:
 			{
 				assert(filter_rule_threshold->get_data_type() == FinanceField_INT && "The data type of filter_rule_threshold is NOT FinanceField_INT");
-				filter_result = (*filter_rule_int_array[filter_rule_threshold->get_rule_type()])(result_set->get_int_array_element(source_type, field_no, i), ((PFILTER_RULE_THRESHOLD_INT)filter_rule_threshold)->get_threshold());
+				if (IS_RULE_RANGE_TYPE(filter_rule_threshold->get_rule_type()))
+					filter_result = (*filter_rule_range_int_array[filter_rule_threshold->get_rule_type() - FILTER_RULT_IN_RANGE_START_INDEX])(result_set->get_int_array_element(source_type, field_no, i), ((PFILTER_RULE_THRESHOLD_RANGE_INT)filter_rule_threshold)->get_left_threshold(), ((PFILTER_RULE_THRESHOLD_RANGE_INT)filter_rule_threshold)->get_right_threshold());
+				else
+					filter_result = (*filter_rule_int_array[filter_rule_threshold->get_rule_type()])(result_set->get_int_array_element(source_type, field_no, i), ((PFILTER_RULE_THRESHOLD_INT)filter_rule_threshold)->get_threshold());
 			}
 			break;
 			case FinanceField_LONG:
 			{
 				assert(filter_rule_threshold->get_data_type() == FinanceField_LONG && "The data type of filter_rule_threshold is NOT FinanceField_LONG");
-				filter_result = (*filter_rule_long_array[filter_rule_threshold->get_rule_type()])(result_set->get_long_array_element(source_type, field_no, i), ((PFILTER_RULE_THRESHOLD_LONG)filter_rule_threshold)->get_threshold());
+				if (IS_RULE_RANGE_TYPE(filter_rule_threshold->get_rule_type()))
+					filter_result = (*filter_rule_range_long_array[filter_rule_threshold->get_rule_type() - FILTER_RULT_IN_RANGE_START_INDEX])(result_set->get_long_array_element(source_type, field_no, i), ((PFILTER_RULE_THRESHOLD_RANGE_LONG)filter_rule_threshold)->get_left_threshold(), ((PFILTER_RULE_THRESHOLD_RANGE_LONG)filter_rule_threshold)->get_right_threshold());
+				else
+					filter_result = (*filter_rule_long_array[filter_rule_threshold->get_rule_type()])(result_set->get_long_array_element(source_type, field_no, i), ((PFILTER_RULE_THRESHOLD_LONG)filter_rule_threshold)->get_threshold());
 			}
 			break;
 			case FinanceField_FLOAT:
 			{
 				assert(filter_rule_threshold->get_data_type() == FinanceField_FLOAT && "The data type of filter_rule_threshold is NOT FinanceField_FLOAT");
-				filter_result = (*filter_rule_float_array[filter_rule_threshold->get_rule_type()])(result_set->get_float_array_element(source_type, field_no, i), ((PFILTER_RULE_THRESHOLD_FLOAT)filter_rule_threshold)->get_threshold());
+				if (IS_RULE_RANGE_TYPE(filter_rule_threshold->get_rule_type()))
+					filter_result = (*filter_rule_range_float_array[filter_rule_threshold->get_rule_type() - FILTER_RULT_IN_RANGE_START_INDEX])(result_set->get_float_array_element(source_type, field_no, i), ((PFILTER_RULE_THRESHOLD_RANGE_FLOAT)filter_rule_threshold)->get_left_threshold(), ((PFILTER_RULE_THRESHOLD_RANGE_FLOAT)filter_rule_threshold)->get_right_threshold());
+				else
+					filter_result = (*filter_rule_float_array[filter_rule_threshold->get_rule_type()])(result_set->get_float_array_element(source_type, field_no, i), ((PFILTER_RULE_THRESHOLD_FLOAT)filter_rule_threshold)->get_threshold());
 			}
 			break;
 			case FinanceField_DATE:
