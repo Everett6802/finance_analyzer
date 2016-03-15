@@ -5,7 +5,7 @@
 #include "finance_analyzer_common_class.h"
 
 
-enum TestType{Test_CheckArray, Test_CheckFilterArray, Test_CheckFormula, Test_CheckFilterFormula, Test_CheckCalculator, TestSize};
+enum TestType{Test_CheckArray, Test_CheckFilterArray, Test_CheckFilterRule, Test_CheckFormula, Test_CheckFilterFormula, Test_CheckCalculator, TestSize};
 
 extern const char* TEST_TYPE_DESCRIPTION[];
 
@@ -19,6 +19,7 @@ private:
 	void check_float_value_equal(float expected_value, float actual_value);
 	void test_check_array();
 	void test_check_filter_array();
+	void test_check_filter_rule();
 	void test_check_formula();
 	void test_check_filter_formula();
 	void test_check_calculator();
@@ -28,7 +29,7 @@ public:
 	~FinanceAnalyzerTest();
 
 	void set_show_detail(bool show_detail);
-	void test(TestType test_type);
+	bool test(TestType test_type);
 };
 
 #endif

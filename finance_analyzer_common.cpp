@@ -447,14 +447,14 @@ bool check_start_index_in_range(int start_index, int range_start, int range_end)
 {
 	assert(range_start >= 0 && "range_start should be larger than 0");
 	assert(range_end >= 1 && "range_end should be larger than 1");
-	return ((start_index >= 0 && start_index < range_end) ? true : false);
+	return ((start_index >= range_start && start_index < range_end) ? true : false);
 }
 
 bool check_end_index_in_range(int end_index, int range_start, int range_end)
 {
 	assert(range_start >= 0 && "range_start should be larger than 0");
 	assert(range_end >= 1 && "range_end should be larger than 1");
-	return ((end_index > 0 && end_index <= range_end) ? true : false);
+	return ((end_index > range_start && end_index <= range_end) ? true : false);
 }
 
 int get_array_index(int value, const int array[], int array_size)

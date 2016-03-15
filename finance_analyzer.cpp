@@ -51,6 +51,8 @@ int main(int argc, char** argv)
 	bool analyze_daily = false;
 	int show_analyze_daily_res_type =  0x0; //SHOW_RES_DEFAULT;
 
+	run_test("2", true);
+	exit(0);
 	for (; index < argc ; index += offset)
 	{
 		if (strcmp(argv[index], "--help") == 0)
@@ -157,11 +159,15 @@ void run_test(const char* test_case_list, bool show_detail)
 
 	FinanceAnalyzerTest finance_analyzer_test;
 	finance_analyzer_test.set_show_detail(show_detail);
+	int cnt = 0;
+	int pass_cnt = 0;
 	if (strcmp(test_case_list, "all") == 0)
 	{
 		for (int i = 0 ; i < TestSize ; i++)
 		{
-			finance_analyzer_test.test((TestType)i);
+			cnt++;
+			if (finance_analyzer_test.test((TestType)i))
+				pass_cnt++;
 		}
 	}
 	else
@@ -180,11 +186,14 @@ void run_test(const char* test_case_list, bool show_detail)
 				snprintf(errmsg, 64, "Unknown test case no: %d", test_case_no);
 				throw invalid_argument(errmsg);
 			}
-			finance_analyzer_test.test((TestType)test_case_no);
+			cnt++;
+			if (finance_analyzer_test.test((TestType)test_case_no))
+				pass_cnt++;
 			test_case_no_str =  strtok(NULL, ",");
 		}
 		delete[] test_case_list_tmp;
 	}
+	printf("\n***Statistics***  Total Test Cases: %d, Pass: %d\n", cnt, pass_cnt);
 }
 
 int parse_show_res_type(const char* show_res_type_string)

@@ -4,8 +4,17 @@
 #include <deque>
 #include <map>
 #include <iostream>
+#include <deque>
 #include "msg_dumper_wrapper.h"
 
+
+class ResultSetAccessParam;
+class FilterRuleThresholdBase;
+
+typedef std::deque<ResultSetAccessParam*> ResultSetAccessParamDeque;
+typedef ResultSetAccessParamDeque* PRESULT_SET_ACCESS_PARAM_DEQUE;
+typedef std::deque<FilterRuleThresholdBase*> FilterRuleThresholdDeque;
+typedef FilterRuleThresholdDeque* PFILTER_RULE_THRESHOLD_DEQUE;
 
 template <typename T>
 class SmartPointer

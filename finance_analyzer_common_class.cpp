@@ -727,6 +727,34 @@ void FinanceDataPtrArrayTemplate<T>::add(T data, size_t data_size)
 	FinanceDataArrayTemplate<T>::array_data[FinanceDataArrayTemplate<T>::array_pos++] = data_new;
 }
 
+//const ResultSetAccessParam* FinanceResultSetAccessParamDataPtrArray::operator[](int index)const
+//{
+////	assert(array_data != NULL && "array_data == NULL");
+////	if (index >= 0)
+////	{
+////		if (index >= array_pos)
+////		{
+////			char errmsg[64];
+////			snprintf(errmsg, 64, "positive index[%d] is out of range: [0, %d)", index, array_pos);
+////			WRITE_ERROR(errmsg);
+////			throw out_of_range(errmsg);
+////		}
+////	}
+////	else if (index < 0)
+////	{
+////		if (abs(index) > abs(array_pos))
+////		{
+////			char errmsg[64];
+////			snprintf(errmsg, 64, "negative index[%d] is out of range: (0, %d]", index, array_pos);
+////			WRITE_ERROR(errmsg);
+////			throw out_of_range(errmsg);
+////		}
+////		index = get_end_index_ex(index, array_pos);
+////	}
+//
+//	return array_data[index];
+//}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define IMPLEMENT_DATA_ARRAY_OPERATOR(m, n)\
