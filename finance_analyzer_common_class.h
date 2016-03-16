@@ -196,16 +196,19 @@ class FinanceLongDataArray;
 class FinanceFloatDataArray;
 class FinanceBoolDataArray;
 
+#define DECLARE_DATA_ARRAY_OPERATOR_EQUAL(m, n)\
+bool operator==(const n* another_array);\
+bool operator==(const Finance##m##DataArray& another);\
+bool operator!=(const n* another_array);\
+bool operator!=(const Finance##m##DataArray& another);
+
 #define DECLARE_DATA_ARRAY_OPERATOR(m, n)\
 Finance##m##DataArray& operator=(const Finance##m##DataArray& another);\
 Finance##m##DataArray& operator+=(const Finance##m##DataArray& another);\
 Finance##m##DataArray operator+(const Finance##m##DataArray& another);\
 Finance##m##DataArray& operator-=(const Finance##m##DataArray& another);\
 Finance##m##DataArray operator-(const Finance##m##DataArray& another);\
-bool operator==(const n* another_array);\
-bool operator==(const Finance##m##DataArray& another);\
-bool operator!=(const n* another_array);\
-bool operator!=(const Finance##m##DataArray& another);
+DECLARE_DATA_ARRAY_OPERATOR_EQUAL(m, n)
 
 #define DECLARE_DATA_ARRAY_ELEMENT_CALCULATION(m)\
 unsigned short get_sub_array(Finance##m##DataArray& new_data_array, const FinanceBoolDataArray* filter_array, int start_index, int end_index=-1);\
@@ -258,6 +261,8 @@ private:
 public:
 	FinanceBoolDataArray();
 
+	DECLARE_DATA_ARRAY_OPERATOR_EQUAL(Bool, bool)
+	void reset_array();
 	void add(bool data);
 	int get_true_cnt()const;
 	float get_probability()const;

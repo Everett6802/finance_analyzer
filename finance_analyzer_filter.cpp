@@ -6,27 +6,26 @@
 
 using namespace std;
 
-//static const int BUF_SIZE = 256;
-//static char errmsg[BUF_SIZE];
-//
-//static void check_index(int start_index, int end_index, int data_size, const char* array_name="")
-//{
-//	if (start_index < 0 || start_index >= data_size)
-//	{
-//		snprintf(errmsg, BUF_SIZE, "%sstart index is out of range[0, %d)", array_name, data_size);
-//		throw out_of_range(errmsg);
-//	}
-//	if (end_index < 1 || end_index > data_size)
-//	{
-//		snprintf(errmsg, BUF_SIZE, "%send index is out of range(1, %d]", array_name, data_size);
-//		throw out_of_range(errmsg);
-//	}
-//	if (start_index >= end_index)
-//	{
-//		snprintf(errmsg, BUF_SIZE, "%send index[%d] should be larger than start index[%d]", array_name, end_index, start_index);
-//		throw invalid_argument(errmsg);
-//	}
-//}
+static const char* FILTER_RULE_DESCRIPTION[] =
+{
+	"Equal",
+	"NotEqual",
+	"GreaterThan",
+	"GreaterEqualThan",
+	"LessThan",
+	"LessEqualThan"
+};
+static const char* FILTER_RULE_RANGE_DESCRIPTION[] =
+{
+	"InRange(LCRC)",
+	"InRange(LORO)",
+	"InRange(LCRO)",
+	"InRange(LORC)",
+	"OutOfRange(LCRC)",
+	"OutOfRange(LORO)",
+	"OutOfRange(LCRO)",
+	"OutOfRange(LORC)"
+};
 
 FilterRuleThresholdBase::FilterRuleThresholdBase(FinanceFieldType data_type, FilterRuleType rule_type)
 {
@@ -89,7 +88,6 @@ FilterRuleThresholdRangeFloat::FilterRuleThresholdRangeFloat(FilterRuleType rule
 	FilterRuleThresholdRangeTemplate<float>(FinanceField_FLOAT, rule_type, l_threshold_value, r_threshold_value)
 {
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -219,6 +217,141 @@ template bool filter_rule_out_of_range_LORC<float>(float data, float l_threshold
 
 bool check_operator_and_exit(bool filter_result){return (filter_result ? false : true);}
 bool check_operator_or_exit(bool filter_result){return (filter_result ? true : false);}
+
+unsigned short add_filter_rule(
+	PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque,
+	PFILTER_RULE_THRESHOLD_DEQUE filter_rule_threshold_deque,
+	PRESULT_SET_ACCESS_PARAM new_result_set_access_param,
+	PFILTER_RULE_THRESHOLD_BASE new_filter_rule_threshold
+	)
+{
+	assert(result_set_access_param_deque != NULL && "result_set_access_param_deque should NOT be NULL");
+	assert(filter_rule_threshold_deque != NULL && "filter_rule_threshold_deque should NOT be NULL");
+	assert(new_result_set_access_param != NULL && "new_result_set_access_param should NOT be NULL");
+	assert(new_filter_rule_threshold != NULL && "new_filter_rule_threshold should NOT be NULL");
+// Add the filter rule
+	result_set_access_param_deque->push_back(new_result_set_access_param);
+	filter_rule_threshold_deque->push_back(new_filter_rule_threshold);
+	return RET_SUCCESS;
+}
+
+void show_filter_rule(
+	ResultSetAccessParamDeque& result_set_access_param_deque,
+	FilterRuleThresholdDeque& filter_rule_threshold_deque
+	)
+{
+	unsigned int filter_rule_size = result_set_access_param_deque.size();
+	assert(filter_rule_size == filter_rule_threshold_deque.size() && "The array sizes of filter rule are NOT equal");
+	for (unsigned int rule_index = 0 ; rule_index < filter_rule_size ; rule_index++)
+	{
+		PRESULT_SET_ACCESS_PARAM result_set_access_param = result_set_access_param_deque[rule_index];
+		PFILTER_RULE_THRESHOLD_BASE filter_rule_threshold = filter_rule_threshold_deque[rule_index];
+		assert(result_set_access_param != NULL && "result_set_access_param should NOT be NULL");
+		assert(filter_rule_threshold != NULL && "filter_rule_threshold should NOT be NULL");
+		FinanceSourceType source_type = result_set_access_param->get_finance_source_type();
+		int field_no = result_set_access_param->get_finance_field_no();
+		switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_type][field_no])
+		{
+		case FinanceField_INT:
+		{
+			assert(filter_rule_threshold->get_data_type() == FinanceField_INT && "The data type of filter_rule_threshold is NOT FinanceField_INT");
+			if (IS_RULE_RANGE_TYPE(filter_rule_threshold->get_rule_type()))
+				printf("%s:%d %s %d %d\n",
+					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					result_set_access_param->get_finance_field_no(),
+					FILTER_RULE_RANGE_DESCRIPTION[filter_rule_threshold->get_rule_type() - FILTER_RULT_IN_RANGE_START_INDEX],
+					((PFILTER_RULE_THRESHOLD_RANGE_INT)filter_rule_threshold)->get_left_threshold(),
+					((PFILTER_RULE_THRESHOLD_RANGE_INT)filter_rule_threshold)->get_right_threshold()
+					);
+			else
+				printf("%s:%d %s %d\n",
+					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					result_set_access_param->get_finance_field_no(),
+					FILTER_RULE_DESCRIPTION[filter_rule_threshold->get_rule_type()],
+					((PFILTER_RULE_THRESHOLD_INT)filter_rule_threshold)->get_threshold()
+					);
+		}
+		break;
+		case FinanceField_LONG:
+		{
+			assert(filter_rule_threshold->get_data_type() == FinanceField_LONG && "The data type of filter_rule_threshold is NOT FinanceField_LONG");
+			if (IS_RULE_RANGE_TYPE(filter_rule_threshold->get_rule_type()))
+				printf("%s:%d %s %ld %ld\n",
+					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					result_set_access_param->get_finance_field_no(),
+					FILTER_RULE_RANGE_DESCRIPTION[filter_rule_threshold->get_rule_type() - FILTER_RULT_IN_RANGE_START_INDEX],
+					((PFILTER_RULE_THRESHOLD_RANGE_LONG)filter_rule_threshold)->get_left_threshold(),
+					((PFILTER_RULE_THRESHOLD_RANGE_LONG)filter_rule_threshold)->get_right_threshold()
+					);
+			else
+				printf("%s:%d %s %ld\n",
+					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					result_set_access_param->get_finance_field_no(),
+					FILTER_RULE_DESCRIPTION[filter_rule_threshold->get_rule_type()],
+					((PFILTER_RULE_THRESHOLD_LONG)filter_rule_threshold)->get_threshold()
+					);
+		}
+		break;
+		case FinanceField_FLOAT:
+		{
+			assert(filter_rule_threshold->get_data_type() == FinanceField_FLOAT && "The data type of filter_rule_threshold is NOT FinanceField_FLOAT");
+			if (IS_RULE_RANGE_TYPE(filter_rule_threshold->get_rule_type()))
+				printf("%s:%d %s %.2f %.2f\n",
+					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					result_set_access_param->get_finance_field_no(),
+					FILTER_RULE_RANGE_DESCRIPTION[filter_rule_threshold->get_rule_type() - FILTER_RULT_IN_RANGE_START_INDEX],
+					((PFILTER_RULE_THRESHOLD_RANGE_FLOAT)filter_rule_threshold)->get_left_threshold(),
+					((PFILTER_RULE_THRESHOLD_RANGE_FLOAT)filter_rule_threshold)->get_right_threshold()
+					);
+			else
+				printf("%s:%d %s %.2f\n",
+					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					result_set_access_param->get_finance_field_no(),
+					FILTER_RULE_DESCRIPTION[filter_rule_threshold->get_rule_type()],
+					((PFILTER_RULE_THRESHOLD_FLOAT)filter_rule_threshold)->get_threshold()
+					);
+		}
+		break;
+		case FinanceField_DATE:
+			assert("The DATE field type is NOT supported");
+		default:
+			assert("The unsupported field type");
+		}
+	}
+}
+
+
+void cleanup_filter_rule(
+	ResultSetAccessParamDeque& result_set_access_param_deque,
+	FilterRuleThresholdDeque& filter_rule_threshold_deque
+	)
+{
+	ResultSetAccessParamDeque::iterator result_set_access_param_iter = result_set_access_param_deque.begin();
+	while (result_set_access_param_iter != result_set_access_param_deque.end())
+	{
+		PRESULT_SET_ACCESS_PARAM result_set_access_param = (PRESULT_SET_ACCESS_PARAM)*result_set_access_param_iter;
+		result_set_access_param_iter++;
+		if (result_set_access_param != NULL)
+		{
+			delete result_set_access_param;
+			result_set_access_param = NULL;
+		}
+	}
+	result_set_access_param_deque.clear();
+
+	FilterRuleThresholdDeque::iterator filter_rule_threshold_iter = filter_rule_threshold_deque.begin();
+	while (filter_rule_threshold_iter != filter_rule_threshold_deque.end())
+	{
+		PFILTER_RULE_THRESHOLD_BASE filter_rule_threshold = (PFILTER_RULE_THRESHOLD_BASE)*filter_rule_threshold_iter;
+		filter_rule_threshold_iter++;
+		if (filter_rule_threshold != NULL)
+		{
+			delete filter_rule_threshold;
+			filter_rule_threshold = NULL;
+		}
+	}
+	filter_rule_threshold_deque.clear();
+}
 
 unsigned short filter(
 	const PRESULT_SET result_set,

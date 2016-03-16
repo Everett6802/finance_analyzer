@@ -221,6 +221,23 @@ extern template bool filter_rule_out_of_range_LORC<float>(float data, float l_th
 bool check_operator_and_exit(bool filter_result);
 bool check_operator_or_exit(bool filter_result);
 
+unsigned short add_filter_rule(
+	PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque,
+	PFILTER_RULE_THRESHOLD_DEQUE filter_rule_threshold_deque,
+	PRESULT_SET_ACCESS_PARAM new_result_set_access_param,
+	PFILTER_RULE_THRESHOLD_BASE new_filter_rule_threshold
+	);
+
+void show_filter_rule(
+	ResultSetAccessParamDeque& result_set_access_param_deque,
+	FilterRuleThresholdDeque& filter_rule_threshold_deque
+	);
+
+void cleanup_filter_rule(
+	ResultSetAccessParamDeque& result_set_access_param_deque,
+	FilterRuleThresholdDeque& filter_rule_threshold_deque
+	);
+
 unsigned short filter(
 	const PRESULT_SET result_set,
 	const PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque,

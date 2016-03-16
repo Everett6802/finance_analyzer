@@ -757,6 +757,22 @@ void FinanceDataPtrArrayTemplate<T>::add(T data, size_t data_size)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#define IMPLEMENT_DATA_ARRAY_OPERATOR_EQUAL(m, n)\
+bool Finance##m##DataArray::operator==(const Finance##m##DataArray& another)\
+{\
+	if (array_pos != another.array_pos)\
+		return false;\
+	return this->operator==(another.get_data_array());\
+}\
+bool Finance##m##DataArray::operator!=(const n* another_array)\
+{\
+	return !this->operator==(another_array);\
+}\
+bool Finance##m##DataArray::operator!=(const Finance##m##DataArray& another)\
+{\
+	return !this->operator==(another);\
+}
+
 #define IMPLEMENT_DATA_ARRAY_OPERATOR(m, n)\
 Finance##m##DataArray& Finance##m##DataArray::operator=(const Finance##m##DataArray& another)\
 {\
@@ -810,20 +826,7 @@ Finance##m##DataArray Finance##m##DataArray::operator-(const Finance##m##DataArr
 {\
 	return Finance##m##DataArray(*this) -= another;\
 }\
-bool Finance##m##DataArray::operator==(const Finance##m##DataArray& another)\
-{\
-	if (array_pos != another.array_pos)\
-		return false;\
-	return this->operator==(another.get_data_array());\
-}\
-bool Finance##m##DataArray::operator!=(const n* another_array)\
-{\
-	return !this->operator==(another_array);\
-}\
-bool Finance##m##DataArray::operator!=(const Finance##m##DataArray& another)\
-{\
-	return !this->operator==(another);\
-}
+IMPLEMENT_DATA_ARRAY_OPERATOR_EQUAL(m, n)
 
 #define IMPLEMENT_DATA_ARRAY_INTEGER_EQUAL_OPERATOR(m, n)\
 bool Finance##m##DataArray::operator==(const n* another_array)\
@@ -1056,6 +1059,9 @@ IMPLEMENT_DATA_ARRAY_INTEGER_EQUAL_OPERATOR(Long, long)
 IMPLEMENT_DATA_ARRAY_OPERATOR(Float, float)
 IMPLEMENT_DATA_ARRAY_FLOAT_EQUAL_OPERATOR(Float, float)
 
+IMPLEMENT_DATA_ARRAY_OPERATOR_EQUAL(Bool, bool)
+IMPLEMENT_DATA_ARRAY_FLOAT_EQUAL_OPERATOR(Bool, bool)
+
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Int, int)
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Long, long)
 IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Float, float)
@@ -1063,6 +1069,12 @@ IMPLEMENT_DATA_ARRAY_ELEMENT_CALCULATION(Float, float)
 FinanceBoolDataArray::FinanceBoolDataArray() :
 	true_cnt(0)
 {
+}
+
+void FinanceBoolDataArray::reset_array()
+{
+	true_cnt = 0;
+	FinanceDataArrayBase::reset_array();
 }
 
 void FinanceBoolDataArray::add(bool data)

@@ -434,10 +434,10 @@ void FinanceAnalyzerTest::test_check_filter_rule()
 {
 	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
 	static const char* field1[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}; // Long
-	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long; Dummy
+	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long
 	static const char* field3[] = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10"}; // Int
 	static const char* field4[] = {"10.1", "20.1", "30.1", "40.1", "50.1", "60.1", "70.1", "80.1", "90.1", "100.1"}; // Float
-	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float; Dummy
+	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
 
 	static const int ERRMSG_SIZE = 256;
 	static char errmsg[ERRMSG_SIZE];
@@ -477,26 +477,40 @@ void FinanceAnalyzerTest::test_check_filter_rule()
 
 	ResultSetAccessParamDeque result_set_access_param_deque;
 	FilterRuleThresholdDeque filter_rule_threshold_deque;
-// Define the filter rule
-	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
-	filter_rule_threshold_deque.push_back(new FilterRuleThresholdLong(FilterRule_GreaterThan, 3));
-	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
-	filter_rule_threshold_deque.push_back(new FilterRuleThresholdLong(FilterRule_LessThan, 7));
-
+// Add the filter rule
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1), new FilterRuleThresholdLong(FilterRule_GreaterThan, 3));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3), new FilterRuleThresholdRangeLong(FilterRule_OutOfRange_LCRC, -3, 3));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5), new FilterRuleThresholdRangeLong(FilterRule_InRange_LCRO, 100.0, 600.0));
+	if (show_test_case_detail) show_filter_rule(result_set_access_param_deque, filter_rule_threshold_deque);
 	ret = filter_and(&result_set, &result_set_access_param_deque, &filter_rule_threshold_deque, filter_data_array);
 	if (CHECK_FAILURE(ret))
 	{
-		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [1 Sub], due to: %s", get_ret_description(ret));
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array[Rule1 AND], due to: %s", get_ret_description(ret));
 		throw runtime_error(string(errmsg));
 	}
-	if (show_test_case_detail) cout << "1 Sub: " << filter_data_array << endl;
-//	static const long ARRAY1_SUB[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-//	if (*sp_long_data_array != ARRAY1_SUB)
-//	{
-//		snprintf(errmsg, ERRMSG_SIZE, "The Array[1 Sub] is NOT correct");
-//		throw runtime_error(string(errmsg));
-//	}
+	if (show_test_case_detail) cout << "Rule1 AND Result: " << filter_data_array << "; Probability: " << filter_data_array.get_probability() << endl;
+	static const bool ARRAY_RULE1_AND_RESULT[] = {false, false, false, true, true, true, false, false, false, false};
+	if (filter_data_array != ARRAY_RULE1_AND_RESULT)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[Rule1 AND] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
 	filter_data_array.reset_array();
+	ret = filter_or(&result_set, &result_set_access_param_deque, &filter_rule_threshold_deque, filter_data_array);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array[Rule1 OR], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "Rule1 OR Result: " << filter_data_array << "; Probability: " << filter_data_array.get_probability() << endl;
+	static const bool ARRAY_RULE1_OR_RESULT[] = {true, false, false, true, true, true, false, false, false, false};
+	if (filter_data_array != ARRAY_RULE1_OR_RESULT)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[Rule1 OR] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	filter_data_array.reset_array();
+	cleanup_filter_rule(result_set_access_param_deque, filter_rule_threshold_deque);
 }
 
 void FinanceAnalyzerTest::test_check_formula()

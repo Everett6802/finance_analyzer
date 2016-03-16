@@ -51,8 +51,8 @@ int main(int argc, char** argv)
 	bool analyze_daily = false;
 	int show_analyze_daily_res_type =  0x0; //SHOW_RES_DEFAULT;
 
-//	run_test("2", true);
-//	exit(0);
+	run_test("2", true);
+	exit(0);
 	for (; index < argc ; index += offset)
 	{
 		if (strcmp(argv[index], "--help") == 0)
