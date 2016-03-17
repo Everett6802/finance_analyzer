@@ -479,8 +479,8 @@ void FinanceAnalyzerTest::test_check_filter_rule()
 	FilterRuleThresholdDeque filter_rule_threshold_deque;
 // Add the filter rule
 	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1), new FilterRuleThresholdLong(FilterRule_GreaterThan, 3));
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3), new FilterRuleThresholdRangeLong(FilterRule_OutOfRange_LCRC, -3, 3));
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5), new FilterRuleThresholdRangeLong(FilterRule_InRange_LCRO, 100.0, 600.0));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3), new FilterRuleThresholdRangeInt(FilterRule_OutOfRange_LCRC, -5, 5));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5), new FilterRuleThresholdRangeFloat(FilterRule_InRange_LCRO, 100.0, 600.0));
 	if (show_test_case_detail) show_filter_rule(result_set_access_param_deque, filter_rule_threshold_deque);
 	ret = filter_and(&result_set, &result_set_access_param_deque, &filter_rule_threshold_deque, filter_data_array);
 	if (CHECK_FAILURE(ret))
@@ -489,7 +489,7 @@ void FinanceAnalyzerTest::test_check_filter_rule()
 		throw runtime_error(string(errmsg));
 	}
 	if (show_test_case_detail) cout << "Rule1 AND Result: " << filter_data_array << "; Probability: " << filter_data_array.get_probability() << endl;
-	static const bool ARRAY_RULE1_AND_RESULT[] = {false, false, false, true, true, true, false, false, false, false};
+	static const bool ARRAY_RULE1_AND_RESULT[] = {false, false, false, false, true, true, true, true, true, false};
 	if (filter_data_array != ARRAY_RULE1_AND_RESULT)
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "The Array[Rule1 AND] is NOT correct");
@@ -503,10 +503,47 @@ void FinanceAnalyzerTest::test_check_filter_rule()
 		throw runtime_error(string(errmsg));
 	}
 	if (show_test_case_detail) cout << "Rule1 OR Result: " << filter_data_array << "; Probability: " << filter_data_array.get_probability() << endl;
-	static const bool ARRAY_RULE1_OR_RESULT[] = {true, false, false, true, true, true, false, false, false, false};
+	static const bool ARRAY_RULE1_OR_RESULT[] = {false, false, true, true, true, true, true, true, true, true};
 	if (filter_data_array != ARRAY_RULE1_OR_RESULT)
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "The Array[Rule1 OR] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	filter_data_array.reset_array();
+	cleanup_filter_rule(result_set_access_param_deque, filter_rule_threshold_deque);
+
+// Add the filter rule
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1), new FilterRuleThresholdLong(FilterRule_LessThan, 9));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2), new FilterRuleThresholdLong(FilterRule_NotEqual, -5));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3), new FilterRuleThresholdRangeInt(FilterRule_OutOfRange_LORO, -5, 5));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4), new FilterRuleThresholdRangeFloat(FilterRule_InRange_LORC, 40.1, 90.1));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5), new FilterRuleThresholdRangeFloat(FilterRule_InRange_LORO, 200.0, 600.0));
+	if (show_test_case_detail) show_filter_rule(result_set_access_param_deque, filter_rule_threshold_deque);
+	ret = filter_and(&result_set, &result_set_access_param_deque, &filter_rule_threshold_deque, filter_data_array);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array[Rule2 AND], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "Rule2 AND Result: " << filter_data_array << "; Probability: " << filter_data_array.get_probability() << endl;
+	static const bool ARRAY_RULE2_AND_RESULT[] = {false, false, false, false, false, true, true, true, false, false};
+	if (filter_data_array != ARRAY_RULE2_AND_RESULT)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[Rule2 AND] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	filter_data_array.reset_array();
+	ret = filter_or(&result_set, &result_set_access_param_deque, &filter_rule_threshold_deque, filter_data_array);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array[Rule2 OR], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "Rule2 OR Result: " << filter_data_array << "; Probability: " << filter_data_array.get_probability() << endl;
+	static const bool ARRAY_RULE2_OR_RESULT[] = {true, true, true, true, true, true, true, true, true, true};
+	if (filter_data_array != ARRAY_RULE2_OR_RESULT)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[Rule2 OR] is NOT correct");
 		throw runtime_error(string(errmsg));
 	}
 	filter_data_array.reset_array();
@@ -803,6 +840,7 @@ bool FinanceAnalyzerTest::test(TestType test_type)
 	bool pass = true;
 	try
 	{
+		printf("Run Test Case: %s\n", TEST_TYPE_DESCRIPTION[test_type]);
 		(this->*(test_func_array[test_type]))();
 		printf("Test Case: %s... Pass\n", TEST_TYPE_DESCRIPTION[test_type]);
 	}

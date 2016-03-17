@@ -21,26 +21,6 @@ int parse_show_res_type(const char* show_res_type_string);
 
 int main(int argc, char** argv)
 {
-//	run_test("2", true);
-//	exit(0);
-//	FinanceBoolDataArray filter_data_array;
-//	filter_data_array.add(true);
-//	filter_data_array.add(false);
-//	filter_data_array.add(true);
-//	filter_data_array.add(true);
-//	filter_data_array.add(false);
-//	FinanceIntDataArray data_array;
-//	data_array.add(1);
-//	data_array.add(2);
-//	data_array.add(3);
-//	data_array.add(4);
-//	data_array.add(5);
-//	cout << sum(data_array) << endl;
-//	cout << sum(data_array, &filter_data_array) << endl;
-//	cout << average(data_array) << endl;
-//	cout << average(data_array, &filter_data_array) << endl;
-//	exit(0);
-
 	static const int ERRMSG_SIZE = 256;
 
 	char errmsg[ERRMSG_SIZE];
@@ -51,8 +31,6 @@ int main(int argc, char** argv)
 	bool analyze_daily = false;
 	int show_analyze_daily_res_type =  0x0; //SHOW_RES_DEFAULT;
 
-	run_test("2", true);
-	exit(0);
 	for (; index < argc ; index += offset)
 	{
 		if (strcmp(argv[index], "--help") == 0)
