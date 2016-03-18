@@ -261,11 +261,6 @@ unsigned short FinanceAnalyzerMgr::correlate(const SmartPointer<ResultSetAccessP
 	return ret;
 }
 
-//unsigned short FinanceAnalyzerMgr::correlate(FinanceSourceType finance_source_type1, int finance_field_no1, FinanceSourceType finance_source_type2, int finance_field_no2, float& correlation, const PTIME_RANGE_CFG time_range_cfg)const
-//{
-//	return correlate(finance_source_type1, finance_field_no1, ArrayElementCalculation_None, finance_source_type2, finance_field_no2, ArrayElementCalculation_None, correlation, time_range_cfg);
-//}
-
 unsigned short FinanceAnalyzerMgr::show_result(string result_str, const PTIME_CFG time_cfg, int show_result_type)const
 {
 	static bool check_result_folder_exist = false;
