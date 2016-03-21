@@ -16,7 +16,8 @@ const char* TEST_TYPE_DESCRIPTION[] =
 	"Check Filter Rule",
 	"Check Formula",
 	"Check Filter Formula",
-	"Check Calculator"
+	"Check Calculator",
+	"Check Output"
 };
 //DECLARE_MSG_DUMPER_PARAM()
 
@@ -60,45 +61,19 @@ void FinanceAnalyzerTest::set_show_detail(bool show_detail)
 
 void FinanceAnalyzerTest::test_check_array()
 {
-	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
-	static const char* field1[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}; // Long
-	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long; Dummy
-	static const char* field3[] = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10"}; // Int
-	static const char* field4[] = {"10.1", "20.1", "30.1", "40.1", "50.1", "60.1", "70.1", "80.1", "90.1", "100.1"}; // Float
-	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float; Dummy
-
 	static const int ERRMSG_SIZE = 256;
 	static char errmsg[ERRMSG_SIZE];
-	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
 
-	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
-	for (int i = 0 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
-	char data[32];
-	for (int i = 0 ; i < DATA_SIZE ; i++)
-	{
-		snprintf(data, 32, "%s", date[i]);
-		result_set.set_date(data);
-		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
-		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
-		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
-		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
-		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-	}
-
+	unsigned short ret = RET_SUCCESS;
 	SmartPointer<FinanceIntDataArray> sp_int_data_array(new FinanceIntDataArray());
 	SmartPointer<FinanceLongDataArray> sp_long_data_array(new FinanceLongDataArray());
 	SmartPointer<FinanceFloatDataArray> sp_float_data_array(new FinanceFloatDataArray());
 	sp_int_data_array->set_type(FinanceField_INT);
 	sp_long_data_array->set_type(FinanceField_LONG);
 	sp_float_data_array->set_type(FinanceField_FLOAT);
-
+// Generate data
+	ResultSet::generate_data_for_simulation(result_set);
 // Check Avg/Diff array
 //	if (show_test_case_detail) cout << "2 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff) << endl;
 //	if (show_test_case_detail) cout << "2 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5) << endl;
@@ -337,49 +312,20 @@ void FinanceAnalyzerTest::test_check_array()
 
 void FinanceAnalyzerTest::test_check_filter_array()
 {
-	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15", "2016-01-18", "2016-01-19", "2016-01-20", "2016-01-21", "2016-01-22", "2016-01-25", "2016-01-26", "2016-01-27", "2016-01-28", "2016-01-29"};
-	static const char* field1[] = {"1", "0", "2", "0", "3", "0", "4", "0", "5", "0", "6", "0", "7", "0", "8", "0", "9", "0", "10", "0"}; // Long
-	static const char* field2[] = {"-1", "0", "2", "0", "-3", "0", "4", "0", "-5", "0", "6", "0", "-7", "0", "8", "0", "-9", "0", "10", "0"}; // Long; Dummy
-	static const char* field3[] = {"-1", "0", "-2", "0", "-3", "0", "-4", "0", "-5", "0", "-6", "0", "-7", "0", "-8", "0", "-9", "0", "-10", "0"}; // Int
-	static const char* field4[] = {"10.1", "0.0", "20.1", "0.0", "30.1", "0.0", "40.1", "0.0", "50.1", "0.0", "60.1", "0.0", "70.1", "0.0", "80.1", "0.0", "90.1", "0.0", "100.1", "0.0"}; // Float
-	static const char* field5[] = {"1.1", "0.0", "21.2", "0.0", "122.3", "0.0", "199.4", "0.0", "200.5", "0.0", "300.6", "0.0", "420.7", "0.0", "435.8", "0.0", "599.4", "0.0", "600.0", "0.0"}; // Float; Dummy
-	static const bool filter[] = {true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false};
-
 	static const int ERRMSG_SIZE = 256;
 	static char errmsg[ERRMSG_SIZE];
-	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
 
-	FinanceBoolDataArray filter_data_array;
-
-	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
-	for (int i = 0 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
-	char data[32];
-	for (int i = 0 ; i < DATA_SIZE ; i++)
-	{
-		snprintf(data, 32, "%s", date[i]);
-		result_set.set_date(data);
-		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
-		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
-		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
-		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
-		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-
-		filter_data_array.add(filter[i]);
-	}
-
+	FinanceBoolDataArray filter_data_array;
+	unsigned short ret = RET_SUCCESS;
 	SmartPointer<FinanceIntDataArray> sp_int_data_array(new FinanceIntDataArray());
 	SmartPointer<FinanceLongDataArray> sp_long_data_array(new FinanceLongDataArray());
 	SmartPointer<FinanceFloatDataArray> sp_float_data_array(new FinanceFloatDataArray());
 	sp_int_data_array->set_type(FinanceField_INT);
 	sp_long_data_array->set_type(FinanceField_LONG);
 	sp_float_data_array->set_type(FinanceField_FLOAT);
+// Generate data
+	ResultSet::generate_filtered_data_for_simulation(result_set, filter_data_array);
 
 	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1);
 	ret = data_array1->get_sub_array(*sp_long_data_array, &filter_data_array, 0);
@@ -432,48 +378,20 @@ void FinanceAnalyzerTest::test_check_filter_array()
 
 void FinanceAnalyzerTest::test_check_filter_rule()
 {
-	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
-	static const char* field1[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}; // Long
-	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long
-	static const char* field3[] = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10"}; // Int
-	static const char* field4[] = {"10.1", "20.1", "30.1", "40.1", "50.1", "60.1", "70.1", "80.1", "90.1", "100.1"}; // Float
-	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
-
 	static const int ERRMSG_SIZE = 256;
 	static char errmsg[ERRMSG_SIZE];
-	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
 
-	FinanceBoolDataArray filter_data_array;
-
-	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
-	for (int i = 0 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
-	char data[32];
-	for (int i = 0 ; i < DATA_SIZE ; i++)
-	{
-		snprintf(data, 32, "%s", date[i]);
-		result_set.set_date(data);
-		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
-		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
-		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
-		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
-		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-
-//		filter_data_array.add(filter[i]);
-	}
-
+	FinanceBoolDataArray filter_data_array;
+	unsigned short ret = RET_SUCCESS;
 	SmartPointer<FinanceIntDataArray> sp_int_data_array(new FinanceIntDataArray());
 	SmartPointer<FinanceLongDataArray> sp_long_data_array(new FinanceLongDataArray());
 	SmartPointer<FinanceFloatDataArray> sp_float_data_array(new FinanceFloatDataArray());
 	sp_int_data_array->set_type(FinanceField_INT);
 	sp_long_data_array->set_type(FinanceField_LONG);
 	sp_float_data_array->set_type(FinanceField_FLOAT);
+// Generate data
+	ResultSet::generate_filtered_data_for_simulation(result_set, filter_data_array);
 
 	ResultSetAccessParamDeque result_set_access_param_deque;
 	FilterRuleThresholdDeque filter_rule_threshold_deque;
@@ -672,42 +590,10 @@ void FinanceAnalyzerTest::test_check_formula()
 
 void FinanceAnalyzerTest::test_check_filter_formula()
 {
-	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15", "2016-01-18", "2016-01-19", "2016-01-20", "2016-01-21", "2016-01-22", "2016-01-25", "2016-01-26", "2016-01-27", "2016-01-28", "2016-01-29"};
-	static const char* field1[] = {"1", "0", "2", "0", "3", "0", "4", "0", "5", "0", "6", "0", "7", "0", "8", "0", "9", "0", "10", "0"}; // Long
-	static const char* field2[] = {"-1", "0", "2", "0", "-3", "0", "4", "0", "-5", "0", "6", "0", "-7", "0", "8", "0", "-9", "0", "10", "0"}; // Long; Dummy
-	static const char* field3[] = {"-1", "0", "-2", "0", "-3", "0", "-4", "0", "-5", "0", "-6", "0", "-7", "0", "-8", "0", "-9", "0", "-10", "0"}; // Int
-	static const char* field4[] = {"10.1", "0.0", "20.1", "0.0", "30.1", "0.0", "40.1", "0.0", "50.1", "0.0", "60.1", "0.0", "70.1", "0.0", "80.1", "0.0", "90.1", "0.0", "100.1", "0.0"}; // Float
-	static const char* field5[] = {"1.1", "0.0", "21.2", "0.0", "122.3", "0.0", "199.4", "0.0", "200.5", "0.0", "300.6", "0.0", "420.7", "0.0", "435.8", "0.0", "599.4", "0.0", "600.0", "0.0"}; // Float; Dummy
-	static const bool filter[] = {true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false};
-
-//	static const int ERRMSG_SIZE = 256;
-//	static char errmsg[ERRMSG_SIZE];
-	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
-
-	FinanceBoolDataArray filter_data_array;
-
-//	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
-	for (int i = 0 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
-	char data[32];
-	for (int i = 0 ; i < DATA_SIZE ; i++)
-	{
-		snprintf(data, 32, "%s", date[i]);
-		result_set.set_date(data);
-		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
-		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
-		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
-		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
-		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-
-		filter_data_array.add(filter[i]);
-	}
+	FinanceBoolDataArray filter_data_array;
+// Generate data
+	ResultSet::generate_filtered_data_for_simulation(result_set, filter_data_array);
 
 	float value;
 // Check Formula
@@ -745,41 +631,16 @@ void FinanceAnalyzerTest::test_check_filter_formula()
 
 void FinanceAnalyzerTest::test_check_calculator()
 {
-	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
-	static const char* field1[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}; // Long
-	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long
-	static const char* field3[] = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10"}; // Int
-	static const char* field4[] = {"-2.1", "8.2", "-100.3", "20.4", "-88.5", "100.6", "-107.7", "100.8", "-202.9", "300.0"}; // Float
-	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
-
 	static const int ERRMSG_SIZE = 256;
 	static char errmsg[ERRMSG_SIZE];
-	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
 
 	FinanceAnalyzerCalculator calculator;
-
 	ResultSet result_set;
-	for (int i = 0 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
-	char data[32];
-	for (int i = 0 ; i < DATA_SIZE ; i++)
-	{
-		snprintf(data, 32, "%s", date[i]);
-		result_set.set_date(data);
-		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
-		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
-		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
-		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
-		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-	}
-
 	unsigned short ret = RET_SUCCESS;
 	float correlation_value;
+// Generate data
+	ResultSet::generate_data_for_simulation(result_set);
+
 	SmartPointer<ResultSetAccessParam> sp_access_param1(NULL);
 	SmartPointer<ResultSetAccessParam> sp_access_param2(NULL);
 // Check Different type of array
@@ -823,6 +684,7 @@ void FinanceAnalyzerTest::test_check_calculator()
 	}
 	if (show_test_case_detail) printf("[1,5] correlation_value: %.2f\n", correlation_value);
 }
+
 
 bool FinanceAnalyzerTest::test(TestType test_type)
 {

@@ -3,7 +3,7 @@ MAKE := make
 
 CXXFLAGS := -g -Wall -std=c++0x
 
-SOURCES := msg_dumper_wrapper.cpp finance_analyzer.cpp finance_analyzer_common.cpp finance_analyzer_common_class.cpp finance_analyzer_mgr.cpp finance_analyzer_sql_reader.cpp finance_analyzer_workday_canlendar.cpp finance_analyzer_database_time_range.cpp finance_analyzer_algorithm.cpp finance_analyzer_filter.cpp finance_analyzer_calculator.cpp finance_analyzer_test.cpp
+SOURCES := msg_dumper_wrapper.cpp finance_analyzer.cpp finance_analyzer_common.cpp finance_analyzer_common_class.cpp finance_analyzer_mgr.cpp finance_analyzer_sql_reader.cpp finance_analyzer_workday_canlendar.cpp finance_analyzer_database_time_range.cpp finance_analyzer_algorithm.cpp finance_analyzer_filter.cpp finance_analyzer_calculator.cpp finance_analyzer_test.cpp finance_analyzer_output.cpp
 OBJS := $(SOURCES:.cpp=.o)
 LIB_MSG_DUMPER := libmsg_dumper.so
 LIB_MSG_DUMPER_HEADER := msg_dumper.h

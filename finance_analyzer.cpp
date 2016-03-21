@@ -7,7 +7,7 @@
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
 #include "finance_analyzer_test.h"
-//#include "finance_analyzer_algorithm.h"
+#include "finance_analyzer_output.h"
 
 
 static FinanceAnalyzerMgr finance_analyzer_mgr;
@@ -21,6 +21,21 @@ int parse_show_res_type(const char* show_res_type_string);
 
 int main(int argc, char** argv)
 {
+	ResultSet result_set;
+	ResultSetAccessParamDeque result_set_access_param_deque;
+	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 0));
+	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
+	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
+	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3));
+	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
+	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5));
+	ResultSet::generate_data_for_simulation(result_set);
+	OutputResultParam output_result_param;
+	output_result_param.set_split_symbol(',');
+	output_result_param.set_show_title(true);
+	output_result(&result_set, &result_set_access_param_deque, &output_result_param, "output.csv");
+	exit(0);
+
 	static const int ERRMSG_SIZE = 256;
 
 	char errmsg[ERRMSG_SIZE];

@@ -395,6 +395,8 @@ public:
 	static unsigned short get_upper_subindex(unsigned short x);
 	static unsigned short get_lower_subindex(unsigned short x);
 	static unsigned short get_calculation_subindex(unsigned long x);
+	static void generate_data_for_simulation(ResultSet& result_set);
+	static void generate_filtered_data_for_simulation(ResultSet& result_set, FinanceBoolDataArray& filter_data_array);
 
 private:
 	std::map<unsigned short, unsigned short> data_set_mapping;
