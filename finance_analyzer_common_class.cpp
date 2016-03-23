@@ -78,6 +78,12 @@ T* SmartPointer<T>::get_instance()
 }
 
 template <typename T>
+const T* SmartPointer<T>::get_const_instance()const
+{
+	return (const T*)data_ptr;
+}
+
+template <typename T>
 void SmartPointer<T>::disable_release(){need_release = false;}
 
 template class SmartPointer<TimeCfg>;

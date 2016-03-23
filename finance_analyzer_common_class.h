@@ -33,6 +33,7 @@ public:
 	const T* operator->() const;
 	void set_new(T* ptr);
 	T* get_instance();
+	const T* get_const_instance()const;
 	void disable_release();
 };
 //typedef SmartPointer SP;

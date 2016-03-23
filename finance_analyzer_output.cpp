@@ -21,10 +21,10 @@ char OutputResultParam::get_split_symbol()const{return split_symbol;}
 void OutputResultParam::set_show_title(char output_show_title){show_title = output_show_title;}
 char OutputResultParam::get_show_title()const{return show_title;}
 
-unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque, const PFINANCE_BOOL_DATA_ARRAY filter_array, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
+unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const PFINANCE_BOOL_DATA_ARRAY filter_array, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
 {
 	assert(result_set != NULL && "result_set should NOT be NULL");
-	assert(result_set_access_param_deque != NULL && "result_set_access_param_deque should NOT be NULL");
+	assert(access_param_deque != NULL && "access_param_deque should NOT be NULL");
 //	assert(output_result_param != NULL && "output_result_param should NOT be NULL");
 	assert(output_filename != NULL && "output_filename should NOT be NULL");
 
@@ -51,15 +51,15 @@ unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCE
 	}
 
 	int data_size = result_set->get_data_size();
-	int access_param_deque_size = result_set_access_param_deque->size();
+	int access_param_deque_size = access_param_deque->size();
 // Add title if required
 	if (show_title)
 	{
 		string title_buf = "";
 		for (int j = 0 ; j < access_param_deque_size ; j++)
 		{
-			int finance_source_type = (int)(*result_set_access_param_deque)[j]->get_finance_source_type();
-			int finance_field_no = (*result_set_access_param_deque)[j]->get_finance_field_no();
+			int finance_source_type = (int)(*access_param_deque)[j]->get_finance_source_type();
+			int finance_field_no = (*access_param_deque)[j]->get_finance_field_no();
 			switch(FINANCE_DATABASE_FIELD_TYPE_LIST[finance_source_type][finance_field_no])
 			{
 			case FinanceField_INT:
@@ -92,8 +92,8 @@ unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCE
 		string data_buf = "";
 		for (int j = 0 ; j < access_param_deque_size ; j++)
 		{
-			int finance_source_type = (int)(*result_set_access_param_deque)[j]->get_finance_source_type();
-			int finance_field_no = (*result_set_access_param_deque)[j]->get_finance_field_no();
+			int finance_source_type = (int)(*access_param_deque)[j]->get_finance_source_type();
+			int finance_field_no = (*access_param_deque)[j]->get_finance_field_no();
 			switch(FINANCE_DATABASE_FIELD_TYPE_LIST[finance_source_type][finance_field_no])
 			{
 			case FinanceField_INT:
@@ -136,7 +136,29 @@ OUT:
 	return ret;
 }
 
-unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
+unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
 {
-	return output_result(result_set, result_set_access_param_deque, NULL, output_result_param, output_filename);
+	return output_result(result_set, access_param_deque, NULL, output_result_param, output_filename);
 }
+
+unsigned short output_2d_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM access_param1, const PRESULT_SET_ACCESS_PARAM access_param2, const PFINANCE_BOOL_DATA_ARRAY filter_array, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
+{
+	assert(result_set != NULL && "result_set should NOT be NULL");
+	assert(access_param1 != NULL && "access_param1 should NOT be NULL");
+	assert(access_param2 != NULL && "access_param2 should NOT be NULL");
+	assert(result_set->get_data_dimension() >= 2 && "result_set data dimension SHOULD be larger than 2");
+
+	ResultSetAccessParamDeque access_param_deque;
+	access_param_deque.push_back(access_param1);
+	access_param_deque.push_back(access_param2);
+	unsigned short ret =  output_result(result_set, &access_param_deque, filter_array, output_result_param, output_filename);
+	access_param_deque[0] = NULL;
+	access_param_deque[1] = NULL;
+	return ret;
+}
+
+unsigned short output_2d_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM access_param1, const PRESULT_SET_ACCESS_PARAM access_param2, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
+{
+	return output_2d_result(result_set, access_param1, access_param2, NULL, output_result_param, output_filename);
+}
+

@@ -33,10 +33,12 @@ public:
 
 	unsigned short initialize();
 	unsigned short query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set)const;
-	unsigned short correlate(const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
+	unsigned short correlate(const SmartPointer<ResultSetAccessParam>& sp_access_param1, const SmartPointer<ResultSetAccessParam>& sp_access_param2, float& correlation, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
+	unsigned short output_2d(const SmartPointer<ResultSetAccessParam>& sp_access_param1, const SmartPointer<ResultSetAccessParam>& sp_access_param2, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
 
-	unsigned short run_daily(int show_result_type);
-	unsigned short analyze_daily(int show_result_type, int offset=1);
+	unsigned short update_daily(int show_result_type)const;
+	unsigned short analyze_daily(int show_result_type, int offset=1)const;
+	unsigned short output_daily(int offset=1)const;
 
 #ifdef DO_DEBUG
 	unsigned short test();

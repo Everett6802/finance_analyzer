@@ -378,20 +378,47 @@ void FinanceAnalyzerTest::test_check_filter_array()
 
 void FinanceAnalyzerTest::test_check_filter_rule()
 {
+	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
+	static const char* field1[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}; // Long
+	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long
+	static const char* field3[] = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10"}; // Int
+	static const char* field4[] = {"10.1", "20.1", "30.1", "40.1", "50.1", "60.1", "70.1", "80.1", "90.1", "100.1"}; // Float
+	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
+
 	static const int ERRMSG_SIZE = 256;
 	static char errmsg[ERRMSG_SIZE];
+	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
 
-	ResultSet result_set;
 	FinanceBoolDataArray filter_data_array;
+
 	unsigned short ret = RET_SUCCESS;
+	ResultSet result_set;
+	for (int i = 0 ; i < 6 ; i++)
+		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
+	char data[32];
+	for (int i = 0 ; i < DATA_SIZE ; i++)
+	{
+		snprintf(data, 32, "%s", date[i]);
+		result_set.set_date(data);
+		snprintf(data, 32, "%s", field1[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
+		snprintf(data, 32, "%s", field2[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
+		snprintf(data, 32, "%s", field3[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
+		snprintf(data, 32, "%s", field4[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
+		snprintf(data, 32, "%s", field5[i]);
+		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
+
+//		filter_data_array.add(filter[i]);
+	}
+
 	SmartPointer<FinanceIntDataArray> sp_int_data_array(new FinanceIntDataArray());
 	SmartPointer<FinanceLongDataArray> sp_long_data_array(new FinanceLongDataArray());
 	SmartPointer<FinanceFloatDataArray> sp_float_data_array(new FinanceFloatDataArray());
 	sp_int_data_array->set_type(FinanceField_INT);
 	sp_long_data_array->set_type(FinanceField_LONG);
-	sp_float_data_array->set_type(FinanceField_FLOAT);
-// Generate data
-	ResultSet::generate_filtered_data_for_simulation(result_set, filter_data_array);
 
 	ResultSetAccessParamDeque result_set_access_param_deque;
 	FilterRuleThresholdDeque filter_rule_threshold_deque;

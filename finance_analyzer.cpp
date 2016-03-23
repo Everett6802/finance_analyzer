@@ -7,7 +7,7 @@
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
 #include "finance_analyzer_test.h"
-#include "finance_analyzer_output.h"
+//#include "finance_analyzer_output.h"
 
 
 static FinanceAnalyzerMgr finance_analyzer_mgr;
@@ -21,30 +21,31 @@ int parse_show_res_type(const char* show_res_type_string);
 
 int main(int argc, char** argv)
 {
-	ResultSet result_set;
-	ResultSetAccessParamDeque result_set_access_param_deque;
-	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 0));
-	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
-	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
-	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3));
-	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
-	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5));
-	ResultSet::generate_data_for_simulation(result_set);
-	OutputResultParam output_result_param;
-	output_result_param.set_split_symbol(',');
-	output_result_param.set_show_title(true);
-	output_result(&result_set, &result_set_access_param_deque, &output_result_param, "output.csv");
-	exit(0);
+//	ResultSet result_set;
+//	ResultSetAccessParamDeque result_set_access_param_deque;
+////	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 0));
+//	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
+////	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
+////	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3));
+////	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
+//	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5));
+//	ResultSet::generate_data_for_simulation(result_set);
+//	OutputResultParam output_result_param;
+////	output_result_param.set_split_symbol(',');
+////	output_result_param.set_show_title(true);
+//	output_result(&result_set, &result_set_access_param_deque, &output_result_param/*, "output.csv"*/);
+//	exit(0);
 
 	static const int ERRMSG_SIZE = 256;
 
 	char errmsg[ERRMSG_SIZE];
 	int index = 1;
 	int offset;
-	bool run_daily = false;
-	int show_run_daily_res_type = 0x0;
+	bool update_daily = false;
+	int show_update_daily_res_type = 0x0;
 	bool analyze_daily = false;
 	int show_analyze_daily_res_type =  0x0; //SHOW_RES_DEFAULT;
+	bool output_daily = false;
 
 	for (; index < argc ; index += offset)
 	{
@@ -67,12 +68,12 @@ int main(int argc, char** argv)
 			run_test(argv[index + 1], true);
 			exit(EXIT_SUCCESS);
 		}
-		else if (strcmp(argv[index], "--run_daily") == 0)
+		else if (strcmp(argv[index], "--update_daily") == 0)
 		{
 			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'run_daily' attribute");
-			run_daily = true;
-			show_run_daily_res_type = parse_show_res_type(argv[index + 1]);
+				print_errmsg_and_exit("No argument found in 'update_daily' attribute");
+			update_daily = true;
+			show_update_daily_res_type = parse_show_res_type(argv[index + 1]);
 			offset = 2;
 		}
 		else if (strcmp(argv[index], "--analyze_daily") == 0)
@@ -82,6 +83,11 @@ int main(int argc, char** argv)
 			analyze_daily = true;
 			show_analyze_daily_res_type = parse_show_res_type(argv[index + 1]);
 			offset = 2;
+		}
+		else if (strcmp(argv[index], "--output_daily") == 0)
+		{
+			output_daily = true;
+			offset = 1;
 		}
 		else if (strcmp(argv[index], "--disable_console") == 0)
 		{
@@ -99,12 +105,12 @@ int main(int argc, char** argv)
 	unsigned short ret = finance_analyzer_mgr.initialize();
 	if (CHECK_FAILURE(ret))
 		return ret;
-	if (run_daily)
+	if (update_daily)
 	{
-		PRINT("Run daily data......\n");
-		ret = finance_analyzer_mgr.run_daily(show_run_daily_res_type);
+		PRINT("Update daily data......\n");
+		ret = finance_analyzer_mgr.update_daily(show_update_daily_res_type);
 		if (CHECK_FAILURE(ret))
-			snprintf(errmsg, ERRMSG_SIZE, "Fails to run daily, due to: %d, %s", ret, get_ret_description(ret));
+			snprintf(errmsg, ERRMSG_SIZE, "Fails to update daily, due to: %d, %s", ret, get_ret_description(ret));
 	}
 	if (analyze_daily)
 	{
@@ -112,6 +118,13 @@ int main(int argc, char** argv)
 		ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type, 0);
 		if (CHECK_FAILURE(ret))
 			snprintf(errmsg, ERRMSG_SIZE, "Fails to analyze daily, due to: %d, %s", ret, get_ret_description(ret));
+	}
+	if (output_daily)
+	{
+		PRINT("Output daily data......\n");
+		ret = finance_analyzer_mgr.output_daily(0);
+		if (CHECK_FAILURE(ret))
+			snprintf(errmsg, ERRMSG_SIZE, "Fails to output daily, due to: %d, %s", ret, get_ret_description(ret));
 	}
 
 	exit(EXIT_SUCCESS);
@@ -129,8 +142,9 @@ void show_usage()
 	PRINT("\n");
 	PRINT("  Format: 1,2,4 (Start from 0)\n");
 	PRINT("  all: All types\n");
-	PRINT("--run_daily\nDescription: Run daily data\nCaution: Other flags are ignored\n");
-	PRINT("--analyze_daily\nDescription: Analyze daily data\nCaution: Other flags are ignored\n");
+	PRINT("--update_daily\nDescription: Update daily data\n");
+	PRINT("--analyze_daily\nDescription: Analyze daily data\n");
+	PRINT("--output_daily\nDescription: Output daily data\n");
 	PRINT(" Show Result Type list: ");
 	for (int i = 0 ; i < SHOW_RES_TYPE_SIZE ; i++)
 		PRINT("%s[%d] ", SHOW_RES_TYPE_DESCRIPTION[i], i);
