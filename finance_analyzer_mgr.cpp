@@ -668,24 +668,24 @@ unsigned short FinanceAnalyzerMgr::analyze_daily(int show_result_type, int offse
 	return ret;
 }
 
-#define OUTPUT_FILE(S1, F1, C1, S2, F2, C2, O1)\
+#define OUTPUT_FILE(S1, F1, C1, S2, F2, C2, O1, TITLE)\
 do{\
 SmartPointer<ResultSetAccessParam> sp_access_param1(new ResultSetAccessParam(S1, F1, C1, O1));\
 SmartPointer<ResultSetAccessParam> sp_access_param2(new ResultSetAccessParam(S2, F2, C2));\
 snprintf(output_filename, 32, "%02d_%02d_%02d_%02d_%02d_%02d_%02d.csv", S1, F1, C1, O1, S2, F2, C2);\
 ret = output_2d(sp_access_param1, sp_access_param2, output_filename);\
 if (CHECK_FAILURE(ret))\
-	return ret;\
-}while(0);\
-snprintf(buf, BUF_SIZE, "Output data to %s\n", output_filename);\
-buf_string += string(buf);
+	goto OUT;\
+snprintf(multiple_2d_graph_entry, BUF_SIZE, "%s,%s\n", output_filename, TITLE);\
+fputs(multiple_2d_graph_entry, fp);\
+}while(0);
 
-#define OUTPUT_FILE_DIFF(S1, F1, C1, S2, F2, C2, O1) OUTPUT_FILE(S1, F1, C1, S2, F2, C2, O1 + 1)
+#define OUTPUT_FILE_DIFF(S1, F1, C1, S2, F2, C2, O1, TITLE) OUTPUT_FILE(S1, F1, C1, S2, F2, C2, O1 + 1, TITLE)
 
 unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
 {
 	static const int BUF_SIZE = 512;
-	static char buf[BUF_SIZE];
+	// static char buf[BUF_SIZE];
 	static const int FILENAME_SIZE = 128;
 	static char output_filename[FILENAME_SIZE];
 
@@ -698,25 +698,29 @@ unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
 		return ret;
 	WRITE_FORMAT_DEBUG("The workday: %04d-%02d-%02d", year, month, day);
 
-	string buf_string = "";
+// Create the config file for plotting multiple graphes
+	char current_working_directory[256];
+	getcwd(current_working_directory, 256);
+	char output_conf_filepath[256];
+	snprintf(output_conf_filepath, 256, "%s/%s/%s", current_working_directory, RESULT_FOLDER_NAME, DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME);
+	FILE* fp = fopen(output_conf_filepath, "w");
+	if (fp == NULL)
+	{
+		fprintf(stderr, "Fail to open file: %s, due to: %s", output_conf_filepath, strerror(errno));
+		return RET_FAILURE_SYSTEM_API;
+	}
+
+	char multiple_2d_graph_entry[BUF_SIZE];
+
 // 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
-	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_None, offset)
+	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_None, offset, "發行量加權股價指數漲跌／自營商(自行買賣)買賣超")
 // 發行量加權股價指數漲跌／自營商(避險)買賣超
-	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_None, offset)
+	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_None, offset, "發行量加權股價指數漲跌／自營商(避險)買賣超")
 // 發行量加權股價指數漲跌／投信買賣超
-	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_None, offset)
+	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_None, offset, "發行量加權股價指數漲跌／投信買賣超")
 // 發行量加權股價指數漲跌／外資及陸資買賣超
-	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_None, offset)
-	buf_string += string("\n");
-//// 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
-//	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_Sum5, 5 - 1 + offset)
-//// 發行量加權股價指數漲跌／自營商(避險)買賣超
-//	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, ArrayElementCalculation_Sum5, 5 - 1 + offset)
-//// 發行量加權股價指數漲跌／投信買賣超
-//	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_Sum5, 5 - 1 + offset)
-//// 發行量加權股價指數漲跌／外資及陸資買賣超
-//	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_Sum5, 5 - 1 + offset)
-//	buf_string += string("\n");
+	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_None, offset, "發行量加權股價指數漲跌／外資及陸資買賣超")
+
 //// 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_Avg5, offset)
 //// 發行量加權股價指數漲跌／自營商(避險)買賣超
@@ -725,7 +729,7 @@ unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_Avg5, offset)
 //// 發行量加權股價指數漲跌／外資及陸資買賣超
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum5, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_Avg5, offset)
-//	buf_string += string("\n");
+
 //// 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_Sum10, offset)
 //// 發行量加權股價指數漲跌／自營商(避險)買賣超
@@ -734,7 +738,7 @@ unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_Sum10, offset)
 //// 發行量加權股價指數漲跌／外資及陸資買賣超
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_Sum10, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_Sum10, offset)
-//	buf_string += string("\n");
+
 //// 發行量加權股價指數漲跌／自營商(自行買賣)買賣超
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, ArrayElementCalculation_Sum20, 20 - 1 + offset)
 //// 發行量加權股價指數漲跌／自營商(避險)買賣超
@@ -743,10 +747,10 @@ unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, ArrayElementCalculation_Sum20, 20 - 1 + offset)
 //// 發行量加權股價指數漲跌／外資及陸資買賣超
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, ArrayElementCalculation_Sum20, 20 - 1 + offset)
-//	buf_string += string("\n");
+
 //// 發行量加權股價指數漲跌／融資餘額變化
 //	OUTPUT_FILE_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_StockMarginTradingAndShortSelling, 15, ArrayElementCalculation_Diff, offset)
-//	buf_string += string("\n");
+
 //// 發行量加權股價指數漲跌／外資期權留倉淨額
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, ArrayElementCalculation_None, offset)
 //// 發行量加權股價指數漲跌／外資期權留倉淨額變化
@@ -759,12 +763,12 @@ unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, ArrayElementCalculation_None, offset)
 //// 發行量加權股價指數漲跌／自營商期權留倉淨額變化
 //	OUTPUT_FILE_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, ArrayElementCalculation_Diff, offset)
-//	buf_string += string("\n");
+
 //// 發行量加權股價指數漲跌／未平倉Put/Call Ratio
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionPutCallRatio, 6, ArrayElementCalculation_None, offset)
 //// 發行量加權股價指數漲跌／未平倉Put/Call Ratio變化
 //	OUTPUT_FILE_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionPutCallRatio, 6, ArrayElementCalculation_Diff, offset)
-//	buf_string += string("\n");
+
 //// 發行量加權股價指數漲跌／外資Buy Call留倉口數
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, ArrayElementCalculation_None, offset)
 //// 發行量加權股價指數漲跌／外資Buy Call留倉口數變化
@@ -797,7 +801,7 @@ unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, ArrayElementCalculation_None, offset)
 //// 發行量加權股價指數漲跌／自營商Sell Put留倉口數變化
 //	OUTPUT_FILE_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, ArrayElementCalculation_Diff, offset)
-//	buf_string += string("\n");
+
 //// 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 3, ArrayElementCalculation_None, offset)
 //// 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數變化
@@ -806,8 +810,13 @@ unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
 //	OUTPUT_FILE(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 12, ArrayElementCalculation_None, offset)
 //// 發行量加權股價指數漲跌／十大交易人及特法近月留倉淨口數變化
 //	OUTPUT_FILE_DIFF(FinanceSource_StockExchangeAndVolume, 5, ArrayElementCalculation_None, FinanceSource_FutureTop10DealersAndLegalPersons, 12, ArrayElementCalculation_Diff, offset)
-//	buf_string += string("\n");
 
+OUT:
+	if (fp != NULL)
+	{
+		fclose(fp);
+		fp = NULL;
+	}
 	return ret;
 
 }

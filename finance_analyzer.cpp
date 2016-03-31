@@ -115,14 +115,14 @@ int main(int argc, char** argv)
 	if (analyze_daily)
 	{
 		PRINT("Analyze daily data......\n");
-		ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type, 0);
+		ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type, 1);
 		if (CHECK_FAILURE(ret))
 			snprintf(errmsg, ERRMSG_SIZE, "Fails to analyze daily, due to: %d, %s", ret, get_ret_description(ret));
 	}
 	if (output_daily)
 	{
 		PRINT("Output daily data......\n");
-		ret = finance_analyzer_mgr.output_daily(0);
+		ret = finance_analyzer_mgr.output_daily(1);
 		if (CHECK_FAILURE(ret))
 			snprintf(errmsg, ERRMSG_SIZE, "Fails to output daily, due to: %d, %s", ret, get_ret_description(ret));
 	}

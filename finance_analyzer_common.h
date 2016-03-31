@@ -125,6 +125,7 @@ extern const char* FINANCE_ANALYZER_CONF_FILENAME;
 extern const char* WORKDAY_CANLENDAR_CONF_FILENAME;
 extern const char* DATABASE_TIME_RANGE_CONF_FILENAME;
 extern const char* DEFAULT_OUTPUT_FILENAME_FOR_PLOT;
+extern const char* DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME;
 
 extern const char* MYSQL_TABLE_NAME_BASE;
 extern const char* MYSQL_DATE_FILED_NAME;

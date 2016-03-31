@@ -18,6 +18,7 @@ const char* FINANCE_ANALYZER_CONF_FILENAME = "finance_analyzer.conf";
 const char* WORKDAY_CANLENDAR_CONF_FILENAME = ".workday_canlendar.conf";
 const char* DATABASE_TIME_RANGE_CONF_FILENAME = ".database_time_range.conf";
 const char* DEFAULT_OUTPUT_FILENAME_FOR_PLOT = "result_data.txt";
+const char* DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME = ".multiple_2d_graph.conf";
 
 const char* MYSQL_TABLE_NAME_BASE = "year";
 const char* MYSQL_DATE_FILED_NAME = "date";
