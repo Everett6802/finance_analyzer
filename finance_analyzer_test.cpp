@@ -12,6 +12,7 @@ using namespace std;
 const char* TEST_TYPE_DESCRIPTION[] =
 {
 	"Check Array",
+	"Check Array Statistics",
 	"Check Filter Array",
 	"Check Filter Rule",
 	"Check Formula",
@@ -32,7 +33,7 @@ FinanceAnalyzerTest::~FinanceAnalyzerTest()
 //	RELEASE_MSG_DUMPER()
 }
 
-void FinanceAnalyzerTest::check_float_value_equal(float expected_value, float actual_value)
+bool FinanceAnalyzerTest::check_float_value_equal(float expected_value, float actual_value, bool throw_exception)
 {
 	static const float TOLERANCE = 0.01f;
 //	static const int VALUE_SIZE = 16;
@@ -50,8 +51,11 @@ void FinanceAnalyzerTest::check_float_value_equal(float expected_value, float ac
 		static char errmsg[ERRMSG_SIZE];
 //		snprintf(errmsg, ERRMSG_SIZE, "Value is NOT equal; Expected: %s, Actual: %s", expected_value_str, actual_value_str);
 		snprintf(errmsg, ERRMSG_SIZE, "Value is NOT equal; Expected: %.2f, Actual: %.2f", expected_value, actual_value);
-		throw runtime_error(errmsg);
+		if (throw_exception)
+			throw runtime_error(errmsg);
+		return false;
 	}
+	return true;
 }
 
 void FinanceAnalyzerTest::set_show_detail(bool show_detail)
@@ -353,6 +357,101 @@ void FinanceAnalyzerTest::test_check_array()
 		throw runtime_error(string(errmsg));
 	}
 	sp_float_data_array->reset_array();
+}
+
+void FinanceAnalyzerTest::test_check_array_statistics()
+{
+	static const int ERRMSG_SIZE = 256;
+	static char errmsg[ERRMSG_SIZE];
+
+	ResultSet result_set;
+	unsigned short ret = RET_SUCCESS;
+	SmartPointer<FinanceIntDataArray> sp_int_data_array(new FinanceIntDataArray());
+	SmartPointer<FinanceLongDataArray> sp_long_data_array(new FinanceLongDataArray());
+	SmartPointer<FinanceFloatDataArray> sp_float_data_array(new FinanceFloatDataArray());
+	sp_int_data_array->set_type(FinanceField_INT);
+	sp_long_data_array->set_type(FinanceField_LONG);
+	sp_float_data_array->set_type(FinanceField_FLOAT);
+// Generate data
+	ResultSet::generate_data_for_simulation(result_set);
+// Check Avg/Diff array
+//	if (show_test_case_detail) cout << "2 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff) << endl;
+//	if (show_test_case_detail) cout << "2 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5) << endl;
+//	if (show_test_case_detail) cout << "2 Avg10: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg10) << endl;
+//	if (show_test_case_detail) cout << "4 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff) << endl;
+//	if (show_test_case_detail) cout << "4 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5) << endl;
+
+	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1);
+	long data_array1_min, data_array1_max;
+	ret = data_array1->get_data_range(data_array1_min, data_array1_max);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [1 Range], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "1 Min: " << data_array1_min << ", 1 Max: " << data_array1_max << endl;
+	static const long ARRAY1_MIN = 1;
+	if (data_array1_min != ARRAY1_MIN)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[1 Min] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	static const long ARRAY1_MAX = 10;
+	if (data_array1_max != ARRAY1_MAX)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[1 Max] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_long_data_array->reset_array();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 3);
+	int data_array3_min, data_array3_max;
+	ret = data_array3->get_data_range(data_array3_min, data_array3_max);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [3 Range], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "3 Min: " << data_array3_min << ", 3 Max: " << data_array3_max << endl;
+	static const long ARRAY3_MIN = -10;
+	if (data_array3_min != ARRAY3_MIN)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 Min] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	static const long ARRAY3_MAX = -1;
+	if (data_array3_max != ARRAY3_MAX)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 Max] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_int_data_array->reset_array();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	PFINANCE_FLOAT_DATA_ARRAY data_array4 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 4);
+	float data_array4_min, data_array4_max;
+	ret = data_array4->get_data_range(data_array4_min, data_array4_max);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [4 Range], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "4 Min: " << data_array4_min << ", 4 Max: " << data_array4_max << endl;
+	static const float ARRAY4_MIN = 10.1f;
+	if (!check_float_value_equal(data_array4_min, ARRAY4_MIN))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[4 Min] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	static const float ARRAY4_MAX = 100.1f;
+	if (!check_float_value_equal(data_array4_max, ARRAY4_MAX))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[4 Max] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_float_data_array->reset_array();
+
 }
 
 void FinanceAnalyzerTest::test_check_filter_array()
@@ -764,6 +863,7 @@ bool FinanceAnalyzerTest::test(TestType test_type)
 	static test_func_ptr test_func_array[] =
 	{
 		&FinanceAnalyzerTest::test_check_array,
+		&FinanceAnalyzerTest::test_check_array_statistics,
 		&FinanceAnalyzerTest::test_check_filter_array,
 		&FinanceAnalyzerTest::test_check_filter_rule,
 		&FinanceAnalyzerTest::test_check_formula,

@@ -595,6 +595,27 @@ void FinanceDataArrayTemplate<T>::add(T data)
 }
 
 template <typename T>
+unsigned short FinanceDataArrayTemplate<T>::get_data_range(T& data_min, T& data_max)const
+{
+	if (is_empty())
+	{
+		WRITE_ERROR("This array is Empty");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	data_min = array_data[0];
+	data_max = array_data[0];
+	for (int i = 1 ; i < array_pos ; i++)
+	{
+		if (data_min > array_data[i])
+			data_min = array_data[i];
+		if (data_max < array_data[i])
+			data_max = array_data[i];
+//		printf("%d %d %d\n", data_min, data_max, array_data[i]);
+	}
+	return RET_SUCCESS;
+}
+
+template <typename T>
 const T FinanceDataArrayTemplate<T>::operator[](int index)const
 {
 	assert(array_data != NULL && "array_data == NULL");
@@ -622,6 +643,11 @@ const T FinanceDataArrayTemplate<T>::operator[](int index)const
 
 	return array_data[index];
 }
+
+template class FinanceDataArrayTemplate<int>;
+template class FinanceDataArrayTemplate<long>;
+template class FinanceDataArrayTemplate<float>;
+template class FinanceDataArrayTemplate<bool>;
 
 //template <typename T>
 //unsigned short FinanceDataArrayTemplate<T>::get_sub_array(FinanceDataArrayTemplate& new_data_array, int start_index, int end_index)

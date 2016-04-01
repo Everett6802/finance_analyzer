@@ -181,6 +181,7 @@ public:
 //	FinanceDataArrayTemplate<T> operator+(const FinanceDataArrayTemplate& another);
 
 	void add(T data);
+	unsigned short get_data_range(T& data_min, T& data_max)const;
 };
 
 template <typename T>
