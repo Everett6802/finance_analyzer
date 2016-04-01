@@ -853,7 +853,7 @@ bool Finance##m##DataArray::operator==(const n* another_array)\
 	assert(another_array != NULL && "another_array should NOT be NULL");\
 	for (int i = 0 ; i < array_pos ; i++)\
 	{\
-		if ((array_data[i] - another_array[i]) > TOLERANCE)\
+		if (abs(array_data[i] - another_array[i]) > TOLERANCE)\
 			return false;\
 	}\
 	return true;\
@@ -908,6 +908,26 @@ unsigned short Finance##m##DataArray::get_diff_array(Finance##m##DataArray& new_
 	}\
 	for (int i = start_index + 1; i < end_index ; i++)\
 		new_data_array.add(array_data[i] - array_data[i - 1]);\
+	return RET_SUCCESS;\
+}\
+unsigned short Finance##m##DataArray::get_rate_array(FinanceFloatDataArray& new_data_array, int start_index, int end_index)\
+{\
+	if (start_index < 0 || start_index >= array_pos)\
+	{\
+		WRITE_FORMAT_ERROR("start_index is NOT in the range[0, %d)", array_pos);\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	end_index = get_end_index_ex(end_index, array_pos);\
+	if ((end_index - start_index) < 2)\
+	{\
+		WRITE_ERROR("The array size is NOT more than 2");\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	for (int i = start_index + 1; i < end_index ; i++)\
+	{\
+		assert (array_data[i - 1] != 0 && "The data should NOT be zero");\
+		new_data_array.add((float)(array_data[i] - array_data[i - 1])/array_data[i - 1]);\
+	}\
 	return RET_SUCCESS;\
 }\
 unsigned short Finance##m##DataArray::get_sum_array(Finance##m##DataArray& new_data_array, int N, int start_index, int end_index)\
@@ -1566,6 +1586,53 @@ unsigned short ResultSet::add_calculation_set_diff(const PFINANCE_DATA_ARRAY_BAS
 	return ret;
 }
 
+unsigned short ResultSet::add_calculation_set_rate(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex)
+{
+	assert(data_array_base != NULL && "data_array_base should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	PFINANCE_FLOAT_DATA_ARRAY new_array = new FinanceFloatDataArray();
+	assert(new_array != NULL && "Fail to allocate the FinanceFloatDataArray object");
+	new_array->set_type(FinanceField_FLOAT);
+
+	unsigned short value = get_combined_index(FinanceField_FLOAT, float_data_set.size());
+
+	switch (data_array_base->get_type())
+	{
+	case FinanceField_INT:
+	{
+		PFINANCE_INT_DATA_ARRAY data_array = (PFINANCE_INT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_rate_array(*new_array, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	break;
+	case FinanceField_LONG:
+	{
+		PFINANCE_LONG_DATA_ARRAY data_array = (PFINANCE_LONG_DATA_ARRAY)data_array_base;
+		ret = data_array->get_rate_array(*new_array, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	break;
+	case FinanceField_FLOAT:
+	{
+		PFINANCE_FLOAT_DATA_ARRAY data_array = (PFINANCE_FLOAT_DATA_ARRAY)data_array_base;
+		ret = data_array->get_rate_array(*new_array, 0);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	break;
+	default:
+		WRITE_FORMAT_ERROR("The unsupported field type: %d", data_array_base->get_type());
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	float_data_set.push_back(new_array);
+	float_data_set_size = float_data_set.size();
+
+	data_calculation_set_mapping[key_ex] = value;
+	return ret;
+}
+
 unsigned short ResultSet::add_calculation_set_sum(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n)
 {
 	assert(data_array_base != NULL && "data_array_base should NOT be NULL");
@@ -1746,6 +1813,7 @@ unsigned short ResultSet::add_calculation_set(int source_index, int field_index,
 	{
 		&ResultSet::add_calculation_set_dummy,
 		&ResultSet::add_calculation_set_diff,
+		&ResultSet::add_calculation_set_rate,
 		&ResultSet::add_calculation_set_sum5,
 		&ResultSet::add_calculation_set_sum10,
 		&ResultSet::add_calculation_set_sum20,

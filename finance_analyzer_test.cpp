@@ -97,6 +97,21 @@ void FinanceAnalyzerTest::test_check_array()
 	}
 	sp_long_data_array->reset_array();
 
+	ret = data_array1->get_rate_array(*sp_float_data_array, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [1 Rate], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "1 Rate: " << *sp_float_data_array << endl;
+	static const float ARRAY1_RATE[] = {1.0, 0.5, 0.33, 0.25, 0.2, 0.17, 0.14, 0.13, 0.11};
+	if (*sp_float_data_array != ARRAY1_RATE)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[1 Rate] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_float_data_array->reset_array();
+
 	ret = data_array1->get_sum_array(*sp_long_data_array, 5, 0);
 	if (CHECK_FAILURE(ret))
 	{
@@ -173,6 +188,21 @@ void FinanceAnalyzerTest::test_check_array()
 	}
 	sp_int_data_array->reset_array();
 
+	ret = data_array3->get_rate_array(*sp_float_data_array, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [3 Rate], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "3 Rate: " << *sp_float_data_array << endl;
+	static const float ARRAY3_RATE[] = {1.0, 0.5, 0.33, 0.25, 0.2, 0.17, 0.14, 0.13, 0.11};
+	if (*sp_float_data_array != ARRAY3_RATE)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 Rate] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_float_data_array->reset_array();
+
 	ret = data_array3->get_sum_array(*sp_int_data_array, 5, 0);
 	if (CHECK_FAILURE(ret))
 	{
@@ -225,7 +255,7 @@ void FinanceAnalyzerTest::test_check_array()
 		throw runtime_error(string(errmsg));
 	}
 	if (show_test_case_detail) cout << "3 WAvg10: " << *sp_float_data_array << endl;
-	static const float ARRAY3_WAVG10[] = {-6.11};
+	static const float ARRAY3_WAVG10[] = {-6.61};
 	if (*sp_float_data_array != ARRAY3_WAVG10)
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 WAvg10] is NOT correct");
@@ -245,6 +275,21 @@ void FinanceAnalyzerTest::test_check_array()
 	if (*sp_float_data_array != ARRAY4_DIFF)
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "The Array[4 Diff] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	sp_float_data_array->reset_array();
+
+	ret = data_array4->get_rate_array(*sp_float_data_array, 0);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [4 Rate], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "4 Rate: " << *sp_float_data_array << endl;
+	static const float ARRAY4_RATE[] = {0.99, 0.5, 0.33, 0.25, 0.2, 0.17, 0.14, 0.12, 0.11};
+	if (*sp_float_data_array != ARRAY4_RATE)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[4 Rate] is NOT correct");
 		throw runtime_error(string(errmsg));
 	}
 	sp_float_data_array->reset_array();

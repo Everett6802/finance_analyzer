@@ -215,6 +215,7 @@ DECLARE_DATA_ARRAY_OPERATOR_EQUAL(m, n)
 unsigned short get_sub_array(Finance##m##DataArray& new_data_array, const FinanceBoolDataArray* filter_array, int start_index, int end_index=-1);\
 unsigned short get_sub_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
 unsigned short get_diff_array(Finance##m##DataArray& new_data_array, int start_index, int end_index=-1);\
+unsigned short get_rate_array(FinanceFloatDataArray& new_data_array, int start_index, int end_index=-1);\
 unsigned short get_sum_array(Finance##m##DataArray& new_data_array, int N, int start_index, int end_index=-1);\
 unsigned short get_avg_array(FinanceFloatDataArray& new_data_array, int N, int start_index, int end_index=-1);\
 unsigned short get_weighted_avg_array(FinanceFloatDataArray& new_data_array, int N, int start_index, int end_index=-1);
@@ -417,6 +418,7 @@ private:
 	unsigned short find_data_pos(int source_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
 	unsigned short add_calculation_set_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
+	unsigned short add_calculation_set_rate(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_sum(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex, int n);
 	unsigned short add_calculation_set_sum5(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_sum10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);

@@ -19,22 +19,14 @@ void print_errmsg_and_exit(const char* errmsg);
 void run_test(const char* test_case_list, bool show_detail);
 int parse_show_res_type(const char* show_res_type_string);
 
+//#define DO_TEST_DEBUG
+
 int main(int argc, char** argv)
 {
-//	ResultSet result_set;
-//	ResultSetAccessParamDeque result_set_access_param_deque;
-////	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 0));
-//	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
-////	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
-////	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3));
-////	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
-//	result_set_access_param_deque.push_back(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5));
-//	ResultSet::generate_data_for_simulation(result_set);
-//	OutputResultParam output_result_param;
-////	output_result_param.set_split_symbol(',');
-////	output_result_param.set_show_title(true);
-//	output_result(&result_set, &result_set_access_param_deque, &output_result_param/*, "output.csv"*/);
-//	exit(0);
+#ifdef DO_TEST_DEBUG
+	run_test("0", true);
+	exit(0);
+#endif
 
 	static const int ERRMSG_SIZE = 256;
 
