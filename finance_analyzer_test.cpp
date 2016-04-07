@@ -383,7 +383,7 @@ void FinanceAnalyzerTest::test_check_array_statistics()
 
 	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1);
 	long data_array1_min, data_array1_max;
-	ret = data_array1->get_data_range(data_array1_min, data_array1_max);
+	ret = get_data_range(*data_array1, data_array1_min, data_array1_max);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [1 Range], due to: %s", get_ret_description(ret));
@@ -407,7 +407,7 @@ void FinanceAnalyzerTest::test_check_array_statistics()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 3);
 	int data_array3_min, data_array3_max;
-	ret = data_array3->get_data_range(data_array3_min, data_array3_max);
+	ret = get_data_range(*data_array3, data_array3_min, data_array3_max);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [3 Range], due to: %s", get_ret_description(ret));
@@ -431,7 +431,7 @@ void FinanceAnalyzerTest::test_check_array_statistics()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	PFINANCE_FLOAT_DATA_ARRAY data_array4 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 4);
 	float data_array4_min, data_array4_max;
-	ret = data_array4->get_data_range(data_array4_min, data_array4_max);
+	ret = get_data_range(*data_array4, data_array4_min, data_array4_max);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [4 Range], due to: %s", get_ret_description(ret));

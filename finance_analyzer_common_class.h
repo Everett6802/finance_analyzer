@@ -181,7 +181,10 @@ public:
 //	FinanceDataArrayTemplate<T> operator+(const FinanceDataArrayTemplate& another);
 
 	void add(T data);
-	unsigned short get_data_range(T& data_min, T& data_max)const;
+	// unsigned short get_data_range(T& data_min, T& data_max)const;
+	// unsigned short get_histogram_interval(int interval_amount, SmartPointer<T> &sp_histogram_interval)const;
+	// unsigned short get_histogram(int interval_amount, const T* histogram_interval, SmartPointer<int> &sp_histogram_statistics)const;
+	// unsigned short get_histogram(int interval_amount, SmartPointer<int> &sp_histogram_statistics)const;
 };
 
 template <typename T>
@@ -260,6 +263,10 @@ class FinanceBoolDataArray : public FinanceDataArrayTemplate<bool>
 {
 private:
 	int true_cnt;
+	// unsigned short get_data_range(bool& data_min, bool& data_max)const{}
+	// unsigned short get_histogram_interval(int interval_amount, SmartPointer<bool> &sp_histogram_interval)const{}
+	// unsigned short get_histogram(int interval_amount, const bool* histogram_interval, SmartPointer<int> &sp_histogram_statistics)const{}
+	// unsigned short get_histogram(int interval_amount, SmartPointer<int> &sp_histogram_statistics)const{}
 
 public:
 	FinanceBoolDataArray();

@@ -376,3 +376,121 @@ template float correlation<float, long>(const FinanceDataArrayTemplate<float>& f
 template float correlation<float, float>(const FinanceDataArrayTemplate<float>& finance_data_array1, const FinanceDataArrayTemplate<float>& finance_data_array2, int start_index1, int start_index2, int end_index1, int end_index2);
 
 IMPLEMENT_DOUBLE_INPUT_FORMULA_FUNCTION(correlation)
+
+
+template <typename T>
+int binary_search_interval(const T* interval_array, T value, int left, int right)
+{
+	assert(interval_array != NULL && "interval_array should NOT be NULL");
+	int mid;
+	while((right - left) > 1)
+	{
+		mid = left + (right - left) / 2;
+		if (value < interval_array[mid])
+			right = mid;
+		else 
+			left = mid;
+	} 
+	return left;
+}
+
+template int binary_search_interval<int>(const int* interval_array, int value, int left, int right);
+template int binary_search_interval<long>(const long* interval_array, long value, int left, int right);
+template int binary_search_interval<float>(const float* interval_array, float value, int left, int right);
+
+
+template <typename T>
+unsigned short get_data_range(const FinanceDataArrayTemplate<T>& finance_data_array, T& data_min, T& data_max)
+{
+	assert(!finance_data_array.is_empty() && "This array is Empty");
+
+	data_min = finance_data_array[0];
+	data_max = finance_data_array[0];
+	int array_size = finance_data_array.get_size();
+	for (int i = 1 ; i < array_size ; i++)
+	{
+		if (data_min > finance_data_array[i])
+			data_min = finance_data_array[i];
+		if (data_max < finance_data_array[i])
+			data_max = finance_data_array[i];
+//		printf("%d %d %d\n", data_min, data_max, array_data[i]);
+	}
+	return RET_SUCCESS;
+}
+
+template unsigned short get_data_range<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int& data_min, int& data_max);
+template unsigned short get_data_range<long>(const FinanceDataArrayTemplate<long>& finance_data_array, long& data_min, long& data_max);
+template unsigned short get_data_range<float>(const FinanceDataArrayTemplate<float>& finance_data_array, float& data_min, float& data_max);
+
+
+template <typename T>
+unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, SmartPointer<T> &sp_histogram_interval)
+{
+	assert(interval_amount != 0 && "The histogram interval amount should NOT be 0");
+	// if (interval_amount == 0)
+	// {
+	// 	WRITE_ERROR("The histogram interval amount should NOT be 0");
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
+
+	T data_min, data_max;
+	unsigned short ret = get_data_range(finance_data_array, data_min, data_max);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	T interval_size = (T)(data_max - data_min) / interval_amount;
+	T* histogram_interval = new T [interval_amount + 1];
+	assert(histogram_interval != NULL && "histogram_interval should NOT be NULL");
+	*histogram_interval = data_min;
+	for (int i = 1 ; i < interval_amount ; i++)
+		*(histogram_interval + i) = (T)(data_min + interval_size * i);
+	*(histogram_interval + interval_amount) = data_max;
+	sp_histogram_interval.set_new(histogram_interval);
+	return ret;
+}
+
+template unsigned short get_histogram_interval<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_interval);
+template unsigned short get_histogram_interval<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, SmartPointer<long> &sp_histogram_interval);
+template unsigned short get_histogram_interval<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, SmartPointer<float> &sp_histogram_interval);
+
+
+template <typename T>
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, const T* histogram_interval, SmartPointer<int> &sp_histogram_statistics)
+{
+	int* histogram_statistics = new int[interval_amount + 1];
+	assert(histogram_statistics != NULL && "histogram_statistics should NOT be NULL");
+	memset(histogram_statistics, 0x0, sizeof(int) * (interval_amount + 1));
+	
+	int interval_index;
+	int array_size = finance_data_array.get_size();
+	for (int i = 0 ; i < array_size ; i++)
+	{
+		interval_index = binary_search_interval(histogram_interval, finance_data_array[i], 0, interval_amount);
+		if (interval_index < 0 || interval_index > interval_amount)
+		{
+			assert(0 && "Fail to find the correct histogram index");
+			return RET_FAILURE_NOT_FOUND;
+		}
+		histogram_statistics[interval_index]++;
+	}
+	sp_histogram_statistics.set_new(histogram_statistics);
+	return RET_SUCCESS;
+}
+
+template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, const int* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
+template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, const long* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
+template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, const float* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
+
+
+template <typename T>
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics)
+{
+	SmartPointer<T> sp_histogram_interval;
+	unsigned short ret = get_histogram_interval(finance_data_array, interval_amount, sp_histogram_interval);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	return get_histogram(finance_data_array, interval_amount, (const T*)sp_histogram_interval.get_const_instance(), sp_histogram_statistics);
+}
+
+template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
+template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
+template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);

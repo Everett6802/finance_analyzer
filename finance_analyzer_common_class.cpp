@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
+#include "finance_analyzer_algorithm.h"
 
 
 using namespace std;
@@ -86,6 +87,9 @@ const T* SmartPointer<T>::get_const_instance()const
 template <typename T>
 void SmartPointer<T>::disable_release(){need_release = false;}
 
+template class SmartPointer<int>;
+template class SmartPointer<long>;
+template class SmartPointer<float>;
 template class SmartPointer<TimeCfg>;
 template class SmartPointer<TimeRangeCfg>;
 template class SmartPointer<QuerySet>;
@@ -594,26 +598,81 @@ void FinanceDataArrayTemplate<T>::add(T data)
 	array_data[array_pos++] = data;
 }
 
-template <typename T>
-unsigned short FinanceDataArrayTemplate<T>::get_data_range(T& data_min, T& data_max)const
-{
-	if (is_empty())
-	{
-		WRITE_ERROR("This array is Empty");
-		return RET_FAILURE_INCORRECT_OPERATION;
-	}
-	data_min = array_data[0];
-	data_max = array_data[0];
-	for (int i = 1 ; i < array_pos ; i++)
-	{
-		if (data_min > array_data[i])
-			data_min = array_data[i];
-		if (data_max < array_data[i])
-			data_max = array_data[i];
-//		printf("%d %d %d\n", data_min, data_max, array_data[i]);
-	}
-	return RET_SUCCESS;
-}
+// template <typename T>
+// unsigned short FinanceDataArrayTemplate<T>::get_data_range(T& data_min, T& data_max)const
+// {
+// 	if (is_empty())
+// 	{
+// 		WRITE_ERROR("This array is Empty");
+// 		return RET_FAILURE_INCORRECT_OPERATION;
+// 	}
+// 	data_min = array_data[0];
+// 	data_max = array_data[0];
+// 	for (int i = 1 ; i < array_pos ; i++)
+// 	{
+// 		if (data_min > array_data[i])
+// 			data_min = array_data[i];
+// 		if (data_max < array_data[i])
+// 			data_max = array_data[i];
+// //		printf("%d %d %d\n", data_min, data_max, array_data[i]);
+// 	}
+// 	return RET_SUCCESS;
+// }
+
+// template <typename T>
+// unsigned short FinanceDataArrayTemplate<T>::get_histogram_interval(int interval_amount, SmartPointer<T> &sp_histogram_interval)const
+// {
+// 	if (interval_amount == 0)
+// 	{
+// 		WRITE_ERROR("The histogram interval amount should NOT be 0");
+// 		return RET_FAILURE_INVALID_ARGUMENT;
+// 	}
+// 	T data_min, data_max;
+// 	unsigned short ret = get_data_range(data_min, data_max);
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	T interval_size = (T)(data_max - data_min) / interval_amount;
+// 	T* histogram_interval = new T [interval_amount + 1];
+// 	assert(histogram_interval != NULL && "histogram_interval should NOT be NULL");
+// 	*histogram_interval = data_min;
+// 	for (int i = 1 ; i < interval_amount ; i++)
+// 		*(histogram_interval + i) = (T)(data_min + interval_size * i);
+// 	*(histogram_interval + interval_amount) = data_max;
+// 	sp_histogram_interval.set_new(histogram_interval);
+// 	return ret;
+// }
+
+// template <typename T>
+// unsigned short FinanceDataArrayTemplate<T>::get_histogram(int interval_amount, const T* histogram_interval, SmartPointer<int> &sp_histogram_statistics)const
+// {
+// 	int* histogram_statistics = new int[interval_amount + 1];
+// 	assert(histogram_statistics != NULL && "histogram_statistics should NOT be NULL");
+// 	memset(histogram_statistics, 0x0, sizeof(int) * (interval_amount + 1));
+	
+// 	int interval_index;
+// 	for (int i = 0 ; i < array_pos ; i++)
+// 	{
+// 		interval_index = binary_search_interval(histogram_interval, array_data[i], 0, interval_amount);
+// 		if (interval_index < 0 || interval_index > interval_amount)
+// 		{
+// 			WRITE_FORMAT_ERROR("Fail to find the correct histogram index[%d]", interval_index);
+// 			return RET_FAILURE_NOT_FOUND;
+// 		}
+// 		histogram_statistics[interval_index]++;
+// 	}
+// 	sp_histogram_statistics.set_new(histogram_statistics);
+// 	return RET_SUCCESS;
+// }
+
+// template <typename T>
+// unsigned short FinanceDataArrayTemplate<T>::get_histogram(int interval_amount, SmartPointer<int> &sp_histogram_statistics)const
+// {
+// 	SmartPointer<T> sp_histogram_interval;
+// 	unsigned short ret = get_histogram_interval(interval_amount, sp_histogram_interval);
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	return get_histogram(interval_amount, (const T*)sp_histogram_interval.get_const_instance(), sp_histogram_statistics);
+// }
 
 template <typename T>
 const T FinanceDataArrayTemplate<T>::operator[](int index)const
