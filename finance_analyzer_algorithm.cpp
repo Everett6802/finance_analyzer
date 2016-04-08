@@ -394,9 +394,19 @@ int binary_search_interval(const T* interval_array, T value, int left, int right
 	return left;
 }
 
+// template <typename T>
+// int binary_search_interval(const FinanceDataArrayTemplate<T>& finance_data_array, T value, int left, int right)
+// {
+// 	return binary_search_interval(finance_data_array.get_data_array(), value, left, right);
+// }
+
 template int binary_search_interval<int>(const int* interval_array, int value, int left, int right);
 template int binary_search_interval<long>(const long* interval_array, long value, int left, int right);
 template int binary_search_interval<float>(const float* interval_array, float value, int left, int right);
+
+// template int binary_search_interval<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int value, int left, int right);
+// template int binary_search_interval<long>(const FinanceDataArrayTemplate<long>& finance_data_array, long value, int left, int right);
+// template int binary_search_interval<float>(const FinanceDataArrayTemplate<float>& finance_data_array, float value, int left, int right);
 
 
 template <typename T>

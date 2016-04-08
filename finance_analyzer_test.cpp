@@ -18,7 +18,7 @@ const char* TEST_TYPE_DESCRIPTION[] =
 	"Check Formula",
 	"Check Filter Formula",
 	"Check Calculator",
-	"Check Output"
+	"Check Histogram"
 };
 //DECLARE_MSG_DUMPER_PARAM()
 
@@ -641,36 +641,9 @@ void FinanceAnalyzerTest::test_check_filter_rule()
 
 void FinanceAnalyzerTest::test_check_formula()
 {
-	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
-	static const char* field1[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}; // Long
-	static const char* field2[] = {"-1", "2", "-3", "4", "-5", "6", "-7", "8", "-9", "10"}; // Long
-	static const char* field3[] = {"-1", "-2", "-3", "-4", "-5", "-6", "-7", "-8", "-9", "-10"}; // Int
-	static const char* field4[] = {"-2.1", "8.2", "-100.3", "20.4", "-88.5", "100.6", "-107.7", "100.8", "-202.9", "300.0"}; // Float
-	static const char* field5[] = {"1.1", "21.2", "122.3", "199.4", "200.5", "300.6", "420.7", "435.8", "599.4", "600.0"}; // Float
-
-	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
-
-//	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
-//	float correlation_value;
-	for (int i = 0 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
-	char data[32];
-	for (int i = 0 ; i < DATA_SIZE ; i++)
-	{
-		snprintf(data, 32, "%s", date[i]);
-		result_set.set_date(data);
-		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
-		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
-		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
-		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
-		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-	}
+// Generate data
+	ResultSet::generate_data_for_simulation(result_set);
 
 	float value;
 // Check Formula
@@ -716,13 +689,13 @@ void FinanceAnalyzerTest::test_check_formula()
 	if (show_test_case_detail) printf("[2 Diff] standard deviation: %.2f\n", value);
 // Check Diff average, variance, standard deviation
 	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
-	check_float_value_equal(33.57, value);
+	check_float_value_equal(10.00, value);
 	if (show_test_case_detail) printf("[4 Diff] average: %.2f\n", value);
 	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
-	check_float_value_equal(55103.06, value);
+	check_float_value_equal(0.00, value);
 	if (show_test_case_detail) printf("[4 Diff] variance: %.2f\n", value);
 	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
-	check_float_value_equal(234.74, value);
+	check_float_value_equal(0.00, value);
 	if (show_test_case_detail) printf("[4 Diff] standard deviation: %.2f\n", value);
 // Check Avg5 average, variance, standard deviation
 	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5));
@@ -736,27 +709,31 @@ void FinanceAnalyzerTest::test_check_formula()
 	if (show_test_case_detail) printf("[2 Avg5] standard deviation: %.2f\n", value);
 // Check Diff average, variance, standard deviation
 	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
-	check_float_value_equal(-12.62, value);
+	check_float_value_equal(55.10, value);
 	if (show_test_case_detail) printf("[4 Avg5] average: %.2f\n", value);
 	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
-	check_float_value_equal(752.91, value);
+	check_float_value_equal(291.67, value);
 	if (show_test_case_detail) printf("[4 Avg5] variance: %.2f\n", value);
 	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
-	check_float_value_equal(27.44, value);
+	check_float_value_equal(17.08, value);
 	if (show_test_case_detail) printf("[4 Avg5] standard deviation: %.2f\n", value);
 // Check Diff/Avg5 correlation
 	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff), result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
-	check_float_value_equal(0.97, value);
+	check_float_value_equal(-0.16, value);
 	if (show_test_case_detail) printf("[2(Diff),4(Diff)] correlation: %.2f\n", value);
 	value = covariance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
-	check_float_value_equal(29.19, value);
+	check_float_value_equal(5.50, value);
 	if (show_test_case_detail) printf("[2(Avg5),4(Avg5)] covariance: %.2f\n", value);
 	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
-	check_float_value_equal(0.93, value);
+	check_float_value_equal(0.28, value);
 	if (show_test_case_detail) printf("[2(Avg5),4(Avg5)] correlation: %.2f\n", value);
 	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), 2, 3, 4, 5);
-	check_float_value_equal(1, value);
+	check_float_value_equal(1.00, value);
 	if (show_test_case_detail) printf("[2(Diff 2:4),2(Avg5 3:5)] correlation: %.2f\n", value);
+// // Check binary search interval
+// 	int index = binary_search_interval((PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1));
+// 	check_float_value_equal(5.5, value);
+// 	if (show_test_case_detail) printf("[1] average: %.2f\n", value);
 }
 
 void FinanceAnalyzerTest::test_check_filter_formula()
@@ -856,6 +833,10 @@ void FinanceAnalyzerTest::test_check_calculator()
 	if (show_test_case_detail) printf("[1,5] correlation_value: %.2f\n", correlation_value);
 }
 
+void FinanceAnalyzerTest::test_check_histogram()
+{
+
+}
 
 bool FinanceAnalyzerTest::test(TestType test_type)
 {
@@ -868,7 +849,8 @@ bool FinanceAnalyzerTest::test(TestType test_type)
 		&FinanceAnalyzerTest::test_check_filter_rule,
 		&FinanceAnalyzerTest::test_check_formula,
 		&FinanceAnalyzerTest::test_check_filter_formula,
-		&FinanceAnalyzerTest::test_check_calculator
+		&FinanceAnalyzerTest::test_check_calculator,
+		&FinanceAnalyzerTest::test_check_histogram
 	};
 
 	bool pass = true;
