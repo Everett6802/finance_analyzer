@@ -563,6 +563,7 @@ void FinanceAnalyzerTest::test_check_filter_rule()
 	SmartPointer<FinanceFloatDataArray> sp_float_data_array(new FinanceFloatDataArray());
 	sp_int_data_array->set_type(FinanceField_INT);
 	sp_long_data_array->set_type(FinanceField_LONG);
+	sp_float_data_array->set_type(FinanceField_FLOAT);
 
 	ResultSetAccessParamDeque result_set_access_param_deque;
 	FilterRuleThresholdDeque filter_rule_threshold_deque;
@@ -835,7 +836,61 @@ void FinanceAnalyzerTest::test_check_calculator()
 
 void FinanceAnalyzerTest::test_check_histogram()
 {
+	static const int ERRMSG_SIZE = 256;
+	static char errmsg[ERRMSG_SIZE];
 
+	ResultSet result_set;
+	unsigned short ret = RET_SUCCESS;
+// Generate data
+	ResultSet::generate_data_for_simulation(result_set);
+
+	FinanceIntDataArray int_data_array;
+	FinanceLongDataArray long_data_array;
+	FinanceFloatDataArray float_data_array;
+	int_data_array.set_type(FinanceField_INT);
+	long_data_array.set_type(FinanceField_LONG);
+	float_data_array.set_type(FinanceField_FLOAT);
+
+	FinanceIntDataArray int_data_statistics;
+	int_data_statistics.set_type(FinanceField_INT);
+
+// Generate data
+	ResultSet::generate_data_for_simulation(result_set);
+
+	PFINANCE_LONG_DATA_ARRAY data_array2 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 2);
+	int data_array2_interval = 4;
+// Get Histogram Interval
+	ret = get_histogram_interval(*data_array2, data_array2_interval, long_data_array);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [2 HistInterval], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "2 HistInterval: " << long_data_array << endl;
+	static const long ARRAY2_HIST_INTERVAL[] = {-9, -4, 0, 5, 10};
+	if (long_data_array != ARRAY2_HIST_INTERVAL)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[2 HistInterval] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	// long_data_array.reset_array();
+// Get Histogram Statistics
+	// sp_data_statistics.set_new(new int[data_array2_interval]);
+	ret = get_histogram(*data_array2, data_array2_interval, long_data_array.get_data_array(), int_data_statistics);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [2 HistStatistics], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "2 HistStatistics: " << int_data_statistics << endl;
+	static const int ARRAY2_HIST_STATISTICS[] = {-9, -4, 0, 5, 10};
+	if (int_data_statistics != ARRAY2_HIST_STATISTICS)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[2 HistStatistics] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	int_data_statistics.reset_array();
+	long_data_array.reset_array();
 }
 
 bool FinanceAnalyzerTest::test(TestType test_type)

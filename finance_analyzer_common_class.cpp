@@ -587,6 +587,24 @@ void FinanceDataArrayTemplate<T>::alloc_new()
 }
 
 template <typename T>
+void FinanceDataArrayTemplate<T>::set_data_array(const T* array, int size)
+{
+	assert(array_data != NULL && "array_data should NOT be NULL");
+	assert(array != NULL && "array should NOT be NULL");
+
+	bool need_allocate_memory = (size > array_size ? true : false);
+	if (need_allocate_memory)
+	{
+		do{
+			array_size <<= 1;
+		}while(array_size >= size);
+		alloc_new();
+	}
+	memcpy(array_data, array, sizeof(T) * size);
+	array_pos = size;
+}
+
+template <typename T>
 const T* FinanceDataArrayTemplate<T>::get_data_array()const{return array_data;}
 
 template <typename T>

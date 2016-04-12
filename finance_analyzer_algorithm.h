@@ -139,8 +139,8 @@ DECLARE_DOUBLE_INPUT_FORMULA_FUNCTION(correlation)
 template <typename T>
 int binary_search_interval(const T* interval_array, T value, int left, int right);
 
-template <typename T>
-int binary_search_interval(const FinanceDataArrayTemplate<T>& finance_data_array, T value, int left, int right);
+// template <typename T>
+// int binary_search_interval(const FinanceDataArrayTemplate<T>& finance_data_array, T value, int left, int right);
 
 extern template int binary_search_interval<int>(const int* interval_array, int value, int left, int right);
 extern template int binary_search_interval<long>(const long* interval_array, long value, int left, int right);
@@ -160,26 +160,46 @@ extern template unsigned short get_data_range<float>(const FinanceDataArrayTempl
 
 
 template <typename T>
-unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, SmartPointer<T> &sp_histogram_interval);
+unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, SmartPointer<T>& sp_histogram_interval);
+
+template <typename T>
+unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<T>& data_histogram_interval);
 
 extern template unsigned short get_histogram_interval<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_interval);
 extern template unsigned short get_histogram_interval<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, SmartPointer<long> &sp_histogram_interval);
 extern template unsigned short get_histogram_interval<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, SmartPointer<float> &sp_histogram_interval);
 
+extern template unsigned short get_histogram_interval<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_interval);
+extern template unsigned short get_histogram_interval<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<long>& data_histogram_interval);
+extern template unsigned short get_histogram_interval<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<float>& data_histogram_interval);
+
 
 template <typename T>
 unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, const T* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
+
+template <typename T>
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, const T* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
 
 extern template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, const int* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
 extern template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, const long* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
 extern template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, const float* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
 
+extern template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, const int* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+extern template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, const long* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+extern template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, const float* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
 
 template <typename T>
 unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
 
+template <typename T>
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+
 extern template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
 extern template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
 extern template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
+
+extern template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+extern template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+extern template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
 
 #endif

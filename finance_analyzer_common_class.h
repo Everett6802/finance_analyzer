@@ -170,6 +170,7 @@ public:
 	FinanceDataArrayTemplate(const FinanceDataArrayTemplate& another);
 	~FinanceDataArrayTemplate();
 
+	void set_data_array(const T* array, int size);
 	const T* get_data_array()const;
 	const T operator[](int index)const;
 //	unsigned short get_sub_array(FinanceDataArrayTemplate& new_data_array, int start_index, int end_index=-1);
