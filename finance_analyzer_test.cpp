@@ -854,9 +854,6 @@ void FinanceAnalyzerTest::test_check_histogram()
 	FinanceIntDataArray int_data_statistics;
 	int_data_statistics.set_type(FinanceField_INT);
 
-// Generate data
-	ResultSet::generate_data_for_simulation(result_set);
-
 	PFINANCE_LONG_DATA_ARRAY data_array2 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 2);
 	int data_array2_interval = 4;
 // Get Histogram Interval
@@ -873,9 +870,7 @@ void FinanceAnalyzerTest::test_check_histogram()
 		snprintf(errmsg, ERRMSG_SIZE, "The Array[2 HistInterval] is NOT correct");
 		throw runtime_error(string(errmsg));
 	}
-	// long_data_array.reset_array();
 // Get Histogram Statistics
-	// sp_data_statistics.set_new(new int[data_array2_interval]);
 	ret = get_histogram(*data_array2, data_array2_interval, long_data_array.get_data_array(), int_data_statistics);
 	if (CHECK_FAILURE(ret))
 	{
@@ -883,14 +878,80 @@ void FinanceAnalyzerTest::test_check_histogram()
 		throw runtime_error(string(errmsg));
 	}
 	if (show_test_case_detail) cout << "2 HistStatistics: " << int_data_statistics << endl;
-	static const int ARRAY2_HIST_STATISTICS[] = {-9, -4, 0, 5, 10};
+	static const int ARRAY2_HIST_STATISTICS[] = {3, 2, 2, 3};
 	if (int_data_statistics != ARRAY2_HIST_STATISTICS)
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "The Array[2 HistStatistics] is NOT correct");
 		throw runtime_error(string(errmsg));
 	}
-	int_data_statistics.reset_array();
 	long_data_array.reset_array();
+	int_data_statistics.reset_array();
+
+	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 3);
+	int data_array3_interval = 3;
+// Get Histogram Interval
+	ret = get_histogram_interval(*data_array3, data_array3_interval, int_data_array);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [3 HistInterval], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "3 HistInterval: " << int_data_array << endl;
+	static const int ARRAY3_HIST_INTERVAL[] = {-10, -7, -4, -1};
+	if (int_data_array != ARRAY3_HIST_INTERVAL)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 HistInterval] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+// Get Histogram Statistics
+	ret = get_histogram(*data_array3, data_array3_interval, int_data_array.get_data_array(), int_data_statistics);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [3 HistStatistics], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "3 HistStatistics: " << int_data_statistics << endl;
+	static const int ARRAY3_HIST_STATISTICS[] = {3, 3, 4};
+	if (int_data_statistics != ARRAY3_HIST_STATISTICS)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 HistStatistics] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	int_data_array.reset_array();
+	int_data_statistics.reset_array();
+
+	PFINANCE_FLOAT_DATA_ARRAY data_array5 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 5);
+	int data_array5_interval = 5;
+// Get Histogram Interval
+	ret = get_histogram_interval(*data_array5, data_array5_interval, float_data_array);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [5 HistInterval], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "5 HistInterval: " << float_data_array << endl;
+	static const float ARRAY5_HIST_INTERVAL[] = {1.1, 120.88, 240.66, 360.44, 480.22, 600.0};
+	if (float_data_array != ARRAY5_HIST_INTERVAL)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[5 HistInterval] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+// Get Histogram Statistics
+	ret = get_histogram(*data_array5, data_array5_interval, float_data_array.get_data_array(), int_data_statistics);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to get Array [5 HistStatistics], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (show_test_case_detail) cout << "5 HistStatistics: " << int_data_statistics << endl;
+	static const int ARRAY5_HIST_STATISTICS[] = {2, 3, 1, 2, 2};
+	if (int_data_statistics != ARRAY5_HIST_STATISTICS)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The Array[5 HistStatistics] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+	float_data_array.reset_array();
+	int_data_statistics.reset_array();
 }
 
 bool FinanceAnalyzerTest::test(TestType test_type)
