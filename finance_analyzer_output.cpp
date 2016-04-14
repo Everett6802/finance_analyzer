@@ -162,3 +162,15 @@ unsigned short output_2d_result(const ResultSet* result_set, const PRESULT_SET_A
 	return output_2d_result(result_set, access_param1, access_param2, NULL, output_result_param, output_filename);
 }
 
+unsigned short output_csv_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const PFINANCE_BOOL_DATA_ARRAY filter_array, const char* output_filename)
+{
+	OutputResultParam output_result_param;
+	output_result_param.set_split_symbol(',');
+	output_result_param.set_show_title(true);
+	return  output_result(result_set, access_param_deque, filter_array, &output_result_param, output_filename);
+}
+
+unsigned short output_csv_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const char* output_filename)
+{
+	return output_csv_result(result_set, access_param_deque, output_filename);
+}

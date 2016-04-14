@@ -30,4 +30,8 @@ unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCE
 unsigned short output_2d_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM access_param1, const PRESULT_SET_ACCESS_PARAM access_param2, const PFINANCE_BOOL_DATA_ARRAY filter_array, const POUTPUT_RESULT_PARAM output_result_param=NULL, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
 unsigned short output_2d_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM access_param1, const PRESULT_SET_ACCESS_PARAM access_param2, const POUTPUT_RESULT_PARAM output_result_param=NULL, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
 
+unsigned short output_csv_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const PFINANCE_BOOL_DATA_ARRAY filter_array, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
+unsigned short output_csv_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
+
+
 #endif
