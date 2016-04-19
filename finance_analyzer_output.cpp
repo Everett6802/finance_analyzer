@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdexcept>
 #include "finance_analyzer_output.h"
+#include "finance_analyzer_algorithm.h"
 
 
 using namespace std;
@@ -21,7 +22,7 @@ char OutputResultParam::get_split_symbol()const{return split_symbol;}
 void OutputResultParam::set_show_title(char output_show_title){show_title = output_show_title;}
 char OutputResultParam::get_show_title()const{return show_title;}
 
-unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const PFINANCE_BOOL_DATA_ARRAY filter_array, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
+unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
 {
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	assert(access_param_deque != NULL && "access_param_deque should NOT be NULL");
@@ -138,10 +139,10 @@ OUT:
 
 unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
 {
-	return output_result(result_set, access_param_deque, NULL, output_result_param, output_filename);
+	return output_result(result_set, NULL, access_param_deque, output_result_param, output_filename);
 }
 
-unsigned short output_2d_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM access_param1, const PRESULT_SET_ACCESS_PARAM access_param2, const PFINANCE_BOOL_DATA_ARRAY filter_array, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
+unsigned short output_2d_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM access_param1, const PRESULT_SET_ACCESS_PARAM access_param2, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
 {
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	assert(access_param1 != NULL && "access_param1 should NOT be NULL");
@@ -151,7 +152,7 @@ unsigned short output_2d_result(const ResultSet* result_set, const PRESULT_SET_A
 	ResultSetAccessParamDeque access_param_deque;
 	access_param_deque.push_back(access_param1);
 	access_param_deque.push_back(access_param2);
-	unsigned short ret =  output_result(result_set, &access_param_deque, filter_array, output_result_param, output_filename);
+	unsigned short ret =  output_result(result_set, filter_array, &access_param_deque, output_result_param, output_filename);
 	access_param_deque[0] = NULL;
 	access_param_deque[1] = NULL;
 	return ret;
@@ -159,18 +160,40 @@ unsigned short output_2d_result(const ResultSet* result_set, const PRESULT_SET_A
 
 unsigned short output_2d_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM access_param1, const PRESULT_SET_ACCESS_PARAM access_param2, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
 {
-	return output_2d_result(result_set, access_param1, access_param2, NULL, output_result_param, output_filename);
+	return output_2d_result(result_set, NULL, access_param1, access_param2, output_result_param, output_filename);
 }
 
-unsigned short output_csv_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const PFINANCE_BOOL_DATA_ARRAY filter_array, const char* output_filename)
+unsigned short output_csv_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const char* output_filename)
 {
 	OutputResultParam output_result_param;
 	output_result_param.set_split_symbol(',');
 	output_result_param.set_show_title(true);
-	return  output_result(result_set, access_param_deque, filter_array, &output_result_param, output_filename);
+	return  output_result(result_set, filter_array, access_param_deque, &output_result_param, output_filename);
 }
 
 unsigned short output_csv_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const char* output_filename)
 {
-	return output_csv_result(result_set, access_param_deque, output_filename);
+	return output_csv_result(result_set, NULL, access_param_deque, output_filename);
+}
+
+unsigned short output_histogram_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM access_param, int interval_amount, const char* output_filename)
+{
+	assert(access_param != NULL && "access_param should NOT be NULL");
+	int finance_source_type = (int)access_param->get_finance_source_type();
+	int finance_field_no = access_param->get_finance_field_no();
+	FinanceIntDataArray data_histogram_statistics;
+	unsigned short ret = get_histogram(result_set->get_array(finance_source_type, finance_field_no), interval_amount, data_histogram_statistics);
+	if (CHECK_FAILURE(ret))
+		return ret;
+// 	ResultSet histogram_result_set;
+// 	histogram_result_set.add_int_set();
+// 	histogram_result_set.deepcopy_int_data_array(0, &data_histogram_statistics);
+// 	ResultSetAccessParamDeque histogram_access_param_deque;
+// 	histogram_access_param_deque.push_back(new ResultSetAccessParam());
+// 	return output_result(histogram_result_set, histogram_access_param_deque, NULL, output_filename);
+}
+
+unsigned short output_histogram_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM access_param, int interval_amount, const char* output_filename)
+{
+	return output_histogram_result(result_set, NULL, access_param, interval_amount, output_filename);
 }

@@ -410,15 +410,34 @@ template int binary_search_interval<float>(const float* interval_array, float va
 
 
 template <typename T>
-unsigned short get_data_range(const FinanceDataArrayTemplate<T>& finance_data_array, T& data_min, T& data_max)
+unsigned short get_data_range(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, T& data_min, T& data_max)
 {
 	assert(!finance_data_array.is_empty() && "This array is Empty");
-
-	data_min = finance_data_array[0];
-	data_max = finance_data_array[0];
 	int array_size = finance_data_array.get_size();
-	for (int i = 1 ; i < array_size ; i++)
+	if (filter_array != NULL)
 	{
+		if (array_size != filter_array->get_size())
+		{
+			snprintf(errmsg, BUF_SIZE, "The filter array size is NOT correct, expected: %d, actual: %d", array_size, filter_array->get_size());
+			throw invalid_argument(errmsg);
+		}
+	}
+// Find the start index
+	int start_index = 0;
+	if (filter_array != NULL)
+	{
+		for (int i = 0 ; i < array_size ; i++)
+		{
+			if ((*filter_array)[i])
+				start_index = i;
+		}
+	}
+	data_min = finance_data_array[start_index];
+	data_max = finance_data_array[start_index];
+	for (int i = start_index + 1 ; i < array_size ; i++)
+	{
+		if (filter_array != NULL && !(*filter_array)[i])
+			continue;
 		if (data_min > finance_data_array[i])
 			data_min = finance_data_array[i];
 		if (data_max < finance_data_array[i])
@@ -427,6 +446,15 @@ unsigned short get_data_range(const FinanceDataArrayTemplate<T>& finance_data_ar
 	}
 	return RET_SUCCESS;
 }
+template <typename T>
+unsigned short get_data_range(const FinanceDataArrayTemplate<T>& finance_data_array, T& data_min, T& data_max)
+{
+	return get_data_range(finance_data_array, NULL, data_min, data_max);
+}
+
+template unsigned short get_data_range<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int& data_min, int& data_max);
+template unsigned short get_data_range<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, long& data_min, long& data_max);
+template unsigned short get_data_range<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, float& data_min, float& data_max);
 
 template unsigned short get_data_range<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int& data_min, int& data_max);
 template unsigned short get_data_range<long>(const FinanceDataArrayTemplate<long>& finance_data_array, long& data_min, long& data_max);
@@ -434,9 +462,10 @@ template unsigned short get_data_range<float>(const FinanceDataArrayTemplate<flo
 
 
 template <typename T>
-unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, SmartPointer<T> &sp_histogram_interval)
+unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, SmartPointer<T> &sp_histogram_interval)
 {
-	assert(interval_amount != 0 && "The histogram interval amount should NOT be 0");
+	assert(!finance_data_array.is_empty() && "This array is Empty");
+	assert(interval_amount > 0 && "The histogram interval amount should be greater than 0");
 	// if (interval_amount == 0)
 	// {
 	// 	WRITE_ERROR("The histogram interval amount should NOT be 0");
@@ -444,7 +473,7 @@ unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance
 	// }
 
 	T data_min, data_max;
-	unsigned short ret = get_data_range(finance_data_array, data_min, data_max);
+	unsigned short ret = get_data_range(finance_data_array, filter_array, data_min, data_max);
 	if (CHECK_FAILURE(ret))
 		return ret;
 
@@ -459,21 +488,39 @@ unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance
 
 	return ret;
 }
+template <typename T>
+unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, SmartPointer<T> &sp_histogram_interval)
+{
+	return get_histogram_interval(finance_data_array, NULL, interval_amount, sp_histogram_interval);
+}
 
 template <typename T>
-unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<T>& data_histogram_interval)
+unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, FinanceDataArrayTemplate<T>& data_histogram_interval)
 {
 	SmartPointer<T> sp_histogram_interval;
 	// sp_histogram_interval.disable_release();
-	unsigned short ret = get_histogram_interval(finance_data_array, interval_amount, sp_histogram_interval);
+	unsigned short ret = get_histogram_interval(finance_data_array, filter_array, interval_amount, sp_histogram_interval);
 	data_histogram_interval.set_data_array(sp_histogram_interval.get_instance(), interval_amount + 1);
 
 	return ret;
 }
+template <typename T>
+unsigned short get_histogram_interval(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<T>& data_histogram_interval)
+{
+	return get_histogram_interval(finance_data_array, NULL, interval_amount, data_histogram_interval);
+}
+
+template unsigned short get_histogram_interval<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, SmartPointer<int> &sp_histogram_interval);
+template unsigned short get_histogram_interval<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, SmartPointer<long> &sp_histogram_interval);
+template unsigned short get_histogram_interval<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, SmartPointer<float> &sp_histogram_interval);
 
 template unsigned short get_histogram_interval<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_interval);
 template unsigned short get_histogram_interval<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, SmartPointer<long> &sp_histogram_interval);
 template unsigned short get_histogram_interval<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, SmartPointer<float> &sp_histogram_interval);
+
+template unsigned short get_histogram_interval<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_interval);
+template unsigned short get_histogram_interval<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, FinanceDataArrayTemplate<long>& data_histogram_interval);
+template unsigned short get_histogram_interval<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, FinanceDataArrayTemplate<float>& data_histogram_interval);
 
 template unsigned short get_histogram_interval<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_interval);
 template unsigned short get_histogram_interval<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<long>& data_histogram_interval);
@@ -481,16 +528,28 @@ template unsigned short get_histogram_interval<float>(const FinanceDataArrayTemp
 
 
 template <typename T>
-unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, const T* histogram_interval, SmartPointer<int> &sp_histogram_statistics)
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, const T* histogram_interval, SmartPointer<int> &sp_histogram_statistics)
 {
+	assert(!finance_data_array.is_empty() && "This array is Empty");
+	int array_size = finance_data_array.get_size();
+	if (filter_array != NULL)
+	{
+		if (array_size != filter_array->get_size())
+		{
+			snprintf(errmsg, BUF_SIZE, "The filter array size is NOT correct, expected: %d, actual: %d", array_size, filter_array->get_size());
+			throw invalid_argument(errmsg);
+		}
+	}
+
 	int* histogram_statistics = new int[interval_amount + 1];
 	assert(histogram_statistics != NULL && "histogram_statistics should NOT be NULL");
 	memset(histogram_statistics, 0x0, sizeof(int) * (interval_amount + 1));
 	
 	int interval_index;
-	int array_size = finance_data_array.get_size();
 	for (int i = 0 ; i < array_size ; i++)
 	{
+		if (filter_array != NULL && !(*filter_array)[i])
+			continue;
 		interval_index = binary_search_interval(histogram_interval, finance_data_array[i], 0, interval_amount);
 		if (interval_index < 0 || interval_index > interval_amount)
 		{
@@ -502,39 +561,91 @@ unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_arr
 	sp_histogram_statistics.set_new(histogram_statistics);
 	return RET_SUCCESS;
 }
+template <typename T>
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, const T* histogram_interval, SmartPointer<int> &sp_histogram_statistics)
+{
+	return get_histogram(finance_data_array, NULL, interval_amount, histogram_interval, sp_histogram_statistics);
+}
 
 template <typename T>
-unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, const T* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics)
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, const T* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics)
 {
 	SmartPointer<int> sp_histogram_statistics;
 	// sp_histogram_interval.disable_release();
-	unsigned short ret = get_histogram(finance_data_array, interval_amount, histogram_interval, sp_histogram_statistics);
+	unsigned short ret = get_histogram(finance_data_array, NULL, interval_amount, histogram_interval, sp_histogram_statistics);
 	data_histogram_statistics.set_data_array(sp_histogram_statistics.get_instance(), interval_amount);
 
 	return ret;
 }
+template <typename T>
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, const T* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics)
+{
+	return get_histogram(finance_data_array, NULL, interval_amount, histogram_interval, data_histogram_statistics);
+}
+
+template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, const int* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
+template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, const long* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
+template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, const float* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
 
 template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, const int* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
 template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, const long* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
 template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, const float* histogram_interval, SmartPointer<int> &sp_histogram_statistics);
 
+template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, const int* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, const long* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, const float* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+
 template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, const int* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
 template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, const long* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
 template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, const float* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics);
 
+unsigned short get_histogram(const PFINANCE_DATA_ARRAY_BASE finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, const void* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics)
+{
+	assert(finance_data_array != NULL && "finance_data_array should NOT be NULL");
+	unsigned short ret;
+	switch (finance_data_array->get_type())
+	{
+	case FinanceField_INT:
+		ret = get_histogram(*(PFINANCE_INT_DATA_ARRAY)finance_data_array, filter_array, interval_amount, (const int*)histogram_interval, data_histogram_statistics);
+		break;
+	case FinanceField_LONG:
+		ret = get_histogram(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array, filter_array, interval_amount, (const long*)histogram_interval, data_histogram_statistics);
+		break;
+	case FinanceField_FLOAT:
+		ret = get_histogram(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array, filter_array, interval_amount, (const float*)histogram_interval, data_histogram_statistics);
+		break;
+	default:
+	{
+		char errmsg[64];
+		snprintf(errmsg, 64, "Unknown type value: %d", finance_data_array->get_type());
+		throw invalid_argument(errmsg);
+	}
+		break;
+	}
+	return ret;
+}
+unsigned short get_histogram(const PFINANCE_DATA_ARRAY_BASE finance_data_array, int interval_amount, const void* histogram_interval, FinanceDataArrayTemplate<int>& data_histogram_statistics)
+{
+	return get_histogram(finance_data_array, NULL, interval_amount, histogram_interval, data_histogram_statistics);
+}
 
 template <typename T>
-unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics)
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics)
 {
 	SmartPointer<T> sp_histogram_interval;
-	unsigned short ret = get_histogram_interval(finance_data_array, interval_amount, sp_histogram_interval);
+	unsigned short ret = get_histogram_interval(finance_data_array, filter_array, interval_amount, sp_histogram_interval);
 	if (CHECK_FAILURE(ret))
 		return ret;
 	return get_histogram(finance_data_array, interval_amount, (const T*)sp_histogram_interval.get_const_instance(), sp_histogram_statistics);
 }
+template <typename T>
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics)
+{
+	return get_histogram(finance_data_array, NULL, interval_amount, sp_histogram_statistics);
+}
 
 template <typename T>
-unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics)
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics)
 {
 	SmartPointer<int> sp_histogram_statistics;
 	// sp_histogram_interval.disable_release();
@@ -543,11 +654,54 @@ unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_arr
 
 	return ret;
 }
+template <typename T>
+unsigned short get_histogram(const FinanceDataArrayTemplate<T>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics)
+{
+	return get_histogram(finance_data_array, NULL, interval_amount, data_histogram_statistics);
+}
+
+template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
+template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
+template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
 
 template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
 template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
 template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, SmartPointer<int> &sp_histogram_statistics);
 
+template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+
 template unsigned short get_histogram<int>(const FinanceDataArrayTemplate<int>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
 template unsigned short get_histogram<long>(const FinanceDataArrayTemplate<long>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
 template unsigned short get_histogram<float>(const FinanceDataArrayTemplate<float>& finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics);
+
+unsigned short get_histogram(const PFINANCE_DATA_ARRAY_BASE finance_data_array, PFINANCE_BOOL_DATA_ARRAY filter_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics)
+{
+	assert(finance_data_array != NULL && "finance_data_array should NOT be NULL");
+	unsigned short ret;
+	switch (finance_data_array->get_type())
+	{
+	case FinanceField_INT:
+		ret = get_histogram(*(PFINANCE_INT_DATA_ARRAY)finance_data_array, interval_amount, data_histogram_statistics);
+		break;
+	case FinanceField_LONG:
+		ret = get_histogram(*(PFINANCE_LONG_DATA_ARRAY)finance_data_array, interval_amount, data_histogram_statistics);
+		break;
+	case FinanceField_FLOAT:
+		ret = get_histogram(*(PFINANCE_FLOAT_DATA_ARRAY)finance_data_array, interval_amount, data_histogram_statistics);
+		break;
+	default:
+	{
+		char errmsg[64];
+		snprintf(errmsg, 64, "Unknown type value: %d", finance_data_array->get_type());
+		throw invalid_argument(errmsg);
+	}
+		break;
+	}
+	return ret;
+}
+unsigned short get_histogram(const PFINANCE_DATA_ARRAY_BASE finance_data_array, int interval_amount, FinanceDataArrayTemplate<int>& data_histogram_statistics)
+{
+	return get_histogram(finance_data_array, NULL, interval_amount, data_histogram_statistics);
+}

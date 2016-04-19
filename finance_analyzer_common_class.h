@@ -479,6 +479,15 @@ public:
 
 	iterator begin() {return iterator(data_set_mapping.begin());}
 	iterator end() {return iterator(data_set_mapping.end());}
+// Caution: The array index is NOT recorded in the data_set_mapping variable in following 3 member functions
+	unsigned short add_int_set();
+	unsigned short add_long_set();
+	unsigned short add_float_set();
+// Catuion: Deep Copy the array data in the following 3 member functions
+	unsigned short deepcopy_int_data_array(int set_index, const PFINANCE_INT_DATA_ARRAY src_int_data_array);
+	unsigned short deepcopy_long_data_array(int set_index, const PFINANCE_LONG_DATA_ARRAY src_long_data_array);
+	unsigned short deepcopy_float_data_array(int set_index, const PFINANCE_FLOAT_DATA_ARRAY src_float_data_array);
+	unsigned short deepcopy_data_array(int set_index, const PFINANCE_DATA_ARRAY_BASE src_data_array);
 
 	unsigned short add_set(int source_index, int field_index);
 	unsigned short add_set(int source_index, const DEQUE_INT& field_set);
