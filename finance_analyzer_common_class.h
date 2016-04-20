@@ -8,9 +8,12 @@
 #include "msg_dumper_wrapper.h"
 
 
+class DataSetAccessParam;
 class ResultSetAccessParam;
 class FilterRuleThresholdBase;
 
+typedef std::deque<DataSetAccessParam*> DataSetAccessParamDeque;
+typedef DataSetAccessParamDeque* PDATA_SET_ACCESS_PARAM_DEQUE;
 typedef std::deque<ResultSetAccessParam*> ResultSetAccessParamDeque;
 typedef ResultSetAccessParamDeque* PRESULT_SET_ACCESS_PARAM_DEQUE;
 typedef std::deque<FilterRuleThresholdBase*> FilterRuleThresholdDeque;
@@ -361,6 +364,77 @@ typedef QuerySet* PQUERY_SET;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class DataSetAccessParam
+{
+private:
+	FinanceFieldType finance_field_type;
+	int array_index;
+	int start_index;
+	int end_index;
+
+public:
+	DataSetAccessParam(FinanceFieldType new_finance_field_type, int new_array_index, int new_start_index=0, int new_end_index=-1);
+
+	void set_finance_field_type(FinanceFieldType new_finance_field_type);
+	FinanceFieldType get_finance_field_type()const;
+
+	void set_array_index(int new_array_index);
+	int get_array_index()const;
+
+	void set_start_index(int new_start_index);
+	int get_start_index()const;
+
+	void set_end_index(int new_end_index);
+	int get_end_index()const;
+};
+typedef ResultSetAccessParam* PRESULT_SET_ACCESS_PARAM;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class DataSet
+{
+protected:
+	DECLARE_MSG_DUMPER()
+
+	std::deque<PFINANCE_INT_DATA_ARRAY> int_data_set;
+	std::deque<PFINANCE_LONG_DATA_ARRAY> long_data_set;
+	std::deque<PFINANCE_FLOAT_DATA_ARRAY> float_data_set;
+	int date_data_size;
+	int date_data_cur_pos;
+	int int_data_set_size;
+	int long_data_set_size;
+	int float_data_set_size;
+
+public:
+	DataSet();
+	~DataSet();
+
+	unsigned short add_int_set();
+	unsigned short add_long_set();
+	unsigned short add_float_set();
+
+#define DECLARE_DEEPCOPY_DATA_ARRAY_FUNC(n, m) unsigned short deepcopy_##n##_data_array(int set_index, const PFINANCE_##m##_DATA_ARRAY src_##n##_data_array);
+	DECLARE_DEEPCOPY_DATA_ARRAY_FUNC(int, INT)
+	DECLARE_DEEPCOPY_DATA_ARRAY_FUNC(long, LONG)
+	DECLARE_DEEPCOPY_DATA_ARRAY_FUNC(float, FLOAT)
+	// unsigned short deepcopy_int_data_array(int set_index, const PFINANCE_INT_DATA_ARRAY src_int_data_array);
+	// unsigned short deepcopy_long_data_array(int set_index, const PFINANCE_LONG_DATA_ARRAY src_long_data_array);
+	// unsigned short deepcopy_float_data_array(int set_index, const PFINANCE_FLOAT_DATA_ARRAY src_float_data_array);
+	unsigned short deepcopy_data_array(int set_index, const PFINANCE_DATA_ARRAY_BASE src_data_array);
+
+#define DECLARE_GET_DATA_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_data_array(int set_index)const;
+	DECLARE_GET_DATA_ARRAY_FUNC(int, INT)
+	DECLARE_GET_DATA_ARRAY_FUNC(long, LONG)
+	DECLARE_GET_DATA_ARRAY_FUNC(float, FLOAT)
+#define DECLARE_GET_DATA_ARRAY_ELEMENT_FUNC(n) n get_##n##_data_array_element(int set_index, int index)const;
+	DECLARE_GET_DATA_ARRAY_ELEMENT_FUNC(int)
+	DECLARE_GET_DATA_ARRAY_ELEMENT_FUNC(long)
+	DECLARE_GET_DATA_ARRAY_ELEMENT_FUNC(float)
+};
+typedef DataSet* PDATA_SET;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class ResultSetAccessParam
 {
 private:
@@ -396,9 +470,9 @@ typedef std::map<unsigned short, unsigned short> MAP_SHORT;
 typedef MAP_SHORT* PMAP_SHORT;
 typedef MAP_SHORT::iterator MAP_SHORT_ITER;
 typedef MAP_SHORT_ITER* PMAP_SHORT_ITER;
-class ResultSet
+class ResultSet : public DataSet
 {
-	DECLARE_MSG_DUMPER()
+	// DECLARE_MSG_DUMPER()
 
 public:
 	static unsigned short get_combined_index(int x, int y);
@@ -413,16 +487,8 @@ private:
 	std::map<unsigned short, unsigned short> data_set_mapping;
 	std::map<unsigned long, unsigned long> data_calculation_set_mapping;
 	FinanceCharDataPtrArray date_data;
-	std::deque<PFINANCE_INT_DATA_ARRAY> int_data_set;
-	std::deque<PFINANCE_LONG_DATA_ARRAY> long_data_set;
-	std::deque<PFINANCE_FLOAT_DATA_ARRAY> float_data_set;
 	bool check_date_data_mode;
 	int data_set_mapping_size;
-	int date_data_size;
-	int date_data_cur_pos;
-	int int_data_set_size;
-	int long_data_set_size;
-	int float_data_set_size;
 
 	unsigned short find_data_pos(int source_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
 	unsigned short add_calculation_set_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
@@ -479,15 +545,6 @@ public:
 
 	iterator begin() {return iterator(data_set_mapping.begin());}
 	iterator end() {return iterator(data_set_mapping.end());}
-// Caution: The array index is NOT recorded in the data_set_mapping variable in following 3 member functions
-	unsigned short add_int_set();
-	unsigned short add_long_set();
-	unsigned short add_float_set();
-// Catuion: Deep Copy the array data in the following 3 member functions
-	unsigned short deepcopy_int_data_array(int set_index, const PFINANCE_INT_DATA_ARRAY src_int_data_array);
-	unsigned short deepcopy_long_data_array(int set_index, const PFINANCE_LONG_DATA_ARRAY src_long_data_array);
-	unsigned short deepcopy_float_data_array(int set_index, const PFINANCE_FLOAT_DATA_ARRAY src_float_data_array);
-	unsigned short deepcopy_data_array(int set_index, const PFINANCE_DATA_ARRAY_BASE src_data_array);
 
 	unsigned short add_set(int source_index, int field_index);
 	unsigned short add_set(int source_index, const DEQUE_INT& field_set);

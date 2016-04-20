@@ -173,6 +173,7 @@ extern const unsigned short RET_FAILURE_INSUFFICIENT_MEMORY;
 extern const unsigned short RET_FAILURE_INCORRECT_OPERATION;
 extern const unsigned short RET_FAILURE_OPEN_FILE;
 extern const unsigned short RET_FAILURE_NOT_FOUND;
+extern const unsigned short RET_FAILURE_NOT_EQUAL;
 extern const unsigned short RET_FAILURE_INCORRECT_CONFIG;
 extern const unsigned short RET_FAILURE_INCORRECT_PATH;
 extern const unsigned short RET_FAILURE_IO_OPERATION;

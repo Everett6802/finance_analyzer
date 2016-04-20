@@ -24,6 +24,9 @@ public:
 };
 typedef OutputResultParam* POUTPUT_RESULT_PARAM;
 
+unsigned short output_result(const DataSet* data_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PDATA_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param=NULL, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
+unsigned short output_result(const DataSet* data_set, const PDATA_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param=NULL, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
+
 unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param=NULL, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
 unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param=NULL, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
 

@@ -537,7 +537,7 @@ void FinanceAnalyzerTest::test_check_filter_rule()
 
 	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
-	for (int i = 0 ; i < 6 ; i++)
+	for (int i = 1 ; i < 6 ; i++)
 		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
 	char data[32];
 	for (int i = 0 ; i < DATA_SIZE ; i++)

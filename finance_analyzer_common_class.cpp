@@ -1341,6 +1341,223 @@ const DEQUE_INT& QuerySet::operator[](int index)const
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+DataSetAccessParam::DataSetAccessParam(FinanceFieldType new_finance_field_type, int new_array_index, int new_start_index, int new_end_index)
+{
+	finance_field_type = new_finance_field_type;
+	array_index = new_array_index;
+	start_index = new_start_index;
+	end_index = new_end_index;
+}
+
+void DataSetAccessParam::set_finance_field_type(FinanceFieldType new_finance_field_type){finance_field_type = new_finance_field_type;}
+FinanceFieldType DataSetAccessParam::get_finance_field_type()const{return finance_field_type;}
+
+void DataSetAccessParam::set_array_index(int new_array_index){array_index = new_array_index;}
+int DataSetAccessParam::get_array_index()const{return array_index;}
+
+void DataSetAccessParam::set_start_index(int new_start_index){start_index = new_start_index;}
+int DataSetAccessParam::get_start_index()const{return start_index;}
+
+void DataSetAccessParam::set_end_index(int new_end_index){end_index = new_end_index;}
+int DataSetAccessParam::get_end_index()const{return end_index;}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+DataSet::DataSet() :
+	// check_date_data_mode(false),
+	// data_set_mapping_size(0),
+	date_data_size(0),
+	date_data_cur_pos(0),
+	int_data_set_size(0),
+	long_data_set_size(0),
+	float_data_set_size(0)
+{
+	IMPLEMENT_MSG_DUMPER()
+}
+
+DataSet::~DataSet()
+{
+	int data_size = 0;
+	if (!int_data_set.empty())
+	{
+		data_size = int_data_set.size();
+		for(int i = 0 ; i < data_size ; i++)
+		{
+			delete int_data_set[i];
+			int_data_set[i] = NULL;
+		}
+		int_data_set.clear();
+	}
+	if (!long_data_set.empty())
+	{
+		data_size = long_data_set.size();
+		for(int i = 0 ; i < data_size ; i++)
+		{
+			delete long_data_set[i];
+			long_data_set[i] = NULL;
+		}
+		long_data_set.clear();
+	}
+	if (!float_data_set.empty())
+	{
+		data_size = float_data_set.size();
+		for(int i = 0 ; i < data_size ; i++)
+		{
+			delete float_data_set[i];
+			float_data_set[i] = NULL;
+		}
+		float_data_set.clear();
+	}
+
+	RELEASE_MSG_DUMPER()
+}
+
+unsigned short DataSet::add_int_set()
+{
+	PFINANCE_INT_DATA_ARRAY new_array = new FinanceIntDataArray();
+	assert(new_array != NULL && "Fail to allocate the FinanceIntDataArray object");
+	new_array->set_type(FinanceField_INT);
+	int_data_set.push_back(new_array);
+	int_data_set_size = int_data_set.size();
+
+	return RET_SUCCESS;
+}
+
+unsigned short DataSet::add_long_set()
+{
+	PFINANCE_LONG_DATA_ARRAY new_array = new FinanceLongDataArray();
+	assert(new_array != NULL && "Fail to allocate the FinanceLongDataArray object");
+	new_array->set_type(FinanceField_LONG);
+	long_data_set.push_back(new_array);
+	long_data_set_size = long_data_set.size();
+
+	return RET_SUCCESS;
+}
+
+unsigned short DataSet::add_float_set()
+{
+	PFINANCE_FLOAT_DATA_ARRAY new_array = new FinanceFloatDataArray();
+	assert(new_array != NULL && "Fail to allocate the FinanceFloatDataArray object");
+	new_array->set_type(FinanceField_FLOAT);
+	float_data_set.push_back(new_array);
+	float_data_set_size = float_data_set.size();
+
+	return RET_SUCCESS;
+}
+
+#define DEFINE_DEEPCOPY_DATA_ARRAY_FUNC(n, m)\
+unsigned short DataSet::deepcopy_##n##_data_array(int set_index, const PFINANCE_##m##_DATA_ARRAY src_##n##_data_array)\
+{\
+	assert(src_##n##_data_array != NULL && "data_array should NOT be NULL");\
+	if (set_index < 0 || set_index >= n##_data_set_size)\
+	{\
+		WRITE_FORMAT_ERROR("The index[%d] is NOT in range[0, %d)", set_index, n##_data_set_size);\
+		return RET_FAILURE_INVALID_ARGUMENT;\
+	}\
+	n##_data_set[set_index]->set_data_array(src_##n##_data_array->get_data_array(), src_##n##_data_array->get_size());\
+	return RET_SUCCESS;\
+}
+
+DEFINE_DEEPCOPY_DATA_ARRAY_FUNC(int, INT)
+DEFINE_DEEPCOPY_DATA_ARRAY_FUNC(long, LONG)
+DEFINE_DEEPCOPY_DATA_ARRAY_FUNC(float, FLOAT)
+
+// unsigned short DataSet::deepcopy_int_data_array(int set_index, const PFINANCE_INT_DATA_ARRAY src_int_data_array)
+// {
+// 	assert(src_int_data_array != NULL && "int_data_array should NOT be NULL");
+// 	if (set_index < 0 || set_index >= int_data_set_size)
+// 	{
+// 		WRITE_FORMAT_ERROR("The index[%d] is NOT in range[0, %d)", set_index, int_data_set_size);
+// 		return RET_FAILURE_INVALID_ARGUMENT;
+// 	}
+// 	int_data_set[set_index]->set_data_array(src_int_data_array->get_data_array(), src_int_data_array->get_size());
+// 	return RET_SUCCESS;
+// }
+
+// unsigned short DataSet::deepcopy_long_data_array(int set_index, const PFINANCE_LONG_DATA_ARRAY src_long_data_array)
+// {
+// 	assert(src_long_data_array != NULL && "long_data_array should NOT be NULL");
+// 	if (set_index < 0 || set_index >= long_data_set_size)
+// 	{
+// 		WRITE_FORMAT_ERROR("The index[%d] is NOT in range[0, %d)", set_index, long_data_set_size);
+// 		return RET_FAILURE_INVALID_ARGUMENT;
+// 	}
+// 	long_data_set[set_index]->set_data_array(src_long_data_array->get_data_array(), src_long_data_array->get_size());
+// 	return RET_SUCCESS;
+// }
+
+// unsigned short DataSet::deepcopy_float_data_array(int set_index, const PFINANCE_FLOAT_DATA_ARRAY src_float_data_array)
+// {
+// 	assert(src_float_data_array != NULL && "float_data_array should NOT be NULL");
+// 	if (set_index < 0 || set_index >= float_data_set_size)
+// 	{
+// 		WRITE_FORMAT_ERROR("The index[%d] is NOT in range[0, %d)", set_index, float_data_set_size);
+// 		return RET_FAILURE_INVALID_ARGUMENT;
+// 	}
+// 	float_data_set[set_index]->set_data_array(src_float_data_array->get_data_array(), src_float_data_array->get_size());
+// 	return RET_SUCCESS;
+// }
+
+unsigned short DataSet::deepcopy_data_array(int set_index, const PFINANCE_DATA_ARRAY_BASE src_data_array)
+{
+	assert(src_data_array != NULL && "src_data_array should NOT be NULL");
+
+	unsigned short ret = RET_SUCCESS;
+	switch(src_data_array->get_type())
+	{
+		case FinanceField_INT:
+		{
+			ret = deepcopy_int_data_array(set_index, (const PFINANCE_INT_DATA_ARRAY)src_data_array);
+		}
+		break;
+		case FinanceField_LONG:
+		{
+			ret = deepcopy_long_data_array(set_index, (const PFINANCE_LONG_DATA_ARRAY)src_data_array);
+		}
+		break;
+		case FinanceField_FLOAT:
+		{
+			ret = deepcopy_float_data_array(set_index, (const PFINANCE_FLOAT_DATA_ARRAY)src_data_array);
+		}
+		break;
+		default:
+			WRITE_FORMAT_ERROR("The unsupported field type: %d", src_data_array->get_type());
+			ret = RET_FAILURE_INVALID_ARGUMENT;
+	}
+	return ret;
+}
+
+#define DEFINE_GET_DATA_ARRAY_FUNC(n, m)\
+const PFINANCE_##m##_DATA_ARRAY DataSet::get_##n##_data_array(int set_index)const\
+{\
+	static const int BUF_SIZE = 64;\
+	static char errmsg[BUF_SIZE];\
+	if (set_index >= n##_data_set_size || set_index < 0)\
+	{\
+		snprintf(errmsg, BUF_SIZE, "The index[%d] is Not in the range[0, %d)", set_index, n##_data_set_size);\
+		WRITE_ERROR(errmsg);\
+		throw out_of_range(errmsg);\
+	}\
+	return n##_data_set[set_index];\
+}
+
+DEFINE_GET_DATA_ARRAY_FUNC(int, INT)
+DEFINE_GET_DATA_ARRAY_FUNC(long, LONG)
+DEFINE_GET_DATA_ARRAY_FUNC(float, FLOAT)
+
+#define DEFINE_GET_DATA_ARRAY_ELEMENT_FUNC(n, m)\
+n DataSet::get_##n##_data_array_element(int set_index, int index)const\
+{\
+	PFINANCE_##m##_DATA_ARRAY data_array = get_##n##_data_array(set_index);\
+	return (*data_array)[index];\
+}
+
+DEFINE_GET_DATA_ARRAY_ELEMENT_FUNC(int, INT)
+DEFINE_GET_DATA_ARRAY_ELEMENT_FUNC(long, LONG)
+DEFINE_GET_DATA_ARRAY_ELEMENT_FUNC(float, FLOAT)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ResultSetAccessParam::ResultSetAccessParam(FinanceSourceType new_finance_source_type, int new_finance_field_no, ArrayElementCalculationType new_calculation_type, int new_start_index, int new_end_index)
 {
 	finance_source_type = new_finance_source_type;
@@ -1405,7 +1622,7 @@ void ResultSet::generate_data_for_simulation(ResultSet& result_set)
 	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
 
 	char data[32];
-	for (int i = 0 ; i < 6 ; i++)
+	for (int i = 1 ; i < 6 ; i++)
 		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
 	for (int i = 0 ; i < DATA_SIZE ; i++)
 	{
@@ -1436,7 +1653,7 @@ void ResultSet::generate_filtered_data_for_simulation(ResultSet& result_set, Fin
 	static const int DATA_SIZE = sizeof(date) / sizeof(date[0]);
 
 	char data[32];
-	for (int i = 0 ; i < 6 ; i++)
+	for (int i = 1 ; i < 6 ; i++)
 		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
 	for (int i = 0 ; i < DATA_SIZE ; i++)
 	{
@@ -1459,152 +1676,14 @@ void ResultSet::generate_filtered_data_for_simulation(ResultSet& result_set, Fin
 
 ResultSet::ResultSet() :
 	check_date_data_mode(false),
-	data_set_mapping_size(0),
-	date_data_size(0),
-	date_data_cur_pos(0),
-	int_data_set_size(0),
-	long_data_set_size(0),
-	float_data_set_size(0)
+	data_set_mapping_size(0)
 {
-	IMPLEMENT_MSG_DUMPER()
+	// IMPLEMENT_MSG_DUMPER()
 }
 
 ResultSet::~ResultSet()
 {
-	int data_size = 0;
-	if (!int_data_set.empty())
-	{
-		data_size = int_data_set.size();
-		for(int i = 0 ; i < data_size ; i++)
-		{
-			delete int_data_set[i];
-			int_data_set[i] = NULL;
-		}
-		int_data_set.clear();
-	}
-	if (!long_data_set.empty())
-	{
-		data_size = long_data_set.size();
-		for(int i = 0 ; i < data_size ; i++)
-		{
-			delete long_data_set[i];
-			long_data_set[i] = NULL;
-		}
-		long_data_set.clear();
-	}
-	if (!float_data_set.empty())
-	{
-		data_size = float_data_set.size();
-		for(int i = 0 ; i < data_size ; i++)
-		{
-			delete float_data_set[i];
-			float_data_set[i] = NULL;
-		}
-		float_data_set.clear();
-	}
-
-	RELEASE_MSG_DUMPER()
-}
-
-unsigned short ResultSet::add_int_set()
-{
-	PFINANCE_INT_DATA_ARRAY new_array = new FinanceIntDataArray();
-	assert(new_array != NULL && "Fail to allocate the FinanceIntDataArray object");
-	new_array->set_type(FinanceField_INT);
-	int_data_set.push_back(new_array);
-	int_data_set_size = int_data_set.size();
-
-	return RET_SUCCESS;
-}
-
-unsigned short ResultSet::add_long_set()
-{
-	PFINANCE_LONG_DATA_ARRAY new_array = new FinanceLongDataArray();
-	assert(new_array != NULL && "Fail to allocate the FinanceLongDataArray object");
-	new_array->set_type(FinanceField_LONG);
-	long_data_set.push_back(new_array);
-	long_data_set_size = long_data_set.size();
-
-	return RET_SUCCESS;
-}
-
-unsigned short ResultSet::add_float_set()
-{
-	PFINANCE_FLOAT_DATA_ARRAY new_array = new FinanceFloatDataArray();
-	assert(new_array != NULL && "Fail to allocate the FinanceFloatDataArray object");
-	new_array->set_type(FinanceField_FLOAT);
-	float_data_set.push_back(new_array);
-	float_data_set_size = float_data_set.size();
-
-	return RET_SUCCESS;
-}
-
-unsigned short ResultSet::deepcopy_int_data_array(int set_index, const PFINANCE_INT_DATA_ARRAY src_int_data_array)
-{
-	assert(src_int_data_array != NULL && "int_data_array should NOT be NULL");
-	if (set_index < 0 || set_index >= int_data_set_size)
-	{
-		WRITE_FORMAT_ERROR("The index[%d] is NOT in range[0, %d)", set_index, int_data_set_size);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-	int_data_set[set_index]->set_data_array(src_int_data_array->get_data_array(), src_int_data_array->get_size());
-	return RET_SUCCESS;
-}
-
-unsigned short ResultSet::deepcopy_long_data_array(int set_index, const PFINANCE_LONG_DATA_ARRAY src_long_data_array)
-{
-	assert(src_long_data_array != NULL && "long_data_array should NOT be NULL");
-	if (set_index < 0 || set_index >= long_data_set_size)
-	{
-		WRITE_FORMAT_ERROR("The index[%d] is NOT in range[0, %d)", set_index, long_data_set_size);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-	long_data_set[set_index]->set_data_array(src_long_data_array->get_data_array(), src_long_data_array->get_size());
-	return RET_SUCCESS;
-}
-
-unsigned short ResultSet::deepcopy_float_data_array(int set_index, const PFINANCE_FLOAT_DATA_ARRAY src_float_data_array)
-{
-	assert(src_float_data_array != NULL && "float_data_array should NOT be NULL");
-	if (set_index < 0 || set_index >= float_data_set_size)
-	{
-		WRITE_FORMAT_ERROR("The index[%d] is NOT in range[0, %d)", set_index, float_data_set_size);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-	float_data_set[set_index]->set_data_array(src_float_data_array->get_data_array(), src_float_data_array->get_size());
-	return RET_SUCCESS;
-}
-
-unsigned short ResultSet::deepcopy_data_array(int set_index, const PFINANCE_DATA_ARRAY_BASE src_data_array)
-{
-	assert(src_data_array != NULL && "src_data_array should NOT be NULL");
-
-	unsigned short ret = RET_SUCCESS;
-	switch(src_data_array->get_type())
-	{
-		case FinanceField_INT:
-		{
-			ret = deepcopy_int_data_array(set_index, (const PFINANCE_INT_DATA_ARRAY)src_data_array);
-		}
-		break;
-		case FinanceField_LONG:
-		{
-			ret = deepcopy_long_data_array(set_index, (const PFINANCE_LONG_DATA_ARRAY)src_data_array);
-		}
-		break;
-		case FinanceField_FLOAT:
-		{
-			ret = deepcopy_float_data_array(set_index, (const PFINANCE_FLOAT_DATA_ARRAY)src_data_array);
-		}
-		break;
-		case FinanceField_DATE:
-			WRITE_ERROR("The DATE field type is NOT supported");
-			ret = RET_FAILURE_INVALID_ARGUMENT;
-		default:
-			WRITE_FORMAT_ERROR("The unsupported field type: %d", src_data_array->get_type());
-			ret = RET_FAILURE_INVALID_ARGUMENT;
-	}
-	return ret;
+	// RELEASE_MSG_DUMPER()
 }
 
 unsigned short ResultSet::add_set(int source_index, int field_index)
@@ -2148,13 +2227,7 @@ const PFINANCE_##m##_DATA_ARRAY ResultSet::get_##n##_array_by_position(unsigned 
 		WRITE_ERROR(errmsg);\
 		throw invalid_argument(errmsg);\
 	}\
-	if (field_type_pos >= n##_data_set_size || field_type_pos < 0)\
-	{\
-		snprintf(errmsg, BUF_SIZE, "The field pos[%d] is out of range", field_type_pos);\
-		WRITE_ERROR(errmsg);\
-		throw out_of_range(errmsg);\
-	}\
-	return n##_data_set[field_type_pos];\
+	return get_##n##_data_array(field_type_pos);\
 }
 
 DEFINE_GET_ARRAY_FUNC_BY_POS(int, INT)
