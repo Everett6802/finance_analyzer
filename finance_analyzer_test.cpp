@@ -5,6 +5,7 @@
 #include "finance_analyzer_calculator.h"
 #include "finance_analyzer_algorithm.h"
 #include "finance_analyzer_filter.h"
+#include "finance_analyzer_output.h"
 
 
 using namespace std;
@@ -882,6 +883,13 @@ void FinanceAnalyzerTest::test_check_histogram()
 	if (int_data_statistics != ARRAY2_HIST_STATISTICS)
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "The Array[2 HistStatistics] is NOT correct");
+		throw runtime_error(string(errmsg));
+	}
+// Output the histogram data
+	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2), data_array2_interval, "long_histogram_for_test.output");
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to output Array [2 HistStatistics], due to: %s", get_ret_description(ret));
 		throw runtime_error(string(errmsg));
 	}
 	long_data_array.reset_array();

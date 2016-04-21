@@ -26,6 +26,7 @@ unsigned short output_result(const DataSet* data_set, const PFINANCE_BOOL_DATA_A
 {
 	assert(data_set != NULL && "data_set should NOT be NULL");
 	assert(access_param_deque != NULL && "access_param_deque should NOT be NULL");
+	assert(!access_param_deque->empty() && "access_param_deque should NOT be EMPTY");
 //	assert(output_result_param != NULL && "output_result_param should NOT be NULL");
 	assert(output_filename != NULL && "output_filename should NOT be NULL");
 
@@ -52,9 +53,9 @@ unsigned short output_result(const DataSet* data_set, const PFINANCE_BOOL_DATA_A
 	}
 
 // Check data size in each array
-	int data_array_size = -1;
+	int data_array_size;
 	int access_param_deque_size = access_param_deque->size();
-	for (int j = 1 ; j < access_param_deque_size ; j++)
+	for (int j = 0 ; j < access_param_deque_size ; j++)
 	{
 		int finance_field_type = (int)(*access_param_deque)[j]->get_finance_field_type();
 		int array_index = (*access_param_deque)[j]->get_array_index();
@@ -64,7 +65,7 @@ unsigned short output_result(const DataSet* data_set, const PFINANCE_BOOL_DATA_A
 			{
 				PFINANCE_INT_DATA_ARRAY data_array = data_set->get_int_data_array(array_index);
 				assert(data_array != NULL && "Fail to find the INT data array");
-				if (data_array_size == -1)
+				if (j == 0)
 					data_array_size = data_array->get_size();
 				else
 				{
@@ -81,7 +82,7 @@ unsigned short output_result(const DataSet* data_set, const PFINANCE_BOOL_DATA_A
 			{
 				PFINANCE_LONG_DATA_ARRAY data_array = data_set->get_long_data_array(array_index);
 				assert(data_array != NULL && "Fail to find the LONG data array");
-				if (data_array_size == -1)
+				if (j == 0)
 					data_array_size = data_array->get_size();
 				else
 				{
@@ -98,7 +99,7 @@ unsigned short output_result(const DataSet* data_set, const PFINANCE_BOOL_DATA_A
 			{
 				PFINANCE_FLOAT_DATA_ARRAY data_array = data_set->get_float_data_array(array_index);
 				assert(data_array != NULL && "Fail to find the INT data array");
-				if (data_array_size == -1)
+				if (j == 0)
 					data_array_size = data_array->get_size();
 				else
 				{
@@ -179,6 +180,7 @@ unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DA
 {
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	assert(access_param_deque != NULL && "access_param_deque should NOT be NULL");
+	assert(!access_param_deque->empty() && "access_param_deque should NOT be EMPTY");
 //	assert(output_result_param != NULL && "output_result_param should NOT be NULL");
 	assert(output_filename != NULL && "output_filename should NOT be NULL");
 
@@ -335,15 +337,29 @@ unsigned short output_histogram_result(const ResultSet* result_set, const PFINAN
 	int finance_source_type = (int)access_param->get_finance_source_type();
 	int finance_field_no = access_param->get_finance_field_no();
 	FinanceIntDataArray data_histogram_statistics;
-	unsigned short ret = get_histogram(result_set->get_array(finance_source_type, finance_field_no), interval_amount, data_histogram_statistics);
+	unsigned short ret = get_histogram(result_set->get_array(finance_source_type, finance_field_no), filter_array, interval_amount, data_histogram_statistics);
 	if (CHECK_FAILURE(ret))
 		return ret;
-// 	ResultSet histogram_result_set;
-// 	histogram_result_set.add_int_set();
-// 	histogram_result_set.deepcopy_int_data_array(0, &data_histogram_statistics);
-// 	ResultSetAccessParamDeque histogram_access_param_deque;
-// 	histogram_access_param_deque.push_back(new ResultSetAccessParam());
-// 	return output_result(histogram_result_set, histogram_access_param_deque, NULL, output_filename);
+
+	// printf("Data in result_set: ");
+	// for (int i = 0 ; i < data_histogram_statistics.get_size() ; i++)
+	// 	printf("%d ", data_histogram_statistics[i]);
+	// printf("\n");
+
+	DataSet histogram_data_set;
+	histogram_data_set.add_int_set();
+	histogram_data_set.deepcopy_int_data_array(0, &data_histogram_statistics);
+
+	// FinanceIntDataArray* int_data_array = histogram_data_set.get_int_data_array(0);
+	// printf("Data in result_set: ");
+	// for (int i = 0 ; i < int_data_array->get_size() ; i++)
+	// 	printf("%d ", histogram_data_set.get_int_data_array_element(0, i));
+	// printf("\n");
+
+	DataSetAccessParamDeque histogram_access_param_deque;
+	histogram_access_param_deque.push_back(new DataSetAccessParam(FinanceField_INT, 0));
+
+	return output_result(&histogram_data_set, &histogram_access_param_deque, NULL, output_filename);
 }
 
 unsigned short output_histogram_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM access_param, int interval_amount, const char* output_filename)
