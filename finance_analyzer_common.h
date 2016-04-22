@@ -2,7 +2,8 @@
 #define FINANCE_ANALYZER_COMMON_H
 
 #include <stdlib.h>
-
+#include <list>
+#include <string>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Macro
@@ -68,6 +69,16 @@ do{\
 
 #define PRINT(...) if (SHOW_CONSOLE) printf(__VA_ARGS__);
 #define FPRINT(stream, ...) if (SHOW_CONSOLE) fprintf(stream, __VA_ARGS__);
+
+#define CREATE_PROJECT_FILEPATH(variable_name, foldername, filename)\
+const int variable_name##_buf_size = 256;\
+char variable_name[variable_name##_buf_size];\
+do{\
+	static const int FILE_PATH_SIZE = 256;\
+	char current_working_directory[FILE_PATH_SIZE];\
+	getcwd(current_working_directory, FILE_PATH_SIZE);\
+	snprintf(variable_name, variable_name##_buf_size, "%s/%s/%s", current_working_directory, foldername, filename);\
+}while(0);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Enumeration
@@ -199,5 +210,7 @@ bool check_start_index_in_range(int index, int range_start, int range_end);
 bool check_end_index_in_range(int index, int range_start, int range_end);
 int get_array_index(int value, const int array[], int array_size);
 int get_array_sum(const int array[], int array_size);
+unsigned short read_text_file(std::list<std::string>& text_result_list, const char* text_filepath);
+unsigned short read_text_file(std::string& text_result_string, const char* text_filepath);
 
 #endif

@@ -478,3 +478,71 @@ int get_array_sum(const int array[], int array_size)
 		sum += array[index];
 	return sum;
 }
+
+unsigned short read_text_file(list<string>& text_result_list, const char* text_filepath)
+{
+	assert(text_filepath != NULL && "text_filepath should NOT be NULL");
+
+	if (!check_file_exist(text_filepath))
+	{
+		fprintf(stderr, "Fail to find the file: %s\n", text_filepath);
+		return RET_FAILURE_NOT_FOUND;
+	}
+
+	unsigned int BUF_SIZE = 1024;
+	char* buf = (char*)malloc(BUF_SIZE * sizeof(char));
+	if (buf == NULL)
+	{
+		fprintf(stderr, "Fail to allocate memoery: buf\n");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+
+	FILE* fp = fopen(text_filepath, "r");
+	if (fp == NULL)
+	{
+		fprintf(stderr, "Fail to open file: %s, due to: %s\n", text_filepath, strerror(errno));
+		return RET_FAILURE_SYSTEM_API;
+	}
+
+	while (fgets(buf, BUF_SIZE, fp) != NULL) 
+	{
+// Check if the buffer size is enough
+		if (strlen(buf) == BUF_SIZE - 1 && buf[BUF_SIZE - 1] == '\0')
+		{
+			do
+			{
+				int BUF_SIZE_OLD = BUF_SIZE;
+				char* buf_old = buf;
+				BUF_SIZE <<= 1;
+				buf = (char*)realloc(buf_old, sizeof(char) * BUF_SIZE);
+				fgets(&buf[BUF_SIZE_OLD - 1], BUF_SIZE - BUF_SIZE_OLD, fp);
+			}while(strlen(buf) == BUF_SIZE - 1 && buf[BUF_SIZE - 1] == '\0');
+		}
+        // printf("data: %s", buf);
+        text_result_list.push_back(string(buf));
+    }
+// OUT:
+	if (fp != NULL)
+	{
+		fclose(fp);
+		fp = NULL;
+	}
+
+	return RET_SUCCESS;
+}
+
+unsigned short read_text_file(string& text_result_string, const char* text_filepath)
+{
+	list<string> text_result_list;
+	unsigned short ret = read_text_file(text_result_list, text_filepath);
+	if (CHECK_SUCCESS(ret))
+	{
+		list<string>::iterator iter = text_result_list.begin();
+		while (iter != text_result_list.end())
+		{
+			text_result_string += *iter;
+			iter++;
+		}
+	}
+	return ret;
+}

@@ -366,3 +366,23 @@ unsigned short output_histogram_result(const ResultSet* result_set, const PRESUL
 {
 	return output_histogram_result(result_set, NULL, access_param, interval_amount, output_filename);
 }
+
+unsigned short read_output_result(list<string>& output_result_list, const char* output_filename)
+{
+	CREATE_PROJECT_FILEPATH(text_filepath, RESULT_FOLDER_NAME, output_filename)
+	// static const int FILE_PATH_SIZE = 256;
+	// char current_working_directory[FILE_PATH_SIZE];
+	// getcwd(current_working_directory, FILE_PATH_SIZE);
+	// snprintf(text_filepath, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, RESULT_FOLDER_NAME, text_filename);
+	return read_text_file(output_result_list, text_filepath);
+}
+
+unsigned short read_output_result(string& output_result_string, const char* output_filename)
+{
+	CREATE_PROJECT_FILEPATH(text_filepath, RESULT_FOLDER_NAME, output_filename)
+	// static const int FILE_PATH_SIZE = 256;
+	// char current_working_directory[FILE_PATH_SIZE];
+	// getcwd(current_working_directory, FILE_PATH_SIZE);
+	// snprintf(text_filepath, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, RESULT_FOLDER_NAME, text_filename);
+	return read_text_file(output_result_string, text_filepath);
+}

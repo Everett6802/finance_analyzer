@@ -855,6 +855,8 @@ void FinanceAnalyzerTest::test_check_histogram()
 	FinanceIntDataArray int_data_statistics;
 	int_data_statistics.set_type(FinanceField_INT);
 
+	string content_in_output_file;
+
 	PFINANCE_LONG_DATA_ARRAY data_array2 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 2);
 	int data_array2_interval = 4;
 // Get Histogram Interval
@@ -886,12 +888,17 @@ void FinanceAnalyzerTest::test_check_histogram()
 		throw runtime_error(string(errmsg));
 	}
 // Output the histogram data
-	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2), data_array2_interval, "long_histogram_for_test.output");
+	static const char* LONG_HISTOGRAM_OUTPUT_FILENAME = "long_histogram_for_test.output";
+	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2), data_array2_interval, LONG_HISTOGRAM_OUTPUT_FILENAME);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail to output Array [2 HistStatistics], due to: %s", get_ret_description(ret));
 		throw runtime_error(string(errmsg));
 	}
+// Check the content of output histogram in the file
+	read_output_result(content_in_output_file, LONG_HISTOGRAM_OUTPUT_FILENAME);
+	// printf("result: %s\n", content_in_output_file.c_str());
+
 	long_data_array.reset_array();
 	int_data_statistics.reset_array();
 

@@ -1,6 +1,8 @@
 #ifndef FINANCE_ANALYZER_OUTPUT_H
 #define FINANCE_ANALYZER_OUTPUT_H
 
+#include <list>
+#include <string>
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
 
@@ -38,5 +40,8 @@ unsigned short output_csv_result(const ResultSet* result_set, const PRESULT_SET_
 
 unsigned short output_histogram_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM access_param, int interval_amount, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
 unsigned short output_histogram_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM access_param, int interval_amount, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
+
+unsigned short read_output_result(std::list<std::string>& output_result_list, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
+unsigned short read_output_result(std::string& output_result_string, const char* output_filename=DEFAULT_OUTPUT_FILENAME_FOR_PLOT);
 
 #endif
