@@ -355,11 +355,12 @@ bool check_file_exist(const char* filepath)
 
 bool check_config_file_exist(const char* config_filename)
 {
-	static const int FILE_PATH_SIZE = 256;
-	static char file_path[FILE_PATH_SIZE];
-	char current_working_directory[FILE_PATH_SIZE];
-	getcwd(current_working_directory, FILE_PATH_SIZE);
-	snprintf(file_path, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, CONFIG_FOLDER_NAME, config_filename);
+	// static const int FILE_PATH_SIZE = 256;
+	// static char file_path[FILE_PATH_SIZE];
+	// char current_working_directory[FILE_PATH_SIZE];
+	// getcwd(current_working_directory, FILE_PATH_SIZE);
+	// snprintf(file_path, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, CONFIG_FOLDER_NAME, config_filename);
+	CREATE_PROJECT_FILEPATH(file_path, CONFIG_FOLDER_NAME, config_filename)
 	return check_file_exist(file_path);
 }
 

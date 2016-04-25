@@ -30,11 +30,11 @@ unsigned short output_result(const DataSet* data_set, const PFINANCE_BOOL_DATA_A
 //	assert(output_result_param != NULL && "output_result_param should NOT be NULL");
 	assert(output_filename != NULL && "output_filename should NOT be NULL");
 
-	static const int FILE_PATH_SIZE = 256;
+	// static const int FILE_PATH_SIZE = 256;
 //	static char folder_path[FILE_PATH_SIZE];
 	static const int DATA_ELEMENT_SIZE = 64;
 	static char data_element[DATA_ELEMENT_SIZE];
-	char output_filepath[FILE_PATH_SIZE];
+	// char output_filepath[FILE_PATH_SIZE];
 
 	char split_symbol = (output_result_param != NULL) ? output_result_param->get_split_symbol() : DEFAULT_OUTPUT_DATA_SPLIT_SYMBOL;
 	// bool show_title = (output_result_param != NULL) ? output_result_param->get_show_title() : DEFAULT_OUTPUT_DATA_SHOW_TITLE;
@@ -42,9 +42,10 @@ unsigned short output_result(const DataSet* data_set, const PFINANCE_BOOL_DATA_A
 	if (CHECK_FAILURE(ret))
 		return ret;
 
-	char current_working_directory[FILE_PATH_SIZE];
-	getcwd(current_working_directory, FILE_PATH_SIZE);
-	snprintf(output_filepath, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, RESULT_FOLDER_NAME, output_filename);
+	// char current_working_directory[FILE_PATH_SIZE];
+	// getcwd(current_working_directory, FILE_PATH_SIZE);
+	// snprintf(output_filepath, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, RESULT_FOLDER_NAME, output_filename);
+	CREATE_PROJECT_FILEPATH(output_filepath, RESULT_FOLDER_NAME, output_filename)
 	FILE* fp = fopen(output_filepath, "w");
 	if (fp == NULL)
 	{
@@ -184,11 +185,11 @@ unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DA
 //	assert(output_result_param != NULL && "output_result_param should NOT be NULL");
 	assert(output_filename != NULL && "output_filename should NOT be NULL");
 
-	static const int FILE_PATH_SIZE = 256;
+	// static const int FILE_PATH_SIZE = 256;
 //	static char folder_path[FILE_PATH_SIZE];
 	static const int DATA_ELEMENT_SIZE = 64;
 	static char data_element[DATA_ELEMENT_SIZE];
-	char output_filepath[FILE_PATH_SIZE];
+	// char output_filepath[FILE_PATH_SIZE];
 
 	char split_symbol = (output_result_param != NULL) ? output_result_param->get_split_symbol() : DEFAULT_OUTPUT_DATA_SPLIT_SYMBOL;
 	bool show_title = (output_result_param != NULL) ? output_result_param->get_show_title() : DEFAULT_OUTPUT_DATA_SHOW_TITLE;
@@ -196,9 +197,10 @@ unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DA
 	if (CHECK_FAILURE(ret))
 		return ret;
 
-	char current_working_directory[FILE_PATH_SIZE];
-	getcwd(current_working_directory, FILE_PATH_SIZE);
-	snprintf(output_filepath, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, RESULT_FOLDER_NAME, output_filename);
+	// char current_working_directory[FILE_PATH_SIZE];
+	// getcwd(current_working_directory, FILE_PATH_SIZE);
+	// snprintf(output_filepath, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, RESULT_FOLDER_NAME, output_filename);
+	CREATE_PROJECT_FILEPATH(output_filepath, RESULT_FOLDER_NAME, output_filename)
 	FILE* fp = fopen(output_filepath, "w");
 	if (fp == NULL)
 	{

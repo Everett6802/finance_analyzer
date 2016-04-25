@@ -855,7 +855,10 @@ void FinanceAnalyzerTest::test_check_histogram()
 	FinanceIntDataArray int_data_statistics;
 	int_data_statistics.set_type(FinanceField_INT);
 
-	string content_in_output_file;
+	// string content_in_output_file;
+	list<string> output_result_list;
+	list<string>::iterator output_result_list_iter;
+	int histogram_array_index = 0;
 
 	PFINANCE_LONG_DATA_ARRAY data_array2 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 2);
 	int data_array2_interval = 4;
@@ -896,11 +899,34 @@ void FinanceAnalyzerTest::test_check_histogram()
 		throw runtime_error(string(errmsg));
 	}
 // Check the content of output histogram in the file
-	read_output_result(content_in_output_file, LONG_HISTOGRAM_OUTPUT_FILENAME);
+	ret = read_output_result(output_result_list, LONG_HISTOGRAM_OUTPUT_FILENAME);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to read Array [2 HistStatistics] from file, due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (output_result_list.size() != sizeof(ARRAY2_HIST_STATISTICS) / sizeof(ARRAY2_HIST_STATISTICS[0]))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "the Array [2 HistStatistics] size is incorrect, expected: %d, actual: %d", (int)(sizeof(ARRAY2_HIST_STATISTICS) / sizeof(ARRAY2_HIST_STATISTICS[0])), (int)output_result_list.size());
+		throw runtime_error(string(errmsg));
+	}
+	histogram_array_index = 0;
+	output_result_list_iter = output_result_list.begin();
+	while(output_result_list_iter != output_result_list.begin())
+	{
+		if (atol((*output_result_list_iter).c_str()) != ARRAY2_HIST_STATISTICS[histogram_array_index])
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "the Array [2 HistStatistics] element is incorrect, expected: %d, actual: %d", ARRAY2_HIST_STATISTICS[histogram_array_index], atoi((*output_result_list_iter).c_str()));
+			throw runtime_error(string(errmsg));			
+		}
+		++output_result_list_iter;
+		histogram_array_index++;
+	}
 	// printf("result: %s\n", content_in_output_file.c_str());
 
 	long_data_array.reset_array();
 	int_data_statistics.reset_array();
+	output_result_list.clear();
 
 	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 3);
 	int data_array3_interval = 3;
@@ -932,8 +958,42 @@ void FinanceAnalyzerTest::test_check_histogram()
 		snprintf(errmsg, ERRMSG_SIZE, "The Array[3 HistStatistics] is NOT correct");
 		throw runtime_error(string(errmsg));
 	}
+// Output the histogram data
+	static const char* INT_HISTOGRAM_OUTPUT_FILENAME = "int_histogram_for_test.output";
+	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3), data_array3_interval, INT_HISTOGRAM_OUTPUT_FILENAME);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to output Array [3 HistStatistics], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+// Check the content of output histogram in the file
+	ret = read_output_result(output_result_list, INT_HISTOGRAM_OUTPUT_FILENAME);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to read Array [3 HistStatistics] from file, due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (output_result_list.size() != sizeof(ARRAY3_HIST_STATISTICS) / sizeof(ARRAY3_HIST_STATISTICS[0]))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "the Array [3 HistStatistics] size is incorrect, expected: %d, actual: %d", (int)(sizeof(ARRAY3_HIST_STATISTICS) / sizeof(ARRAY3_HIST_STATISTICS[0])), (int)output_result_list.size());
+		throw runtime_error(string(errmsg));
+	}
+	histogram_array_index = 0;
+	output_result_list_iter = output_result_list.begin();
+	while(output_result_list_iter != output_result_list.begin())
+	{
+		if (atol((*output_result_list_iter).c_str()) != ARRAY3_HIST_STATISTICS[histogram_array_index])
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "the Array [3 HistStatistics] element is incorrect, expected: %d, actual: %d", ARRAY3_HIST_STATISTICS[histogram_array_index], atoi((*output_result_list_iter).c_str()));
+			throw runtime_error(string(errmsg));			
+		}
+		++output_result_list_iter;
+		histogram_array_index++;
+	}
+	// printf("result: %s\n", content_in_output_file.c_str());
 	int_data_array.reset_array();
 	int_data_statistics.reset_array();
+	output_result_list.clear();
 
 	PFINANCE_FLOAT_DATA_ARRAY data_array5 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 5);
 	int data_array5_interval = 5;
@@ -965,8 +1025,42 @@ void FinanceAnalyzerTest::test_check_histogram()
 		snprintf(errmsg, ERRMSG_SIZE, "The Array[5 HistStatistics] is NOT correct");
 		throw runtime_error(string(errmsg));
 	}
+// Output the histogram data
+	static const char* FLOAT_HISTOGRAM_OUTPUT_FILENAME = "float_histogram_for_test.output";
+	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5), data_array5_interval, FLOAT_HISTOGRAM_OUTPUT_FILENAME);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to output Array [5 HistStatistics], due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+// Check the content of output histogram in the file
+	ret = read_output_result(output_result_list, FLOAT_HISTOGRAM_OUTPUT_FILENAME);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to read Array [5 HistStatistics] from file, due to: %s", get_ret_description(ret));
+		throw runtime_error(string(errmsg));
+	}
+	if (output_result_list.size() != sizeof(ARRAY5_HIST_STATISTICS) / sizeof(ARRAY5_HIST_STATISTICS[0]))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "the Array [5 HistStatistics] size is incorrect, expected: %d, actual: %d", (int)(sizeof(ARRAY5_HIST_STATISTICS) / sizeof(ARRAY5_HIST_STATISTICS[0])), (int)output_result_list.size());
+		throw runtime_error(string(errmsg));
+	}
+	histogram_array_index = 0;
+	output_result_list_iter = output_result_list.begin();
+	while(output_result_list_iter != output_result_list.begin())
+	{
+		if (atol((*output_result_list_iter).c_str()) != ARRAY5_HIST_STATISTICS[histogram_array_index])
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "the Array [5 HistStatistics] element is incorrect, expected: %d, actual: %d", ARRAY5_HIST_STATISTICS[histogram_array_index], atoi((*output_result_list_iter).c_str()));
+			throw runtime_error(string(errmsg));			
+		}
+		++output_result_list_iter;
+		histogram_array_index++;
+	}
+
 	float_data_array.reset_array();
 	int_data_statistics.reset_array();
+	output_result_list.clear();
 }
 
 bool FinanceAnalyzerTest::test(TestType test_type)

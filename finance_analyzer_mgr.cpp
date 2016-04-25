@@ -699,10 +699,11 @@ unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
 	WRITE_FORMAT_DEBUG("The workday: %04d-%02d-%02d", year, month, day);
 
 // Create the config file for plotting multiple graphes
-	char current_working_directory[256];
-	getcwd(current_working_directory, 256);
-	char output_conf_filepath[256];
-	snprintf(output_conf_filepath, 256, "%s/%s/%s", current_working_directory, RESULT_FOLDER_NAME, DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME);
+	// char current_working_directory[256];
+	// getcwd(current_working_directory, 256);
+	// char output_conf_filepath[256];
+	// snprintf(output_conf_filepath, 256, "%s/%s/%s", current_working_directory, RESULT_FOLDER_NAME, DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME);
+	CREATE_PROJECT_FILEPATH(output_conf_filepath, RESULT_FOLDER_NAME, DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME)
 	FILE* fp = fopen(output_conf_filepath, "w");
 	if (fp == NULL)
 	{

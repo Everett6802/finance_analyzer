@@ -61,11 +61,12 @@ FinanceAnalyzerWorkdayCanlendar::~FinanceAnalyzerWorkdayCanlendar()
 
 unsigned short FinanceAnalyzerWorkdayCanlendar::initialize()
 {
-	static const int FILE_PATH_SIZE = 256;
-	static char file_path[FILE_PATH_SIZE];
-	char current_working_directory[FILE_PATH_SIZE];
-	getcwd(current_working_directory, FILE_PATH_SIZE);
-	snprintf(file_path, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, CONFIG_FOLDER_NAME, WORKDAY_CANLENDAR_CONF_FILENAME);
+	// static const int FILE_PATH_SIZE = 256;
+	// static char file_path[FILE_PATH_SIZE];
+	// char current_working_directory[FILE_PATH_SIZE];
+	// getcwd(current_working_directory, FILE_PATH_SIZE);
+	// snprintf(file_path, FILE_PATH_SIZE, "%s/%s/%s", current_working_directory, CONFIG_FOLDER_NAME, WORKDAY_CANLENDAR_CONF_FILENAME);
+	CREATE_PROJECT_FILEPATH(file_path, CONFIG_FOLDER_NAME, WORKDAY_CANLENDAR_CONF_FILENAME)
 
 // First check if the config file exists
 	if (!check_file_exist(file_path))
