@@ -15,6 +15,9 @@
 #define IMPLEMENT_DATABASE_TIME_RANGE() database_time_range = FinanceAnalyzerDatabaseTimeRange::get_instance();
 #define RELEASE_DATABASE_TIME_RANGE() SAFE_RELEASE(database_time_range)
 
+#define DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()\
+static PFINANCE_ANALYZER_DATABASE_TIME_RANGE database_time_range = FinanceAnalyzerDatabaseTimeRange::get_instance();
+
 class FinanceAnalyzerDatabaseTimeRange
 {
 	DECLARE_MSG_DUMPER()

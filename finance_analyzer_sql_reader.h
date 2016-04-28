@@ -40,6 +40,8 @@ public:
 	~FinanceAnalyzerSqlReader();
 
 	static unsigned short get_sql_field_command(int source_index, const DEQUE_INT& query_field, std::string& field_cmd);
+	static unsigned short query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET result_set);
+	static unsigned short query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set);
 
 	unsigned short try_connect_mysql(const std::string database);
 	unsigned short disconnect_mysql();

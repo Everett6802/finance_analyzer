@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <stdexcept>
+#include <set>
 #include "finance_analyzer_sql_reader.h"
+#include "finance_analyzer_database_time_range.h"
 /*
  * Go to the following links to see more detailed info:
  * http://www.cs.wichita.edu/~chang/lecture/cs742/program/how-mysql-c-api.html
@@ -29,17 +31,6 @@ const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT 
 //const char* FinanceAnalyzerSqlReader::format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
 DECLARE_MSG_DUMPER_PARAM()
 
-FinanceAnalyzerSqlReader::FinanceAnalyzerSqlReader() :
-	connection(NULL)
-{
-	IMPLEMENT_MSG_DUMPER()
-}
-
-FinanceAnalyzerSqlReader::~FinanceAnalyzerSqlReader()
-{
-	RELEASE_MSG_DUMPER()
-}
-
 unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(int source_index, const DEQUE_INT& query_field, string& field_cmd)
 {
 	if (query_field.empty())
@@ -64,6 +55,141 @@ unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(int source_index,
 	}
 
 	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerSqlReader::query(
+	const PTIME_RANGE_CFG time_range_cfg, 
+	const PQUERY_SET query_set, 
+	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+	PRESULT_SET result_set
+	)
+{
+	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
+	DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
+
+	assert(finance_analyzer_sql_reader != NULL && time_range_cfg != NULL && query_set != NULL && result_set != NULL);
+	if (time_range_cfg->get_start_time() == NULL || time_range_cfg->get_end_time() == NULL)
+	{
+		WRITE_ERROR("The start/end time in time_range_cfg should NOT be NULL");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	if (time_range_cfg->is_month_type())
+	{
+		WRITE_ERROR("The time format of time_range_cfg should be Day type");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	if (!query_set->is_add_query_done())
+	{
+		WRITE_ERROR("The setting of query data is NOT complete");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+
+// Collect the information that what kind of the data source will be queried
+	set<int> source_type_index_set;
+	for (int i = 0 ; i < FinanceSourceSize ; i++)
+	{
+		if (!(*query_set)[i].empty())
+			source_type_index_set.insert(i);
+	}
+
+	unsigned short ret = RET_SUCCESS;
+// Check the boundary of each database
+	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
+	WRITE_FORMAT_DEBUG("The original search time range: %s", sp_restricted_time_range_cfg->to_string());
+	ret = database_time_range->restrict_time_range(source_type_index_set, sp_restricted_time_range_cfg.get_instance());
+	if (CHECK_FAILURE(ret))
+		return ret;
+	WRITE_FORMAT_DEBUG("The new search time range: %s", sp_restricted_time_range_cfg->to_string());
+
+//	for (QuerySet::iterator iter = query_set.begin() ; iter < query_set.end() ; iter++)
+	for (int source_index = 0 ; source_index < FinanceSourceSize ; source_index++)
+	{
+		const DEQUE_INT& query_field = (*query_set)[source_index];
+		if (query_field.empty())
+			continue;
+// Add to the result set
+		ret = result_set->add_set(source_index, query_field);
+		if (CHECK_FAILURE(ret))
+			return ret;
+// Connect to the database
+		ret = finance_analyzer_sql_reader->try_connect_mysql(FINANCE_DATABASE_NAME_LIST[source_index]);
+		if (CHECK_FAILURE(ret))
+			return ret;
+// Generate the field command
+		string field_cmd = string("");
+		FinanceAnalyzerSqlReader::get_sql_field_command(source_index, query_field, field_cmd);
+// Query the data in each table
+		int start_year = sp_restricted_time_range_cfg->get_start_time()->get_year();
+		int end_year = sp_restricted_time_range_cfg->get_end_time()->get_year();
+// Search for each table year by year
+		for (int year = start_year ; year <= end_year ; year++)
+		{
+			char table_name[16];
+			snprintf(table_name, 16, "%s%d", MYSQL_TABLE_NAME_BASE, year);
+			PTIME_RANGE_CFG time_range_cfg_in_year = NULL;
+			if (year == start_year || year == end_year)
+			{
+				if (start_year == end_year)
+					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), sp_restricted_time_range_cfg->get_end_time()->to_string());
+				else if (year == start_year)
+					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), NULL);
+				else
+					time_range_cfg_in_year = new TimeRangeCfg(NULL, sp_restricted_time_range_cfg->get_end_time()->to_string());
+				if (time_range_cfg_in_year == NULL)
+				{
+					WRITE_ERROR("Fail to allocate memory: time_range_cfg_in_year");
+					return RET_FAILURE_INSUFFICIENT_MEMORY;
+				}
+			}
+			ret = finance_analyzer_sql_reader->select_data(source_index, string(table_name), field_cmd, (const PDEQUE_INT)&query_field, time_range_cfg_in_year, result_set);
+			if (CHECK_FAILURE(ret))
+				return ret;
+		}
+
+// Disconnect from the database
+		ret = finance_analyzer_sql_reader->disconnect_mysql();
+		if (CHECK_FAILURE(ret))
+			return ret;
+		result_set->switch_to_check_date_mode();
+	}
+// Check the result
+	ret = result_set->check_data();
+// No need, keep them in the memory until the process is dead
+	// RELEASE_DATABASE_TIME_RANGE()
+	// RELEASE_MSG_DUMPER()
+	return ret;
+}
+
+unsigned short FinanceAnalyzerSqlReader::query(
+	const PTIME_RANGE_CFG time_range_cfg, 
+	const PQUERY_SET query_set, 
+	PRESULT_SET result_set
+	)
+{
+	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
+	if (finance_analyzer_sql_reader == NULL)
+	{
+		// WRITE_ERROR("Fail to allocate memory: finance_analyzer_sql_reader");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+	unsigned short ret = query(time_range_cfg, query_set, finance_analyzer_sql_reader, result_set);
+	if (finance_analyzer_sql_reader != NULL)
+	{
+		delete finance_analyzer_sql_reader;
+		finance_analyzer_sql_reader = NULL;
+	}
+	return ret;
+}
+
+FinanceAnalyzerSqlReader::FinanceAnalyzerSqlReader() :
+	connection(NULL)
+{
+	IMPLEMENT_MSG_DUMPER()
+}
+
+FinanceAnalyzerSqlReader::~FinanceAnalyzerSqlReader()
+{
+	RELEASE_MSG_DUMPER()
 }
 
 unsigned short FinanceAnalyzerSqlReader::try_connect_mysql(const string database)
