@@ -10,7 +10,7 @@
 
 
 class FinanceAnalyzerSqlReader;
-class FinanceAnalyzerCalculator;
+class FinanceAnalyzerDataStatistics;
 
 class FinanceAnalyzerMgr
 {
@@ -21,7 +21,7 @@ private:
 	DECLARE_WORKDAY_CANLENDAR();
 	DECLARE_DATABASE_TIME_RANGE();
 	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader;
-	FinanceAnalyzerCalculator* finance_analyzer_calculator;
+	FinanceAnalyzerDataStatistics* finance_analyzer_data_statistics;
 	std::list<std::string> email_address_list;
 
 	unsigned short parse_config();

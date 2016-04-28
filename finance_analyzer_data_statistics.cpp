@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stdexcept>
-#include "finance_analyzer_calculator.h"
+#include "finance_analyzer_data_statistics.h"
 #include "finance_analyzer_algorithm.h"
 
 
@@ -8,7 +8,7 @@ using namespace std;
 
 DECLARE_MSG_DUMPER_PARAM()
 
-FinanceAnalyzerCalculator::FinanceAnalyzerCalculator() :
+FinanceAnalyzerDataStatistics::FinanceAnalyzerDataStatistics() :
 	need_res_info(true)
 {
 	IMPLEMENT_MSG_DUMPER()
@@ -16,23 +16,23 @@ FinanceAnalyzerCalculator::FinanceAnalyzerCalculator() :
 	res_info[0] = '\0';
 }
 
-FinanceAnalyzerCalculator::~FinanceAnalyzerCalculator()
+FinanceAnalyzerDataStatistics::~FinanceAnalyzerDataStatistics()
 {
 	RELEASE_DATABASE_TIME_RANGE()
 	RELEASE_MSG_DUMPER()
 }
 
-void FinanceAnalyzerCalculator::enable_res_info(bool enable)
+void FinanceAnalyzerDataStatistics::enable_res_info(bool enable)
 {
 	need_res_info = enable;
 }
 
-const char* FinanceAnalyzerCalculator::get_last_res_info()const
+const char* FinanceAnalyzerDataStatistics::get_last_res_info()const
 {
 	return res_info;
 }
 
-unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, FinanceSourceType finance_source_type1, int finance_field_no1, ArrayElementCalculationType calculation_type1, FinanceSourceType finance_source_type2, int finance_field_no2, ArrayElementCalculationType calculation_type2, int start_index1, int start_index2, int end_index1, int end_index2, float& correlation_value)
+unsigned short FinanceAnalyzerDataStatistics::correlate(const PRESULT_SET result_set, FinanceSourceType finance_source_type1, int finance_field_no1, ArrayElementCalculationType calculation_type1, FinanceSourceType finance_source_type2, int finance_field_no2, ArrayElementCalculationType calculation_type2, int start_index1, int start_index2, int end_index1, int end_index2, float& correlation_value)
 {
 	assert(result_set != NULL && "result_set should NOT be NULL");
 // Get the array
@@ -79,7 +79,7 @@ unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set
 	return ret;
 }
 
-unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set, const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation_value)
+unsigned short FinanceAnalyzerDataStatistics::correlate(const PRESULT_SET result_set, const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation_value)
 {
 // Get each parameter
 	FinanceSourceType finance_source_type1 = access_param1->get_finance_source_type(), finance_source_type2 = access_param2->get_finance_source_type();
@@ -91,7 +91,7 @@ unsigned short FinanceAnalyzerCalculator::correlate(const PRESULT_SET result_set
 	return correlate(result_set, finance_source_type1, finance_field_no1, calculation_type1, finance_source_type2, finance_field_no2, calculation_type2, start_index1, start_index2, end_index1, end_index2, correlation_value);
 }
 
-unsigned short FinanceAnalyzerCalculator::correlate_auto_alignment(const PRESULT_SET result_set, const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation_value)
+unsigned short FinanceAnalyzerDataStatistics::correlate_auto_alignment(const PRESULT_SET result_set, const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation_value)
 {
 // Auto Alignment: Modify the end index of the larger array
 	assert(result_set != NULL && "result_set should NOT be NULL");

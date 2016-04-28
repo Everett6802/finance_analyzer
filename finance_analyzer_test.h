@@ -5,7 +5,7 @@
 #include "finance_analyzer_common_class.h"
 
 
-enum TestType{Test_CheckArray, Test_CheckArrayStatistics, Test_CheckFilterArray, Test_CheckFilterRule, Test_CheckFormula, Test_CheckFilterFormula, Test_CheckCalculator, Test_CheckHistogram, TestSize};
+enum TestType{Test_CheckArray, Test_CheckArrayStatistics, Test_CheckFilterArray, Test_CheckFilterRule, Test_CheckFormula, Test_CheckFilterFormula, Test_CheckDataStatistics, Test_CheckHistogram, TestSize};
 
 extern const char* TEST_TYPE_DESCRIPTION[];
 
@@ -23,7 +23,7 @@ private:
 	void test_check_filter_rule();
 	void test_check_formula();
 	void test_check_filter_formula();
-	void test_check_calculator();
+	void test_check_data_statistics();
 	void test_check_histogram();
 
 public:

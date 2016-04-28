@@ -4,7 +4,7 @@
 #include <set>
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_sql_reader.h"
-#include "finance_analyzer_calculator.h"
+#include "finance_analyzer_data_statistics.h"
 #include "finance_analyzer_workday_canlendar.h"
 #include "finance_analyzer_database_time_range.h"
 #include "finance_analyzer_output.h"
@@ -16,7 +16,7 @@ DECLARE_MSG_DUMPER_PARAM()
 
 FinanceAnalyzerMgr::FinanceAnalyzerMgr() :
 	finance_analyzer_sql_reader(NULL),
-	finance_analyzer_calculator(NULL)
+	finance_analyzer_data_statistics(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 	IMPLEMENT_WORKDAY_CANLENDAR()
@@ -25,10 +25,10 @@ FinanceAnalyzerMgr::FinanceAnalyzerMgr() :
 
 FinanceAnalyzerMgr::~FinanceAnalyzerMgr()
 {
-	if (finance_analyzer_calculator != NULL)
+	if (finance_analyzer_data_statistics != NULL)
 	{
-		delete finance_analyzer_calculator;
-		finance_analyzer_calculator = NULL;
+		delete finance_analyzer_data_statistics;
+		finance_analyzer_data_statistics = NULL;
 	}
 	if (finance_analyzer_sql_reader != NULL)
 	{
@@ -122,10 +122,10 @@ unsigned short FinanceAnalyzerMgr::initialize()
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
 
-	finance_analyzer_calculator = new FinanceAnalyzerCalculator();
-	if (finance_analyzer_calculator == NULL)
+	finance_analyzer_data_statistics = new FinanceAnalyzerDataStatistics();
+	if (finance_analyzer_data_statistics == NULL)
 	{
-		WRITE_ERROR("Fail to allocate memory: finance_analyzer_calculator");
+		WRITE_ERROR("Fail to allocate memory: finance_analyzer_data_statistics");
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
 
@@ -253,7 +253,7 @@ unsigned short FinanceAnalyzerMgr::correlate(const SmartPointer<ResultSetAccessP
 	if (CHECK_FAILURE(ret))
 		return ret;
 // Find the correlation
-	ret = finance_analyzer_calculator->correlate_auto_alignment(sp_result_set.get_instance(), access_param1, access_param2, correlation);
+	ret = finance_analyzer_data_statistics->correlate_auto_alignment(sp_result_set.get_instance(), access_param1, access_param2, correlation);
 	if (CHECK_FAILURE(ret))
 		return ret;
 //	printf("The correlation: %.2f\n", correlation);
@@ -530,7 +530,7 @@ ret = correlate(sp_access_param1, sp_access_param2, correlation);\
 if (CHECK_FAILURE(ret))\
 	return ret;\
 }while(0);\
-snprintf(buf, BUF_SIZE, "Correlation: %.2f Detail: %s\n", correlation, finance_analyzer_calculator->get_last_res_info());\
+snprintf(buf, BUF_SIZE, "Correlation: %.2f Detail: %s\n", correlation, finance_analyzer_data_statistics->get_last_res_info());\
 buf_string += string(buf);
 
 #define ANALYZE_CORRELATION_DIFF(S1, F1, C1, S2, F2, C2, O1) ANALYZE_CORRELATION(S1, F1, C1, S2, F2, C2, O1 + 1)
