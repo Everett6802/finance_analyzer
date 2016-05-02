@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdexcept>
 #include "finance_analyzer_test.h"
-#include "finance_analyzer_data_statistics.h"
+// #include "finance_analyzer_data_statistics.h"
 #include "finance_analyzer_algorithm.h"
 #include "finance_analyzer_filter.h"
 #include "finance_analyzer_output.h"
@@ -18,7 +18,7 @@ const char* TEST_TYPE_DESCRIPTION[] =
 	"Check Filter Rule",
 	"Check Formula",
 	"Check Filter Formula",
-	"Check Data Statistics",
+	// "Check Data Statistics",
 	"Check Histogram"
 };
 //DECLARE_MSG_DUMPER_PARAM()
@@ -779,61 +779,61 @@ void FinanceAnalyzerTest::test_check_filter_formula()
 	if (show_test_case_detail) printf("[1,2] correlation: %.2f\n", value);
 }
 
-void FinanceAnalyzerTest::test_check_data_statistics()
-{
-	static const int ERRMSG_SIZE = 256;
-	static char errmsg[ERRMSG_SIZE];
+// void FinanceAnalyzerTest::test_check_data_statistics()
+// {
+// 	static const int ERRMSG_SIZE = 256;
+// 	static char errmsg[ERRMSG_SIZE];
 
-	FinanceAnalyzerDataStatistics data_statistics;
-	ResultSet result_set;
-	unsigned short ret = RET_SUCCESS;
-	float correlation_value;
-// Generate data
-	ResultSet::generate_data_for_simulation(result_set);
+// 	FinanceAnalyzerDataStatistics data_statistics;
+// 	ResultSet result_set;
+// 	unsigned short ret = RET_SUCCESS;
+// 	float correlation_value;
+// // Generate data
+// 	ResultSet::generate_data_for_simulation(result_set);
 
-	SmartPointer<ResultSetAccessParam> sp_access_param1(NULL);
-	SmartPointer<ResultSetAccessParam> sp_access_param2(NULL);
-// Check Different type of array
-	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
-	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3));
-	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
-	if (CHECK_FAILURE(ret))
-	{
-		snprintf(errmsg, ERRMSG_SIZE, "Fail in [2,3] correlation_value, due to: %s", get_ret_description(ret));
-		throw runtime_error(string(errmsg));
-	}
-	if (show_test_case_detail) printf("[2,3] correlation_value: %.2f\n", correlation_value);
+// 	SmartPointer<ResultSetAccessParam> sp_access_param1(NULL);
+// 	SmartPointer<ResultSetAccessParam> sp_access_param2(NULL);
+// // Check Different type of array
+// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
+// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3));
+// 	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
+// 	if (CHECK_FAILURE(ret))
+// 	{
+// 		snprintf(errmsg, ERRMSG_SIZE, "Fail in [2,3] correlation_value, due to: %s", get_ret_description(ret));
+// 		throw runtime_error(string(errmsg));
+// 	}
+// 	if (show_test_case_detail) printf("[2,3] correlation_value: %.2f\n", correlation_value);
 
-	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
-	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
-	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
-	if (CHECK_FAILURE(ret))
-	{
-		snprintf(errmsg, ERRMSG_SIZE, "Fail in [2,4] correlation_value, due to: %s", get_ret_description(ret));
-		throw runtime_error(string(errmsg));
-	}
-	if (show_test_case_detail) printf("[2,4] correlation_value: %.2f\n", correlation_value);
+// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
+// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
+// 	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
+// 	if (CHECK_FAILURE(ret))
+// 	{
+// 		snprintf(errmsg, ERRMSG_SIZE, "Fail in [2,4] correlation_value, due to: %s", get_ret_description(ret));
+// 		throw runtime_error(string(errmsg));
+// 	}
+// 	if (show_test_case_detail) printf("[2,4] correlation_value: %.2f\n", correlation_value);
 
-	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
-	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
-	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
-	if (CHECK_FAILURE(ret))
-	{
-		snprintf(errmsg, ERRMSG_SIZE, "Fail in [1,4] correlation_value, due to: %s", get_ret_description(ret));
-		throw runtime_error(string(errmsg));
-	}
-	if (show_test_case_detail) printf("[1,4] correlation_value: %.2f\n", correlation_value);
+// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
+// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
+// 	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
+// 	if (CHECK_FAILURE(ret))
+// 	{
+// 		snprintf(errmsg, ERRMSG_SIZE, "Fail in [1,4] correlation_value, due to: %s", get_ret_description(ret));
+// 		throw runtime_error(string(errmsg));
+// 	}
+// 	if (show_test_case_detail) printf("[1,4] correlation_value: %.2f\n", correlation_value);
 
-	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
-	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5));
-	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
-	if (CHECK_FAILURE(ret))
-	{
-		snprintf(errmsg, ERRMSG_SIZE, "Fail in [1,5] correlation_value, due to: %s", get_ret_description(ret));
-		throw runtime_error(string(errmsg));
-	}
-	if (show_test_case_detail) printf("[1,5] correlation_value: %.2f\n", correlation_value);
-}
+// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
+// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5));
+// 	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
+// 	if (CHECK_FAILURE(ret))
+// 	{
+// 		snprintf(errmsg, ERRMSG_SIZE, "Fail in [1,5] correlation_value, due to: %s", get_ret_description(ret));
+// 		throw runtime_error(string(errmsg));
+// 	}
+// 	if (show_test_case_detail) printf("[1,5] correlation_value: %.2f\n", correlation_value);
+// }
 
 void FinanceAnalyzerTest::test_check_histogram()
 {
@@ -1074,7 +1074,7 @@ bool FinanceAnalyzerTest::test(TestType test_type)
 		&FinanceAnalyzerTest::test_check_filter_rule,
 		&FinanceAnalyzerTest::test_check_formula,
 		&FinanceAnalyzerTest::test_check_filter_formula,
-		&FinanceAnalyzerTest::test_check_data_statistics,
+		// &FinanceAnalyzerTest::test_check_data_statistics,
 		&FinanceAnalyzerTest::test_check_histogram
 	};
 

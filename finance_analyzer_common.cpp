@@ -281,6 +281,13 @@ const char* SHOW_RES_TYPE_DESCRIPTION[] =
 const int SHOW_RES_TYPE_SIZE = sizeof(SHOW_RES_TYPE_DESCRIPTION) / sizeof(SHOW_RES_TYPE_DESCRIPTION[0]);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Observer command
+const unsigned short OBSERVER_SET_START_ID = 0x0;
+const unsigned short OBSERVER_GET_START_ID = 0x100;
+
+const unsigned short OBSERVER_SET_SHOW_RESULT = OBSERVER_SET_START_ID;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Return values
 
 const unsigned short RET_SUCCESS = 0;

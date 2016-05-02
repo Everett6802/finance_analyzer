@@ -19,6 +19,9 @@ typedef ResultSetAccessParamDeque* PRESULT_SET_ACCESS_PARAM_DEQUE;
 typedef std::deque<FilterRuleThresholdBase*> FilterRuleThresholdDeque;
 typedef FilterRuleThresholdDeque* PFILTER_RULE_THRESHOLD_DEQUE;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Class
+
 template <typename T>
 class SmartPointer
 {

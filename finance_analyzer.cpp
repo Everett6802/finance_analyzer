@@ -91,27 +91,27 @@ int main(int argc, char** argv)
 	unsigned short ret = finance_analyzer_mgr.initialize();
 	if (CHECK_FAILURE(ret))
 		return ret;
-	if (update_daily)
-	{
-		PRINT("Update daily data......\n");
-		ret = finance_analyzer_mgr.update_daily(show_update_daily_res_type);
-		if (CHECK_FAILURE(ret))
-			snprintf(errmsg, ERRMSG_SIZE, "Fails to update daily, due to: %d, %s", ret, get_ret_description(ret));
-	}
-	if (analyze_daily)
-	{
-		PRINT("Analyze daily data......\n");
-		ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type, 1);
-		if (CHECK_FAILURE(ret))
-			snprintf(errmsg, ERRMSG_SIZE, "Fails to analyze daily, due to: %d, %s", ret, get_ret_description(ret));
-	}
-	if (output_daily)
-	{
-		PRINT("Output daily data......\n");
-		ret = finance_analyzer_mgr.output_daily(1);
-		if (CHECK_FAILURE(ret))
-			snprintf(errmsg, ERRMSG_SIZE, "Fails to output daily, due to: %d, %s", ret, get_ret_description(ret));
-	}
+	// if (update_daily)
+	// {
+	// 	PRINT("Update daily data......\n");
+	// 	ret = finance_analyzer_mgr.update_daily(show_update_daily_res_type);
+	// 	if (CHECK_FAILURE(ret))
+	// 		snprintf(errmsg, ERRMSG_SIZE, "Fails to update daily, due to: %d, %s", ret, get_ret_description(ret));
+	// }
+	// if (analyze_daily)
+	// {
+	// 	PRINT("Analyze daily data......\n");
+	// 	ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type, 1);
+	// 	if (CHECK_FAILURE(ret))
+	// 		snprintf(errmsg, ERRMSG_SIZE, "Fails to analyze daily, due to: %d, %s", ret, get_ret_description(ret));
+	// }
+	// if (output_daily)
+	// {
+	// 	PRINT("Output daily data......\n");
+	// 	ret = finance_analyzer_mgr.output_daily(1);
+	// 	if (CHECK_FAILURE(ret))
+	// 		snprintf(errmsg, ERRMSG_SIZE, "Fails to output daily, due to: %d, %s", ret, get_ret_description(ret));
+	// }
 
 	exit(EXIT_SUCCESS);
 }

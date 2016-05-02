@@ -169,6 +169,12 @@ extern const int SHOW_RES_ALL;
 extern const char* SHOW_RES_TYPE_DESCRIPTION[];
 extern const int SHOW_RES_TYPE_SIZE;
 
+// Observer command
+extern const unsigned short OBSERVER_SET_START_ID;
+extern const unsigned short OBSERVER_GET_START_ID;
+
+extern const unsigned short OBSERVER_SET_SHOW_RESULT;
+
 // Return values
 extern const unsigned short RET_SUCCESS;
 

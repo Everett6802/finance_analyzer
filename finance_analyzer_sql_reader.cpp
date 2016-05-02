@@ -166,19 +166,8 @@ unsigned short FinanceAnalyzerSqlReader::query(
 	PRESULT_SET result_set
 	)
 {
-	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
-	if (finance_analyzer_sql_reader == NULL)
-	{
-		// WRITE_ERROR("Fail to allocate memory: finance_analyzer_sql_reader");
-		return RET_FAILURE_INSUFFICIENT_MEMORY;
-	}
-	unsigned short ret = query(time_range_cfg, query_set, finance_analyzer_sql_reader, result_set);
-	if (finance_analyzer_sql_reader != NULL)
-	{
-		delete finance_analyzer_sql_reader;
-		finance_analyzer_sql_reader = NULL;
-	}
-	return ret;
+	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
+	return query(time_range_cfg, query_set, &finance_analyzer_sql_reader, result_set);
 }
 
 FinanceAnalyzerSqlReader::FinanceAnalyzerSqlReader() :
