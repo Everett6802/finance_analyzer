@@ -62,6 +62,7 @@ private:
 public:
 	static int get_int_value(int year, int month, int day);
 	static int get_int_value(const TimeCfg* time_cfg);
+	static int get_int_value(const char* time_str); // Format: "2015-09" or "2015-09-04"
 
 	TimeCfg(const char* cur_time_str); // Format: "2015-09" or "2015-09-04"
 	TimeCfg(int cur_year, int cur_month);
@@ -299,7 +300,7 @@ typedef DEQUE_INT* PDEQUE_INT;
 
 #define ADD_QUERY(QuerySet, SourceIndex, FieldIndex)\
 do{\
-unsigned short ret = QuerySet.add_query(SourceIndex, FieldIndex);\
+ret = QuerySet.add_query(SourceIndex, FieldIndex);\
 if (CHECK_FAILURE(ret))\
 	return ret;\
 }while(0)
@@ -390,7 +391,7 @@ public:
 	void set_end_index(int new_end_index);
 	int get_end_index()const;
 };
-typedef ResultSetAccessParam* PRESULT_SET_ACCESS_PARAM;
+typedef DataSetAccessParam* PDATA_SET_ACCESS_PARAM;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -577,6 +578,7 @@ public:
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(long)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(float)
 	const char* get_date_array_element(int index)const;
+	int get_date_array_element_index(const char* date_str)const;
 };
 typedef ResultSet* PRESULT_SET;
 

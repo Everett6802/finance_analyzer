@@ -4,8 +4,7 @@
 #include <set>
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_sql_reader.h"
-#include "finance_analyzer_math_formula_statistics.h"
-#include "finance_analyzer_graph_table_statistics.h"
+#include "finance_analyzer_statistics.h"
 #include "finance_analyzer_workday_canlendar.h"
 #include "finance_analyzer_database_time_range.h"
 #include "finance_analyzer_output.h"
@@ -17,8 +16,8 @@ DECLARE_MSG_DUMPER_PARAM()
 
 FinanceAnalyzerMgr::FinanceAnalyzerMgr() :
 	// finance_analyzer_sql_reader(NULL),
-	finance_analyzer_math_formula_statistics(NULL),
-	finance_analyzer_graph_table_statistics(NULL)
+	// finance_analyzer_math_formula_statistics(NULL),
+	finance_analyzer_statistics(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 	// IMPLEMENT_WORKDAY_CANLENDAR()
@@ -27,16 +26,16 @@ FinanceAnalyzerMgr::FinanceAnalyzerMgr() :
 
 FinanceAnalyzerMgr::~FinanceAnalyzerMgr()
 {
-	if (finance_analyzer_math_formula_statistics != NULL)
+	if (finance_analyzer_statistics != NULL)
 	{
-		delete finance_analyzer_math_formula_statistics;
-		finance_analyzer_math_formula_statistics = NULL;
+		delete finance_analyzer_statistics;
+		finance_analyzer_statistics = NULL;
 	}
-	if (finance_analyzer_graph_table_statistics != NULL)
-	{
-		delete finance_analyzer_graph_table_statistics;
-		finance_analyzer_graph_table_statistics = NULL;
-	}
+	// if (finance_analyzer_graph_table_statistics != NULL)
+	// {
+	// 	delete finance_analyzer_graph_table_statistics;
+	// 	finance_analyzer_graph_table_statistics = NULL;
+	// }
 	// if (finance_analyzer_sql_reader != NULL)
 	// {
 	// 	delete finance_analyzer_sql_reader;
@@ -122,32 +121,32 @@ unsigned short FinanceAnalyzerMgr::parse_config()
 
 unsigned short FinanceAnalyzerMgr::initialize()
 {
-	// finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
-	// if (finance_analyzer_sql_reader == NULL)
-	// {
-	// 	WRITE_ERROR("Fail to allocate memory: finance_analyzer_sql_reader");
-	// 	return RET_FAILURE_INSUFFICIENT_MEMORY;
-	// }
-
-	finance_analyzer_math_formula_statistics = new FinanceAnalyzerMathFormulaStatistics();
-	if (finance_analyzer_math_formula_statistics == NULL)
-	{
-		WRITE_ERROR("Fail to allocate memory: finance_analyzer_math_formula_statistics");
-		return RET_FAILURE_INSUFFICIENT_MEMORY;
-	}
-	finance_analyzer_graph_table_statistics = new FinanceAnalyzerGraphTableStatistics();
-	if (finance_analyzer_graph_table_statistics == NULL)
-	{
-		WRITE_ERROR("Fail to allocate memory: finance_analyzer_graph_table_statistics");
-		return RET_FAILURE_INSUFFICIENT_MEMORY;
-	}
-
 	unsigned short ret = RET_SUCCESS;
 	ret = parse_config();
 	if (CHECK_FAILURE(ret))
 		return ret;
 
 	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_method)
+{
+	unsigned short ret = RET_SUCCESS;
+	if (finance_analyzer_statistics == NULL)
+	{
+		finance_analyzer_statistics = new FinanceAnalyzerStatistics();
+		if (finance_analyzer_statistics == NULL)
+		{
+			WRITE_ERROR("Fail to allocate memory: finance_analyzer_statistics");
+			return RET_FAILURE_INSUFFICIENT_MEMORY;
+		}
+	// Initialize the parameters in its delegator
+		ret = finance_analyzer_statistics->initialize(email_address_list);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	SmartPointer<TimeRangeCfg> time_range_cfg;
+	return finance_analyzer_statistics->get_statistics(statistics_method, time_range_cfg);
 }
 
 // unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set)const
@@ -305,71 +304,71 @@ unsigned short FinanceAnalyzerMgr::initialize()
 // 	return ret;
 // }
 
-unsigned short FinanceAnalyzerMgr::show_result(string result_str, const PTIME_CFG time_cfg, int show_result_type)const
-{
-	static bool check_result_folder_exist = false;
-	assert(time_cfg != NULL && "time_cfg should NOT be NULL");
-	unsigned short ret = RET_SUCCESS;
-// Check the folder of keeping track of the result exist
-	if (!check_result_folder_exist)
-	{
-		ret = create_folder_in_project_if_not_exist(RESULT_FOLDER_NAME);
-		if (CHECK_FAILURE(ret))
-			return ret;
-		check_result_folder_exist = true;
-	}
+// unsigned short FinanceAnalyzerMgr::show_result(string result_str, const PTIME_CFG time_cfg, int show_result_type)const
+// {
+// 	static bool check_result_folder_exist = false;
+// 	assert(time_cfg != NULL && "time_cfg should NOT be NULL");
+// 	unsigned short ret = RET_SUCCESS;
+// // Check the folder of keeping track of the result exist
+// 	if (!check_result_folder_exist)
+// 	{
+// 		ret = create_folder_in_project_if_not_exist(RESULT_FOLDER_NAME);
+// 		if (CHECK_FAILURE(ret))
+// 			return ret;
+// 		check_result_folder_exist = true;
+// 	}
 
-// Show result on the screen
-	if (show_result_type & SHOW_RES_STDOUT)
-	{
-		if (!SHOW_CONSOLE)
-		{
-			WRITE_WARN("Disabled; No data will be shown on STDOUT/STDERR");
-		}
-		else
-		{
-// Write the data into STDOUT
-			ret =  direct_string_to_output_stream(result_str.c_str());
-			if (CHECK_FAILURE(ret))
-				return ret;
-		}
-	}
-// Send the result by email
-	if (show_result_type & SHOW_RES_EMAIL)
-	{
-		char title[32];
-		snprintf(title, 32, DAILY_FINANCE_EMAIL_TITLE_FORMAT, time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
-		for (list<string>::const_iterator iter = email_address_list.begin() ; iter != email_address_list.end() ; iter++)
-		{
-			string email_address = (string)*iter;
-			WRITE_FORMAT_DEBUG("Write daily data by email[%s] to %s", title, email_address.c_str());
-			ret = send_email(title, email_address.c_str(), result_str.c_str());
-			if (CHECK_FAILURE(ret))
-				return ret;
-		}
-	}
-// Write the data into file
-	if (show_result_type & SHOW_RES_FILE)
-	{
-		char filename[32];
-		snprintf(filename, 32, DAILY_FINANCE_FILENAME_FORMAT, time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
-		char filepath[32];
-		snprintf(filepath, 32, "%s/%s", RESULT_FOLDER_NAME, filename);
-		WRITE_FORMAT_DEBUG("Write daily data to file[%s]", filepath);
-		ret = direct_string_to_output_stream(result_str.c_str(), filepath);
-		if (CHECK_FAILURE(ret))
-			return ret;
-		PRINT("Check the result in file: %s\n", filepath);
-	}
-// Show result on syslog
-	if (show_result_type & SHOW_RES_SYSLOG)
-	{
-// Write the data into syslog
-		WRITE_FORMAT_INFO("*** Result ***\n%s", result_str.c_str());
-	}
+// // Show result on the screen
+// 	if (show_result_type & SHOW_RES_STDOUT)
+// 	{
+// 		if (!SHOW_CONSOLE)
+// 		{
+// 			WRITE_WARN("Disabled; No data will be shown on STDOUT/STDERR");
+// 		}
+// 		else
+// 		{
+// // Write the data into STDOUT
+// 			ret =  direct_string_to_output_stream(result_str.c_str());
+// 			if (CHECK_FAILURE(ret))
+// 				return ret;
+// 		}
+// 	}
+// // Send the result by email
+// 	if (show_result_type & SHOW_RES_EMAIL)
+// 	{
+// 		char title[32];
+// 		snprintf(title, 32, DAILY_FINANCE_EMAIL_TITLE_FORMAT, time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
+// 		for (list<string>::const_iterator iter = email_address_list.begin() ; iter != email_address_list.end() ; iter++)
+// 		{
+// 			string email_address = (string)*iter;
+// 			WRITE_FORMAT_DEBUG("Write daily data by email[%s] to %s", title, email_address.c_str());
+// 			ret = send_email(title, email_address.c_str(), result_str.c_str());
+// 			if (CHECK_FAILURE(ret))
+// 				return ret;
+// 		}
+// 	}
+// // Write the data into file
+// 	if (show_result_type & SHOW_RES_FILE)
+// 	{
+// 		char filename[32];
+// 		snprintf(filename, 32, DAILY_FINANCE_FILENAME_FORMAT, time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
+// 		char filepath[32];
+// 		snprintf(filepath, 32, "%s/%s", RESULT_FOLDER_NAME, filename);
+// 		WRITE_FORMAT_DEBUG("Write daily data to file[%s]", filepath);
+// 		ret = direct_string_to_output_stream(result_str.c_str(), filepath);
+// 		if (CHECK_FAILURE(ret))
+// 			return ret;
+// 		PRINT("Check the result in file: %s\n", filepath);
+// 	}
+// // Show result on syslog
+// 	if (show_result_type & SHOW_RES_SYSLOG)
+// 	{
+// // Write the data into syslog
+// 		WRITE_FORMAT_INFO("*** Result ***\n%s", result_str.c_str());
+// 	}
 
-	return RET_SUCCESS;
-}
+// 	return RET_SUCCESS;
+// }
 
 // unsigned short FinanceAnalyzerMgr::update_daily(int show_result_type)const
 // {

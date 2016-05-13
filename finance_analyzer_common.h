@@ -80,6 +80,14 @@ do{\
 	snprintf(variable_name, variable_name##_buf_size, "%s/%s/%s", current_working_directory, foldername, filename);\
 }while(0);
 
+#define IS_FORMULA_STATISTICS_METHOD(X)\
+((X >= StatisticsFormula_Start && X < StatisticsFormula_End) ? true : false)
+#define IS_TABLE_STATISTICS_METHOD(X)\
+((X >= StatisticsTable_Start && X < StatisticsTable_End) ? true : false)
+#define IS_GRAPH_STATISTICS_METHOD(X)\
+((X >= StatisticsGraph_Start && X < StatisticsGraph_End) ? true : false)
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Enumeration
 
@@ -126,6 +134,18 @@ enum ArrayElementCalculationType
 	ArrayElementCalculationSize,
 };
 
+enum StatisticsMethod
+{
+	StatisticsMethod_None = -1,
+	StatisticsFormula_Start = 0,
+	StatisticsFormula_RangeValue = 0,
+	StatisticsFormula_End,
+	StatisticsTable_Start = 0x100,
+	StatisticsTable_End,
+	StatisticsGraph_Start = 0x200,
+	StatisticsGraph_End,
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 
@@ -143,6 +163,13 @@ extern const char* MYSQL_TABLE_NAME_BASE;
 extern const char* MYSQL_DATE_FILED_NAME;
 extern const char* MYSQL_FILED_NAME_BASE;
 
+extern const char* FORMULA_STATSTICS_METHOD_DESCRIPTION[];
+extern const int FORMULA_STATSTICS_METHOD_SIZE;
+extern const char* TABLE_STATSTICS_METHOD_DESCRIPTION[];
+extern const int TABLE_STATSTICS_METHOD_SIZE;
+extern const char* GRAPH_STATSTICS_METHOD_DESCRIPTION[];
+extern const int GRAPH_STATSTICS_METHOD_SIZE;
+
 extern const int STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION[];
 extern const int STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION[];
 extern const int STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION[];
@@ -151,6 +178,15 @@ extern const int FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DE
 extern const int OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION[];
 extern const int OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION[];
 extern const int FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[];
+
+extern const char* STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[];
+extern const char* STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[];
+extern const char* STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[];
+extern const char* FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[];
+extern const char* FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[];
+extern const char* OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[];
+extern const char* OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[];
+extern const char* FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[];
 
 extern const char* FINANCE_DATABASE_NAME_LIST[];
 extern const int FINANCE_DATABASE_NAME_LIST_LEN;
@@ -169,11 +205,11 @@ extern const int SHOW_RES_ALL;
 extern const char* SHOW_RES_TYPE_DESCRIPTION[];
 extern const int SHOW_RES_TYPE_SIZE;
 
-// Observer command
-extern const unsigned short OBSERVER_SET_START_ID;
-extern const unsigned short OBSERVER_GET_START_ID;
+// // Observer command
+// extern const unsigned short OBSERVER_SET_START_ID;
+// extern const unsigned short OBSERVER_GET_START_ID;
 
-extern const unsigned short OBSERVER_SET_SHOW_RESULT;
+// extern const unsigned short OBSERVER_SET_SHOW_RESULT;
 
 // Return values
 extern const unsigned short RET_SUCCESS;
@@ -205,6 +241,7 @@ extern bool SHOW_CONSOLE;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions
 const char* get_ret_description(unsigned short ret);
+const char* get_database_field_description(int source_index, int field_index);
 bool check_file_exist(const char* filepath);
 bool check_config_file_exist(const char* filepath);
 unsigned short create_folder_if_not_exist(const char* path, int mode=0755);

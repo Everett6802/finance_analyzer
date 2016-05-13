@@ -157,6 +157,15 @@ int TimeCfg::get_int_value(const TimeCfg* time_cfg)
 	return get_int_value(time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
 }
 
+int TimeCfg::get_int_value(const char* time_str)
+{
+	assert(time_str != NULL && "time_str should NOT be NULL");
+	int year, month, day;
+	TimeType time_type;
+	parse_time_string(time_str, year, month, day, time_type);
+	return get_int_value(year, month, day);
+}
+
 TimeCfg::TimeCfg(const char* cur_time_str)
 {
 	IMPLEMENT_MSG_DUMPER()
@@ -2340,6 +2349,27 @@ DEFINE_GET_ARRAY_ELEMENT_FUNC(float, FLOAT)
 const char* ResultSet::get_date_array_element(int index)const
 {
 	return date_data[index];
+}
+
+int ResultSet::get_date_array_element_index(const char* date_str)const
+{
+	assert(date_str != NULL && "date_str should NOT be NULL");
+	int cur_value = TimeCfg::get_int_value(date_str);
+	int start_index = 0;
+	int end_index = get_data_size();
+	while (start_index < end_index)
+	{
+		int mid_index = start_index + (end_index - start_index) / 2;
+		int mid_value = TimeCfg::get_int_value(date_data[mid_index]);
+		if (cur_value == mid_value)
+			return mid_index;
+		else if (cur_value > mid_value)
+			start_index = mid_index + 1;
+		else
+			end_index = mid_index;
+	}
+	WRITE_FORMAT_ERROR("Fail to find the date[%s] index", date_str);
+	return -1;
 }
 
 void ResultSet::switch_to_check_date_mode()

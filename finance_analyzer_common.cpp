@@ -24,6 +24,20 @@ const char* MYSQL_TABLE_NAME_BASE = "year";
 const char* MYSQL_DATE_FILED_NAME = "date";
 const char* MYSQL_FILED_NAME_BASE = "value";
 
+const char* FORMULA_STATSTICS_METHOD_DESCRIPTION[] = 
+{
+	"Range Value by Formula",
+};
+const int FORMULA_STATSTICS_METHOD_SIZE = sizeof(FORMULA_STATSTICS_METHOD_DESCRIPTION) / sizeof(FORMULA_STATSTICS_METHOD_DESCRIPTION[0]);
+const char* TABLE_STATSTICS_METHOD_DESCRIPTION[] = 
+{
+};
+const int TABLE_STATSTICS_METHOD_SIZE = sizeof(TABLE_STATSTICS_METHOD_DESCRIPTION) / sizeof(TABLE_STATSTICS_METHOD_DESCRIPTION[0]);
+const char* GRAPH_STATSTICS_METHOD_DESCRIPTION[] = 
+{
+};
+const int GRAPH_STATSTICS_METHOD_SIZE = sizeof(GRAPH_STATSTICS_METHOD_DESCRIPTION) / sizeof(GRAPH_STATSTICS_METHOD_DESCRIPTION[0]);
+
 const int STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION[] =
 {
 	FinanceField_DATE, // 日期
@@ -183,25 +197,208 @@ const int OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION[] =
 const int FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[] =
 {
 	FinanceField_DATE, // 日期
-	FinanceField_INT, // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
-	FinanceField_FLOAT, // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
-	FinanceField_INT, // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
-	FinanceField_FLOAT, // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
-	FinanceField_INT, // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
-	FinanceField_FLOAT, // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
-	FinanceField_INT, // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
-	FinanceField_FLOAT, // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
+	FinanceField_INT, // 臺股期貨_到期月份_買方_前五大交易人部位數
+	FinanceField_FLOAT, // 臺股期貨_到期月份_買方_前五大交易人比率
+	FinanceField_INT, // 臺股期貨_到期月份_買方_前十大交易人部位數
+	FinanceField_FLOAT, // 臺股期貨_到期月份_買方_前十大交易人比率
+	FinanceField_INT, // 臺股期貨_到期月份_賣方_前五大交易人部位數
+	FinanceField_FLOAT, // 臺股期貨_到期月份_賣方_前五大交易人比率
+	FinanceField_INT, // 臺股期貨_到期月份_賣方_前十大交易人部位數
+	FinanceField_FLOAT, // 臺股期貨_到期月份_賣方_前十大交易人比率
 	FinanceField_INT, // 臺股期貨_到期月份_全市場未沖銷部位數
-	FinanceField_INT, // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
-	FinanceField_FLOAT, // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
-	FinanceField_INT, // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
-	FinanceField_FLOAT, // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
-	FinanceField_INT, // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
-	FinanceField_FLOAT, // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
-	FinanceField_INT, // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
-	FinanceField_FLOAT, // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
+	FinanceField_INT, // 臺股期貨_所有契約_買方_前五大交易人部位數
+	FinanceField_FLOAT, // 臺股期貨_所有契約_買方_前五大交易人比率
+	FinanceField_INT, // 臺股期貨_所有契約_買方_前十大交易人部位數
+	FinanceField_FLOAT, // 臺股期貨_所有契約_買方_前十大交易人比率
+	FinanceField_INT, // 臺股期貨_所有契約_賣方_前五大交易人部位數
+	FinanceField_FLOAT, // 臺股期貨_所有契約_賣方_前五大交易人比率
+	FinanceField_INT, // 臺股期貨_所有契約_賣方_前十大交易人部位數
+	FinanceField_FLOAT, // 臺股期貨_所有契約_賣方_前十大交易人比率
 	FinanceField_INT, // 臺股期貨_所有契約_全市場未沖銷部位數
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const char* STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[] =
+{
+	"日期", // FinanceField_DATE
+	"成交股數", // FinanceField_LONG
+	"成交金額", // FinanceField_LONG
+	"成交筆數", // FinanceField_INT
+	"發行量加權股價指數", // FinanceField_FLOAT
+	"漲跌點數", // FinanceField_FLOAT
+};
+const char* STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[] =
+{
+	"日期", // FinanceField_DATE
+	"自營商(自行買賣)_買進金額", // FinanceField_LONG
+	"自營商(自行買賣)_賣出金額", // FinanceField_LONG
+	"自營商(自行買賣)_買賣差額", // FinanceField_LONG
+	"自營商(避險)_買進金額", // FinanceField_LONG
+	"自營商(避險)_賣出金額", // FinanceField_LONG
+	"自營商(避險)_買賣差額", // FinanceField_LONG
+	"投信_買進金額", // FinanceField_LONG
+	"投信_賣出金額", // FinanceField_LONG
+	"投信_買賣差額", // FinanceField_LONG
+	"外資及陸資_買進金額", // FinanceField_LONG
+	"外資及陸資_賣出金額", // FinanceField_LONG
+	"外資及陸資_買賣差額", // FinanceField_LONG
+};
+const char* STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[] =
+{
+	"日期", // FinanceField_DATE
+	"融資(交易單位)_買進", // FinanceField_INT
+	"融資(交易單位)_賣出", // FinanceField_INT
+	"融資(交易單位)_現金(券)償還", // FinanceField_INT
+	"融資(交易單位)_前日餘額", // FinanceField_INT
+	"融資(交易單位)_今日餘額", // FinanceField_INT
+	"融券(交易單位)_買進", // FinanceField_INT
+	"融券(交易單位)_賣出", // FinanceField_INT
+	"融券(交易單位)_現金(券)償還", // FinanceField_INT
+	"融券(交易單位)_前日餘額", // FinanceField_INT
+	"融券(交易單位)_今日餘額", // FinanceField_INT
+	"融資金額(仟元)_買進", // FinanceField_INT
+	"融資金額(仟元)_賣出", // FinanceField_INT
+	"融資金額(仟元)_現金(券)償還", // FinanceField_INT
+	"融資金額(仟元)_前日餘額", // FinanceField_LONG
+	"融資金額(仟元)_今日餘額", // FinanceField_LONG
+};
+const char* FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[] =
+{
+	"日期", // FinanceField_DATE
+	"自營商_多方_口數", // FinanceField_INT,
+	"自營商_多方_契約金額", // FinanceField_INT,
+	"自營商_空方_口數", // FinanceField_INT,
+	"自營商_空方_契約金額", // FinanceField_INT,
+	"自營商_多空淨額_口數", // FinanceField_INT,
+	"自營商_多空淨額_契約金額", // FinanceField_INT,
+	"投信_多方_口數", // FinanceField_INT,
+	"投信_多方_契約金額", // FinanceField_INT,
+	"投信_空方_口數", // FinanceField_INT,
+	"投信_空方_契約金額", // FinanceField_INT,
+	"投信_多空淨額_口數", // FinanceField_INT,
+	"投信_多空淨額_契約金額", // FinanceField_INT,
+	"外資_多方_口數", // FinanceField_INT,
+	"外資_多方_契約金額", // FinanceField_INT,
+	"外資_空方_口數", // FinanceField_INT,
+	"外資_空方_契約金額", // FinanceField_INT,
+	"外資_多空淨額_口數", // FinanceField_INT,
+	"外資_多空淨額_契約金額", // FinanceField_INT,
+};
+const char* FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[] =
+{
+	"日期", // FinanceField_DATE
+	"自營商_多方_口數_期貨", // FinanceField_INT,
+	"自營商_多方_口數_選擇權", // FinanceField_INT,
+	"自營商_多方_契約金額_期貨", // FinanceField_INT,
+	"自營商_多方_契約金額_選擇權", // FinanceField_INT,
+	"自營商_空方_口數_期貨", // FinanceField_INT,
+	"自營商_空方_口數_選擇權", // FinanceField_INT,
+	"自營商_空方_契約金額_期貨", // FinanceField_INT,
+	"自營商_空方_契約金額_選擇權", // FinanceField_INT,
+	"自營商_多空淨額_口數_期貨", // FinanceField_INT,
+	"自營商_多空淨額_口數_選擇權", // FinanceField_INT,
+	"自營商_多空淨額_契約金額_期貨", // FinanceField_INT,
+	"自營商_多空淨額_契約金額_選擇權", // FinanceField_INT,
+	"投信_多方_口數_期貨", // FinanceField_INT,
+	"投信_多方_口數_選擇權", // FinanceField_INT,
+	"投信_多方_契約金額_期貨", // FinanceField_INT,
+	"投信_多方_契約金額_選擇權", // FinanceField_INT,
+	"投信_空方_口數_期貨", // FinanceField_INT,
+	"投信_空方_口數_選擇權", // FinanceField_INT,
+	"投信_空方_契約金額_期貨", // FinanceField_INT,
+	"投信_空方_契約金額_選擇權", // FinanceField_INT,
+	"投信_多空淨額_口數_期貨", // FinanceField_INT,
+	"投信_多空淨額_口數_選擇權", // FinanceField_INT,
+	"投信_多空淨額_契約金額_期貨", // FinanceField_INT,
+	"投信_多空淨額_契約金額_選擇權", // FinanceField_INT,
+	"外資_多方_口數_期貨", // FinanceField_INT,
+	"外資_多方_口數_選擇權", // FinanceField_INT,
+	"外資_多方_契約金額_期貨", // FinanceField_INT,
+	"外資_多方_契約金額_選擇權", // FinanceField_INT,
+	"外資_空方_口數_期貨", // FinanceField_INT,
+	"外資_空方_口數_選擇權", // FinanceField_INT,
+	"外資_空方_契約金額_期貨", // FinanceField_INT,
+	"外資_空方_契約金額_選擇權", // FinanceField_INT,
+	"外資_多空淨額_口數_期貨", // FinanceField_INT,
+	"外資_多空淨額_口數_選擇權", // FinanceField_INT,
+	"外資_多空淨額_契約金額_期貨", // FinanceField_INT,
+	"外資_多空淨額_契約金額_選擇權", // FinanceField_INT,
+};
+const char* OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[] =
+{
+	"日期", // FinanceField_DATE
+	"買權_自營商_買方_口數", // FinanceField_INT,
+	"買權_自營商_買方_契約金額", // FinanceField_INT,
+	"買權_自營商_賣方_口數", // FinanceField_INT,
+	"買權_自營商_賣方_契約金額", // FinanceField_INT,
+	"買權_自營商_買賣差額_口數", //FinanceField_INT,
+	"買權_自營商_買賣差額_契約金額", // FinanceField_INT,
+	"買權_投信_買方_口數", // FinanceField_INT,
+	"買權_投信_買方_契約金額", // FinanceField_INT,
+	"買權_投信_賣方_口數", // FinanceField_INT,
+	"買權_投信_賣方_契約金額", // FinanceField_INT,
+	"買權_投信_買賣差額_口數", // FinanceField_INT,
+	"買權_投信_買賣差額_契約金額", // FinanceField_INT,
+	"買權_外資_買方_口數", // FinanceField_INT,
+	"買權_外資_買方_契約金額", // FinanceField_INT,
+	"買權_外資_賣方_口數", // FinanceField_INT,
+	"買權_外資_賣方_契約金額", // FinanceField_INT,
+	"買權_外資_買賣差額_口數", // FinanceField_INT,
+	"買權_外資_買賣差額_契約金額", // FinanceField_INT,
+	"賣權_自營商_買方_口數", // FinanceField_INT,
+	"賣權_自營商_買方_契約金額", // FinanceField_INT,
+	"賣權_自營商_賣方_口數", // FinanceField_INT,
+	"賣權_自營商_賣方_契約金額", // FinanceField_INT,
+	"賣權_自營商_買賣差額_口數", // FinanceField_INT,
+	"賣權_自營商_買賣差額_契約金額", // FinanceField_INT,
+	"賣權_投信_買方_口數", // FinanceField_INT,
+	"賣權_投信_買方_契約金額", // FinanceField_INT,
+	"賣權_投信_賣方_口數", // FinanceField_INT,
+	"賣權_投信_賣方_契約金額", // FinanceField_INT,
+	"賣權_投信_買賣差額_口數", // FinanceField_INT,
+	"賣權_投信_買賣差額_契約金額", // FinanceField_INT,
+	"賣權_外資_買方_口數", // FinanceField_INT,
+	"賣權_外資_買方_契約金額", // FinanceField_INT,
+	"賣權_外資_賣方_口數", // FinanceField_INT,
+	"賣權_外資_賣方_契約金額", // FinanceField_INT,
+	"賣權_外資_買賣差額_口數", // FinanceField_INT,
+	"賣權_外資_買賣差額_契約金額", // FinanceField_INT,
+};
+const char* OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[] =
+{
+	"日期", // FinanceField_DATE
+	"賣權成交量", // FinanceField_INT
+	"買權成交量", // FinanceField_INT
+	"買賣權成交量比率", // FinanceField_FLOAT
+	"賣權未平倉量", // FinanceField_INT
+	"買權未平倉量", // FinanceField_INT
+	"買賣權未平倉量比率", // FinanceField_FLOAT
+};
+const char* FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[] =
+{
+	"日期", // FinanceField_DATE
+	"臺股期貨_到期月份_買方_前五大交易人部位數", // FinanceField_INT
+	"臺股期貨_到期月份_買方_前五大交易人比率", // FinanceField_FLOAT
+	"臺股期貨_到期月份_買方_前十大交易人部位數", // FinanceField_INT
+	"臺股期貨_到期月份_買方_前十大交易人比率", // FinanceField_FLOAT
+	"臺股期貨_到期月份_賣方_前五大交易人部位數", // FinanceField_INT
+	"臺股期貨_到期月份_賣方_前五大交易人比率", // FinanceField_FLOAT
+	"臺股期貨_到期月份_賣方_前十大交易人部位數", // FinanceField_INT
+	"臺股期貨_到期月份_賣方_前十大交易人比率", // FinanceField_FLOAT
+	"臺股期貨_到期月份_全市場未沖銷部位數", // FinanceField_INT
+	"臺股期貨_所有契約_買方_前五大交易人部位數", // FinanceField_INT
+	"臺股期貨_所有契約_買方_前五大交易人比率", // FinanceField_FLOAT
+	"臺股期貨_所有契約_買方_前十大交易人部位數", // FinanceField_INT
+	"臺股期貨_所有契約_買方_前十大交易人比率", // FinanceField_FLOAT
+	"臺股期貨_所有契約_賣方_前五大交易人部位數", // FinanceField_INT
+	"臺股期貨_所有契約_賣方_前五大交易人比率", // FinanceField_FLOAT
+	"臺股期貨_所有契約_賣方_前十大交易人部位數", // FinanceField_INT
+	"臺股期貨_所有契約_賣方_前十大交易人比率", // FinanceField_FLOAT
+	"臺股期貨_所有契約_全市場未沖銷部位數", // FinanceField_INT
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const char* FINANCE_DATABASE_NAME_LIST[] =
 {
@@ -281,13 +478,6 @@ const char* SHOW_RES_TYPE_DESCRIPTION[] =
 const int SHOW_RES_TYPE_SIZE = sizeof(SHOW_RES_TYPE_DESCRIPTION) / sizeof(SHOW_RES_TYPE_DESCRIPTION[0]);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Observer command
-const unsigned short OBSERVER_SET_START_ID = 0x0;
-const unsigned short OBSERVER_GET_START_ID = 0x100;
-
-const unsigned short OBSERVER_SET_SHOW_RESULT = OBSERVER_SET_START_ID;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Return values
 
 const unsigned short RET_SUCCESS = 0;
@@ -351,6 +541,41 @@ const char* get_ret_description(unsigned short ret)
 		return warn_ret_descriptions[ret - RET_WARN_BASE];
 	else
 		return success_ret_description;
+}
+
+const char* get_database_field_description(int source_index, int field_index)
+{
+	assert((source_index >= 0 && source_index < FinanceSourceSize) && "source_index is out of range");
+	assert((field_index >= 0 && field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index]) && "field_index is out of range");
+	
+	switch(source_index)
+	{
+		case FinanceSource_StockExchangeAndVolume:
+			return STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_StockTop3LegalPersonsNetBuyOrSell:
+			return STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_StockMarginTradingAndShortSelling:
+			return STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest:
+			return FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest:
+			return FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest:
+			return OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_OptionPutCallRatio:
+			return OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_FutureTop10DealersAndLegalPersons:
+			return FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[field_index];
+		default:
+		{
+			static const int BUF_SIZE = 256;
+			static char buf[BUF_SIZE];
+			snprintf(buf, BUF_SIZE, "Unknown source index: %d", source_index);
+			throw invalid_argument(buf);
+		}
+		break;
+	}
+	return NULL;
 }
 
 bool check_file_exist(const char* filepath)

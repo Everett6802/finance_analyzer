@@ -16,64 +16,124 @@ using namespace std;
 
 void show_usage();
 void print_errmsg_and_exit(const char* errmsg);
-void run_test(const char* test_case_list, bool show_detail);
+bool run_test(const char* test_case_list, bool show_detail);
 int parse_show_res_type(const char* show_res_type_string);
+const char* get_statistics_method_description(StatisticsMethod statistics_method);
+
+
+#include <stdio.h>
+#include <wchar.h>
+#include <stdlib.h>
+#include <locale.h>
 
 
 int main(int argc, char** argv)
 {
-	static const int ERRMSG_SIZE = 256;
+	static const int BUF_SIZE = 256;
+	static char errmsg[BUF_SIZE];
+    // wchar_t myString2[16] = { 0x55E8, 0x3001, 0x4F60, 0x597D};
 
-	char errmsg[ERRMSG_SIZE];
+    // setlocale(LC_ALL, "");
+    // wprintf(L"嗨、你好\n");
+    // wprintf(L"嗨好\n");
+    // printf("1111\n");
+    // printf("%s\n", FINANCE_DATABASE_DESCRIPTION_LIST[0]);
+    // return 0; 
+
+	// static const int ERRMSG_SIZE = 256;
+
+	// char errmsg[ERRMSG_SIZE];
 	int index = 1;
 	int offset;
-	bool update_daily = false;
-	int show_update_daily_res_type = 0x0;
-	bool analyze_daily = false;
-	int show_analyze_daily_res_type =  0x0; //SHOW_RES_DEFAULT;
-	bool output_daily = false;
+	unsigned short ret = RET_SUCCESS;
+	StatisticsMethod statistics_method = StatisticsMethod_None;
+	// bool update_daily = false;
+	// int show_update_daily_res_type = 0x0;
+	// bool analyze_daily = false;
+	// int show_analyze_daily_res_type =  0x0; //SHOW_RES_DEFAULT;
+	// bool output_daily = false;
 
+	int exit_code = EXIT_SUCCESS;
 	for (; index < argc ; index += offset)
 	{
 		if (strcmp(argv[index], "--help") == 0)
 		{
 			show_usage();
-			exit(EXIT_SUCCESS);
+			goto OUT;
 		}
 		else if (strcmp(argv[index], "--test") == 0)
 		{
 			if (index + 1 >= argc)
 				print_errmsg_and_exit("No argument found in 'test' attribute");
-			run_test(argv[index + 1], false);
-			exit(EXIT_SUCCESS);
+			exit_code = run_test(argv[index + 1], false) ? EXIT_SUCCESS : EXIT_FAILURE;
+			goto OUT;
 		}
 		else if (strcmp(argv[index], "--test_verbose") == 0)
 		{
 			if (index + 1 >= argc)
 				print_errmsg_and_exit("No argument found in 'test_verbose' attribute");
-			run_test(argv[index + 1], true);
-			exit(EXIT_SUCCESS);
+			exit_code = run_test(argv[index + 1], true) ? EXIT_SUCCESS : EXIT_FAILURE;
+			goto OUT;
 		}
-		else if (strcmp(argv[index], "--update_daily") == 0)
+		else if (strcmp(argv[index], "--calculate_statistics") == 0)
 		{
-			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'update_daily' attribute");
-			update_daily = true;
-			show_update_daily_res_type = parse_show_res_type(argv[index + 1]);
+			if (statistics_method == StatisticsMethod_None)
+			{
+				if (index + 1 >= argc)
+					print_errmsg_and_exit("No argument found in 'calculate_statistics' attribute");
+				int method_number = atoi(argv[index + 1]) + StatisticsFormula_Start;
+				if (!IS_FORMULA_STATISTICS_METHOD(method_number))
+				{
+					snprintf(errmsg, BUF_SIZE, "Unknown formula statistics method: %d", method_number);
+					print_errmsg_and_exit(errmsg);					
+				}
+				statistics_method = (StatisticsMethod)(atoi(argv[index + 1]) + StatisticsFormula_Start);
+			}
+			else
+			{
+				printf("The %s Statistics Method has already been selected. Ignore this...", get_statistics_method_description(statistics_method));
+			}
 			offset = 2;
 		}
-		else if (strcmp(argv[index], "--analyze_daily") == 0)
+		else if (strcmp(argv[index], "--fillout_statistics") == 0)
 		{
-			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'analyze_daily' attribute");
-			analyze_daily = true;
-			show_analyze_daily_res_type = parse_show_res_type(argv[index + 1]);
+			if (statistics_method == StatisticsMethod_None)
+			{
+				if (index + 1 >= argc)
+					print_errmsg_and_exit("No argument found in 'fillout_statistics' attribute");
+				int method_number = atoi(argv[index + 1]) + StatisticsTable_Start;
+				if (!IS_TABLE_STATISTICS_METHOD(method_number))
+				{
+					snprintf(errmsg, BUF_SIZE, "Unknown table statistics method: %d", method_number);
+					print_errmsg_and_exit(errmsg);					
+				}
+				statistics_method = (StatisticsMethod)(atoi(argv[index + 1]) + StatisticsFormula_Start);
+			}
+			else
+			{
+				printf("The %s Statistics Method has already been selected. Ignore this...", get_statistics_method_description(statistics_method));
+			}
 			offset = 2;
 		}
-		else if (strcmp(argv[index], "--output_daily") == 0)
+		else if (strcmp(argv[index], "--plot_statistics") == 0)
 		{
-			output_daily = true;
-			offset = 1;
+			if (statistics_method == StatisticsMethod_None)
+			{
+				if (index + 1 >= argc)
+					print_errmsg_and_exit("No argument found in 'plot_statistics' attribute");
+				int method_number = atoi(argv[index + 1]) + StatisticsGraph_Start;
+				if (!IS_GRAPH_STATISTICS_METHOD(method_number))
+				{
+					snprintf(errmsg, BUF_SIZE, "Unknown formula statistics method: %d", method_number);
+					print_errmsg_and_exit(errmsg);			
+				}
+				statistics_method = (StatisticsMethod)(atoi(argv[index + 1]) + StatisticsGraph_Start);
+			}
+			else
+			{
+				printf("The %s Statistics Method has already been selected. Ignore this...", get_statistics_method_description(statistics_method));
+			}
+			offset = 2;
 		}
 		else if (strcmp(argv[index], "--disable_console") == 0)
 		{
@@ -88,53 +148,56 @@ int main(int argc, char** argv)
 	}
 
 // Start to run
-	unsigned short ret = finance_analyzer_mgr.initialize();
+	ret = finance_analyzer_mgr.initialize();
 	if (CHECK_FAILURE(ret))
-		return ret;
-	// if (update_daily)
-	// {
-	// 	PRINT("Update daily data......\n");
-	// 	ret = finance_analyzer_mgr.update_daily(show_update_daily_res_type);
-	// 	if (CHECK_FAILURE(ret))
-	// 		snprintf(errmsg, ERRMSG_SIZE, "Fails to update daily, due to: %d, %s", ret, get_ret_description(ret));
-	// }
-	// if (analyze_daily)
-	// {
-	// 	PRINT("Analyze daily data......\n");
-	// 	ret = finance_analyzer_mgr.analyze_daily(show_analyze_daily_res_type, 1);
-	// 	if (CHECK_FAILURE(ret))
-	// 		snprintf(errmsg, ERRMSG_SIZE, "Fails to analyze daily, due to: %d, %s", ret, get_ret_description(ret));
-	// }
-	// if (output_daily)
-	// {
-	// 	PRINT("Output daily data......\n");
-	// 	ret = finance_analyzer_mgr.output_daily(1);
-	// 	if (CHECK_FAILURE(ret))
-	// 		snprintf(errmsg, ERRMSG_SIZE, "Fails to output daily, due to: %d, %s", ret, get_ret_description(ret));
-	// }
+	{
+		snprintf(errmsg, BUF_SIZE, "Fail to initialize, due to: %s", get_ret_description(ret));
+		goto OUT;
+	}
+	
+	ret = finance_analyzer_mgr.get_statistics(statistics_method);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, BUF_SIZE, "Fail to get statistics, due to: %s", get_ret_description(ret));
+		goto OUT;
+	}
 
 	exit(EXIT_SUCCESS);
+OUT:
+	print_errmsg_and_exit(errmsg);
 }
 
 void show_usage()
 {
 	PRINT("====================== Usage ======================\n");
 	PRINT("-h|--help\nDescription: The usage\nCaution: Other flags are ignored\n");
-	PRINT("-test\nDescription: Run test case\nCaution: Other flags are ignored\n");
-	PRINT("-test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
+	PRINT("--test\nDescription: Run test case\nCaution: Other flags are ignored\n");
+	PRINT("--test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
 	PRINT(" Test case list: ");
 	for (int i = 0 ; i < TestSize ; i++)
 		PRINT("%s[%d] ", TEST_TYPE_DESCRIPTION[i], i);
 	PRINT("\n");
 	PRINT("  Format: 1,2,4 (Start from 0)\n");
 	PRINT("  all: All types\n");
-	PRINT("--update_daily\nDescription: Update daily data\n");
-	PRINT("--analyze_daily\nDescription: Analyze daily data\n");
-	PRINT("--output_daily\nDescription: Output daily data\n");
-	PRINT(" Show Result Type list: ");
-	for (int i = 0 ; i < SHOW_RES_TYPE_SIZE ; i++)
-		PRINT("%s[%d] ", SHOW_RES_TYPE_DESCRIPTION[i], i);
+	PRINT("--calculate_statistics\nDescription: Calculate the statistics by different analysis method\n");
+	for (int i = 0 ; i < FORMULA_STATSTICS_METHOD_SIZE ; i++)
+		PRINT("%s[%d] ", FORMULA_STATSTICS_METHOD_DESCRIPTION[i], i);
 	PRINT("\n");
+	PRINT("--fillout_statistics\nDescription: Fillout the statistics by different analysis method\n");
+	for (int i = 0 ; i < TABLE_STATSTICS_METHOD_SIZE ; i++)
+		PRINT("%s[%d] ", TABLE_STATSTICS_METHOD_DESCRIPTION[i], i);
+	PRINT("\n");
+	PRINT("--plot_statistics\nDescription: Plot the statistics by different analysis method\n");
+	for (int i = 0 ; i < GRAPH_STATSTICS_METHOD_SIZE ; i++)
+		PRINT("%s[%d] ", GRAPH_STATSTICS_METHOD_DESCRIPTION[i], i);
+	PRINT("\n");
+	// PRINT("--update_daily\nDescription: Update daily data\n");
+	// PRINT("--analyze_daily\nDescription: Analyze daily data\n");
+	// PRINT("--output_daily\nDescription: Output daily data\n");
+	// PRINT(" Show Result Type list: ");
+	// for (int i = 0 ; i < SHOW_RES_TYPE_SIZE ; i++)
+	// 	PRINT("%s[%d] ", SHOW_RES_TYPE_DESCRIPTION[i], i);
+	// PRINT("\n");
 	PRINT("--disable_console\nDescription: Disable printing the runtime info on STDOUT/STDERR\n");
 	PRINT("===================================================\n");
 }
@@ -146,7 +209,7 @@ void print_errmsg_and_exit(const char* errmsg)
 	exit(EXIT_FAILURE);
 }
 
-void run_test(const char* test_case_list, bool show_detail)
+bool run_test(const char* test_case_list, bool show_detail)
 {
 	assert(test_case_list != NULL && "test_case_list should NOT be NULL");
 
@@ -186,7 +249,20 @@ void run_test(const char* test_case_list, bool show_detail)
 		}
 		delete[] test_case_list_tmp;
 	}
-	printf("\n***Statistics***  Total Test Cases: %d, Pass: %d\n", cnt, pass_cnt);
+	printf("\n***Result***  Total Test Cases: %d, Pass: %d\n", cnt, pass_cnt);
+	return ((cnt == pass_cnt) ? true : false);
+}
+
+const char* get_statistics_method_description(StatisticsMethod statistics_method)
+{
+	if (IS_FORMULA_STATISTICS_METHOD(statistics_method))
+		return "Statistics by Formula";
+	else if (IS_TABLE_STATISTICS_METHOD(statistics_method))
+		return "Statistics by Table";
+	else if (IS_GRAPH_STATISTICS_METHOD(statistics_method))
+		return "Statistics by Graph";
+	assert ("Unknown Statistics Method");
+	return NULL;
 }
 
 int parse_show_res_type(const char* show_res_type_string)
