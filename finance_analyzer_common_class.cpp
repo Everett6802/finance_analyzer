@@ -496,24 +496,46 @@ const PTIME_CFG TimeRangeCfg::get_end_time()const
 	return time_end_cfg;
 }
 
-PTIME_CFG TimeRangeCfg::get_start_time()
+// PTIME_CFG TimeRangeCfg::get_start_time()
+// {
+// //	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+// 	return time_start_cfg;
+// }
+
+// PTIME_CFG TimeRangeCfg::get_end_time()
+// {
+// //	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
+// 	return time_end_cfg;
+// }
+
+void TimeRangeCfg::reset_start_time(const char* new_time_start_str)
 {
-//	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
-	return time_start_cfg;
+	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+	time_start_cfg->reset(new_time_start_str);
+	if (time_range_description != NULL)
+	{
+		delete time_range_description;
+		time_range_description = NULL;
+	}
 }
 
-PTIME_CFG TimeRangeCfg::get_end_time()
+void TimeRangeCfg::reset_end_time(const char* new_time_end_str)
 {
-//	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
-	return time_end_cfg;
+	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
+	time_end_cfg->reset(new_time_end_str);
+	if (time_range_description != NULL)
+	{
+		delete time_range_description;
+		time_range_description = NULL;
+	}
 }
 
 void TimeRangeCfg::reset_time(const char* new_time_start_str, const char* new_time_end_str)
 {
 	if (new_time_start_str != NULL)
-		time_start_cfg->reset(new_time_start_str);
+		reset_start_time(new_time_start_str);
 	if (new_time_end_str != NULL)
-		time_start_cfg->reset(new_time_end_str);
+		reset_end_time(new_time_end_str);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1333,6 +1355,19 @@ unsigned short QuerySet::add_query_done()
 	add_done = true;
 	return RET_SUCCESS;
 }
+
+int QuerySet::get_size()const
+{
+	int sum = 0;
+	for (int i = 0 ; i < FinanceSourceSize ; i++)
+	{
+		if (query_set[i].empty())
+			continue;
+		sum += query_set[i].size();
+	}
+	return sum;
+}
+
 
 bool QuerySet::is_add_query_done()const{ return add_done; }
 
@@ -2356,17 +2391,22 @@ int ResultSet::get_date_array_element_index(const char* date_str)const
 	assert(date_str != NULL && "date_str should NOT be NULL");
 	int cur_value = TimeCfg::get_int_value(date_str);
 	int start_index = 0;
-	int end_index = get_data_size();
-	while (start_index < end_index)
+	int end_index = get_data_size() - 1;
+	while (start_index <= end_index)
 	{
-		int mid_index = start_index + (end_index - start_index) / 2;
+		int mid_index = (end_index + start_index) / 2;
 		int mid_value = TimeCfg::get_int_value(date_data[mid_index]);
+		WRITE_FORMAT_DEBUG("***Index*** Start: %d, Mid: %d, End: %d", start_index, mid_index, end_index);
+		WRITE_FORMAT_DEBUG("***Date*** Start: %s, Mid: %s, End: %s", date_data[start_index], date_data[mid_index], date_data[end_index]);
 		if (cur_value == mid_value)
+		{
+			WRITE_FORMAT_DEBUG("Found in Index: %d", mid_index);
 			return mid_index;
+		}
 		else if (cur_value > mid_value)
 			start_index = mid_index + 1;
 		else
-			end_index = mid_index;
+			end_index = mid_index - 1;
 	}
 	WRITE_FORMAT_ERROR("Fail to find the date[%s] index", date_str);
 	return -1;

@@ -75,6 +75,7 @@ const PQUERY_SET FinanceAnalyzerMathFormulaStatistics::get_general_query_set()
 			throw runtime_error(string(buf));
 		}
 		query_set.add_query_done();	
+		// WRITE_FORMAT_DEBUG("There are totally %d query items", query_set.get_size());
 	}
 	return &query_set;
 }
@@ -172,17 +173,29 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::get_range_value_result(int 
 // Check the time range of this database
 	SmartPointer<TimeRangeCfg> sp_restrict_time_range_cfg;
 	if (time_range_cfg != NULL)
+	{
 		sp_restrict_time_range_cfg.set_new(new TimeRangeCfg(*time_range_cfg));
+	}
+	else
+	{
+		ret = database_time_range->get_max_database_time_range(sp_restrict_time_range_cfg);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		WRITE_FORMAT_DEBUG("time_rage_cfg is NULL, use the max database time range: %s", sp_restrict_time_range_cfg->to_string());
+	}
+	
 	ret = database_time_range->restrict_time_range(
 		source_type_index_set, 
 		sp_restrict_time_range_cfg.get_instance()
 		);
 	if (CHECK_FAILURE(ret))
 		return ret;
+	WRITE_FORMAT_DEBUG("The search time range: %s", sp_restrict_time_range_cfg->to_string());
+
 	SmartPointer<QuerySet> sp_query_set(new QuerySet());
 	sp_query_set->add_query(source_index, field_index);
-	SmartPointer<ResultSet> sp_result_set(new ResultSet());
-//	printf("The new search time range: %s\n", time_range_cfg->to_string());
+	sp_query_set->add_query_done();
+	SmartPointer<ResultSet> sp_result_set(new ResultSet());	
 // Query the data from MySQL
 	ret = FinanceAnalyzerSqlReader::query(
 		sp_restrict_time_range_cfg.get_instance(), 
@@ -296,8 +309,10 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::range_value(const SmartPoin
 		if (query_field.empty())
 			continue;
 		int query_field_size = query_field.size();
-		for (int field_index = 0 ; field_index < query_field_size ; field_index++)
+		for (int index = 0 ; index < query_field_size ; index++)
 		{
+			int field_index = query_field[index];
+			WRITE_FORMAT_DEBUG("Calcuate the range value from data[%d, %d](%s)", source_index, field_index, get_database_field_description(source_index, field_index));
 			string new_str;
 			ret = get_range_value_result(
 				source_index, 
@@ -308,6 +323,7 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::range_value(const SmartPoin
 			if (CHECK_FAILURE(ret))
 				return ret;
 			result_str += new_str;
+			result_str += "\n";
 		}
 	}
 	ret = parent_obj->show_result(result_str, SHOW_RES_STDOUT, DEF_DESCRIPTION);

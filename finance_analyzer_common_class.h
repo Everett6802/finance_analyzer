@@ -123,8 +123,11 @@ public:
 	const char* to_string();
 	const PTIME_CFG get_start_time()const;
 	const PTIME_CFG get_end_time()const;
-	PTIME_CFG get_start_time();
-	PTIME_CFG get_end_time();
+// Don't modify the start/end time in the following way
+	// PTIME_CFG get_start_time();
+	// PTIME_CFG get_end_time();
+	void reset_start_time(const char* new_time_start_str);
+	void reset_end_time(const char* new_time_end_str);
 	void reset_time(const char* new_time_start_str, const char* new_time_end_str);
 };
 typedef TimeRangeCfg* PTIME_RANGE_CFG;
@@ -325,6 +328,7 @@ public:
 	unsigned short add_query(int source_index, int field_index=-1);
 	unsigned short add_query_done();
 	bool is_add_query_done()const;
+	int get_size()const;
 
 	class iterator
 	{

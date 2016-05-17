@@ -227,13 +227,17 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::restrict_time_range(const set<i
 	if (*database_time_range_deque[max_start_time_source_type_index]->get_start_time() > *time_range_cfg->get_start_time())
 	{
 		WRITE_FORMAT_WARN("Start search time out of range, restrict from %s to %s", time_range_cfg->get_start_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string());
-		 *time_range_cfg->get_start_time() = *database_time_range_deque[max_start_time_source_type_index]->get_start_time();
+// Caution: Don't modify the start time in this way below:
+		 // *time_range_cfg->get_start_time() = *database_time_range_deque[max_start_time_source_type_index]->get_start_time();
+		time_range_cfg->reset_start_time(database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string());
 	}
 // Check the end time boundary
 	if (*database_time_range_deque[min_end_time_source_type_index]->get_end_time() < *time_range_cfg->get_end_time())
 	{
 		WRITE_FORMAT_WARN("End search time out of range, restrict from %s to %s", time_range_cfg->get_end_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_end_time()->to_string());
-		*time_range_cfg->get_end_time() = *database_time_range_deque[min_end_time_source_type_index]->get_end_time();
+// Caution: Don't modify the end time in this way below:
+		// *time_range_cfg->get_end_time() = *database_time_range_deque[min_end_time_source_type_index]->get_end_time();
+		time_range_cfg->reset_end_time(database_time_range_deque[min_end_time_source_type_index]->get_end_time()->to_string());
 	}
 
 	return RET_SUCCESS;

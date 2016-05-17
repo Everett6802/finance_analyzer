@@ -112,7 +112,8 @@ unsigned short FinanceAnalyzerStatistics::show_result(string& result_str, int sh
 // Write the data into STDOUT
 			if (data_description != NULL)
 			{
-				ret = direct_string_to_output_stream(data_description);
+				string data_description_str = string(data_description) + string("\n");
+				ret = direct_string_to_output_stream(data_description_str.c_str());
 				if (CHECK_FAILURE(ret))
 					return ret;
 			}

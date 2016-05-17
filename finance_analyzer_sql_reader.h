@@ -24,12 +24,12 @@ private:
 	static const char* FORMAT_CMD_SELECT_DATA_HEAD;
 	static const char* FORMAT_CMD_SELECT_DATA_TAIL_FORMAT;
 	static const char* FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT;
-	static const char* FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN_FORMAT;
-	static const char* FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_DATE_RULE_EQUAL_FORMAT;
 	static const char* FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT;
-	static const char* FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT;
-	static const char* FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT;
+	static const char* FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT;
 
 	static unsigned short get_sql_field_command(int source_index, const DEQUE_INT& query_field, std::string& field_cmd);
