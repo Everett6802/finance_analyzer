@@ -221,6 +221,11 @@ const int FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION[] =
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const char* FINANCE_FIELD_TYPE_DESCRIPTION[] = 
+{
+	"INT", "LONG", "FLOAT", "DATE"
+};
+
 const char* STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[] =
 {
 	"日期", // FinanceField_DATE

@@ -165,6 +165,8 @@ extern const char* MYSQL_TABLE_NAME_BASE;
 extern const char* MYSQL_DATE_FILED_NAME;
 extern const char* MYSQL_FILED_NAME_BASE;
 
+extern const char* FINANCE_FIELD_TYPE_DESCRIPTION[];
+
 extern const char* FORMULA_STATSTICS_METHOD_DESCRIPTION[];
 extern const int FORMULA_STATSTICS_METHOD_SIZE;
 extern const char* TABLE_STATSTICS_METHOD_DESCRIPTION[];

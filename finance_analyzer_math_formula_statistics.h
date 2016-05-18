@@ -32,12 +32,13 @@ private:
 	const char* get_description_head(const PRESULT_SET result_set, const PRESULT_SET_ACCESS_PARAM result_set_access_param, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
 	unsigned short get_restricted_time_range(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const;
 	unsigned short query_from_database(int source_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSet>& sp_result_set)const;
-	// void enable_res_info(bool enable);
-	// const char* get_last_res_info()const;
-	unsigned short get_range_value_result(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, std::string& result_str)const;
-	unsigned short get_average_result(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, std::string& result_str)const;
-	unsigned short get_variance_result(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, std::string& result_str)const;
 
+	unsigned short get_statistics_result(StatisticsMethod statistics_method, int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, std::string& result_str)const;
+
+	unsigned short get_range_value_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
+	unsigned short get_average_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
+	unsigned short get_standard_deviation_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
+	
 public:
 	unsigned short calculate_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)const;
 };
