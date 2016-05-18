@@ -139,6 +139,8 @@ enum StatisticsMethod
 	StatisticsMethod_None = -1,
 	StatisticsFormula_Start = 0,
 	StatisticsFormula_RangeValue = 0,
+	StatisticsFormula_Average = 1,
+	StatisticsFormula_Variance = 2,
 	StatisticsFormula_End,
 	StatisticsTable_Start = 0x100,
 	StatisticsTable_End,

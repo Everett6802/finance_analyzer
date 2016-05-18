@@ -86,7 +86,6 @@ FinanceAnalyzerMathFormulaStatistics::FinanceAnalyzerMathFormulaStatistics(Finan
 	IMPLEMENT_MSG_DUMPER()
 	IMPLEMENT_WORKDAY_CANLENDAR()
 	IMPLEMENT_DATABASE_TIME_RANGE()
-	// database_time_range = FinanceAnalyzerDatabaseTimeRange::get_instance();
 }
 
 FinanceAnalyzerMathFormulaStatistics::~FinanceAnalyzerMathFormulaStatistics()
@@ -148,11 +147,8 @@ const char* FinanceAnalyzerMathFormulaStatistics::get_description_head(const PRE
 	return buf;
 }
 
-unsigned short FinanceAnalyzerMathFormulaStatistics::get_range_value_result(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, string& result_str)const
+unsigned short FinanceAnalyzerMathFormulaStatistics::get_restricted_time_range(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const
 {
-	static const int BUF_SIZE = 1024;
-	static char buf[BUF_SIZE];
-
 	set<int> source_type_index_set;
 	// int source_index, field_index;
 	// for (int index = 0 ; index < FinanceSourceSize ; index++)
@@ -171,26 +167,184 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::get_range_value_result(int 
 
 	unsigned short ret = RET_SUCCESS;
 // Check the time range of this database
-	SmartPointer<TimeRangeCfg> sp_restrict_time_range_cfg;
+	// SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
 	if (time_range_cfg != NULL)
 	{
-		sp_restrict_time_range_cfg.set_new(new TimeRangeCfg(*time_range_cfg));
+		sp_restricted_time_range_cfg.set_new(new TimeRangeCfg(*time_range_cfg));
 	}
 	else
 	{
-		ret = database_time_range->get_max_database_time_range(sp_restrict_time_range_cfg);
+		ret = database_time_range->get_max_database_time_range(sp_restricted_time_range_cfg);
 		if (CHECK_FAILURE(ret))
 			return ret;
-		WRITE_FORMAT_DEBUG("time_rage_cfg is NULL, use the max database time range: %s", sp_restrict_time_range_cfg->to_string());
+		WRITE_FORMAT_DEBUG("time_rage_cfg is NULL, use the max database time range: %s", sp_restricted_time_range_cfg->to_string());
 	}
 	
 	ret = database_time_range->restrict_time_range(
 		source_type_index_set, 
-		sp_restrict_time_range_cfg.get_instance()
+		sp_restricted_time_range_cfg.get_instance()
 		);
 	if (CHECK_FAILURE(ret))
 		return ret;
-	WRITE_FORMAT_DEBUG("The search time range: %s", sp_restrict_time_range_cfg->to_string());
+	WRITE_FORMAT_DEBUG("The search time range: %s", sp_restricted_time_range_cfg->to_string());
+	return ret;
+}
+
+unsigned short FinanceAnalyzerMathFormulaStatistics::query_from_database(int source_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSet>& sp_result_set)const
+{
+	unsigned short ret = RET_SUCCESS;
+	SmartPointer<QuerySet> sp_query_set(new QuerySet());
+	sp_query_set->add_query(source_index, field_index);
+	sp_query_set->add_query_done();
+	// SmartPointer<ResultSet> sp_result_set(new ResultSet());	
+// Query the data from MySQL
+	ret = FinanceAnalyzerSqlReader::query(
+		(const PTIME_RANGE_CFG)sp_restricted_time_range_cfg.get_const_instance(), 
+		(const PQUERY_SET)sp_query_set.get_const_instance(), 
+		parent_obj->finance_analyzer_sql_reader, 
+		sp_result_set.get_instance()
+		);
+#ifdef DO_DEBUG
+// Show the result
+	ret = sp_result_set->show_data();
+	if (CHECK_FAILURE(ret))
+		return ret;
+#endif
+	return ret;
+}
+
+unsigned short FinanceAnalyzerMathFormulaStatistics::get_range_value_result(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, string& result_str)const
+{
+	static const int BUF_SIZE = 1024;
+	static char buf[BUF_SIZE];
+
+	unsigned short ret = RET_SUCCESS;
+// Find the time range of this database
+	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
+	ret = get_restricted_time_range(source_index, field_index, time_range_cfg, sp_restricted_time_range_cfg);
+	if (CHECK_FAILURE(ret))
+		return ret;
+// Query the data from MySQL
+	SmartPointer<ResultSet> sp_result_set(new ResultSet());	
+	ret = query_from_database(source_index, field_index, sp_restricted_time_range_cfg, sp_result_set);
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+	switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index])
+	{
+		case FinanceField_INT:
+		{
+			PFINANCE_INT_DATA_ARRAY int_data_array = sp_result_set->get_int_array(source_index, field_index);
+			if (int_data_array == NULL)
+			{
+				WRITE_FORMAT_ERROR("Fail to find int array: %d, %d", source_index, field_index);
+				return RET_FAILURE_INVALID_ARGUMENT;
+			}
+			int min_value, max_value;
+			ret = get_data_range(*int_data_array, min_value, max_value);
+			if (CHECK_FAILURE(ret))
+			{
+				WRITE_FORMAT_ERROR("Fail to find int array[%d,%d] data range", source_index, field_index);
+				return ret;
+			}
+			SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)source_index, field_index));
+			const char* description_head = get_description_head(
+				sp_result_set.get_instance(), 
+				sp_result_set_access_param.get_instance(), 
+				sp_restricted_time_range_cfg.get_instance()
+				);
+			snprintf(buf, BUF_SIZE, "%s, min: %d, max: %d", description_head, min_value, max_value);
+		}
+		break;
+		case FinanceField_LONG:
+		{
+			PFINANCE_LONG_DATA_ARRAY long_data_array = sp_result_set->get_long_array(source_index, field_index);
+			if (long_data_array == NULL)
+			{
+				WRITE_FORMAT_ERROR("Fail to find long array: %d, %d", source_index, field_index);
+				return RET_FAILURE_INVALID_ARGUMENT;
+			}
+			long min_value, max_value;
+			ret = get_data_range(*long_data_array, min_value, max_value);
+			if (CHECK_FAILURE(ret))
+			{
+				WRITE_FORMAT_ERROR("Fail to find long array[%d,%d] data range", source_index, field_index);
+				return ret;
+			}
+			SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)source_index, field_index));
+			const char* description_head = get_description_head(
+				sp_result_set.get_instance(), 
+				sp_result_set_access_param.get_instance(), 
+				sp_restricted_time_range_cfg.get_instance()
+				);
+			snprintf(buf, BUF_SIZE, "%s, min: %ld, max: %ld", description_head, min_value, max_value);
+		}
+		break;
+		case FinanceField_FLOAT:
+		{
+			PFINANCE_FLOAT_DATA_ARRAY float_data_array = sp_result_set->get_float_array(source_index, field_index);
+			if (float_data_array == NULL)
+			{
+				WRITE_FORMAT_ERROR("Fail to find float array: %d, %d", source_index, field_index);
+				return RET_FAILURE_INVALID_ARGUMENT;
+			}
+			float min_value, max_value;
+			ret = get_data_range(*float_data_array, min_value, max_value);
+			if (CHECK_FAILURE(ret))
+			{
+				WRITE_FORMAT_ERROR("Fail to find float array[%d,%d] data range", source_index, field_index);
+				return ret;
+			}
+			SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)source_index, field_index));
+			const char* description_head = get_description_head(
+				sp_result_set.get_instance(), 
+				sp_result_set_access_param.get_instance(), 
+				sp_restricted_time_range_cfg.get_instance()
+				);
+			snprintf(buf, BUF_SIZE, "%s, min: %.2f, max: %.2f", description_head, min_value, max_value);
+		}
+		break;
+		case FinanceField_DATE:
+			WRITE_ERROR("The DATE field type is NOT supported");
+			return RET_FAILURE_INVALID_ARGUMENT;
+		default:
+			WRITE_FORMAT_ERROR("The unsupported field type: %d", FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]);
+			return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	result_str = string(buf);
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerMathFormulaStatistics::get_average_result(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, string& result_str)const
+{
+	static const int BUF_SIZE = 1024;
+	static char buf[BUF_SIZE];
+
+	set<int> source_type_index_set;
+	source_type_index_set.insert(source_index);
+
+	unsigned short ret = RET_SUCCESS;
+// Check the time range of this database
+	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
+	if (time_range_cfg != NULL)
+	{
+		sp_restricted_time_range_cfg.set_new(new TimeRangeCfg(*time_range_cfg));
+	}
+	else
+	{
+		ret = database_time_range->get_max_database_time_range(sp_restricted_time_range_cfg);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		WRITE_FORMAT_DEBUG("time_rage_cfg is NULL, use the max database time range: %s", sp_restricted_time_range_cfg->to_string());
+	}
+	
+	ret = database_time_range->restrict_time_range(
+		source_type_index_set, 
+		sp_restricted_time_range_cfg.get_instance()
+		);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	WRITE_FORMAT_DEBUG("The search time range: %s", sp_restricted_time_range_cfg->to_string());
 
 	SmartPointer<QuerySet> sp_query_set(new QuerySet());
 	sp_query_set->add_query(source_index, field_index);
@@ -198,7 +352,7 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::get_range_value_result(int 
 	SmartPointer<ResultSet> sp_result_set(new ResultSet());	
 // Query the data from MySQL
 	ret = FinanceAnalyzerSqlReader::query(
-		sp_restrict_time_range_cfg.get_instance(), 
+		sp_restricted_time_range_cfg.get_instance(), 
 		sp_query_set.get_instance(), 
 		parent_obj->finance_analyzer_sql_reader, 
 		sp_result_set.get_instance()
@@ -233,7 +387,7 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::get_range_value_result(int 
 			const char* description_head = get_description_head(
 				sp_result_set.get_instance(), 
 				sp_result_set_access_param.get_instance(), 
-				sp_restrict_time_range_cfg.get_instance()
+				sp_restricted_time_range_cfg.get_instance()
 				);
 			snprintf(buf, BUF_SIZE, "%s, min: %d, max: %d", description_head, min_value, max_value);
 		}
@@ -257,7 +411,7 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::get_range_value_result(int 
 			const char* description_head = get_description_head(
 				sp_result_set.get_instance(), 
 				sp_result_set_access_param.get_instance(), 
-				sp_restrict_time_range_cfg.get_instance()
+				sp_restricted_time_range_cfg.get_instance()
 				);
 			snprintf(buf, BUF_SIZE, "%s, min: %ld, max: %ld", description_head, min_value, max_value);
 		}
@@ -281,7 +435,7 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::get_range_value_result(int 
 			const char* description_head = get_description_head(
 				sp_result_set.get_instance(), 
 				sp_result_set_access_param.get_instance(), 
-				sp_restrict_time_range_cfg.get_instance()
+				sp_restricted_time_range_cfg.get_instance()
 				);
 			snprintf(buf, BUF_SIZE, "%s, min: %.2f, max: %.2f", description_head, min_value, max_value);
 		}
@@ -297,9 +451,156 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::get_range_value_result(int 
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerMathFormulaStatistics::range_value(const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)const
+unsigned short FinanceAnalyzerMathFormulaStatistics::get_variance_result(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, string& result_str)const
 {
-	static const char* DEF_DESCRIPTION = "***** Range Value Analysis Result *****";
+	static const int BUF_SIZE = 1024;
+	static char buf[BUF_SIZE];
+
+	set<int> source_type_index_set;
+	source_type_index_set.insert(source_index);
+
+	unsigned short ret = RET_SUCCESS;
+// Check the time range of this database
+	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
+	if (time_range_cfg != NULL)
+	{
+		sp_restricted_time_range_cfg.set_new(new TimeRangeCfg(*time_range_cfg));
+	}
+	else
+	{
+		ret = database_time_range->get_max_database_time_range(sp_restricted_time_range_cfg);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		WRITE_FORMAT_DEBUG("time_rage_cfg is NULL, use the max database time range: %s", sp_restricted_time_range_cfg->to_string());
+	}
+	
+	ret = database_time_range->restrict_time_range(
+		source_type_index_set, 
+		sp_restricted_time_range_cfg.get_instance()
+		);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	WRITE_FORMAT_DEBUG("The search time range: %s", sp_restricted_time_range_cfg->to_string());
+
+	SmartPointer<QuerySet> sp_query_set(new QuerySet());
+	sp_query_set->add_query(source_index, field_index);
+	sp_query_set->add_query_done();
+	SmartPointer<ResultSet> sp_result_set(new ResultSet());	
+// Query the data from MySQL
+	ret = FinanceAnalyzerSqlReader::query(
+		sp_restricted_time_range_cfg.get_instance(), 
+		sp_query_set.get_instance(), 
+		parent_obj->finance_analyzer_sql_reader, 
+		sp_result_set.get_instance()
+		);
+	if (CHECK_FAILURE(ret))
+		return ret;
+#ifdef DO_DEBUG
+// Show the result
+	ret = sp_result_set->show_data();
+	if (CHECK_FAILURE(ret))
+		return ret;
+#endif
+
+	switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index])
+	{
+		case FinanceField_INT:
+		{
+			PFINANCE_INT_DATA_ARRAY int_data_array = sp_result_set->get_int_array(source_index, field_index);
+			if (int_data_array == NULL)
+			{
+				WRITE_FORMAT_ERROR("Fail to find int array: %d, %d", source_index, field_index);
+				return RET_FAILURE_INVALID_ARGUMENT;
+			}
+			int min_value, max_value;
+			ret = get_data_range(*int_data_array, min_value, max_value);
+			if (CHECK_FAILURE(ret))
+			{
+				WRITE_FORMAT_ERROR("Fail to find int array[%d,%d] data range", source_index, field_index);
+				return ret;
+			}
+			SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)source_index, field_index));
+			const char* description_head = get_description_head(
+				sp_result_set.get_instance(), 
+				sp_result_set_access_param.get_instance(), 
+				sp_restricted_time_range_cfg.get_instance()
+				);
+			snprintf(buf, BUF_SIZE, "%s, min: %d, max: %d", description_head, min_value, max_value);
+		}
+		break;
+		case FinanceField_LONG:
+		{
+			PFINANCE_LONG_DATA_ARRAY long_data_array = sp_result_set->get_long_array(source_index, field_index);
+			if (long_data_array == NULL)
+			{
+				WRITE_FORMAT_ERROR("Fail to find long array: %d, %d", source_index, field_index);
+				return RET_FAILURE_INVALID_ARGUMENT;
+			}
+			long min_value, max_value;
+			ret = get_data_range(*long_data_array, min_value, max_value);
+			if (CHECK_FAILURE(ret))
+			{
+				WRITE_FORMAT_ERROR("Fail to find long array[%d,%d] data range", source_index, field_index);
+				return ret;
+			}
+			SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)source_index, field_index));
+			const char* description_head = get_description_head(
+				sp_result_set.get_instance(), 
+				sp_result_set_access_param.get_instance(), 
+				sp_restricted_time_range_cfg.get_instance()
+				);
+			snprintf(buf, BUF_SIZE, "%s, min: %ld, max: %ld", description_head, min_value, max_value);
+		}
+		break;
+		case FinanceField_FLOAT:
+		{
+			PFINANCE_FLOAT_DATA_ARRAY float_data_array = sp_result_set->get_float_array(source_index, field_index);
+			if (float_data_array == NULL)
+			{
+				WRITE_FORMAT_ERROR("Fail to find float array: %d, %d", source_index, field_index);
+				return RET_FAILURE_INVALID_ARGUMENT;
+			}
+			float min_value, max_value;
+			ret = get_data_range(*float_data_array, min_value, max_value);
+			if (CHECK_FAILURE(ret))
+			{
+				WRITE_FORMAT_ERROR("Fail to find float array[%d,%d] data range", source_index, field_index);
+				return ret;
+			}
+			SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)source_index, field_index));
+			const char* description_head = get_description_head(
+				sp_result_set.get_instance(), 
+				sp_result_set_access_param.get_instance(), 
+				sp_restricted_time_range_cfg.get_instance()
+				);
+			snprintf(buf, BUF_SIZE, "%s, min: %.2f, max: %.2f", description_head, min_value, max_value);
+		}
+		break;
+		case FinanceField_DATE:
+			WRITE_ERROR("The DATE field type is NOT supported");
+			return RET_FAILURE_INVALID_ARGUMENT;
+		default:
+			WRITE_FORMAT_ERROR("The unsupported field type: %d", FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]);
+			return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	result_str = string(buf);
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerMathFormulaStatistics::calculate_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)const
+{
+	typedef unsigned short (FinanceAnalyzerMathFormulaStatistics::*get_result_func_ptr)(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, std::string& result_str)const;
+	static get_result_func_ptr get_result_func_array[] =
+	{
+		&FinanceAnalyzerMathFormulaStatistics::get_range_value_result,
+		&FinanceAnalyzerMathFormulaStatistics::get_average_result,
+		&FinanceAnalyzerMathFormulaStatistics::get_variance_result
+	};
+	static const char* DEF_DESCRIPTION_FORMAT = "***** %s Analysis Result *****";
+	static const int DESCRIPTION_SIZE = 256;
+	static char description[DESCRIPTION_SIZE];
+
+	int index = statistics_method - StatisticsFormula_Start;
 	unsigned short ret = RET_SUCCESS;
 	const PQUERY_SET query_set = FinanceAnalyzerMathFormulaStatistics::get_general_query_set();
 	string result_str = "";
@@ -309,12 +610,12 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::range_value(const SmartPoin
 		if (query_field.empty())
 			continue;
 		int query_field_size = query_field.size();
-		for (int index = 0 ; index < query_field_size ; index++)
+		for (int i = 0 ; i < query_field_size ; i++)
 		{
-			int field_index = query_field[index];
-			WRITE_FORMAT_DEBUG("Calcuate the range value from data[%d, %d](%s)", source_index, field_index, get_database_field_description(source_index, field_index));
+			int field_index = query_field[i];
+			WRITE_FORMAT_INFO("Calcuate the %s from data[%d, %d](%s)", FORMULA_STATSTICS_METHOD_DESCRIPTION[index], source_index, field_index, get_database_field_description(source_index, field_index));
 			string new_str;
-			ret = get_range_value_result(
+			ret = (this->*(get_result_func_array[index]))(
 				source_index, 
 				field_index, 
 				(const PTIME_RANGE_CFG)sp_time_range_cfg.get_const_instance(), 
@@ -326,17 +627,7 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::range_value(const SmartPoin
 			result_str += "\n";
 		}
 	}
-	ret = parent_obj->show_result(result_str, SHOW_RES_STDOUT, DEF_DESCRIPTION);
+	snprintf(description, DESCRIPTION_SIZE, DEF_DESCRIPTION_FORMAT, FORMULA_STATSTICS_METHOD_DESCRIPTION[index]);
+	ret = parent_obj->show_result(result_str, SHOW_RES_STDOUT, description);
 	return ret;
-}
-
-unsigned short FinanceAnalyzerMathFormulaStatistics::calculate_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)const
-{
-	typedef unsigned short (FinanceAnalyzerMathFormulaStatistics::*calculate_statistics_func_ptr)(const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)const;
-	static calculate_statistics_func_ptr calculate_statistics_func_array[] =
-	{
-		&FinanceAnalyzerMathFormulaStatistics::range_value
-	};
-	int index = statistics_method - StatisticsFormula_Start;
-	return (this->*(calculate_statistics_func_array[index]))(sp_time_range_cfg);
 }

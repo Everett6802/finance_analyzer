@@ -27,6 +27,8 @@ const char* MYSQL_FILED_NAME_BASE = "value";
 const char* FORMULA_STATSTICS_METHOD_DESCRIPTION[] = 
 {
 	"Range Value by Formula",
+	"Average by Formula",
+	"Variance by Formula",
 };
 const int FORMULA_STATSTICS_METHOD_SIZE = sizeof(FORMULA_STATSTICS_METHOD_DESCRIPTION) / sizeof(FORMULA_STATSTICS_METHOD_DESCRIPTION[0]);
 const char* TABLE_STATSTICS_METHOD_DESCRIPTION[] = 
