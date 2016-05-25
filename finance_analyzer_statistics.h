@@ -3,7 +3,7 @@
 
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_common_class.h"
-// #include "finance_analyzer_workday_canlendar.h"
+#include "finance_analyzer_workday_canlendar.h"
 // #include "finance_analyzer_database_time_range.h"
 
 
@@ -16,7 +16,7 @@ class FinanceAnalyzerStatistics
 	friend class FinanceAnalyzerMathFormulaStatistics;
 	friend class FinanceAnalyzerGraphTableStatistics;
 	DECLARE_MSG_DUMPER()
-	// DECLARE_WORKDAY_CANLENDAR()
+	DECLARE_WORKDAY_CANLENDAR()
 	// DECLARE_DATABASE_TIME_RANGE()
 
 private:

@@ -147,6 +147,23 @@ const char* FinanceAnalyzerMathFormulaStatistics::get_description_head(const PRE
 	return buf;
 }
 
+const char* FinanceAnalyzerMathFormulaStatistics::get_no_data_description(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg)const
+{
+	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
+	assert(time_range_cfg->get_start_time() != NULL && "time_range_cfg::start_time should NOT be NULL");
+	assert(time_range_cfg->get_end_time() != NULL && "time_range_cfg::end_time should NOT be NULL");
+	static const int BUF_SIZE = 512;
+	static char buf[BUF_SIZE];
+
+	snprintf(buf, BUF_SIZE, "%s:%s %s:%s *** No Data in MySQL ***", 
+		FINANCE_DATABASE_DESCRIPTION_LIST[source_index],
+		get_database_field_description(source_index, field_index),
+		time_range_cfg->get_start_time()->to_string(),
+		time_range_cfg->get_end_time()->to_string()
+	);
+	return buf;
+}
+
 unsigned short FinanceAnalyzerMathFormulaStatistics::get_restricted_time_range(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const
 {
 	set<int> source_type_index_set;
@@ -232,36 +249,45 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::get_statistics_result(Stati
 	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
 	ret = get_restricted_time_range(source_index, field_index, time_range_cfg, sp_restricted_time_range_cfg);
 	if (CHECK_FAILURE(ret))
-		return ret;
-// Query the data from MySQL
-	SmartPointer<ResultSet> sp_result_set(new ResultSet());	
-	ret = query_from_database(source_index, field_index, sp_restricted_time_range_cfg, sp_result_set);
-	if (CHECK_FAILURE(ret))
-		return ret;
-
-	string new_str;
-	// int finance_field_type_index = FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index];
-	ret = (this->*(get_result_str_func_array[method_index]))(sp_result_set->get_array(source_index, field_index), new_str);
-	if (CHECK_FAILURE(ret))
 	{
-		WRITE_FORMAT_ERROR("Fail to Calculate %s array[%d,%d] %s",
-			FORMULA_STATSTICS_METHOD_DESCRIPTION[method_index], 
-			source_index, 
-			field_index, 
-			FINANCE_FIELD_TYPE_DESCRIPTION[FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]]
+		if (!FAILURE_IS_OUT_OF_RANGE(ret))
+			return ret;
+		const char* description = get_no_data_description(source_index, field_index, (const PTIME_RANGE_CFG)sp_restricted_time_range_cfg.get_const_instance());
+		result_str = string(description);
+	}
+	else
+	{
+// Query the data from MySQL
+		SmartPointer<ResultSet> sp_result_set(new ResultSet());	
+		ret = query_from_database(source_index, field_index, sp_restricted_time_range_cfg, sp_result_set);
+		if (CHECK_FAILURE(ret))
+			return ret;
+
+		string new_str;
+		// int finance_field_type_index = FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index];
+		ret = (this->*(get_result_str_func_array[method_index]))(sp_result_set->get_array(source_index, field_index), new_str);
+		if (CHECK_FAILURE(ret))
+		{
+			WRITE_FORMAT_ERROR("Fail to Calculate %s array[%d,%d] %s",
+				FORMULA_STATSTICS_METHOD_DESCRIPTION[method_index], 
+				source_index, 
+				field_index, 
+				FINANCE_FIELD_TYPE_DESCRIPTION[FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]]
+				);
+			return ret;
+		}
+
+		SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)source_index, field_index));
+		const char* description_head = get_description_head(
+			sp_result_set.get_instance(), 
+			sp_result_set_access_param.get_instance(), 
+			sp_restricted_time_range_cfg.get_instance()
 			);
-		return ret;
+		snprintf(buf, BUF_SIZE, "%s, %s", description_head, new_str.c_str());
+
+		result_str = string(buf);
 	}
 
-	SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)source_index, field_index));
-	const char* description_head = get_description_head(
-		sp_result_set.get_instance(), 
-		sp_result_set_access_param.get_instance(), 
-		sp_restricted_time_range_cfg.get_instance()
-		);
-	snprintf(buf, BUF_SIZE, "%s, %s", description_head, new_str.c_str());
-
-	result_str = string(buf);
 	return RET_SUCCESS;
 }
 

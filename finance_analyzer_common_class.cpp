@@ -273,6 +273,12 @@ void TimeCfg::reset(int new_year, int new_month, int new_day)
 	time_type = TIME_DATE;
 }
 
+void TimeCfg::reset(const TimeCfg* new_time_cfg)
+{
+	assert(new_time_cfg != NULL && "new_time_cfg should NOT be NULL");
+	*this = *new_time_cfg;
+}
+
 bool TimeCfg::operator<(const TimeCfg& another_time_cfg)const
 {
 	if (this == &another_time_cfg)
@@ -508,10 +514,17 @@ const PTIME_CFG TimeRangeCfg::get_end_time()const
 // 	return time_end_cfg;
 // }
 
-void TimeRangeCfg::reset_start_time(const char* new_time_start_str)
+void TimeRangeCfg::reset_start_time(const PTIME_CFG new_start_time_cfg)
 {
-	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
-	time_start_cfg->reset(new_time_start_str);
+	assert(new_start_time_cfg != NULL && "new_start_time_cfg should NOT be NULL");
+	if (time_start_cfg == NULL)
+	{
+		time_start_cfg = new TimeCfg(new_start_time_cfg);
+		if (time_start_cfg == NULL)
+			throw bad_alloc();
+	}
+	else
+		time_start_cfg->reset(new_start_time_cfg);
 	if (time_range_description != NULL)
 	{
 		delete time_range_description;
@@ -519,10 +532,17 @@ void TimeRangeCfg::reset_start_time(const char* new_time_start_str)
 	}
 }
 
-void TimeRangeCfg::reset_end_time(const char* new_time_end_str)
+void TimeRangeCfg::reset_end_time(const PTIME_CFG new_end_time_cfg)
 {
-	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
-	time_end_cfg->reset(new_time_end_str);
+	assert(new_end_time_cfg != NULL && "new_end_time_cfg should NOT be NULL");
+	if (time_end_cfg == NULL)
+	{
+		time_end_cfg = new TimeCfg(new_end_time_cfg);
+		if (time_end_cfg == NULL)
+			throw bad_alloc();
+	}
+	else
+		time_end_cfg->reset(new_end_time_cfg);
 	if (time_range_description != NULL)
 	{
 		delete time_range_description;
@@ -530,13 +550,36 @@ void TimeRangeCfg::reset_end_time(const char* new_time_end_str)
 	}
 }
 
-void TimeRangeCfg::reset_time(const char* new_time_start_str, const char* new_time_end_str)
+void TimeRangeCfg::reset_time(const PTIME_CFG new_start_time_cfg, const PTIME_CFG new_end_time_cfg)
 {
-	if (new_time_start_str != NULL)
-		reset_start_time(new_time_start_str);
-	if (new_time_end_str != NULL)
-		reset_end_time(new_time_end_str);
+	if (new_start_time_cfg != NULL)
+		reset_start_time(new_start_time_cfg);
+	if (new_end_time_cfg != NULL)
+		reset_end_time(new_end_time_cfg);
 }
+
+void TimeRangeCfg::reset_start_time(const char* new_start_time_str)
+{
+	assert(new_start_time_str != NULL && "new_start_time_str should NOT be NULL");
+	TimeCfg new_start_time_cfg(new_start_time_str);
+	reset_start_time((const PTIME_CFG)&new_start_time_cfg);
+}
+
+void TimeRangeCfg::reset_end_time(const char* new_end_time_str)
+{
+	assert(new_end_time_str != NULL && "new_end_time_str should NOT be NULL");
+	TimeCfg new_end_time_cfg(new_end_time_str);
+	reset_end_time((const PTIME_CFG)&new_end_time_cfg);
+}
+
+void TimeRangeCfg::reset_time(const char* new_start_time_str, const char* new_end_time_str)
+{
+	if (new_start_time_str != NULL)
+		reset_start_time(new_start_time_str);
+	if (new_end_time_str != NULL)
+		reset_end_time(new_end_time_str);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

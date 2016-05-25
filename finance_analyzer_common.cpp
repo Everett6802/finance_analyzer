@@ -502,12 +502,13 @@ const unsigned short RET_FAILURE_INCORRECT_OPERATION = RET_FAILURE_BASE + 5;
 const unsigned short RET_FAILURE_OPEN_FILE = RET_FAILURE_BASE + 6;
 const unsigned short RET_FAILURE_NOT_FOUND = RET_FAILURE_BASE + 7;
 const unsigned short RET_FAILURE_NOT_EQUAL = RET_FAILURE_BASE + 8;
-const unsigned short RET_FAILURE_INCORRECT_CONFIG = RET_FAILURE_BASE + 9;
-const unsigned short RET_FAILURE_INCORRECT_PATH = RET_FAILURE_BASE + 10;
-const unsigned short RET_FAILURE_IO_OPERATION = RET_FAILURE_BASE + 11;
-const unsigned short RET_FAILURE_HANDLE_THREAD = RET_FAILURE_BASE + 12;
-const unsigned short RET_FAILURE_SYSTEM_API = RET_FAILURE_BASE + 13;
-const unsigned short RET_FAILURE_MYSQL = RET_FAILURE_BASE + 14;
+const unsigned short RET_FAILURE_OUT_OF_RANGE = RET_FAILURE_BASE + 9;
+const unsigned short RET_FAILURE_INCORRECT_CONFIG = RET_FAILURE_BASE + 10;
+const unsigned short RET_FAILURE_INCORRECT_PATH = RET_FAILURE_BASE + 11;
+const unsigned short RET_FAILURE_IO_OPERATION = RET_FAILURE_BASE + 12;
+const unsigned short RET_FAILURE_HANDLE_THREAD = RET_FAILURE_BASE + 14;
+const unsigned short RET_FAILURE_SYSTEM_API = RET_FAILURE_BASE + 14;
+const unsigned short RET_FAILURE_MYSQL = RET_FAILURE_BASE + 15;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -535,6 +536,7 @@ const char* get_ret_description(unsigned short ret)
 		"Failure_OpenFile",
 		"Failure_NotFound",
 		"Failure_NotEqual",
+		"Failure_OutOfRange",
 		"Failure_IncorrectConfig",
 		"Failure_IncorrectPath",
 		"Failure_IOOperation",

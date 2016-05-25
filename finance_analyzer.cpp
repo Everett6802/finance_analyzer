@@ -47,6 +47,7 @@ int main(int argc, char** argv)
 	int offset;
 	unsigned short ret = RET_SUCCESS;
 	StatisticsMethod statistics_method = StatisticsMethod_None;
+	SmartPointer<TimeRangeCfg> sp_statistics_time_range_cfg;
 	// bool update_daily = false;
 	// int show_update_daily_res_type = 0x0;
 	// bool analyze_daily = false;
@@ -85,7 +86,7 @@ int main(int argc, char** argv)
 				if (!IS_FORMULA_STATISTICS_METHOD(method_number))
 				{
 					snprintf(errmsg, BUF_SIZE, "Unknown formula statistics method: %d", method_number);
-					print_errmsg_and_exit(errmsg);					
+					print_errmsg_and_exit(errmsg);				
 				}
 				statistics_method = (StatisticsMethod)(atoi(argv[index + 1]) + StatisticsFormula_Start);
 			}
@@ -135,6 +136,44 @@ int main(int argc, char** argv)
 			}
 			offset = 2;
 		}
+		else if (strcmp(argv[index], "--statistics_time_range") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'statistics_time_range' attribute");
+			char* statistics_time_range_tmp = new char[strlen(argv[index + 1]) + 1];
+			assert(statistics_time_range_tmp != NULL && "Fail to allocate memory:statistics_time_range_tmp");
+			memset(statistics_time_range_tmp, 0x0, sizeof(char) * strlen(argv[index + 1]) + 1);
+			memcpy(statistics_time_range_tmp, argv[index + 1], sizeof(char) * strlen(argv[index + 1]));
+			char* time_str_1 = strtok(statistics_time_range_tmp, ",");
+			char* time_str_2 = strtok(NULL, ",");
+			if (time_str_1 == NULL)
+			{
+				snprintf(errmsg, BUF_SIZE, "Incorrect statistics time range format: %s", argv[index + 1]);
+				print_errmsg_and_exit(errmsg);
+			}
+			else
+			{
+				try
+				{
+					if (time_str_2 == NULL)
+					{
+						if (argv[index + 1][0] == ',')
+							sp_statistics_time_range_cfg.set_new(new TimeRangeCfg(NULL, time_str_1));
+						else
+							sp_statistics_time_range_cfg.set_new(new TimeRangeCfg(time_str_1, NULL));
+					}
+					else
+						sp_statistics_time_range_cfg.set_new(new TimeRangeCfg(time_str_1, time_str_2));
+				}
+				catch (const std::invalid_argument& e)
+				{
+					snprintf(errmsg, BUF_SIZE, "Error occur while setting statistics time range, due to: %s", e.what());
+					print_errmsg_and_exit(errmsg);
+				}
+			}
+			// printf("statistics time range: %s\n", sp_statistics_time_range_cfg->to_string());
+			offset = 2;
+		}
 		else if (strcmp(argv[index], "--disable_console") == 0)
 		{
 			SHOW_CONSOLE = false;
@@ -154,12 +193,15 @@ int main(int argc, char** argv)
 		snprintf(errmsg, BUF_SIZE, "Fail to initialize, due to: %s", get_ret_description(ret));
 		goto OUT;
 	}
-	
-	ret = finance_analyzer_mgr.get_statistics(statistics_method);
-	if (CHECK_FAILURE(ret))
+
+	if (statistics_method != StatisticsMethod_None)
 	{
-		snprintf(errmsg, BUF_SIZE, "Fail to get statistics, due to: %s", get_ret_description(ret));
-		goto OUT;
+		ret = finance_analyzer_mgr.get_statistics(statistics_method, sp_statistics_time_range_cfg);
+		if (CHECK_FAILURE(ret))
+		{
+			snprintf(errmsg, BUF_SIZE, "Fail to get statistics, due to: %s", get_ret_description(ret));
+			goto OUT;
+		}	
 	}
 
 	exit(EXIT_SUCCESS);
@@ -191,13 +233,11 @@ void show_usage()
 	for (int i = 0 ; i < GRAPH_STATSTICS_METHOD_SIZE ; i++)
 		PRINT("%s[%d] ", GRAPH_STATSTICS_METHOD_DESCRIPTION[i], i);
 	PRINT("\n");
-	// PRINT("--update_daily\nDescription: Update daily data\n");
-	// PRINT("--analyze_daily\nDescription: Analyze daily data\n");
-	// PRINT("--output_daily\nDescription: Output daily data\n");
-	// PRINT(" Show Result Type list: ");
-	// for (int i = 0 ; i < SHOW_RES_TYPE_SIZE ; i++)
-	// 	PRINT("%s[%d] ", SHOW_RES_TYPE_DESCRIPTION[i], i);
-	// PRINT("\n");
+	PRINT("--statistics_time_range\nDescription: The time range of statistics result\n");
+    PRINT("  Format 1 (start_time): 2015-01-01\n");
+    PRINT("  Format 2 (start_time,end_time): 2015-01-01,2015-09-04\n");
+    PRINT("  Format 3 (,end_time): ,2015-09-04\n");
+	PRINT("\n");
 	PRINT("--disable_console\nDescription: Disable printing the runtime info on STDOUT/STDERR\n");
 	PRINT("===================================================\n");
 }

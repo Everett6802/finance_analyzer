@@ -81,6 +81,7 @@ public:
 	void reset(const char* new_time_str); // Format: "2015-09" or "2015-09-04"
 	void reset(int new_year, int new_month);
 	void reset(int new_year, int new_month, int cur_day);
+	void reset(const TimeCfg* new_time_cfg);
 
 	bool operator<(const TimeCfg& another_time_cfg)const;
 	bool operator>(const TimeCfg& another_time_cfg)const;
@@ -126,9 +127,13 @@ public:
 // Don't modify the start/end time in the following way
 	// PTIME_CFG get_start_time();
 	// PTIME_CFG get_end_time();
-	void reset_start_time(const char* new_time_start_str);
-	void reset_end_time(const char* new_time_end_str);
-	void reset_time(const char* new_time_start_str, const char* new_time_end_str);
+	void reset_start_time(const PTIME_CFG new_start_time_cfg);
+	void reset_end_time(const PTIME_CFG new_end_time_cfg);
+	void reset_time(const PTIME_CFG new_start_time_cfg, const PTIME_CFG new_end_time_cfg);
+
+	void reset_start_time(const char* new_start_time_str);
+	void reset_end_time(const char* new_end_time_str);
+	void reset_time(const char* new_start_time_str, const char* new_end_time_str);
 };
 typedef TimeRangeCfg* PTIME_RANGE_CFG;
 

@@ -5,6 +5,7 @@
 #include <list>
 #include <string>
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Macro
 
@@ -18,6 +19,10 @@
 
 #ifndef CHECK_FAILURE
 #define CHECK_FAILURE(X) ((X >= RET_FAILURE_BASE) ? true : false)
+#endif
+
+#ifndef FAILURE_IS_OUT_OF_RANGE
+#define FAILURE_IS_OUT_OF_RANGE(X) ((X == RET_FAILURE_OUT_OF_RANGE) ? true : false)
 #endif
 
 #ifndef CHECK_SUCCESS_IGNORE_WARN
@@ -231,6 +236,7 @@ extern const unsigned short RET_FAILURE_INCORRECT_OPERATION;
 extern const unsigned short RET_FAILURE_OPEN_FILE;
 extern const unsigned short RET_FAILURE_NOT_FOUND;
 extern const unsigned short RET_FAILURE_NOT_EQUAL;
+extern const unsigned short RET_FAILURE_OUT_OF_RANGE;
 extern const unsigned short RET_FAILURE_INCORRECT_CONFIG;
 extern const unsigned short RET_FAILURE_INCORRECT_PATH;
 extern const unsigned short RET_FAILURE_IO_OPERATION;

@@ -30,6 +30,7 @@ private:
 	~FinanceAnalyzerMathFormulaStatistics();
 
 	const char* get_description_head(const PRESULT_SET result_set, const PRESULT_SET_ACCESS_PARAM result_set_access_param, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
+	const char* get_no_data_description(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg)const;
 	unsigned short get_restricted_time_range(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const;
 	unsigned short query_from_database(int source_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSet>& sp_result_set)const;
 

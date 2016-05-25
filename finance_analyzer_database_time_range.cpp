@@ -223,6 +223,23 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::restrict_time_range(const set<i
 		iter++;
 	}
 	WRITE_FORMAT_DEBUG("The available search time range:%s %s", database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string(), database_time_range_deque[min_end_time_source_type_index]->get_end_time()->to_string());
+// Check if the start/end time is out of the Mysql time range
+	if (time_range_cfg->get_end_time() != NULL)
+	{
+		if (*time_range_cfg->get_end_time() < *database_time_range_deque[max_start_time_source_type_index]->get_start_time())
+		{
+			WRITE_FORMAT_ERROR("The end time[%s] is earlier than the MySQL start time[%s]", time_range_cfg->get_end_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string());
+			return RET_FAILURE_OUT_OF_RANGE;
+		}
+	}
+	if (time_range_cfg->get_start_time() != NULL)
+	{
+		if (*time_range_cfg->get_start_time() > *database_time_range_deque[max_start_time_source_type_index]->get_end_time())
+		{
+			WRITE_FORMAT_ERROR("The start time[%s] is later than the MySQL end time[%s]", time_range_cfg->get_start_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_end_time()->to_string());
+			return RET_FAILURE_OUT_OF_RANGE;
+		}
+	}
 // Check the start time boundary
 	if (*database_time_range_deque[max_start_time_source_type_index]->get_start_time() > *time_range_cfg->get_start_time())
 	{

@@ -40,7 +40,7 @@ public:
 	// unsigned short update_daily(int show_result_type)const;
 	// unsigned short analyze_daily(int show_result_type, int offset=1)const;
 	// unsigned short output_daily(int offset=1)const;
-	unsigned short get_statistics(StatisticsMethod statistics_method);
+	unsigned short get_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& time_range_cfg);
 
 #ifdef DO_DEBUG
 	unsigned short test();

@@ -129,7 +129,7 @@ unsigned short FinanceAnalyzerMgr::initialize()
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_method)
+unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& time_range_cfg)
 {
 	unsigned short ret = RET_SUCCESS;
 	if (finance_analyzer_statistics == NULL)
@@ -145,7 +145,6 @@ unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_me
 		if (CHECK_FAILURE(ret))
 			return ret;
 	}
-	SmartPointer<TimeRangeCfg> time_range_cfg;
 	return finance_analyzer_statistics->get_statistics(statistics_method, time_range_cfg);
 }
 

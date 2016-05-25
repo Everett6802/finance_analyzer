@@ -21,7 +21,7 @@ FinanceAnalyzerStatistics::FinanceAnalyzerStatistics() :
 	finance_analyzer_graph_table_statistics(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
-	// IMPLEMENT_WORKDAY_CANLENDAR()
+	IMPLEMENT_WORKDAY_CANLENDAR()
 	// IMPLEMENT_DATABASE_TIME_RANGE()
 	res_info[0] = '\0';
 }
@@ -44,7 +44,7 @@ FinanceAnalyzerStatistics::~FinanceAnalyzerStatistics()
 		finance_analyzer_sql_reader = NULL;
 	}
 	// RELEASE_DATABASE_TIME_RANGE()
-	// RELEASE_WORKDAY_CANLENDAR()
+	RELEASE_WORKDAY_CANLENDAR()
 	RELEASE_MSG_DUMPER()
 }
 
@@ -182,17 +182,78 @@ unsigned short FinanceAnalyzerStatistics::show_result(string& result_str, int sh
 unsigned short FinanceAnalyzerStatistics::get_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)
 {
 	unsigned short ret = RET_SUCCESS;
+	SmartPointer<TimeRangeCfg> sp_modified_time_range_cfg;
+	if (sp_time_range_cfg.get_const_instance() != NULL)
+	{
+		sp_modified_time_range_cfg.set_new((const PTIME_RANGE_CFG)sp_time_range_cfg.get_const_instance());
+		WRITE_FORMAT_DEBUG("Check if it's required to check the statistics time range[%s]", sp_modified_time_range_cfg.get_instance()->to_string());
+		if (sp_modified_time_range_cfg->get_start_time() != NULL)
+		{
+			if (!workday_canlendar->is_workday(sp_modified_time_range_cfg->get_start_time()))
+			{
+				SmartPointer<TimeCfg> sp_nearest_start_time_cfg;
+				ret = workday_canlendar->get_next_workday(sp_modified_time_range_cfg->get_start_time(), sp_nearest_start_time_cfg);
+				if (CHECK_FAILURE(ret))
+				{
+					WRITE_FORMAT_ERROR("Fail to get the nearest start workday from the start time: %s, due to: %s", sp_modified_time_range_cfg->get_start_time()->to_string(), get_ret_description(ret));
+					return ret;
+				}
+				WRITE_FORMAT_DEBUG("The nearest start workday: %s", sp_nearest_start_time_cfg->to_string());
+				sp_modified_time_range_cfg->reset_start_time(sp_nearest_start_time_cfg.get_instance());		
+			}
+		}
+		else
+		{
+			SmartPointer<TimeCfg> sp_first_time_cfg;
+			ret = workday_canlendar->get_first_workday(sp_first_time_cfg);
+			if (CHECK_FAILURE(ret))
+			{
+				WRITE_FORMAT_ERROR("Fail to get the first workday, due to: %s", get_ret_description(ret));
+				return ret;
+			}
+			WRITE_FORMAT_DEBUG("Set the end to first workday: %s", sp_first_time_cfg->to_string());
+			sp_modified_time_range_cfg->reset_start_time(sp_first_time_cfg.get_instance());
+		}
+		if (sp_modified_time_range_cfg->get_end_time() != NULL)
+		{
+			if (!workday_canlendar->is_workday(sp_modified_time_range_cfg->get_end_time()))
+			{
+				SmartPointer<TimeCfg> sp_nearest_end_time_cfg;
+				ret = workday_canlendar->get_prev_workday(sp_modified_time_range_cfg->get_end_time(), sp_nearest_end_time_cfg);
+				if (CHECK_FAILURE(ret))
+				{
+					WRITE_FORMAT_ERROR("Fail to get the nearest end workday from the end time: %s, due to: %s", sp_modified_time_range_cfg->get_end_time()->to_string(), get_ret_description(ret));
+					return ret;
+				}
+				WRITE_FORMAT_DEBUG("The nearest end workday: %s", sp_nearest_end_time_cfg->to_string());
+				sp_modified_time_range_cfg->reset_end_time(sp_nearest_end_time_cfg.get_instance());
+			}
+		}
+		else
+		{
+			SmartPointer<TimeCfg> sp_last_time_cfg;
+			ret = workday_canlendar->get_last_workday(sp_last_time_cfg);
+			if (CHECK_FAILURE(ret))
+			{
+				WRITE_FORMAT_ERROR("Fail to get the latest workday, due to: %s", get_ret_description(ret));
+				return ret;
+			}
+			WRITE_FORMAT_DEBUG("Set the end to latest workday: %s", sp_last_time_cfg->to_string());
+			sp_modified_time_range_cfg->reset_end_time(sp_last_time_cfg.get_instance());
+		}
+	}
+
 	if (IS_FORMULA_STATISTICS_METHOD(statistics_method))
 	{
-		ret = finance_analyzer_math_formula_statistics->calculate_statistics(statistics_method, sp_time_range_cfg);
+		ret = finance_analyzer_math_formula_statistics->calculate_statistics(statistics_method, sp_modified_time_range_cfg);
 	}
 	else if (IS_TABLE_STATISTICS_METHOD(statistics_method))
 	{
-		ret = finance_analyzer_graph_table_statistics->fillout_statistics(statistics_method, sp_time_range_cfg);
+		ret = finance_analyzer_graph_table_statistics->fillout_statistics(statistics_method, sp_modified_time_range_cfg);
 	}
 	else if (IS_GRAPH_STATISTICS_METHOD(statistics_method))
 	{
-		ret = finance_analyzer_graph_table_statistics->plot_statistics(statistics_method, sp_time_range_cfg);
+		ret = finance_analyzer_graph_table_statistics->plot_statistics(statistics_method, sp_modified_time_range_cfg);
 	}
 	else
 	{
