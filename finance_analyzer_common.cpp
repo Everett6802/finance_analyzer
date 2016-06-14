@@ -17,6 +17,8 @@ const char* RESULT_FOLDER_NAME = "result";
 const char* FINANCE_ANALYZER_CONF_FILENAME = "finance_analyzer.conf";
 const char* WORKDAY_CANLENDAR_CONF_FILENAME = ".workday_canlendar.conf";
 const char* DATABASE_TIME_RANGE_CONF_FILENAME = ".database_time_range.conf";
+const char* COMPANY_PROFILE_CONF_FILENAME = ".company_profile.conf";
+const char* COMPANY_GROUP_CONF_FILENAME = ".company_group.conf";
 const char* DEFAULT_OUTPUT_FILENAME_FOR_PLOT = "result_data.txt";
 const char* DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME = ".multiple_2d_graph.conf";
 

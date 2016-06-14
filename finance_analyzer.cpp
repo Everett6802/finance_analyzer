@@ -25,10 +25,28 @@ const char* get_statistics_method_description(StatisticsMethod statistics_method
 #include <wchar.h>
 #include <stdlib.h>
 #include <locale.h>
+#include "finance_analyzer_company_profile.h"
+#include <string>
 
+using namespace std;
 
 int main(int argc, char** argv)
 {
+	// cout << strcmp("2362", "2361") << endl;
+	DECLARE_COMPANY_PROFILE()
+	IMPLEMENT_COMPANY_PROFILE()
+	// string company_code_number("2362");
+	// string res_listing_date = company_profile->lookup_company_listing_date(company_code_number);
+	// string res_group_name = company_profile->lookup_company_group_name(company_code_number);
+	// string res_group_number = company_profile->lookup_company_group_number(company_code_number);
+	// cout << res_listing_date << endl;
+	// cout << res_group_name << endl;
+	// cout << res_group_number << endl;
+	company_profile->generate_company_profile_sorted_deque();
+	RELEASE_COMPANY_PROFILE()
+
+	
+	exit(EXIT_SUCCESS);
 	static const int BUF_SIZE = 256;
 	static char errmsg[BUF_SIZE];
     // wchar_t myString2[16] = { 0x55E8, 0x3001, 0x4F60, 0x597D};
