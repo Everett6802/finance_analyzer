@@ -3,7 +3,7 @@
 
 #include <pthread.h>
 #include <deque>
-// #include <list>
+#include <vector>
 #include <map>
 #include <string>
 #include "finance_analyzer_common.h"
@@ -27,6 +27,8 @@ class FinanceAnalyzerCompanyProfile
 	typedef COMPANY_PROFILE_MAP* PCOMPANY_PROFILE_MAP;
 	typedef std::deque<PCOMPANY_PROFILE_ENTRY> COMPANY_PROFILE_DEQUE;
 	typedef COMPANY_PROFILE_DEQUE* PCOMPANY_PROFILE_DEQUE;
+	typedef std::deque<PCOMPANY_PROFILE_DEQUE> COMPANY_GROUP_PROFILE_DEQUE;
+	typedef COMPANY_GROUP_PROFILE_DEQUE* PCOMPANY_GROUP_PROFILE_DEQUE;
 
 private:
 	static const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER;
@@ -41,8 +43,9 @@ private:
 	volatile int ref_cnt;
 	COMPANY_PROFILE_MAP company_profile_map;
 	PCOMPANY_PROFILE_DEQUE company_profile_sorted_deque;
-	std::string* company_group_description_array;
+	std::vector<std::string> company_group_description_vector;
 	int company_group_size;
+	PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_sorted_deque;
 
 	FinanceAnalyzerCompanyProfile();
 	FinanceAnalyzerCompanyProfile(const FinanceAnalyzerCompanyProfile&);
@@ -63,6 +66,7 @@ public:
 	std::string lookup_company_group_name(std::string company_number)const;
 	std::string lookup_company_group_number(std::string company_number)const;
 	unsigned short generate_company_profile_sorted_deque();
+	unsigned short generate_company_group_profile_sorted_deque();
 };
 typedef FinanceAnalyzerCompanyProfile* PFINANCE_ANALYZER_COMPANY_PROFILE;
 

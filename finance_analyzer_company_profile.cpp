@@ -38,6 +38,11 @@ public:
 			return true;
 		return strcmp((*profile_element_deque)[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER].c_str(), (*another.profile_element_deque)[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER].c_str());
 	}
+	const string& operator[](int index)const
+	{
+		assert ((index >= 0 && index < COMPANY_PROFILE_ENTRY_FIELD_SIZE) && "index should NOT be Out of Range");
+		return (*profile_element_deque)[index];
+	}
 	const string to_string()const
 	{
 		static string white_space_str(" ");
@@ -51,6 +56,7 @@ public:
 		}
 		return res;
 	}
+	size_t size()const{return profile_element_deque->size();}
 };
 
 
@@ -92,19 +98,36 @@ FinanceAnalyzerCompanyProfile* FinanceAnalyzerCompanyProfile::get_instance()
 FinanceAnalyzerCompanyProfile::FinanceAnalyzerCompanyProfile() :
 	ref_cnt(0),
 	company_profile_sorted_deque(NULL),
-	company_group_description_array(NULL),
-	company_group_size(0)
+	company_group_size(0),
+	company_group_profile_sorted_deque(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 }
 
 FinanceAnalyzerCompanyProfile::~FinanceAnalyzerCompanyProfile()
 {
-	if (company_group_description_array != NULL)
+	if (company_group_profile_sorted_deque != NULL)
 	{
-		free(company_group_description_array);
-		company_group_description_array = NULL;
-		company_group_size = 0;
+		for (int i = 0 ; i < company_group_size ; i++)
+		{
+			PCOMPANY_PROFILE_DEQUE company_profile_deque = (*company_group_profile_sorted_deque)[i];
+			if (company_profile_deque != NULL)
+				delete company_profile_deque;
+		}
+		delete company_group_profile_sorted_deque;
+		company_group_profile_sorted_deque = NULL;
+	}
+	if (company_group_profile_sorted_deque != NULL)
+	{
+		COMPANY_GROUP_PROFILE_DEQUE::iterator iter = company_group_profile_sorted_deque->begin();
+		while(iter !=  company_group_profile_sorted_deque->end())
+		{
+			PCOMPANY_PROFILE_DEQUE company_profile_deque = (PCOMPANY_PROFILE_DEQUE)(*iter);
+			iter++;
+			delete company_profile_deque;
+		}
+		delete company_group_profile_sorted_deque;
+		company_group_profile_sorted_deque = NULL;
 	}
 	if (company_profile_sorted_deque != NULL)
 	{
@@ -156,9 +179,10 @@ unsigned short FinanceAnalyzerCompanyProfile::parse_company_profile_conf()
 	if (fp == NULL)
 	{
 		WRITE_FORMAT_ERROR("Fail to open the config file: %s, due to: %s", COMPANY_PROFILE_CONF_FILENAME, strerror(errno));
-		ret = RET_FAILURE_SYSTEM_API;
-		goto OUT;
+		return RET_FAILURE_SYSTEM_API;
 	}
+// Parse the config file
+	int buf_len;
 	while (fgets(buf, BUF_SIZE, fp) != NULL)
 	{
 		// PPROFILE_ELEMENT_DEQUE profile_element_deque = new PROFILE_ELEMENT_DEQUE();
@@ -168,6 +192,9 @@ unsigned short FinanceAnalyzerCompanyProfile::parse_company_profile_conf()
 		// 	ret = RET_FAILURE_INSUFFICIENT_MEMORY;
 		// 	goto OUT;
 		// }
+		buf_len = strlen(buf);
+		if (buf[buf_len - 1] == '\n')
+			buf[buf_len - 1] = '\0';
 		PCOMPANY_PROFILE_ENTRY company_profile_entry = new CompanyProfileEntry();
 		if (company_profile_entry == NULL)
 		{
@@ -175,7 +202,7 @@ unsigned short FinanceAnalyzerCompanyProfile::parse_company_profile_conf()
 			ret = RET_FAILURE_INSUFFICIENT_MEMORY;
 			goto OUT;
 		}
-
+// Parse each element in the entry
 		char* company_code_number = strtok(buf, ",");
 		if (company_code_number == NULL)
 		{
@@ -192,6 +219,7 @@ unsigned short FinanceAnalyzerCompanyProfile::parse_company_profile_conf()
 			company_profile_entry->push_back(entry_str);
 		}
 		company_profile_map[company_code_number_str] = company_profile_entry;
+		assert(company_profile_entry->size() == (size_t)COMPANY_PROFILE_ENTRY_FIELD_SIZE && "Incorrect company profile entry size");
 	}
 OUT:
 	if (fp != NULL)
@@ -216,14 +244,14 @@ unsigned short FinanceAnalyzerCompanyProfile::parse_company_group_conf()
 	}
 	WRITE_FORMAT_DEBUG("Try to parse the config: %s", file_path);
 
-	static const unsigned int DEF_COMPANY_GROUP_COUNT = 64;
-	int company_group_count = DEF_COMPANY_GROUP_COUNT;
-	company_group_description_array = new string [company_group_count];
-	if (company_group_description_array == NULL)
-	{
-		WRITE_ERROR("Fail to allocate the memory: company_group_description_array");
-		return RET_FAILURE_INSUFFICIENT_MEMORY;	
-	}
+	// static const unsigned int DEF_COMPANY_GROUP_COUNT = 64;
+	// int company_group_count = DEF_COMPANY_GROUP_COUNT;
+	// company_group_description_vector = new string [company_group_count];
+	// if (company_group_description_vector == NULL)
+	// {
+	// 	WRITE_ERROR("Fail to allocate the memory: company_group_description_array");
+	// 	return RET_FAILURE_INSUFFICIENT_MEMORY;	
+	// }
 
 	static const unsigned int BUF_SIZE = 1024;
 	char buf[BUF_SIZE];
@@ -236,26 +264,17 @@ unsigned short FinanceAnalyzerCompanyProfile::parse_company_group_conf()
 		return RET_FAILURE_SYSTEM_API;
 	}
 
+// Parse the config file
+	int buf_len;
 	int line_cnt = 0;
 	char* group_number = NULL;
 	char* group_description = NULL;
 	while (fgets(buf, BUF_SIZE, fp) != NULL)
 	{
-// Check if the buffer size is enough
-		if (line_cnt == company_group_count)
-		{
-			int company_group_count_old = company_group_count;
-			string* company_group_description_array_old = company_group_description_array;
-			company_group_count <<= 1;
-			WRITE_FORMAT_WARN("Size is NOT enough, enlarge the array from %d to %d", company_group_count, company_group_count_old);
-			company_group_description_array = (string*)realloc(company_group_description_array_old, sizeof(string) * company_group_count);
-			if (company_group_description_array == NULL)
-			{
-				WRITE_ERROR("Fail to re-allocate the memory: company_group_description_array");
-				ret = RET_FAILURE_INSUFFICIENT_MEMORY;
-				goto OUT;
-			}
-		}
+		buf_len = strlen(buf);
+		if (buf[buf_len - 1] == '\n')
+			buf[buf_len - 1] = '\0';
+// Parse each element in the entry
 		group_number = strtok(buf, " ");
 		group_description = strtok(NULL, " ");
 		if (atoi(group_number) != line_cnt)
@@ -264,8 +283,10 @@ unsigned short FinanceAnalyzerCompanyProfile::parse_company_group_conf()
 			ret = RET_FAILURE_INVALID_ARGUMENT;
 			goto OUT;		
 		}
-		company_group_description_array[line_cnt++] = string(group_description);
+		company_group_description_vector.push_back(string(group_description));
+		line_cnt++;
 	}
+	assert(company_group_description_vector.size() == (unsigned int)line_cnt && "The company_group_description_vector size is NOT correct");
 	company_group_size = line_cnt;
 	WRITE_FORMAT_DEBUG("There are totally %d company group", company_group_size);
 OUT:
@@ -340,15 +361,59 @@ unsigned short FinanceAnalyzerCompanyProfile::generate_company_profile_sorted_de
 		PCOMPANY_PROFILE_ENTRY company_profile_entry = (PCOMPANY_PROFILE_ENTRY)iter->second;
 		company_profile_sorted_deque->push_back(company_profile_entry);
 	}
-	cout << "size: " << company_profile_sorted_deque->size() << endl;
 	std::sort(company_profile_sorted_deque->begin(), company_profile_sorted_deque->end());
-	COMPANY_PROFILE_DEQUE::iterator iter = company_profile_sorted_deque->begin();
-	while(iter != company_profile_sorted_deque->end())
+	// cout << "size: " << company_profile_sorted_deque->size() << endl;
+	// COMPANY_PROFILE_DEQUE::iterator iter = company_profile_sorted_deque->begin();
+	// while(iter != company_profile_sorted_deque->end())
+	// {
+	// 	cout << ((PCOMPANY_PROFILE_ENTRY)*iter)->to_string();
+	// 	iter++;
+	// }
+
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerCompanyProfile::generate_company_group_profile_sorted_deque()
+{
+	if (company_group_profile_sorted_deque != NULL)
+		return RET_FAILURE_INCORRECT_OPERATION;
+	company_group_profile_sorted_deque = new COMPANY_GROUP_PROFILE_DEQUE();
+	if (company_group_profile_sorted_deque == NULL)
 	{
-		cout << ((PCOMPANY_PROFILE_ENTRY)*iter)->to_string();
-		iter++;
+		WRITE_ERROR("Fail to allocate the memory: company_group_profile_sorted_deque");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
-	// for(int i = 0 ; i < company_profile_sorted_deque->size() ; i++)
-	// 	cout << (*company_profile_sorted_deque)[i]->to_string() << endl;
+	for (int i = 0 ; i < company_group_size ; i++)
+	{
+		PCOMPANY_PROFILE_DEQUE company_profile_deque = new COMPANY_PROFILE_DEQUE();
+		if (company_profile_deque == NULL)
+		{
+			WRITE_ERROR("Fail to allocate the memory: ompany_profile_deque");
+			return RET_FAILURE_INSUFFICIENT_MEMORY;
+		}
+		company_group_profile_sorted_deque->push_back(company_profile_deque);
+	}
+	for(COMPANY_PROFILE_MAP::iterator iter = company_profile_map.begin() ; iter != company_profile_map.end() ; iter++)
+	{
+		PCOMPANY_PROFILE_ENTRY company_profile_entry = (PCOMPANY_PROFILE_ENTRY)iter->second;
+		assert(company_profile_entry != NULL && "company_profile_entry should NOT be NULL");
+		// cout << "entry: " << company_profile_entry->to_string() << endl;
+		const string& company_group_number = (*company_profile_entry)[COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER];
+		(*company_group_profile_sorted_deque)[atoi(company_group_number.c_str())]->push_back(company_profile_entry);
+	}
+	for (int i = 0 ; i < company_group_size ; i++)
+	{
+		PCOMPANY_PROFILE_DEQUE company_profile_deque = (*company_group_profile_sorted_deque)[i];
+		assert(company_profile_deque != NULL && "company_profile_deque should NOT be NULL");
+		std::sort(company_profile_deque->begin(), company_profile_deque->end());
+		// cout << "++++++++++++++++ group [" << i << "] member count: " << company_profile_deque->size() << " ++++++++++++++++" << endl;
+		// COMPANY_PROFILE_DEQUE::iterator iter = company_profile_deque->begin();
+		// while(iter != company_profile_deque->end())
+		// {
+		// 	cout << ((PCOMPANY_PROFILE_ENTRY)*iter)->to_string() << endl;
+		// 	iter++;
+		// }
+	}
+
 	return RET_SUCCESS;
 }
