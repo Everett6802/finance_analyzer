@@ -10,56 +10,6 @@ using namespace std;
 static 	pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 DECLARE_MSG_DUMPER_PARAM()
 
-class FinanceAnalyzerCompanyProfile::CompanyProfileEntry
-{
-public:
-	PPROFILE_ELEMENT_DEQUE profile_element_deque;
-	CompanyProfileEntry() :
-		profile_element_deque(NULL)
-	{
-		profile_element_deque = new PROFILE_ELEMENT_DEQUE();
-		if (profile_element_deque == NULL)
-			throw bad_alloc();
-	}
-	~CompanyProfileEntry()
-	{
-		if (profile_element_deque != NULL)
-		{
-			delete profile_element_deque;
-			profile_element_deque = NULL;
-		}
-	}
-	void push_back(const string& new_element){profile_element_deque->push_back(new_element);}
-	bool operator< (const FinanceAnalyzerCompanyProfile::CompanyProfileEntry& another)
-	{
-		assert(profile_element_deque != NULL && "profile_element_deque should NOT be NULL");
-		assert(another.profile_element_deque != NULL && "another.profile_element_deque should NOT be NULL");
-		if (this == &another)
-			return true;
-		return strcmp((*profile_element_deque)[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER].c_str(), (*another.profile_element_deque)[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER].c_str());
-	}
-	const string& operator[](int index)const
-	{
-		assert ((index >= 0 && index < COMPANY_PROFILE_ENTRY_FIELD_SIZE) && "index should NOT be Out of Range");
-		return (*profile_element_deque)[index];
-	}
-	const string to_string()const
-	{
-		static string white_space_str(" ");
-		assert(profile_element_deque != NULL && "profile_element_deque != NULL");
-		PROFILE_ELEMENT_DEQUE::iterator iter = profile_element_deque->begin();
-		string res = "";
-		while(iter != profile_element_deque->end())
-		{
-			res += (string(*iter) + white_space_str);
-			iter++;
-		}
-		return res;
-	}
-	size_t size()const{return profile_element_deque->size();}
-};
-
-
 const int FinanceAnalyzerCompanyProfile::COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER = 0;
 const int FinanceAnalyzerCompanyProfile::COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_NAME = 1;
 const int FinanceAnalyzerCompanyProfile::COMPANY_PROFILE_ENTRY_FIELD_INDEX_LISTING_DATE = 3;
@@ -185,13 +135,6 @@ unsigned short FinanceAnalyzerCompanyProfile::parse_company_profile_conf()
 	int buf_len;
 	while (fgets(buf, BUF_SIZE, fp) != NULL)
 	{
-		// PPROFILE_ELEMENT_DEQUE profile_element_deque = new PROFILE_ELEMENT_DEQUE();
-		// if (profile_element_deque == NULL)
-		// {
-		// 	WRITE_ERROR("Fail to allocate the memory: profile_element_deque");
-		// 	ret = RET_FAILURE_INSUFFICIENT_MEMORY;
-		// 	goto OUT;
-		// }
 		buf_len = strlen(buf);
 		if (buf[buf_len - 1] == '\n')
 			buf[buf_len - 1] = '\0';
@@ -417,3 +360,25 @@ unsigned short FinanceAnalyzerCompanyProfile::generate_company_group_profile_sor
 
 	return RET_SUCCESS;
 }
+
+// const PCOMPANY_PROFILE_DEQUE FinanceAnalyzerCompanyProfile::get_company_profile_sorted_deque()
+// {
+// 	if (company_profile_sorted_deque == NULL)
+// 	{
+// 		unsigned short ret = generate_company_profile_sorted_deque();
+// 		if (CHECK_FAILURE(ret))
+// 			throw runtime_error(string(get_ret_description(ret)));
+// 	}
+// 	return company_profile_sorted_deque;
+// }
+
+// const PCOMPANY_GROUP_PROFILE_DEQUE FinanceAnalyzerCompanyProfile::get_company_group_profile_sorted_deque()
+// {
+// 	if (company_group_profile_sorted_deque == NULL)
+// 	{
+// 		unsigned short ret = generate_company_group_profile_sorted_deque();
+// 		if (CHECK_FAILURE(ret))
+// 			throw runtime_error(string(get_ret_description(ret)));
+// 	}
+// 	return company_group_profile_sorted_deque;
+// }
