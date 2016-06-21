@@ -7,7 +7,7 @@
 
 using namespace std;
 
-static 	pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 DECLARE_MSG_DUMPER_PARAM()
 
 const int FinanceAnalyzerCompanyProfile::COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER = 0;
@@ -101,6 +101,12 @@ unsigned short FinanceAnalyzerCompanyProfile::initialize()
 	if (CHECK_FAILURE(ret))
 		return ret;
 	ret = parse_company_group_conf();
+	if (CHECK_FAILURE(ret))
+		return ret;
+	ret = generate_company_profile_sorted_deque();
+	if (CHECK_FAILURE(ret))
+		return ret;
+	ret = generate_company_group_profile_sorted_deque();
 	if (CHECK_FAILURE(ret))
 		return ret;
 
@@ -239,7 +245,6 @@ OUT:
 		fp = NULL;
 	}
 	return ret;
-
 }
 
 int FinanceAnalyzerCompanyProfile::add_ref()
@@ -257,6 +262,45 @@ int FinanceAnalyzerCompanyProfile::release()
 		return 0;
 	}
 	return ref_cnt;
+}
+
+void FinanceAnalyzerCompanyProfile::show_traverse_result(FinanceAnalyzerCompanyProfile* company_profile, bool company_group_mode)
+{
+	assert(company_profile != NULL && "company_profile should NOT be NULL");
+	if (company_group_mode)
+	{
+		int company_group_size = company_profile->get_company_group_size();
+		for (int i = 0 ; i < company_group_size ; i++)
+		{
+			cout << "****************** " << i << " : " << company_profile->get_company_group_description(i) << " ******************" << endl;
+			FinanceAnalyzerCompanyProfile::const_iterator iter = company_profile->group_begin(i);
+			while (iter != company_profile->group_end(i))
+			{
+				const PROFILE_ELEMENT_DEQUE& profile_element_deque = *iter;
+				cout << profile_element_deque[0] << endl;
+				++iter;
+			}
+		}
+	}
+	else
+	{
+		FinanceAnalyzerCompanyProfile::const_iterator iter = company_profile->begin();
+		while (iter != company_profile->end())
+		{
+			const PROFILE_ELEMENT_DEQUE& profile_element_deque = *iter;
+			cout << profile_element_deque[0] << endl;
+			++iter;
+		}
+	}
+}
+
+int FinanceAnalyzerCompanyProfile::get_company_group_size()const{return company_group_size;}
+
+std::string FinanceAnalyzerCompanyProfile::get_company_group_description(int index)const
+{
+	if (index < 0 || index >= company_group_size)
+		throw std::invalid_argument("index is Out Of Range");
+	return company_group_description_vector[index];
 }
 
 const PPROFILE_ELEMENT_DEQUE FinanceAnalyzerCompanyProfile::lookup_company_profile(string company_number)const
@@ -360,6 +404,29 @@ unsigned short FinanceAnalyzerCompanyProfile::generate_company_group_profile_sor
 
 	return RET_SUCCESS;
 }
+
+	// const PCOMPANY_PROFILE_DEQUE FinanceAnalyzerCompanyProfile::get_company_profile_sorted_deque()
+	// {
+	// 	if (company_profile_sorted_deque == NULL)
+	// 	{
+	// 		unsigned short ret = generate_company_profile_sorted_deque();
+	// 		if (CHECK_FAILURE(ret))
+	// 			throw std::runtime_error(std::string(get_ret_description(ret)));
+	// 	}
+	// 	return company_profile_sorted_deque;
+	// }
+
+	// const PCOMPANY_GROUP_PROFILE_DEQUE FinanceAnalyzerCompanyProfile::get_company_group_profile_sorted_deque()
+	// {
+	// 	if (company_group_profile_sorted_deque == NULL)
+	// 	{
+	// 		unsigned short ret = generate_company_group_profile_sorted_deque();
+	// 		if (CHECK_FAILURE(ret))
+	// 			throw std::runtime_error(std::string(get_ret_description(ret)));
+	// 	}
+	// 	return company_group_profile_sorted_deque;
+	// }
+
 
 // const PCOMPANY_PROFILE_DEQUE FinanceAnalyzerCompanyProfile::get_company_profile_sorted_deque()
 // {

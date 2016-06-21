@@ -109,26 +109,27 @@ private:
 	unsigned short generate_company_profile_sorted_deque();
 	unsigned short generate_company_group_profile_sorted_deque();
 
-	const PCOMPANY_PROFILE_DEQUE get_company_profile_sorted_deque()
-	{
-		if (company_profile_sorted_deque == NULL)
-		{
-			unsigned short ret = generate_company_profile_sorted_deque();
-			if (CHECK_FAILURE(ret))
-				throw std::runtime_error(std::string(get_ret_description(ret)));
-		}
-		return company_profile_sorted_deque;
-	}
-	const PCOMPANY_GROUP_PROFILE_DEQUE get_company_group_profile_sorted_deque()
-	{
-		if (company_group_profile_sorted_deque == NULL)
-		{
-			unsigned short ret = generate_company_group_profile_sorted_deque();
-			if (CHECK_FAILURE(ret))
-				throw std::runtime_error(std::string(get_ret_description(ret)));
-		}
-		return company_group_profile_sorted_deque;
-	}
+// It seems that it's NOT sutiable for lazy initialization in Singleton
+	// const PCOMPANY_PROFILE_DEQUE get_company_profile_sorted_deque();
+	// {
+	// 	if (company_profile_sorted_deque == NULL)
+	// 	{
+	// 		unsigned short ret = generate_company_profile_sorted_deque();
+	// 		if (CHECK_FAILURE(ret))
+	// 			throw std::runtime_error(std::string(get_ret_description(ret)));
+	// 	}
+	// 	return company_profile_sorted_deque;
+	// }
+	// const PCOMPANY_GROUP_PROFILE_DEQUE get_company_group_profile_sorted_deque();
+	// {
+	// 	if (company_group_profile_sorted_deque == NULL)
+	// 	{
+	// 		unsigned short ret = generate_company_group_profile_sorted_deque();
+	// 		if (CHECK_FAILURE(ret))
+	// 			throw std::runtime_error(std::string(get_ret_description(ret)));
+	// 	}
+	// 	return company_group_profile_sorted_deque;
+	// }
 
 public:
 	static FinanceAnalyzerCompanyProfile* get_instance();
@@ -160,33 +161,41 @@ public:
 
 	const_iterator begin() 
 	{
-		const PCOMPANY_PROFILE_DEQUE company_profile_deque = get_company_profile_sorted_deque();
-		return const_iterator(company_profile_deque->begin());
+		// const PCOMPANY_PROFILE_DEQUE company_profile_deque = get_company_profile_sorted_deque();
+		// return const_iterator(company_profile_deque->begin());
+		return const_iterator(company_profile_sorted_deque->begin());
 	}
 	const_iterator end() 
 	{
-		const PCOMPANY_PROFILE_DEQUE company_profile_deque = get_company_profile_sorted_deque();
-		return const_iterator(company_profile_deque->end());
+		// const PCOMPANY_PROFILE_DEQUE company_profile_deque = get_company_profile_sorted_deque();
+		// return const_iterator(company_profile_deque->end());
+		return const_iterator(company_profile_sorted_deque->end());
 	}
 	const_iterator group_begin(int index) 
 	{
-		const PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_deque = get_company_group_profile_sorted_deque();
+		// const PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_deque = get_company_group_profile_sorted_deque();
 		if (index < 0 || index >= company_group_size)
 		{
 			throw std::invalid_argument("index is Out Of Range");
 		}
-		return const_iterator(((*company_group_profile_deque)[index])->begin());
+		// return const_iterator(((*company_group_profile_deque)[index])->begin());
+		return const_iterator(((*company_group_profile_sorted_deque)[index])->begin());
 	}
 	const_iterator group_end(int index) 
 	{
-		const PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_deque = get_company_group_profile_sorted_deque();
+		// const PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_deque = get_company_group_profile_sorted_deque();
 		if (index < 0 || index >= company_group_size)
 		{
 			throw std::invalid_argument("index is Out Of Range");
 		}
-		return const_iterator(((*company_group_profile_deque)[index])->end());
+		// return const_iterator(((*company_group_profile_deque)[index])->end());
+		return const_iterator(((*company_group_profile_sorted_deque)[index])->end());
 	}
 
+	static void show_traverse_result(FinanceAnalyzerCompanyProfile* company_profile, bool company_group_mode=true);
+
+	int get_company_group_size()const;
+	std::string get_company_group_description(int index)const;
 	const PPROFILE_ELEMENT_DEQUE lookup_company_profile(std::string company_number)const;
 	std::string lookup_company_listing_date(std::string company_number)const;
 	std::string lookup_company_group_name(std::string company_number)const;

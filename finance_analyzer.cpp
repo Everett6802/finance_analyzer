@@ -44,13 +44,29 @@ int main(int argc, char** argv)
 	// cout << res_group_number << endl;
 	// company_profile->generate_company_profile_sorted_deque();
 	// company_profile->generate_company_group_profile_sorted_deque();
-	FinanceAnalyzerCompanyProfile::const_iterator iter = company_profile->begin();
-	while (iter != company_profile->end())
-	{
-		const PROFILE_ELEMENT_DEQUE& profile_element_deque = *iter;
-		cout << profile_element_deque[0] << endl;
-		++iter;
-	}
+
+	// FinanceAnalyzerCompanyProfile::const_iterator iter = company_profile->begin();
+	// while (iter != company_profile->end())
+	// {
+	// 	const PROFILE_ELEMENT_DEQUE& profile_element_deque = *iter;
+	// 	cout << profile_element_deque[0] << endl;
+	// 	++iter;
+	// }
+
+	// int company_group_size = company_profile->get_company_group_size();
+	// for (int i = 0 ; i < company_group_size ; i++)
+	// {
+	// 	cout << "****************** " << i << " : " << company_profile->get_company_group_description(i) << " ******************" << endl;
+	// 	FinanceAnalyzerCompanyProfile::const_iterator iter = company_profile->group_begin(i);
+	// 	while (iter != company_profile->group_end(i))
+	// 	{
+	// 		const PROFILE_ELEMENT_DEQUE& profile_element_deque = *iter;
+	// 		cout << profile_element_deque[0] << endl;
+	// 		++iter;
+	// 	}
+	// }
+	// FinanceAnalyzerCompanyProfile::show_traverse_result(company_profile, false);
+
 	RELEASE_COMPANY_PROFILE()
 
 	
