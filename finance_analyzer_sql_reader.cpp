@@ -57,7 +57,7 @@ unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(int source_index,
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerSqlReader::query(
+unsigned short FinanceAnalyzerSqlReader::query_market(
 	const PTIME_RANGE_CFG time_range_cfg, 
 	const PQUERY_SET query_set, 
 	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
@@ -121,30 +121,30 @@ unsigned short FinanceAnalyzerSqlReader::query(
 // Query the data in each table
 		int start_year = sp_restricted_time_range_cfg->get_start_time()->get_year();
 		int end_year = sp_restricted_time_range_cfg->get_end_time()->get_year();
-// Search for each table year by year
-		for (int year = start_year ; year <= end_year ; year++)
-		{
-			char table_name[16];
-			snprintf(table_name, 16, "%s%d", MYSQL_TABLE_NAME_BASE, year);
-			PTIME_RANGE_CFG time_range_cfg_in_year = NULL;
-			if (year == start_year || year == end_year)
-			{
-				if (start_year == end_year)
-					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), sp_restricted_time_range_cfg->get_end_time()->to_string());
-				else if (year == start_year)
-					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), NULL);
-				else
-					time_range_cfg_in_year = new TimeRangeCfg(NULL, sp_restricted_time_range_cfg->get_end_time()->to_string());
-				if (time_range_cfg_in_year == NULL)
-				{
-					WRITE_ERROR("Fail to allocate memory: time_range_cfg_in_year");
-					return RET_FAILURE_INSUFFICIENT_MEMORY;
-				}
-			}
-			ret = finance_analyzer_sql_reader->select_data(source_index, string(table_name), field_cmd, (const PDEQUE_INT)&query_field, time_range_cfg_in_year, result_set);
-			if (CHECK_FAILURE(ret))
-				return ret;
-		}
+// // Search for each table year by year
+// 		for (int year = start_year ; year <= end_year ; year++)
+// 		{
+// 			char table_name[16];
+// 			snprintf(table_name, 16, "%s%d", MYSQL_TABLE_NAME_BASE, year);
+// 			PTIME_RANGE_CFG time_range_cfg_in_year = NULL;
+// 			if (year == start_year || year == end_year)
+// 			{
+// 				if (start_year == end_year)
+// 					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), sp_restricted_time_range_cfg->get_end_time()->to_string());
+// 				else if (year == start_year)
+// 					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), NULL);
+// 				else
+// 					time_range_cfg_in_year = new TimeRangeCfg(NULL, sp_restricted_time_range_cfg->get_end_time()->to_string());
+// 				if (time_range_cfg_in_year == NULL)
+// 				{
+// 					WRITE_ERROR("Fail to allocate memory: time_range_cfg_in_year");
+// 					return RET_FAILURE_INSUFFICIENT_MEMORY;
+// 				}
+// 			}
+// 			ret = finance_analyzer_sql_reader->select_data(source_index, string(table_name), field_cmd, (const PDEQUE_INT)&query_field, time_range_cfg_in_year, result_set);
+// 			if (CHECK_FAILURE(ret))
+// 				return ret;
+// 		}
 
 // Disconnect from the database
 		ret = finance_analyzer_sql_reader->disconnect_mysql();
@@ -160,15 +160,36 @@ unsigned short FinanceAnalyzerSqlReader::query(
 	return ret;
 }
 
-unsigned short FinanceAnalyzerSqlReader::query(
+unsigned short FinanceAnalyzerSqlReader::query_market(
 	const PTIME_RANGE_CFG time_range_cfg, 
 	const PQUERY_SET query_set, 
 	PRESULT_SET result_set
 	)
 {
 	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
-	return query(time_range_cfg, query_set, &finance_analyzer_sql_reader, result_set);
+	return query_market(time_range_cfg, query_set, &finance_analyzer_sql_reader, result_set);
 }
+
+unsigned short FinanceAnalyzerSqlReader::query_stock(
+	const PTIME_RANGE_CFG time_range_cfg, 
+	const PQUERY_SET query_set, 
+	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+	PRESULT_SET result_set
+	)
+{
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerSqlReader::query_stock(
+	const PTIME_RANGE_CFG time_range_cfg, 
+	const PQUERY_SET query_set, 
+	PRESULT_SET result_set
+	)
+{
+	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
+	return query_stock(time_range_cfg, query_set, &finance_analyzer_sql_reader, result_set);	
+}
+
 
 FinanceAnalyzerSqlReader::FinanceAnalyzerSqlReader() :
 	connection(NULL)

@@ -27,11 +27,44 @@ const char* get_statistics_method_description(StatisticsMethod statistics_method
 #include <locale.h>
 #include "finance_analyzer_company_profile.h"
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
+class my_class
+{
+public:
+	char* number;
+	int number_int;
+	my_class(char* num):number(num)
+	{
+		number_int = atoi(number);
+		fprintf(stderr, "number: %d\n", number_int);
+	}
+	const char* to_string()const{return number;}	
+};
+
+bool compare_company_number(const my_class* number1, const my_class* number2)
+{
+	return (strcmp(number1->number, number2->number) < 0 ? true : false);
+}
+
+bool compare_company_number_int(const my_class* number1, const my_class* number2)
+{
+	fprintf(stderr, "number1: %d, number2: %d\n", number1->number_int, number2->number_int);
+	if (number1->number_int < number2->number_int)
+	{
+		return false;
+	}
+	else 
+	{
+		return true;
+	}
+}
+
 int main(int argc, char** argv)
 {
+	cout << (is_market_mode() ? "Market" : "Stock") << endl;
 	// cout << strcmp("2362", "2361") << endl;
 	DECLARE_COMPANY_PROFILE()
 	IMPLEMENT_COMPANY_PROFILE()
@@ -66,10 +99,115 @@ int main(int argc, char** argv)
 	// 	}
 	// }
 	// FinanceAnalyzerCompanyProfile::show_traverse_result(company_profile, false);
-
+	// company_profile->get_company_number_list_in_group(1);
+	// company_profile->get_company_number_list_in_group(2);
+	// company_profile->get_company_number_list_in_group(1);
 	RELEASE_COMPANY_PROFILE()
 
-	
+	// cout << strcmp("1234", "4321") << endl;
+	// cout << strcmp("4321", "1234") << endl;
+	// cout << strcmp("1234", "4321") << endl;
+
+	my_class* my_number_list[] = {new my_class("9955"),new my_class("1152"),new my_class("2203")};
+ 	int my_number_list_len = sizeof(my_number_list) / sizeof(my_number_list[0]);
+ 	std::vector<my_class*> my_number_vector;
+ 	for (int i = 0 ; i < my_number_list_len ; i++)
+ 		my_number_vector.push_back(my_number_list[i]);
+ 	std::vector<my_class*>::iterator iter1 = my_number_vector.begin();
+ 	while(iter1 != my_number_vector.end())
+ 	{
+ 		cout << ((my_class*)*iter1)->to_string() << endl;
+ 		iter1++;
+ 	}
+ 	std::sort(my_number_vector.begin(), my_number_vector.end(), compare_company_number);
+ 	cout << "=================" << endl;
+  	std::vector<my_class*>::iterator iter2 = my_number_vector.begin();
+ 	while(iter2 != my_number_vector.end())
+ 	{
+ 		cout << ((my_class*)*iter2)->to_string() << endl;
+ 		iter2++;
+ 	}
+
+	// char* my_number_list[] = {"8420","8421","8423","9946","9955","0050","0051","0052","0053","1103","1108","1109"};
+ // 	int my_number_list_len = sizeof(my_number_list) / sizeof(my_number_list[0]);
+ // 	std::vector<char*> my_number_vector;
+ // 	for (int i = 0 ; i < my_number_list_len ; i++)
+ // 		my_number_vector.push_back(my_number_list[i]);
+ // 	std::vector<char*>::iterator iter1 = my_number_vector.begin();
+ // 	while(iter1 != my_number_vector.end())
+ // 	{
+ // 		cout << *iter1 << endl;
+ // 		iter1++;
+ // 	}
+ // 	std::sort(my_number_vector.begin(), my_number_vector.end());
+ // 	cout << "=================" << endl;
+ //  	std::vector<char*>::iterator iter2 = my_number_vector.begin();
+ // 	while(iter2 != my_number_vector.end())
+ // 	{
+ // 		cout << *iter2 << endl;
+ // 		iter2++;
+ // 	}
+
+	// int my_number_list[] = {8420,8421,8423,9946,9955,50,51,52,53,1103,1108,1109};
+ // 	int my_number_list_len = sizeof(my_number_list) / sizeof(my_number_list[0]);
+ // 	std::vector<int> my_number_vector;
+ // 	for (int i = 0 ; i < my_number_list_len ; i++)
+ // 		my_number_vector.push_back(my_number_list[i]);
+ // 	std::vector<int>::iterator iter1 = my_number_vector.begin();
+ // 	while(iter1 != my_number_vector.end())
+ // 	{
+ // 		cout << *iter1 << endl;
+ // 		iter1++;
+ // 	}
+ // 	std::sort(my_number_vector.begin(), my_number_vector.end());
+ // 	cout << "=================" << endl;
+ //  	std::vector<int>::iterator iter2 = my_number_vector.begin();
+ // 	while(iter2 != my_number_vector.end())
+ // 	{
+ // 		cout << *iter2 << endl;
+ // 		iter2++;
+ // 	}
+
+	// string my_number_list[] = {string("8420"),string("8421"),string("8423"),string("9946"),string("9955"),string("0050"),string("0051"),string("0052"),string("0053"),string("1103"),string("1108"),string("1109")};
+ // 	int my_number_list_len = sizeof(my_number_list) / sizeof(my_number_list[0]);
+ // 	std::vector<string> my_number_vector;
+ // 	for (int i = 0 ; i < my_number_list_len ; i++)
+ // 		my_number_vector.push_back(my_number_list[i]);
+ // 	std::vector<string>::iterator iter1 = my_number_vector.begin();
+ // 	while(iter1 != my_number_vector.end())
+ // 	{
+ // 		cout << *iter1 << endl;
+ // 		iter1++;
+ // 	}
+ // 	std::sort(my_number_vector.begin(), my_number_vector.end());
+ // 	cout << "=================" << endl;
+ //  	std::vector<string>::iterator iter2 = my_number_vector.begin();
+ // 	while(iter2 != my_number_vector.end())
+ // 	{
+ // 		cout << *iter2 << endl;
+ // 		iter2++;
+ // 	}
+
+	// string my_number_list[] = {string("8420"),string("8421"),string("8423"),string("9946"),string("9955"),string("0050"),string("0051"),string("0052"),string("0053"),string("1103"),string("1108"),string("1109")};
+ // 	int my_number_list_len = sizeof(my_number_list) / sizeof(my_number_list[0]);
+ // 	std::vector<string&> my_number_vector;
+ // 	for (int i = 0 ; i < my_number_list_len ; i++)
+ // 		my_number_vector.push_back(my_number_list[i]);
+ // 	std::vector<string>::iterator iter1 = my_number_vector.begin();
+ // 	while(iter1 != my_number_vector.end())
+ // 	{
+ // 		cout << *iter1 << endl;
+ // 		iter1++;
+ // 	}
+ // 	std::sort(my_number_vector.begin(), my_number_vector.end());
+ // 	cout << "=================" << endl;
+ //  	std::vector<string&>::iterator iter2 = my_number_vector.begin();
+ // 	while(iter2 != my_number_vector.end())
+ // 	{
+ // 		cout << *iter2 << endl;
+ // 		iter2++;
+ // 	}
+
 	exit(EXIT_SUCCESS);
 	static const int BUF_SIZE = 256;
 	static char errmsg[BUF_SIZE];

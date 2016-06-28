@@ -215,7 +215,7 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::query_from_database(int sou
 	sp_query_set->add_query_done();
 	// SmartPointer<ResultSet> sp_result_set(new ResultSet());	
 // Query the data from MySQL
-	ret = FinanceAnalyzerSqlReader::query(
+	ret = FinanceAnalyzerSqlReader::query_market(
 		(const PTIME_RANGE_CFG)sp_restricted_time_range_cfg.get_const_instance(), 
 		(const PQUERY_SET)sp_query_set.get_const_instance(), 
 		parent_obj->finance_analyzer_sql_reader, 

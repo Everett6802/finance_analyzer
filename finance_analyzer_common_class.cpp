@@ -2577,3 +2577,52 @@ unsigned short ResultSet::show_data()const
 
 int ResultSet::get_data_dimension()const{return data_set_mapping_size;}
 int ResultSet::get_data_size()const{return date_data_size;}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ResultSetGroup::ResultSetGroup()
+{
+
+}
+
+ResultSetGroup::~ResultSetGroup()
+{
+	RESULT_SET_MAP::iterator iter = result_set_map.begin();
+	while (iter != result_set_map.end())
+	{
+		PRESULT_SET result_set = (PRESULT_SET)iter->second;
+		assert(result_set != NULL && "result_set should NOT be NULL");
+		iter++;
+		delete result_set;
+	}
+}
+
+unsigned short ResultSetGroup::register_result_set(std::string company_number, const PRESULT_SET result_set)
+{
+	assert(result_set != NULL && "result_set should NOT be NULL");
+	RESULT_SET_MAP::const_iterator iter = result_set_map.find(company_number);
+	if (iter != result_set_map.end()) 
+	{
+		static const int ERRMSG_SIZE = 256;
+		static char errmsg[ERRMSG_SIZE];
+		snprintf(errmsg, ERRMSG_SIZE, "The result set of company number[%s] already exist", company_number.c_str());
+		throw invalid_argument(string(errmsg));
+	}
+	result_set_map[company_number] = result_set;
+	return RET_SUCCESS;
+}
+
+const PRESULT_SET ResultSetGroup::lookup_result_set(std::string company_number)const
+{
+	RESULT_SET_MAP::const_iterator iter = result_set_map.find(company_number);
+	if (iter == result_set_map.end()) 
+	{
+		static const int ERRMSG_SIZE = 256;
+		static char errmsg[ERRMSG_SIZE];
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to find the result set of company number: %s", company_number.c_str());
+		throw invalid_argument(string(errmsg));
+	}
+
+	return ((PRESULT_SET)iter->second);
+
+}

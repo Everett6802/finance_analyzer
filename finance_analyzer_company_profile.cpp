@@ -113,6 +113,11 @@ unsigned short FinanceAnalyzerCompanyProfile::initialize()
 	return RET_SUCCESS;
 }
 
+bool FinanceAnalyzerCompanyProfile::compare_company_number(const PCOMPANY_PROFILE_ENTRY company_profile_entry1, const PCOMPANY_PROFILE_ENTRY company_profile_entry2)
+{
+	return strcmp((*company_profile_entry1->profile_element_deque)[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER].c_str(), (*company_profile_entry2->profile_element_deque)[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER].c_str());
+}
+
 unsigned short FinanceAnalyzerCompanyProfile::parse_company_profile_conf()
 {
 	CREATE_PROJECT_FILEPATH(file_path, CONFIG_FOLDER_NAME, COMPANY_PROFILE_CONF_FILENAME)
@@ -303,6 +308,51 @@ std::string FinanceAnalyzerCompanyProfile::get_company_group_description(int ind
 	return company_group_description_vector[index];
 }
 
+const PCOMPANY_NUMBER_DEQUE FinanceAnalyzerCompanyProfile::get_company_number_list_in_group(int index)
+{
+	if (index < 0 || index >= company_group_size)
+		throw std::invalid_argument("index is Out Of Range");
+
+	static bool deque_init = false;
+	static std::vector<COMPANY_NUMBER_DEQUE> company_number_list_in_group_vector;
+	if (!deque_init)
+	{
+		pthread_mutex_lock(&mtx);
+		if (!deque_init)
+		{
+			for (int i = 0 ; i < company_group_size ; i++)
+			{
+				COMPANY_NUMBER_DEQUE new_company_number_deque;
+				company_number_list_in_group_vector.push_back(new_company_number_deque);
+			}
+			deque_init = true;		
+		}
+		pthread_mutex_unlock(&mtx);
+	}
+	if (company_number_list_in_group_vector[index].empty())
+	{
+		pthread_mutex_lock(&mtx);
+		if (company_number_list_in_group_vector[index].empty())
+		{
+			FinanceAnalyzerCompanyProfile::const_iterator iter = group_begin(index);
+			while (iter != group_end(index))
+			{
+				const PROFILE_ELEMENT_DEQUE& profile_element_deque = *iter;
+				company_number_list_in_group_vector[index].push_back(profile_element_deque[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER]);
+				++iter;
+			}
+		}
+		pthread_mutex_unlock(&mtx);
+	}
+
+	cout << "****************** " << index << " : " << get_company_group_description(index) << " ******************" << endl;
+	int company_number_list_in_group_vector_size = company_number_list_in_group_vector[index].size();
+	for (int i = 0 ; i < company_number_list_in_group_vector_size ; i++)
+		cout << company_number_list_in_group_vector[index][i] << endl;
+
+	return &company_number_list_in_group_vector[index];
+}
+
 const PPROFILE_ELEMENT_DEQUE FinanceAnalyzerCompanyProfile::lookup_company_profile(string company_number)const
 {
 	// PPROFILE_ELEMENT_DEQUE company_profile = company_profile_map.get(company_number);
@@ -354,6 +404,7 @@ unsigned short FinanceAnalyzerCompanyProfile::generate_company_profile_sorted_de
 	// while(iter != company_profile_sorted_deque->end())
 	// {
 	// 	cout << ((PCOMPANY_PROFILE_ENTRY)*iter)->to_string();
+	// 	// cout << (*((PCOMPANY_PROFILE_ENTRY)*iter))[0] << " ";
 	// 	iter++;
 	// }
 

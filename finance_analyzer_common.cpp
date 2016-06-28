@@ -10,6 +10,9 @@
 
 using namespace std;
 
+// const bool IS_FINANCE_MARKET_MODE;
+// const bool IS_FINANCE_STOCK_MODE;
+
 const char* DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
 const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%02d%02d";
 const char* CONFIG_FOLDER_NAME = "conf";
@@ -19,10 +22,13 @@ const char* WORKDAY_CANLENDAR_CONF_FILENAME = ".workday_canlendar.conf";
 const char* DATABASE_TIME_RANGE_CONF_FILENAME = ".database_time_range.conf";
 const char* COMPANY_PROFILE_CONF_FILENAME = ".company_profile.conf";
 const char* COMPANY_GROUP_CONF_FILENAME = ".company_group.conf";
+const char* MARKET_STOCK_SWITCH_CONF_FILENAME = "market_stock_switch.conf";
 const char* DEFAULT_OUTPUT_FILENAME_FOR_PLOT = "result_data.txt";
 const char* DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME = ".multiple_2d_graph.conf";
 
-const char* MYSQL_TABLE_NAME_BASE = "year";
+// const char* MYSQL_TABLE_NAME_BASE = "year";
+const char* MYSQL_MARKET_DATABASE_NAME = "finance_market";
+const char* MYSQL_STOCK_DATABASE_NAME = "finance_stock";
 const char* MYSQL_DATE_FILED_NAME = "date";
 const char* MYSQL_FILED_NAME_BASE = "value";
 
@@ -512,12 +518,73 @@ const unsigned short RET_FAILURE_HANDLE_THREAD = RET_FAILURE_BASE + 14;
 const unsigned short RET_FAILURE_SYSTEM_API = RET_FAILURE_BASE + 14;
 const unsigned short RET_FAILURE_MYSQL = RET_FAILURE_BASE + 15;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// enumeration
+enum FinanceAnalysisMode{FinanceAnalysis_Market, FinanceAnalysis_Stock, FinanceAnalysisSize, FinanceAnalysis_None};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variables
 bool SHOW_CONSOLE = true;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions
+
+static FinanceAnalysisMode get_finance_analysis_mode()
+{
+	static FinanceAnalysisMode finance_analysis_mode = FinanceAnalysis_None;
+	if (finance_analysis_mode == FinanceAnalysis_None)
+	{
+		static const int ERRMSG_SIZE = 256;
+		static char errmsg[ERRMSG_SIZE];
+		CREATE_PROJECT_FILEPATH(file_path, CONFIG_FOLDER_NAME, MARKET_STOCK_SWITCH_CONF_FILENAME)
+	// First check if the config file exists
+		if (!check_file_exist(file_path))
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "The %s config file does NOT exist", MARKET_STOCK_SWITCH_CONF_FILENAME);
+			throw runtime_error(string(errmsg));
+		}
+
+		static const unsigned int BUF_SIZE = 4;
+		char buf[BUF_SIZE];
+		unsigned short ret = RET_SUCCESS;
+		// WRITE_FORMAT_DEBUG("Parse the config file: %s", MARKET_STOCK_SWITCH_CONF_FILENAME);
+		FILE* fp = fopen(file_path, "r");
+		if (fp == NULL)
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "Fail to open the config file: %s, due to: %s", MARKET_STOCK_SWITCH_CONF_FILENAME, strerror(errno));
+			throw runtime_error(string(errmsg));
+		}
+	// Parse the config file
+		if (fgets(buf, BUF_SIZE, fp) == NULL)
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "Incorrect format in config file[%s]", MARKET_STOCK_SWITCH_CONF_FILENAME);
+			throw runtime_error(string(errmsg));
+			goto OUT;
+		}
+	OUT:
+		if (fp != NULL)
+		{
+			fclose(fp);
+			fp = NULL;
+		}
+
+		int buf_len = strlen(buf);
+		if (buf[buf_len - 1] == '\n')
+			buf[buf_len - 1] = '\0';
+		int mode = atoi(buf);
+		if (mode < 0 || mode >= FinanceAnalysisSize)
+		{
+			char errmsg[64];
+			snprintf(errmsg, 64, "Unknown finance analysis mode: %s", buf);
+			throw runtime_error(string(errmsg));
+		}
+		finance_analysis_mode = (FinanceAnalysisMode)mode;
+	}
+	return finance_analysis_mode;
+}
+bool is_market_mode(){return get_finance_analysis_mode() == FinanceAnalysis_Market;}
+bool is_stock_mode(){return get_finance_analysis_mode() == FinanceAnalysis_Stock;}
+
 const char* get_ret_description(unsigned short ret)
 {
 	static const char* success_ret_description = "Success";

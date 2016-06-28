@@ -156,6 +156,9 @@ enum StatisticsMethod
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 
+// extern const bool IS_FINANCE_MARKET_MODE;
+// extern const bool IS_FINANCE_STOCK_MODE;
+
 extern const char* DAILY_FINANCE_FILENAME_FORMAT;
 extern const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT;
 extern const char* CONFIG_FOLDER_NAME;
@@ -165,10 +168,13 @@ extern const char* WORKDAY_CANLENDAR_CONF_FILENAME;
 extern const char* DATABASE_TIME_RANGE_CONF_FILENAME;
 extern const char* COMPANY_PROFILE_CONF_FILENAME;
 extern const char* COMPANY_GROUP_CONF_FILENAME;
+extern const char* MARKET_STOCK_SWITCH_CONF_FILENAME;
 extern const char* DEFAULT_OUTPUT_FILENAME_FOR_PLOT;
 extern const char* DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME;
 
-extern const char* MYSQL_TABLE_NAME_BASE;
+// extern const char* MYSQL_TABLE_NAME_BASE;
+extern const char* MYSQL_MARKET_DATABASE_NAME;
+extern const char* MYSQL_STOCK_DATABASE_NAME;
 extern const char* MYSQL_DATE_FILED_NAME;
 extern const char* MYSQL_FILED_NAME_BASE;
 
@@ -252,6 +258,7 @@ extern bool SHOW_CONSOLE;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions
+bool is_market_mode();
 const char* get_ret_description(unsigned short ret);
 const char* get_database_field_description(int source_index, int field_index);
 bool check_file_exist(const char* filepath);

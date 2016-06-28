@@ -591,4 +591,21 @@ public:
 };
 typedef ResultSet* PRESULT_SET;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class ResultSetGroup
+{
+	typedef std::map<std::string, PRESULT_SET> RESULT_SET_MAP;
+	typedef RESULT_SET_MAP* PRESULT_SET_MAP;
+private:
+	RESULT_SET_MAP result_set_map;
+
+public:
+	ResultSetGroup();
+	~ResultSetGroup();
+	unsigned short register_result_set(std::string company_number, const PRESULT_SET result_set);
+	const PRESULT_SET lookup_result_set(std::string company_number)const;
+};
+typedef ResultSetGroup* PRESULT_SET_GROUP;
+
 #endif
