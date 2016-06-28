@@ -281,7 +281,7 @@ void FinanceAnalyzerCompanyProfile::show_traverse_result(FinanceAnalyzerCompanyP
 			FinanceAnalyzerCompanyProfile::const_iterator iter = company_profile->group_begin(i);
 			while (iter != company_profile->group_end(i))
 			{
-				const PROFILE_ELEMENT_DEQUE& profile_element_deque = *iter;
+				const STRING_DEQUE& profile_element_deque = *iter;
 				cout << profile_element_deque[0] << endl;
 				++iter;
 			}
@@ -292,7 +292,7 @@ void FinanceAnalyzerCompanyProfile::show_traverse_result(FinanceAnalyzerCompanyP
 		FinanceAnalyzerCompanyProfile::const_iterator iter = company_profile->begin();
 		while (iter != company_profile->end())
 		{
-			const PROFILE_ELEMENT_DEQUE& profile_element_deque = *iter;
+			const STRING_DEQUE& profile_element_deque = *iter;
 			cout << profile_element_deque[0] << endl;
 			++iter;
 		}
@@ -308,13 +308,13 @@ std::string FinanceAnalyzerCompanyProfile::get_company_group_description(int ind
 	return company_group_description_vector[index];
 }
 
-const PCOMPANY_NUMBER_DEQUE FinanceAnalyzerCompanyProfile::get_company_number_list_in_group(int index)
+const PSTRING_DEQUE FinanceAnalyzerCompanyProfile::get_company_number_list_in_group(int index)
 {
 	if (index < 0 || index >= company_group_size)
 		throw std::invalid_argument("index is Out Of Range");
 
 	static bool deque_init = false;
-	static std::vector<COMPANY_NUMBER_DEQUE> company_number_list_in_group_vector;
+	static std::vector<STRING_DEQUE> company_number_list_in_group_vector;
 	if (!deque_init)
 	{
 		pthread_mutex_lock(&mtx);
@@ -322,7 +322,7 @@ const PCOMPANY_NUMBER_DEQUE FinanceAnalyzerCompanyProfile::get_company_number_li
 		{
 			for (int i = 0 ; i < company_group_size ; i++)
 			{
-				COMPANY_NUMBER_DEQUE new_company_number_deque;
+				STRING_DEQUE new_company_number_deque;
 				company_number_list_in_group_vector.push_back(new_company_number_deque);
 			}
 			deque_init = true;		
@@ -337,7 +337,7 @@ const PCOMPANY_NUMBER_DEQUE FinanceAnalyzerCompanyProfile::get_company_number_li
 			FinanceAnalyzerCompanyProfile::const_iterator iter = group_begin(index);
 			while (iter != group_end(index))
 			{
-				const PROFILE_ELEMENT_DEQUE& profile_element_deque = *iter;
+				const STRING_DEQUE& profile_element_deque = *iter;
 				company_number_list_in_group_vector[index].push_back(profile_element_deque[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER]);
 				++iter;
 			}
@@ -353,9 +353,9 @@ const PCOMPANY_NUMBER_DEQUE FinanceAnalyzerCompanyProfile::get_company_number_li
 	return &company_number_list_in_group_vector[index];
 }
 
-const PPROFILE_ELEMENT_DEQUE FinanceAnalyzerCompanyProfile::lookup_company_profile(string company_number)const
+const PSTRING_DEQUE FinanceAnalyzerCompanyProfile::lookup_company_profile(string company_number)const
 {
-	// PPROFILE_ELEMENT_DEQUE company_profile = company_profile_map.get(company_number);
+	// PSTRING_DEQUE company_profile = company_profile_map.get(company_number);
 	COMPANY_PROFILE_MAP::const_iterator iter = company_profile_map.find(company_number);
 	if (iter == company_profile_map.end()) 
 	{

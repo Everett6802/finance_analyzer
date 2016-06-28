@@ -20,10 +20,13 @@ static PFINANCE_ANALYZER_COMPANY_PROFILE company_profile = FinanceAnalyzerCompan
 
 class CompanyProfileEntry;
 
-typedef std::deque<std::string> PROFILE_ELEMENT_DEQUE;
-typedef PROFILE_ELEMENT_DEQUE* PPROFILE_ELEMENT_DEQUE;
-typedef std::deque<std::string> COMPANY_NUMBER_DEQUE;
-typedef COMPANY_NUMBER_DEQUE* PCOMPANY_NUMBER_DEQUE;
+typedef std::deque<std::string> STRING_DEQUE;
+typedef STRING_DEQUE* PSTRING_DEQUE;
+
+// typedef std::deque<std::string> PROFILE_ELEMENT_DEQUE;
+// typedef PROFILE_ELEMENT_DEQUE* PPROFILE_ELEMENT_DEQUE;
+// typedef std::deque<std::string> STRING_DEQUE;
+// typedef COMPANY_NUMBER_DEQUE* PCOMPANY_NUMBER_DEQUE;
 
 class FinanceAnalyzerCompanyProfile
 {
@@ -32,11 +35,11 @@ class FinanceAnalyzerCompanyProfile
 	class CompanyProfileEntry
 	{
 	public:
-		PPROFILE_ELEMENT_DEQUE profile_element_deque;
+		PSTRING_DEQUE profile_element_deque;
 		CompanyProfileEntry() :
 			profile_element_deque(NULL)
 		{
-			profile_element_deque = new PROFILE_ELEMENT_DEQUE();
+			profile_element_deque = new STRING_DEQUE();
 			if (profile_element_deque == NULL)
 				throw std::bad_alloc();
 		}
@@ -66,7 +69,7 @@ class FinanceAnalyzerCompanyProfile
 		{
 			static std::string white_space_str(" ");
 			assert(profile_element_deque != NULL && "profile_element_deque != NULL");
-			PROFILE_ELEMENT_DEQUE::iterator iter = profile_element_deque->begin();
+			STRING_DEQUE::iterator iter = profile_element_deque->begin();
 			std::string res = "";
 			while(iter != profile_element_deque->end())
 			{
@@ -104,7 +107,7 @@ private:
 	int company_group_size;
 	PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_sorted_deque;
 	std::vector<std::string> company_group_description_vector;
-	// std::vector<COMPANY_NUMBER_DEQUE> company_number_list_in_group_vector;
+	// std::vector<STRING_DEQUE> company_number_list_in_group_vector;
 
 	FinanceAnalyzerCompanyProfile();
 	FinanceAnalyzerCompanyProfile(const FinanceAnalyzerCompanyProfile&);
@@ -163,8 +166,8 @@ public:
 			return iter == another.iter;
 		}
 		bool operator!=(const const_iterator& another){return !(*this == another);}
-		const PPROFILE_ELEMENT_DEQUE operator->(){return ((PCOMPANY_PROFILE_ENTRY)(*iter))->profile_element_deque;}
-		const PROFILE_ELEMENT_DEQUE& operator*(){return *((PCOMPANY_PROFILE_ENTRY)(*iter))->profile_element_deque;}
+		const PSTRING_DEQUE operator->(){return ((PCOMPANY_PROFILE_ENTRY)(*iter))->profile_element_deque;}
+		const STRING_DEQUE& operator*(){return *((PCOMPANY_PROFILE_ENTRY)(*iter))->profile_element_deque;}
 	};
 
 	const_iterator begin() 
@@ -204,8 +207,8 @@ public:
 
 	int get_company_group_size()const;
 	std::string get_company_group_description(int index)const;
-	const PCOMPANY_NUMBER_DEQUE get_company_number_list_in_group(int index);
-	const PPROFILE_ELEMENT_DEQUE lookup_company_profile(std::string company_number)const;
+	const PSTRING_DEQUE get_company_number_list_in_group(int index);
+	const PSTRING_DEQUE lookup_company_profile(std::string company_number)const;
 	std::string lookup_company_listing_date(std::string company_number)const;
 	std::string lookup_company_group_name(std::string company_number)const;
 	std::string lookup_company_group_number(std::string company_number)const;
