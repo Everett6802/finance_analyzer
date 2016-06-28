@@ -573,3 +573,31 @@ void FinanceAnalyzerCompanyProfile::init_company_group_profile_sorted_deque()
 		pthread_mutex_unlock(&mtx);
 	}
 }
+
+FinanceAnalyzerCompanyProfile::const_iterator FinanceAnalyzerCompanyProfile::begin() 
+{
+	if (company_profile_sorted_deque == NULL) init_company_profile_sorted_deque();
+	return const_iterator(company_profile_sorted_deque->begin());
+}
+
+FinanceAnalyzerCompanyProfile::const_iterator FinanceAnalyzerCompanyProfile::end() 
+{
+	if (company_profile_sorted_deque == NULL) init_company_profile_sorted_deque();
+	return const_iterator(company_profile_sorted_deque->end());
+}
+
+FinanceAnalyzerCompanyProfile::const_iterator FinanceAnalyzerCompanyProfile::group_begin(int index) 
+{
+	if (index < 0 || index >= company_group_size)
+		throw std::invalid_argument("index is Out Of Range");
+	if (company_group_profile_sorted_deque == NULL) init_company_group_profile_sorted_deque();
+	return const_iterator(((*company_group_profile_sorted_deque)[index])->begin());
+}
+
+FinanceAnalyzerCompanyProfile::const_iterator FinanceAnalyzerCompanyProfile::group_end(int index) 
+{
+	if (index < 0 || index >= company_group_size)
+		throw std::invalid_argument("index is Out Of Range");
+	if (company_group_profile_sorted_deque == NULL) init_company_group_profile_sorted_deque();
+	return const_iterator(((*company_group_profile_sorted_deque)[index])->end());
+}

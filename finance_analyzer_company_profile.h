@@ -85,34 +85,11 @@ public:
 		const STRING_DEQUE& operator*();
 	};
 
-	const_iterator begin() 
-	{
-		// const PCOMPANY_PROFILE_DEQUE company_profile_deque = get_company_profile_sorted_deque();
-		// return const_iterator(company_profile_deque->begin());
-		if (company_profile_sorted_deque == NULL) init_company_profile_sorted_deque();
-		return const_iterator(company_profile_sorted_deque->begin());
-	}
-	const_iterator end() 
-	{
-		// const PCOMPANY_PROFILE_DEQUE company_profile_deque = get_company_profile_sorted_deque();
-		// return const_iterator(company_profile_deque->end());
-		if (company_profile_sorted_deque == NULL) init_company_profile_sorted_deque();
-		return const_iterator(company_profile_sorted_deque->end());
-	}
-	const_iterator group_begin(int index) 
-	{
-		if (index < 0 || index >= company_group_size)
-			throw std::invalid_argument("index is Out Of Range");
-		if (company_group_profile_sorted_deque == NULL) init_company_group_profile_sorted_deque();
-		return const_iterator(((*company_group_profile_sorted_deque)[index])->begin());
-	}
-	const_iterator group_end(int index) 
-	{
-		if (index < 0 || index >= company_group_size)
-			throw std::invalid_argument("index is Out Of Range");
-		if (company_group_profile_sorted_deque == NULL) init_company_group_profile_sorted_deque();
-		return const_iterator(((*company_group_profile_sorted_deque)[index])->end());
-	}
+	const_iterator begin();
+	const_iterator end();
+
+	const_iterator group_begin(int index); 
+	const_iterator group_end(int index);
 
 	static void show_traverse_result(FinanceAnalyzerCompanyProfile* company_profile, bool company_group_mode=true);
 
