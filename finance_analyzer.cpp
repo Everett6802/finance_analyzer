@@ -104,6 +104,7 @@ int main(int argc, char** argv)
 	// company_profile->get_company_number_list_in_group(1);
 	RELEASE_COMPANY_PROFILE()
 
+	getchar();
 	exit(EXIT_SUCCESS);
 	static const int BUF_SIZE = 256;
 	static char errmsg[BUF_SIZE];

@@ -49,8 +49,8 @@ private:
 	volatile int ref_cnt;
 	COMPANY_PROFILE_MAP company_profile_map;
 	PCOMPANY_PROFILE_DEQUE company_profile_sorted_deque;
-	int company_group_size;
 	PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_sorted_deque;
+	int company_group_size;
 	std::vector<std::string> company_group_description_vector;
 
 	FinanceAnalyzerCompanyProfile();
@@ -63,28 +63,8 @@ private:
 	unsigned short parse_company_group_conf();
 	unsigned short generate_company_profile_sorted_deque();
 	unsigned short generate_company_group_profile_sorted_deque();
-
-// It seems that it's NOT sutiable for lazy initialization in Singleton
-	// const PCOMPANY_PROFILE_DEQUE get_company_profile_sorted_deque();
-	// {
-	// 	if (company_profile_sorted_deque == NULL)
-	// 	{
-	// 		unsigned short ret = generate_company_profile_sorted_deque();
-	// 		if (CHECK_FAILURE(ret))
-	// 			throw std::runtime_error(std::string(get_ret_description(ret)));
-	// 	}
-	// 	return company_profile_sorted_deque;
-	// }
-	// const PCOMPANY_GROUP_PROFILE_DEQUE get_company_group_profile_sorted_deque();
-	// {
-	// 	if (company_group_profile_sorted_deque == NULL)
-	// 	{
-	// 		unsigned short ret = generate_company_group_profile_sorted_deque();
-	// 		if (CHECK_FAILURE(ret))
-	// 			throw std::runtime_error(std::string(get_ret_description(ret)));
-	// 	}
-	// 	return company_group_profile_sorted_deque;
-	// }
+	void init_company_profile_sorted_deque();
+	void init_company_group_profile_sorted_deque();
 
 public:
 	static FinanceAnalyzerCompanyProfile* get_instance();
@@ -109,32 +89,28 @@ public:
 	{
 		// const PCOMPANY_PROFILE_DEQUE company_profile_deque = get_company_profile_sorted_deque();
 		// return const_iterator(company_profile_deque->begin());
+		if (company_profile_sorted_deque == NULL) init_company_profile_sorted_deque();
 		return const_iterator(company_profile_sorted_deque->begin());
 	}
 	const_iterator end() 
 	{
 		// const PCOMPANY_PROFILE_DEQUE company_profile_deque = get_company_profile_sorted_deque();
 		// return const_iterator(company_profile_deque->end());
+		if (company_profile_sorted_deque == NULL) init_company_profile_sorted_deque();
 		return const_iterator(company_profile_sorted_deque->end());
 	}
 	const_iterator group_begin(int index) 
 	{
-		// const PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_deque = get_company_group_profile_sorted_deque();
 		if (index < 0 || index >= company_group_size)
-		{
 			throw std::invalid_argument("index is Out Of Range");
-		}
-		// return const_iterator(((*company_group_profile_deque)[index])->begin());
+		if (company_group_profile_sorted_deque == NULL) init_company_group_profile_sorted_deque();
 		return const_iterator(((*company_group_profile_sorted_deque)[index])->begin());
 	}
 	const_iterator group_end(int index) 
 	{
-		// const PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_deque = get_company_group_profile_sorted_deque();
 		if (index < 0 || index >= company_group_size)
-		{
 			throw std::invalid_argument("index is Out Of Range");
-		}
-		// return const_iterator(((*company_group_profile_deque)[index])->end());
+		if (company_group_profile_sorted_deque == NULL) init_company_group_profile_sorted_deque();
 		return const_iterator(((*company_group_profile_sorted_deque)[index])->end());
 	}
 
