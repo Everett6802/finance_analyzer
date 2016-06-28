@@ -18,69 +18,24 @@
 #define DECLARE_AND_IMPLEMENT_STATIC_COMPANY_PROFILE()\
 static PFINANCE_ANALYZER_COMPANY_PROFILE company_profile = FinanceAnalyzerCompanyProfile::get_instance();
 
-class CompanyProfileEntry;
+extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER;
+extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_NAME;
+extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_LISTING_DATE;
+extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_MARKET;
+extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_INDUSTRY;
+extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NAME;
+extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER;
+extern const int COMPANY_PROFILE_ENTRY_FIELD_SIZE;
 
 typedef std::deque<std::string> STRING_DEQUE;
 typedef STRING_DEQUE* PSTRING_DEQUE;
-
-// typedef std::deque<std::string> PROFILE_ELEMENT_DEQUE;
-// typedef PROFILE_ELEMENT_DEQUE* PPROFILE_ELEMENT_DEQUE;
-// typedef std::deque<std::string> STRING_DEQUE;
-// typedef COMPANY_NUMBER_DEQUE* PCOMPANY_NUMBER_DEQUE;
+class CompanyProfileEntry;
+typedef CompanyProfileEntry* PCOMPANY_PROFILE_ENTRY;
 
 class FinanceAnalyzerCompanyProfile
 {
 	DECLARE_MSG_DUMPER()
 
-	class CompanyProfileEntry
-	{
-	public:
-		PSTRING_DEQUE profile_element_deque;
-		CompanyProfileEntry() :
-			profile_element_deque(NULL)
-		{
-			profile_element_deque = new STRING_DEQUE();
-			if (profile_element_deque == NULL)
-				throw std::bad_alloc();
-		}
-		~CompanyProfileEntry()
-		{
-			if (profile_element_deque != NULL)
-			{
-				delete profile_element_deque;
-				profile_element_deque = NULL;
-			}
-		}
-		void push_back(const std::string& new_element){profile_element_deque->push_back(new_element);}
-		bool operator< (const FinanceAnalyzerCompanyProfile::CompanyProfileEntry& another)
-		{
-			assert(profile_element_deque != NULL && "profile_element_deque should NOT be NULL");
-			assert(another.profile_element_deque != NULL && "another.profile_element_deque should NOT be NULL");
-			if (this == &another)
-				return true;
-			return strcmp((*profile_element_deque)[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER].c_str(), (*another.profile_element_deque)[COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER].c_str());
-		}
-		const std::string& operator[](int index)const
-		{
-			assert ((index >= 0 && index < COMPANY_PROFILE_ENTRY_FIELD_SIZE) && "index should NOT be Out of Range");
-			return (*profile_element_deque)[index];
-		}
-		const std::string to_string()const
-		{
-			static std::string white_space_str(" ");
-			assert(profile_element_deque != NULL && "profile_element_deque != NULL");
-			STRING_DEQUE::iterator iter = profile_element_deque->begin();
-			std::string res = "";
-			while(iter != profile_element_deque->end())
-			{
-				res += (std::string(*iter) + white_space_str);
-				iter++;
-			}
-			return res;
-		}
-		size_t size()const{return profile_element_deque->size();}
-	};
-	typedef CompanyProfileEntry* PCOMPANY_PROFILE_ENTRY;
 	typedef std::map<std::string, PCOMPANY_PROFILE_ENTRY> COMPANY_PROFILE_MAP;
 	typedef COMPANY_PROFILE_MAP* PCOMPANY_PROFILE_MAP;
 	typedef std::deque<PCOMPANY_PROFILE_ENTRY> COMPANY_PROFILE_DEQUE;
@@ -89,17 +44,7 @@ class FinanceAnalyzerCompanyProfile
 	typedef COMPANY_GROUP_PROFILE_DEQUE* PCOMPANY_GROUP_PROFILE_DEQUE;
 	typedef std::deque<PCOMPANY_PROFILE_ENTRY>::iterator COMPANY_PROFILE_ENTRY_DEQUE_ITER;
 
-	static bool compare_company_number(const PCOMPANY_PROFILE_ENTRY company_profile_entry1, const PCOMPANY_PROFILE_ENTRY company_profile_entry2);
-
 private:
-	static const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER;
-	static const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_NAME;
-	static const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_LISTING_DATE;
-	static const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_MARKET;
-	static const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_INDUSTRY;
-	static const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NAME;
-	static const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER;
-	static const int COMPANY_PROFILE_ENTRY_FIELD_SIZE;
 	static FinanceAnalyzerCompanyProfile* instance;
 	volatile int ref_cnt;
 	COMPANY_PROFILE_MAP company_profile_map;
@@ -107,7 +52,6 @@ private:
 	int company_group_size;
 	PCOMPANY_GROUP_PROFILE_DEQUE company_group_profile_sorted_deque;
 	std::vector<std::string> company_group_description_vector;
-	// std::vector<STRING_DEQUE> company_number_list_in_group_vector;
 
 	FinanceAnalyzerCompanyProfile();
 	FinanceAnalyzerCompanyProfile(const FinanceAnalyzerCompanyProfile&);
@@ -153,21 +97,12 @@ public:
 		COMPANY_PROFILE_ENTRY_DEQUE_ITER iter;
 
 	public:
-		const_iterator(COMPANY_PROFILE_ENTRY_DEQUE_ITER iterator) : iter(iterator){}
-		const_iterator operator++()
-		{
-			++iter;
-			return *this;
-		}
-		bool operator==(const const_iterator& another)
-		{
-			if (this == &another)
-				return true;
-			return iter == another.iter;
-		}
-		bool operator!=(const const_iterator& another){return !(*this == another);}
-		const PSTRING_DEQUE operator->(){return ((PCOMPANY_PROFILE_ENTRY)(*iter))->profile_element_deque;}
-		const STRING_DEQUE& operator*(){return *((PCOMPANY_PROFILE_ENTRY)(*iter))->profile_element_deque;}
+		const_iterator(COMPANY_PROFILE_ENTRY_DEQUE_ITER iterator);
+		const_iterator operator++();
+		bool operator==(const const_iterator& another);
+		bool operator!=(const const_iterator& another);
+		const PSTRING_DEQUE operator->();
+		const STRING_DEQUE& operator*();
 	};
 
 	const_iterator begin() 
@@ -208,6 +143,7 @@ public:
 	int get_company_group_size()const;
 	std::string get_company_group_description(int index)const;
 	const PSTRING_DEQUE get_company_number_list_in_group(int index);
+
 	const PSTRING_DEQUE lookup_company_profile(std::string company_number)const;
 	std::string lookup_company_listing_date(std::string company_number)const;
 	std::string lookup_company_group_name(std::string company_number)const;
