@@ -2,7 +2,6 @@
 #define FINANCE_ANALYZER_ALGORITHM_H
 
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 
 
 #define DECLARE_SINGLE_INPUT_FORMULA_FUNCTION(X)\

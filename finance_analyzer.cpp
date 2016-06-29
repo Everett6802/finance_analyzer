@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 #include "finance_analyzer_test.h"
 //#include "finance_analyzer_output.h"
 

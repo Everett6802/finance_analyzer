@@ -134,13 +134,13 @@ FinanceAnalyzerCompanyProfile* FinanceAnalyzerCompanyProfile::get_instance()
 	return instance;
 }
 
-FinanceAnalyzerCompanyProfile::FinanceAnalyzerCompanyProfile() :
-	company_group_size(0),
-	company_profile_sorted_deque(NULL),
-	company_group_profile_sorted_deque(NULL),
-	ref_cnt(0)
+FinanceAnalyzerCompanyProfile::FinanceAnalyzerCompanyProfile()
 {
 	IMPLEMENT_MSG_DUMPER()
+	company_group_size = 0;
+	company_profile_sorted_deque = NULL;
+	company_group_profile_sorted_deque = NULL;
+	ref_cnt = 0;
 }
 
 FinanceAnalyzerCompanyProfile::~FinanceAnalyzerCompanyProfile()

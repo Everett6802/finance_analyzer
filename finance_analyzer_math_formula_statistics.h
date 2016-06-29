@@ -1,10 +1,7 @@
 #ifndef FINANCE_ANALYZER_MATH_FORMULA_STATISTICS_H
 #define FINANCE_ANALYZER_MATH_FORMULA_STATISTICS_H
 
-#include <string>
-#include <list>
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 #include "finance_analyzer_workday_canlendar.h"
 #include "finance_analyzer_database_time_range.h"
 

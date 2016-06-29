@@ -170,7 +170,7 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::get_restricted_time_range(i
 	// int source_index, field_index;
 	// for (int index = 0 ; index < FinanceSourceSize ; index++)
 	// {
-	// 	const DEQUE_INT& query_field = (*sp_query_set.get_instance())[index];
+	// 	const INT_DEQUE& query_field = (*sp_query_set.get_instance())[index];
 	// 	if (!query_field.empty())
 	// 	{
 	// 		source_type_index_set.insert(index);
@@ -399,7 +399,7 @@ unsigned short FinanceAnalyzerMathFormulaStatistics::calculate_statistics(Statis
 	string result_str = "";
 	for (int source_index = 0 ; source_index < FinanceSourceSize ; source_index++)
 	{
-		const DEQUE_INT& query_field = (*query_set)[source_index];
+		const INT_DEQUE& query_field = (*query_set)[source_index];
 		if (query_field.empty())
 			continue;
 		int query_field_size = query_field.size();

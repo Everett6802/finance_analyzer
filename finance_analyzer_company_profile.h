@@ -2,13 +2,7 @@
 #define FINANCE_ANALYZER_WORKDAY_CANLENDAR_H
 
 #include <pthread.h>
-#include <deque>
-#include <vector>
-#include <map>
-#include <string>
-#include <stdexcept>
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 
 
 #define DECLARE_COMPANY_PROFILE() PFINANCE_ANALYZER_COMPANY_PROFILE company_profile;
@@ -27,8 +21,6 @@ extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NAME;
 extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER;
 extern const int COMPANY_PROFILE_ENTRY_FIELD_SIZE;
 
-typedef std::deque<std::string> STRING_DEQUE;
-typedef STRING_DEQUE* PSTRING_DEQUE;
 class CompanyProfileEntry;
 typedef CompanyProfileEntry* PCOMPANY_PROFILE_ENTRY;
 

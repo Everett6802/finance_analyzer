@@ -31,7 +31,7 @@ const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT 
 //const char* FinanceAnalyzerSqlReader::format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
 DECLARE_MSG_DUMPER_PARAM()
 
-unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(int source_index, const DEQUE_INT& query_field, string& field_cmd)
+unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(int source_index, const INT_DEQUE& query_field, string& field_cmd)
 {
 	if (query_field.empty())
 		throw invalid_argument("The query should NOT be empty");
@@ -104,7 +104,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 //	for (QuerySet::iterator iter = query_set.begin() ; iter < query_set.end() ; iter++)
 	for (int source_index = 0 ; source_index < FinanceSourceSize ; source_index++)
 	{
-		const DEQUE_INT& query_field = (*query_set)[source_index];
+		const INT_DEQUE& query_field = (*query_set)[source_index];
 		if (query_field.empty())
 			continue;
 // Add to the result set
@@ -141,7 +141,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 // 					return RET_FAILURE_INSUFFICIENT_MEMORY;
 // 				}
 // 			}
-// 			ret = finance_analyzer_sql_reader->select_data(source_index, string(table_name), field_cmd, (const PDEQUE_INT)&query_field, time_range_cfg_in_year, result_set);
+// 			ret = finance_analyzer_sql_reader->select_data(source_index, string(table_name), field_cmd, (const PINT_DEQUE)&query_field, time_range_cfg_in_year, result_set);
 // 			if (CHECK_FAILURE(ret))
 // 				return ret;
 // 		}
@@ -170,25 +170,25 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 	return query_market(time_range_cfg, query_set, &finance_analyzer_sql_reader, result_set);
 }
 
-unsigned short FinanceAnalyzerSqlReader::query_stock(
-	const PTIME_RANGE_CFG time_range_cfg, 
-	const PQUERY_SET query_set, 
-	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
-	PRESULT_SET result_set
-	)
-{
-	return RET_SUCCESS;
-}
+// unsigned short FinanceAnalyzerSqlReader::query_stock(
+// 	const PTIME_RANGE_CFG time_range_cfg, 
+// 	const PQUERY_SET query_set, 
+// 	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+// 	PRESULT_SET result_set
+// 	)
+// {
+// 	return RET_SUCCESS;
+// }
 
-unsigned short FinanceAnalyzerSqlReader::query_stock(
-	const PTIME_RANGE_CFG time_range_cfg, 
-	const PQUERY_SET query_set, 
-	PRESULT_SET result_set
-	)
-{
-	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
-	return query_stock(time_range_cfg, query_set, &finance_analyzer_sql_reader, result_set);	
-}
+// unsigned short FinanceAnalyzerSqlReader::query_stock(
+// 	const PTIME_RANGE_CFG time_range_cfg, 
+// 	const PQUERY_SET query_set, 
+// 	PRESULT_SET result_set
+// 	)
+// {
+// 	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
+// 	return query_stock(time_range_cfg, query_set, &finance_analyzer_sql_reader, result_set);	
+// }
 
 
 FinanceAnalyzerSqlReader::FinanceAnalyzerSqlReader() :
@@ -266,7 +266,7 @@ unsigned short FinanceAnalyzerSqlReader::select_data(
 		int source_index,
 		const std::string& table_name,
 		const std::string& cmd_table_field,
-		const PDEQUE_INT query_field,
+		const PINT_DEQUE query_field,
 		const PTIME_RANGE_CFG time_range_cfg,
 		PRESULT_SET result_cfg
 	)

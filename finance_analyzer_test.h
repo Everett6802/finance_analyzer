@@ -2,7 +2,6 @@
 #define FINANCE_ANALYZER_TEST_H
 
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 
 
 enum TestType{

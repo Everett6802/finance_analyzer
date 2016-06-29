@@ -3,7 +3,9 @@ MAKE := make
 
 CXXFLAGS := -g -Wall -std=c++0x
 
-SOURCES := msg_dumper_wrapper.cpp finance_analyzer.cpp finance_analyzer_common.cpp finance_analyzer_common_class.cpp finance_analyzer_mgr.cpp finance_analyzer_sql_reader.cpp finance_analyzer_workday_canlendar.cpp finance_analyzer_database_time_range.cpp finance_analyzer_algorithm.cpp finance_analyzer_filter.cpp finance_analyzer_statistics.cpp finance_analyzer_math_formula_statistics.cpp finance_analyzer_graph_table_statistics.cpp finance_analyzer_test.cpp finance_analyzer_output.cpp finance_analyzer_company_profile.cpp
+CMN_FOLDER := common
+CMN_SOURCES := $(CMN_FOLDER)/finance_analyzer_common_market_sql_definition.cpp $(CMN_FOLDER)/finance_analyzer_common_stock_sql_definition.cpp $(CMN_FOLDER)/finance_analyzer_common_definition.cpp $(CMN_FOLDER)/finance_analyzer_common_function.cpp $(CMN_FOLDER)/finance_analyzer_common_class.cpp
+SOURCES := $(CMN_SOURCES) msg_dumper_wrapper.cpp finance_analyzer.cpp finance_analyzer_mgr.cpp finance_analyzer_sql_reader.cpp finance_analyzer_workday_canlendar.cpp finance_analyzer_database_time_range.cpp finance_analyzer_algorithm.cpp finance_analyzer_filter.cpp finance_analyzer_statistics.cpp finance_analyzer_math_formula_statistics.cpp finance_analyzer_graph_table_statistics.cpp finance_analyzer_test.cpp finance_analyzer_output.cpp finance_analyzer_company_profile.cpp
 OBJS := $(SOURCES:.cpp=.o)
 LIB_MSG_DUMPER := libmsg_dumper.so
 LIB_MSG_DUMPER_HEADER := msg_dumper.h

@@ -2,7 +2,6 @@
 #define FINANCE_ANALYZER_FILTER_H
 
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 
 
 #define FILTER_RULT_IN_RANGE_START_INDEX 100

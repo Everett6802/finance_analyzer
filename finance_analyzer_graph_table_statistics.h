@@ -2,7 +2,6 @@
 #define FINANCE_ANALYZER_GRAPH_TABLE_STATISTICS_H
 
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 #include "finance_analyzer_workday_canlendar.h"
 #include "finance_analyzer_database_time_range.h"
 

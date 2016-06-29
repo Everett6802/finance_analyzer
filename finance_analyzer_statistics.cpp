@@ -58,7 +58,7 @@ FinanceAnalyzerStatistics::~FinanceAnalyzerStatistics()
 // 	return res_info;
 // }
 
-unsigned short FinanceAnalyzerStatistics::initialize(std::list<std::string>& src_email_address_list)
+unsigned short FinanceAnalyzerStatistics::initialize(STRING_LIST& src_email_address_list)
 {
 	finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
 	if (finance_analyzer_sql_reader == NULL)
@@ -85,9 +85,9 @@ unsigned short FinanceAnalyzerStatistics::initialize(std::list<std::string>& src
 	return ret;
 }
 
-unsigned short FinanceAnalyzerStatistics::copy_email_adress_list(std::list<std::string>& src_email_address_list)
+unsigned short FinanceAnalyzerStatistics::copy_email_adress_list(STRING_LIST& src_email_address_list)
 {
-	for (list<string>::const_iterator iter = src_email_address_list.begin() ; iter != src_email_address_list.end() ; iter++)
+	for (STRING_LIST::const_iterator iter = src_email_address_list.begin() ; iter != src_email_address_list.end() ; iter++)
 	{
 		string email_address = (string)*iter;
 		email_address_list.push_back(email_address);
@@ -130,7 +130,7 @@ unsigned short FinanceAnalyzerStatistics::show_result(string& result_str, int sh
 			static const char* DEF_EMAIL_TITLE = "Finance Statistics";
 			data_description = DEF_EMAIL_TITLE;
 		}
-		for (list<string>::const_iterator iter = email_address_list.begin() ; iter != email_address_list.end() ; iter++)
+		for (STRING_LIST::const_iterator iter = email_address_list.begin() ; iter != email_address_list.end() ; iter++)
 		{
 			string email_address = (string)*iter;
 			WRITE_FORMAT_DEBUG("Write daily data by email[%s] to %s", data_description, email_address.c_str());

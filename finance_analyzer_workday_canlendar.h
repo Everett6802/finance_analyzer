@@ -2,12 +2,7 @@
 #define FINANCE_ANALYZER_WORKDAY_CANLENDAR_H
 
 #include <pthread.h>
-#include <deque>
-#include <list>
-#include <map>
-#include <string>
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 
 
 #define DECLARE_WORKDAY_CANLENDAR() PFINANCE_ANALYZER_WORKDAY_CANLENDAR workday_canlendar;

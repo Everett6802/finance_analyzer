@@ -337,7 +337,7 @@ unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_me
 // 	{
 // 		char title[32];
 // 		snprintf(title, 32, DAILY_FINANCE_EMAIL_TITLE_FORMAT, time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
-// 		for (list<string>::const_iterator iter = email_address_list.begin() ; iter != email_address_list.end() ; iter++)
+// 		for (STRING_LIST::const_iterator iter = email_address_list.begin() ; iter != email_address_list.end() ; iter++)
 // 		{
 // 			string email_address = (string)*iter;
 // 			WRITE_FORMAT_DEBUG("Write daily data by email[%s] to %s", title, email_address.c_str());

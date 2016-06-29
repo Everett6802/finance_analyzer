@@ -8,7 +8,6 @@
 #include <set>
 #include <string>
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 
 
 #define DECLARE_DATABASE_TIME_RANGE() PFINANCE_ANALYZER_DATABASE_TIME_RANGE database_time_range;

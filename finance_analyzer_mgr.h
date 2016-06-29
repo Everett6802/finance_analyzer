@@ -1,12 +1,7 @@
 #ifndef FINANCE_ANALYZER_MGR_H
 #define FINANCE_ANALYZER_MGR_H
 
-#include <string>
-#include <list>
-// #include "finance_analyzer_workday_canlendar.h"
-// #include "finance_analyzer_database_time_range.h"
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_common_class.h"
 
 
 // class FinanceAnalyzerSqlReader;
@@ -22,7 +17,7 @@ class FinanceAnalyzerMgr
 private:
 	// FinanceAnalyzerMathFormulaStatistics* finance_analyzer_math_formula_statistics;
 	// FinanceAnalyzerGraphTableStatistics* finance_analyzer_graph_table_statistics;
-	std::list<std::string> email_address_list;
+	STRING_LIST email_address_list;
 	FinanceAnalyzerStatistics* finance_analyzer_statistics;
 
 	unsigned short parse_config();
