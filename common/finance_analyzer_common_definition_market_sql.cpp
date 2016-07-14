@@ -1,4 +1,5 @@
-#include "finance_analyzer_common_definition.h"
+#include "finance_analyzer_common_definition_base.h"
+#include "finance_analyzer_common_definition_market_sql.h"
 
 
 const int STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION[] =

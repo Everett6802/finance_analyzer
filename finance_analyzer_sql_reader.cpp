@@ -59,7 +59,7 @@ unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(int source_index,
 
 unsigned short FinanceAnalyzerSqlReader::query_market(
 	const PTIME_RANGE_CFG time_range_cfg, 
-	const PQUERY_SET query_set, 
+	const PMARKET_QUERY_SET market_query_set, 
 	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
 	PRESULT_SET result_set
 	)
@@ -67,7 +67,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 
-	assert(finance_analyzer_sql_reader != NULL && time_range_cfg != NULL && query_set != NULL && result_set != NULL);
+	assert(finance_analyzer_sql_reader != NULL && time_range_cfg != NULL && market_query_set != NULL && result_set != NULL);
 	if (time_range_cfg->get_start_time() == NULL || time_range_cfg->get_end_time() == NULL)
 	{
 		WRITE_ERROR("The start/end time in time_range_cfg should NOT be NULL");
@@ -78,80 +78,53 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 		WRITE_ERROR("The time format of time_range_cfg should be Day type");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	if (!query_set->is_add_query_done())
+	if (!market_query_set->is_add_query_done())
 	{
 		WRITE_ERROR("The setting of query data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
-	}
-
-// Collect the information that what kind of the data source will be queried
-	set<int> source_type_index_set;
-	for (int i = 0 ; i < FinanceSourceSize ; i++)
-	{
-		if (!(*query_set)[i].empty())
-			source_type_index_set.insert(i);
 	}
 
 	unsigned short ret = RET_SUCCESS;
 // Check the boundary of each database
 	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
 	WRITE_FORMAT_DEBUG("The original search time range: %s", sp_restricted_time_range_cfg->to_string());
-	ret = database_time_range->restrict_time_range(source_type_index_set, sp_restricted_time_range_cfg.get_instance());
+	ret = database_time_range->restrict_time_range(market_query_set, sp_restricted_time_range_cfg.get_instance());
 	if (CHECK_FAILURE(ret))
 		return ret;
 	WRITE_FORMAT_DEBUG("The new search time range: %s", sp_restricted_time_range_cfg->to_string());
 
-//	for (QuerySet::iterator iter = query_set.begin() ; iter < query_set.end() ; iter++)
-	for (int source_index = 0 ; source_index < FinanceSourceSize ; source_index++)
-	{
-		const INT_DEQUE& query_field = (*query_set)[source_index];
-		if (query_field.empty())
-			continue;
-// Add to the result set
-		ret = result_set->add_set(source_index, query_field);
-		if (CHECK_FAILURE(ret))
-			return ret;
 // Connect to the database
-		ret = finance_analyzer_sql_reader->try_connect_mysql(FINANCE_DATABASE_NAME_LIST[source_index]);
-		if (CHECK_FAILURE(ret))
-			return ret;
-// Generate the field command
-		string field_cmd = string("");
-		FinanceAnalyzerSqlReader::get_sql_field_command(source_index, query_field, field_cmd);
-// Query the data in each table
-		int start_year = sp_restricted_time_range_cfg->get_start_time()->get_year();
-		int end_year = sp_restricted_time_range_cfg->get_end_time()->get_year();
-// // Search for each table year by year
-// 		for (int year = start_year ; year <= end_year ; year++)
-// 		{
-// 			char table_name[16];
-// 			snprintf(table_name, 16, "%s%d", MYSQL_TABLE_NAME_BASE, year);
-// 			PTIME_RANGE_CFG time_range_cfg_in_year = NULL;
-// 			if (year == start_year || year == end_year)
-// 			{
-// 				if (start_year == end_year)
-// 					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), sp_restricted_time_range_cfg->get_end_time()->to_string());
-// 				else if (year == start_year)
-// 					time_range_cfg_in_year = new TimeRangeCfg(sp_restricted_time_range_cfg->get_start_time()->to_string(), NULL);
-// 				else
-// 					time_range_cfg_in_year = new TimeRangeCfg(NULL, sp_restricted_time_range_cfg->get_end_time()->to_string());
-// 				if (time_range_cfg_in_year == NULL)
-// 				{
-// 					WRITE_ERROR("Fail to allocate memory: time_range_cfg_in_year");
-// 					return RET_FAILURE_INSUFFICIENT_MEMORY;
-// 				}
-// 			}
-// 			ret = finance_analyzer_sql_reader->select_data(source_index, string(table_name), field_cmd, (const PINT_DEQUE)&query_field, time_range_cfg_in_year, result_set);
-// 			if (CHECK_FAILURE(ret))
-// 				return ret;
-// 		}
+	ret = finance_analyzer_sql_reader->try_connect_mysql(FINANCE_DATABASE_MARKET_NAME);
+	if (CHECK_FAILURE(ret))
+		return ret;
+
+// //	for (QuerySet::iterator iter = query_set.begin() ; iter < query_set.end() ; iter++)
+// 	for (int source_index = 0 ; source_index < FinanceSourceSize ; source_index++)
+// 	{
+// 		const INT_DEQUE& query_field = (*query_set)[source_index];
+// 		if (query_field.empty())
+// 			continue;
+// // Add to the result set
+// 		ret = result_set->add_set(source_index, query_field);
+// 		if (CHECK_FAILURE(ret))
+// 			return ret;
+// // Generate the field command
+// 		string field_cmd = string("");
+// 		FinanceAnalyzerSqlReader::get_sql_field_command(source_index, query_field, field_cmd);
+// // Query the data in each table
+// 		int start_year = sp_restricted_time_range_cfg->get_start_time()->get_year();
+// 		int end_year = sp_restricted_time_range_cfg->get_end_time()->get_year();
+// // Search for each table
+// 		ret = finance_analyzer_sql_reader->select_data(source_index, string(table_name), field_cmd, (const PINT_DEQUE)&query_field, time_range_cfg_in_year, result_set);
+// 		if (CHECK_FAILURE(ret))
+// 			return ret;
+// 	}
 
 // Disconnect from the database
-		ret = finance_analyzer_sql_reader->disconnect_mysql();
-		if (CHECK_FAILURE(ret))
-			return ret;
-		result_set->switch_to_check_date_mode();
-	}
+	ret = finance_analyzer_sql_reader->disconnect_mysql();
+	if (CHECK_FAILURE(ret))
+		return ret;
+	result_set->switch_to_check_date_mode();
 // Check the result
 	ret = result_set->check_data();
 // No need, keep them in the memory until the process is dead
@@ -162,33 +135,78 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 
 unsigned short FinanceAnalyzerSqlReader::query_market(
 	const PTIME_RANGE_CFG time_range_cfg, 
-	const PQUERY_SET query_set, 
+	const PMARKET_QUERY_SET market_query_set, 
 	PRESULT_SET result_set
 	)
 {
 	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
-	return query_market(time_range_cfg, query_set, &finance_analyzer_sql_reader, result_set);
+	return query_market(time_range_cfg, market_query_set, &finance_analyzer_sql_reader, result_set);
 }
 
-// unsigned short FinanceAnalyzerSqlReader::query_stock(
-// 	const PTIME_RANGE_CFG time_range_cfg, 
-// 	const PQUERY_SET query_set, 
-// 	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
-// 	PRESULT_SET result_set
-// 	)
-// {
-// 	return RET_SUCCESS;
-// }
+unsigned short FinanceAnalyzerSqlReader::query_stock(
+	const PTIME_RANGE_CFG time_range_cfg, 
+	const PSTOCK_QUERY_SET stock_query_set, 
+	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+	PRESULT_SET_GROUP result_set_group
+	)
+{
+	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
+	DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 
-// unsigned short FinanceAnalyzerSqlReader::query_stock(
-// 	const PTIME_RANGE_CFG time_range_cfg, 
-// 	const PQUERY_SET query_set, 
-// 	PRESULT_SET result_set
-// 	)
-// {
-// 	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
-// 	return query_stock(time_range_cfg, query_set, &finance_analyzer_sql_reader, result_set);	
-// }
+	assert(finance_analyzer_sql_reader != NULL && time_range_cfg != NULL && stock_query_set != NULL && result_set_group != NULL);
+	if (time_range_cfg->get_start_time() == NULL || time_range_cfg->get_end_time() == NULL)
+	{
+		WRITE_ERROR("The start/end time in time_range_cfg should NOT be NULL");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	if (time_range_cfg->is_month_type())
+	{
+		WRITE_ERROR("The time format of time_range_cfg should be Day type");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	if (!stock_query_set->is_add_query_done())
+	{
+		WRITE_ERROR("The setting of query data is NOT complete");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+
+	unsigned short ret = RET_SUCCESS;
+// // Check the boundary of each database
+// 	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
+// 	WRITE_FORMAT_DEBUG("The original search time range: %s", sp_restricted_time_range_cfg->to_string());
+// 	ret = database_time_range->restrict_time_range(query_set, sp_restricted_time_range_cfg.get_instance());
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	WRITE_FORMAT_DEBUG("The new search time range: %s", sp_restricted_time_range_cfg->to_string());
+
+// // Connect to the database
+// 	ret = finance_analyzer_sql_reader->try_connect_mysql(FINANCE_DATABASE_MARKET_NAME);
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+
+// // Disconnect from the database
+// 	ret = finance_analyzer_sql_reader->disconnect_mysql();
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	result_set->switch_to_check_date_mode();
+// // Check the result
+// 	ret = result_set->check_data();
+// // No need, keep them in the memory until the process is dead
+// 	// RELEASE_DATABASE_TIME_RANGE()
+// 	// RELEASE_MSG_DUMPER()
+	return ret;
+
+}
+
+unsigned short FinanceAnalyzerSqlReader::query_stock(
+	const PTIME_RANGE_CFG time_range_cfg, 
+	const PSTOCK_QUERY_SET stock_query_set, 
+	PRESULT_SET_GROUP result_set_group
+	)
+{
+	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
+	return query_stock(time_range_cfg, stock_query_set, &finance_analyzer_sql_reader, result_set_group);	
+}
 
 
 FinanceAnalyzerSqlReader::FinanceAnalyzerSqlReader() :
@@ -336,7 +354,7 @@ unsigned short FinanceAnalyzerSqlReader::select_data(
 		if (need_add_rule)
 			cmd_select_data += string(_cmd_search_rule);
 	}
-	WRITE_FORMAT_DEBUG("select data by command: %s",cmd_select_data.c_str());
+	WRITE_FORMAT_DEBUG("select data by command: %s", cmd_select_data.c_str());
 	if(mysql_query(connection, cmd_select_data.c_str()) != 0)
 	{
 		WRITE_FORMAT_ERROR("mysql_query() fails, due to: %s", mysql_error(connection));

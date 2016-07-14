@@ -2,19 +2,10 @@
 #include <stdexcept>
 #include <string>
 #include <algorithm>
-#include "finance_analyzer_company_profile.h"
+#include "finance_analyzer_common_class_company_profile.h"
 
 
 using namespace std;
-
-const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER = 0;
-const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_NAME = 1;
-const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_LISTING_DATE = 3;
-const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_MARKET = 4;
-const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_INDUSTRY = 5;
-const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NAME = 7;
-const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER = 8;
-const int COMPANY_PROFILE_ENTRY_FIELD_SIZE = 9;
 
 static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 DECLARE_MSG_DUMPER_PARAM()

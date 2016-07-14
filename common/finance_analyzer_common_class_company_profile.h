@@ -1,8 +1,9 @@
-#ifndef FINANCE_ANALYZER_WORKDAY_CANLENDAR_H
-#define FINANCE_ANALYZER_WORKDAY_CANLENDAR_H
+#ifndef FINANCE_ANALYZER_COMMON_CLASS_COMPANY_PROFILE_H
+#define FINANCE_ANALYZER_COMMON_CLASS_COMPANY_PROFILE_H
 
-#include <pthread.h>
-#include "finance_analyzer_common.h"
+#include "msg_dumper_wrapper.h"
+#include "finance_analyzer_common_definition.h"
+#include "finance_analyzer_common_class_base.h"
 
 
 #define DECLARE_COMPANY_PROFILE() PFINANCE_ANALYZER_COMPANY_PROFILE company_profile;
@@ -11,15 +12,6 @@
 
 #define DECLARE_AND_IMPLEMENT_STATIC_COMPANY_PROFILE()\
 static PFINANCE_ANALYZER_COMPANY_PROFILE company_profile = FinanceAnalyzerCompanyProfile::get_instance();
-
-extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER;
-extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_NAME;
-extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_LISTING_DATE;
-extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_MARKET;
-extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_INDUSTRY;
-extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NAME;
-extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER;
-extern const int COMPANY_PROFILE_ENTRY_FIELD_SIZE;
 
 class CompanyProfileEntry;
 typedef CompanyProfileEntry* PCOMPANY_PROFILE_ENTRY;

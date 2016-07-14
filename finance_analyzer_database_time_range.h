@@ -42,6 +42,7 @@ public:
 	int release();
 
 	unsigned short restrict_time_range(const std::set<int>& source_type_index_set, PTIME_RANGE_CFG time_range_cfg);
+	unsigned short restrict_time_range(const PQUERY_SET query_set, PTIME_RANGE_CFG time_range_cfg);
 	unsigned short get_max_database_time_range(SmartPointer<TimeRangeCfg>& sp_max_database_time_range_cfg);
 };
 typedef FinanceAnalyzerDatabaseTimeRange* PFINANCE_ANALYZER_DATABASE_TIME_RANGE;

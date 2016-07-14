@@ -24,7 +24,7 @@ const char* get_statistics_method_description(StatisticsMethod statistics_method
 #include <wchar.h>
 #include <stdlib.h>
 #include <locale.h>
-#include "finance_analyzer_company_profile.h"
+// #include "finance_analyzer_company_profile.h"
 #include <string>
 #include <algorithm>
 
@@ -63,6 +63,15 @@ bool compare_company_number_int(const my_class* number1, const my_class* number2
 
 int main(int argc, char** argv)
 {
+	FinanceCharDataPtrArray array;
+	char *my_string_array[] = {"Fuck", "Shit", "Damn"};
+	for (int i = 0 ; i < 3 ; i++)
+		array.add(my_string_array[i], strlen(my_string_array[i]) + 1);
+	cout << array << endl;
+	// for (int i = 0 ; i < 3 ; i++)
+	// 	cout << array[i] << endl;
+	exit(0);
+
 	cout << (is_market_mode() ? "Market" : "Stock") << endl;
 	// cout << strcmp("2362", "2361") << endl;
 	DECLARE_COMPANY_PROFILE()

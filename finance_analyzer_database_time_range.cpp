@@ -259,3 +259,20 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::restrict_time_range(const set<i
 
 	return RET_SUCCESS;
 }
+
+unsigned short FinanceAnalyzerDatabaseTimeRange::restrict_time_range(const PQUERY_SET query_set, PTIME_RANGE_CFG time_range_cfg)
+{
+	if (query_set == NULL)
+	{
+		WRITE_ERROR("query_set should NOT be NULL");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+// Collect the information that what kind of the data source will be queried
+	set<int> source_type_index_set;
+	for (int i = 0 ; i < FinanceSourceSize ; i++)
+	{
+		if (!(*query_set)[i].empty())
+			source_type_index_set.insert(i);
+	}
+	return restrict_time_range(source_type_index_set, time_range_cfg);
+}

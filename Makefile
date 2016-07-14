@@ -4,8 +4,8 @@ MAKE := make
 CXXFLAGS := -g -Wall -std=c++0x
 
 CMN_FOLDER := common
-CMN_SOURCES := $(CMN_FOLDER)/finance_analyzer_common_market_sql_definition.cpp $(CMN_FOLDER)/finance_analyzer_common_stock_sql_definition.cpp $(CMN_FOLDER)/finance_analyzer_common_definition.cpp $(CMN_FOLDER)/finance_analyzer_common_function.cpp $(CMN_FOLDER)/finance_analyzer_common_class.cpp
-SOURCES := $(CMN_SOURCES) msg_dumper_wrapper.cpp finance_analyzer.cpp finance_analyzer_mgr.cpp finance_analyzer_sql_reader.cpp finance_analyzer_workday_canlendar.cpp finance_analyzer_database_time_range.cpp finance_analyzer_algorithm.cpp finance_analyzer_filter.cpp finance_analyzer_statistics.cpp finance_analyzer_math_formula_statistics.cpp finance_analyzer_graph_table_statistics.cpp finance_analyzer_test.cpp finance_analyzer_output.cpp finance_analyzer_company_profile.cpp
+CMN_SOURCES := $(CMN_FOLDER)/msg_dumper_wrapper.cpp $(CMN_FOLDER)/finance_analyzer_common_definition_base.cpp $(CMN_FOLDER)/finance_analyzer_common_definition_market_sql.cpp $(CMN_FOLDER)/finance_analyzer_common_definition_stock_sql.cpp $(CMN_FOLDER)/finance_analyzer_common_function.cpp $(CMN_FOLDER)/finance_analyzer_common_class_base.cpp $(CMN_FOLDER)/finance_analyzer_common_class_company_profile.cpp $(CMN_FOLDER)/finance_analyzer_common_class_set.cpp $(CMN_FOLDER)/finance_analyzer_common_class_smart_pointer.cpp
+SOURCES := $(CMN_SOURCES) finance_analyzer.cpp finance_analyzer_mgr.cpp finance_analyzer_sql_reader.cpp finance_analyzer_workday_canlendar.cpp finance_analyzer_database_time_range.cpp finance_analyzer_algorithm.cpp finance_analyzer_filter.cpp finance_analyzer_statistics.cpp finance_analyzer_math_formula_statistics.cpp finance_analyzer_graph_table_statistics.cpp finance_analyzer_test.cpp finance_analyzer_output.cpp
 OBJS := $(SOURCES:.cpp=.o)
 LIB_MSG_DUMPER := libmsg_dumper.so
 LIB_MSG_DUMPER_HEADER := msg_dumper.h
@@ -22,13 +22,13 @@ $(OUTPUT): $(OBJS)
 	$(CC) $(CXXFLAGS) $^ -o $@ -Wl,--start-group $(LIB_MSG_DUMPER) -Wl,--end-group -lrt -ldl -lpthread -lmysqlclient
 
 $(LIB_MSG_DUMPER_WRAPPER_HEADER):
-	cp $(LIB_MSG_DUMPER_PATH)/$(LIB_MSG_DUMPER_WRAPPER_FOLDER)/$(LIB_MSG_DUMPER_WRAPPER_HEADER) .
+	cp $(LIB_MSG_DUMPER_PATH)/$(LIB_MSG_DUMPER_WRAPPER_FOLDER)/$(LIB_MSG_DUMPER_WRAPPER_HEADER) $(CMN_FOLDER)
 
 $(LIB_MSG_DUMPER_WRAPPER_SOURCE):
-	cp $(LIB_MSG_DUMPER_PATH)/$(LIB_MSG_DUMPER_WRAPPER_FOLDER)/$(LIB_MSG_DUMPER_WRAPPER_SOURCE) .
+	cp $(LIB_MSG_DUMPER_PATH)/$(LIB_MSG_DUMPER_WRAPPER_FOLDER)/$(LIB_MSG_DUMPER_WRAPPER_SOURCE) $(CMN_FOLDER)
 
 $(LIB_MSG_DUMPER_HEADER):
-	cp $(LIB_MSG_DUMPER_PATH)/$(LIB_MSG_DUMPER_HEADER) .
+	cp $(LIB_MSG_DUMPER_PATH)/$(LIB_MSG_DUMPER_HEADER) $(CMN_FOLDER)
 
 $(LIB_MSG_DUMPER):
 	$(MAKE) -C $(LIB_MSG_DUMPER_PATH)
