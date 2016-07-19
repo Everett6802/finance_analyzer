@@ -297,39 +297,6 @@ CompanyGroupSet::~CompanyGroupSet()
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short CompanyGroupSet::add_company(int company_group_number, std::string company_code_number)
-{
-	if (company_number_in_group_map == NULL)
-	{
-		company_number_in_group_map = new INT_STRING_DEQUE_MAP();
-		if (company_number_in_group_map == NULL)
-		{
-			WRITE_ERROR("Fail to allocate memory: company_number_in_group_map");
-			return RET_FAILURE_INSUFFICIENT_MEMORY;
-		}
-	}
-	if (company_number_in_group_map->find(company_group_number) == company_number_in_group_map->end())
-	{
-		PSTRING_DEQUE company_number_deque = new STRING_DEQUE();
-		if (company_number_deque == NULL)
-		{
-			WRITE_ERROR("Fail to allocate memory: company_number_deque");
-			return RET_FAILURE_INSUFFICIENT_MEMORY;
-		}
-		(*company_number_in_group_map)[company_group_number] = company_number_deque;
-	}
-	else
-	{
-		if ((*company_number_in_group_map)[company_group_number] == NULL)
-		{
-			WRITE_FORMAT_ERROR("The company group[%d] has already been set to NULL", company_group_number);
-			return RET_FAILURE_INCORRECT_OPERATION;			
-		}
-	}
-	(*company_number_in_group_map)[company_group_number]->push_back(company_code_number);
-	return RET_SUCCESS;
-}
-
 unsigned short CompanyGroupSet::add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque)
 {
 	if (company_number_in_group_map == NULL)
@@ -344,38 +311,69 @@ unsigned short CompanyGroupSet::add_company_list(int company_group_number, const
 	STRING_DEQUE_ITER iter;
 	if (company_number_in_group_map->find(company_group_number) == company_number_in_group_map->end())
 	{
-		if (company_code_number_in_group_deque == NULL)
+		PSTRING_DEQUE company_number_deque = new STRING_DEQUE();
+		if (company_number_deque == NULL)
 		{
-			(*company_number_in_group_map)[company_group_number] = NULL;
-			goto OUT;
+			WRITE_ERROR("Fail to allocate memory: company_number_deque");
+			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-		else
-		{
-			PSTRING_DEQUE company_number_deque = new STRING_DEQUE();
-			if (company_number_deque == NULL)
-			{
-				WRITE_ERROR("Fail to allocate memory: company_number_deque");
-				return RET_FAILURE_INSUFFICIENT_MEMORY;
-			}
-			(*company_number_in_group_map)[company_group_number] = company_number_deque;
-		}			
+		(*company_number_in_group_map)[company_group_number] = company_number_deque;		
 	}
 	else
 	{
 		if ((*company_number_in_group_map)[company_group_number] == NULL)
 		{
 			WRITE_FORMAT_ERROR("The company group[%d] has already been set to NULL", company_group_number);
-			return RET_FAILURE_INCORRECT_OPERATION;			
+			return RET_FAILURE_INCORRECT_OPERATION;	
 		}
 	}
 	iter = company_code_number_in_group_deque->begin();
+	PSTRING_DEQUE company_code_number_in_group_deque_in_map = (*company_number_in_group_map)[company_group_number];
+	assert(company_code_number_in_group_deque_in_map != NULL && "company_code_number_in_group_deque_in_map should NOT be NULL");
 	while (iter != company_code_number_in_group_deque->end())
 	{
 		string company_code_number = (string)*iter;
+		STRING_DEQUE_ITER iter = company_code_number_in_group_deque_in_map->begin();
+		if (find(company_code_number_in_group_deque_in_map->begin(), company_code_number_in_group_deque_in_map->end(), company_code_number) != company_code_number_in_group_deque_in_map->end())
+		// if ((*company_number_in_group_map)[company_group_number]->find(company_code_number) != (*company_number_in_group_map)[company_group_number]->end())
+		{
+			WRITE_FORMAT_WARN("The company code number[%s] has already been added to the group[%d]", company_code_number.c_str(), company_group_number);
+			continue;
+		}
 		(*company_number_in_group_map)[company_group_number]->push_back(company_code_number);
 		iter++;
 	}
-OUT:
+	return RET_SUCCESS;
+}
+
+unsigned short CompanyGroupSet::add_company(int company_group_number, std::string company_code_number)
+{
+	STRING_DEQUE company_code_number_in_group_deque;
+	company_code_number_in_group_deque.push_back(company_code_number);
+	return add_company_list(company_group_number, &company_code_number_in_group_deque);
+}
+
+unsigned short CompanyGroupSet::add_company_group(int company_group_number)
+{
+	if (company_number_in_group_map == NULL)
+	{
+		company_number_in_group_map = new INT_STRING_DEQUE_MAP();
+		if (company_number_in_group_map == NULL)
+		{
+			WRITE_ERROR("Fail to allocate memory: company_number_in_group_map");
+			return RET_FAILURE_INSUFFICIENT_MEMORY;
+		}
+	}
+	STRING_DEQUE_ITER iter;
+	if (company_number_in_group_map->find(company_group_number) != company_number_in_group_map->end())
+	{
+		if ((*company_number_in_group_map)[company_group_number] != NULL)
+		{
+			PSTRING_DEQUE company_code_number_in_group_deque = (*company_number_in_group_map)[company_group_number];
+			delete company_code_number_in_group_deque;
+		}
+	}
+	(*company_number_in_group_map)[company_group_number] = NULL;
 	return RET_SUCCESS;
 }
 
@@ -421,7 +419,17 @@ unsigned short StockQuerySet::add_company_list(int company_group_number, const P
 	return company_group_set.add_company_list(company_group_number, company_code_number_in_group_deque);
 }
 
+unsigned short StockQuerySet::add_company_group(int company_group_number)
+{
+	return company_group_set.add_company_group(company_group_number);
+}
+
 const CompanyGroupSet& StockQuerySet::get_company_group_set()const
+{
+	return company_group_set;
+}
+
+CompanyGroupSet& StockQuerySet::get_company_group_set()
 {
 	return company_group_set;
 }

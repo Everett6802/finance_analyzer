@@ -85,6 +85,7 @@ public:
 	std::string lookup_company_listing_date(std::string company_number)const;
 	std::string lookup_company_group_name(std::string company_number)const;
 	std::string lookup_company_group_number(std::string company_number)const;
+	bool is_company_exist(std::string company_number)const;
 };
 typedef FinanceAnalyzerCompanyProfile* PFINANCE_ANALYZER_COMPANY_PROFILE;
 

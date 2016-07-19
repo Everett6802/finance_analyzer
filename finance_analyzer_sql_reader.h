@@ -29,7 +29,14 @@ private:
 	static const char* FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT;
 
-	static unsigned short get_sql_field_command(int source_index, const INT_DEQUE& query_field, std::string& field_cmd);
+	static unsigned short get_sql_field_command(int source_type_index, const INT_DEQUE& query_field, std::string& field_cmd);
+	static unsigned short query_from_tables(
+		const PTIME_RANGE_CFG restricted_time_range_cfg, 
+		const PQUERY_SET query_set,
+		const std::string& company_code_number,  // For stock mode only, ignored in market mode
+		FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+		PRESULT_SET result_set
+	);
 
 	MYSQL* connection;
 	char cmd_buf[CMD_BUF_SIZE];
@@ -41,7 +48,7 @@ private:
 		const std::string& cmd_table_field,
 		const PINT_DEQUE query_field,
 		const PTIME_RANGE_CFG time_range_cfg,
-		PRESULT_SET result_cfg
+		PRESULT_SET result_set
 	);
 
 public:

@@ -11,13 +11,6 @@
 class DataSetAccessParam;
 class ResultSetAccessParam;
 class FilterRuleThresholdBase;
-// class FinanceAnalyzerCompanyProfile;
-// class FinanceDataArrayBase;
-// class FinanceIntDataArray;
-// class FinanceLongDataArray;
-// class FinanceFloatDataArray;
-// class FinanceBoolDataArray;
-// class FinanceCharDataPtrArray;
 
 typedef std::deque<DataSetAccessParam*> DataSetAccessParamDeque;
 typedef DataSetAccessParamDeque* PDATA_SET_ACCESS_PARAM_DEQUE;
@@ -177,8 +170,9 @@ public:
 	CompanyGroupSet();
 	~CompanyGroupSet();
 
+	unsigned short add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
 	unsigned short add_company(int company_group_number, std::string company_code_number);
-	unsigned short add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque=NULL);
+	unsigned short add_company_group(int company_group_number);
 	const PSTRING_DEQUE get_company_number_in_group_list(int company_group_index)const;
 };
 typedef CompanyGroupSet* PCOMPANY_GROUP_SET;
@@ -196,7 +190,9 @@ public:
 
 	unsigned short add_company(int company_group_number, std::string company_code_number);
 	unsigned short add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque=NULL);
+	unsigned short add_company_group(int company_group_number);
 	const CompanyGroupSet& get_company_group_set()const;
+	CompanyGroupSet& get_company_group_set();
 	// unsigned short add_query_done();
 };
 typedef StockQuerySet* PSTOCK_QUERY_SET;

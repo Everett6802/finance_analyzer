@@ -460,6 +460,19 @@ string FinanceAnalyzerCompanyProfile::lookup_company_group_number(string company
 	return (*lookup_company_profile(company_number))[COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER];
 }
 
+bool FinanceAnalyzerCompanyProfile::is_company_exist(std::string company_number)const
+{
+	try
+	{
+		lookup_company_profile(company_number);
+	}
+	catch(invalid_argument& e)
+	{
+		return false;
+	}
+	return true;
+}
+
 unsigned short FinanceAnalyzerCompanyProfile::generate_company_profile_sorted_deque()
 {
 	if (company_profile_sorted_deque != NULL)

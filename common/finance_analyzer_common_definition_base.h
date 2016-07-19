@@ -103,6 +103,7 @@ do{\
 typedef std::deque<std::string> STRING_DEQUE;
 typedef STRING_DEQUE* PSTRING_DEQUE;
 typedef STRING_DEQUE::iterator STRING_DEQUE_ITER;
+typedef STRING_DEQUE::const_iterator STRING_DEQUE_CONST_ITER;
 typedef std::list<std::string> STRING_LIST;
 typedef STRING_LIST* PSTRING_LIST;
 typedef std::deque<int> INT_DEQUE;

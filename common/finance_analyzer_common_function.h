@@ -6,6 +6,7 @@
 
 
 bool is_market_mode();
+bool is_stock_mode();
 const char* get_ret_description(unsigned short ret);
 const char* get_database_field_description(int source_index, int field_index);
 bool check_file_exist(const char* filepath);
