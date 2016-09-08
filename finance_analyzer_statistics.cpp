@@ -5,7 +5,7 @@
 #include "finance_analyzer_graph_table_statistics.h"
 // #include "finance_analyzer_mgr.h"
 // #include "finance_analyzer_algorithm.h"
-#include "finance_analyzer_sql_reader.h"
+// #include "finance_analyzer_sql_reader.h"
 #include "finance_analyzer_output.h"
 
 
@@ -16,7 +16,7 @@ static const int RES_INFO_LENGTH = 1024;
 static char res_info[RES_INFO_LENGTH];
 
 FinanceAnalyzerStatistics::FinanceAnalyzerStatistics() :
-	finance_analyzer_sql_reader(NULL),
+	// finance_analyzer_sql_reader(NULL),
 	finance_analyzer_math_formula_statistics(NULL),
 	finance_analyzer_graph_table_statistics(NULL)
 {
@@ -38,11 +38,11 @@ FinanceAnalyzerStatistics::~FinanceAnalyzerStatistics()
 		delete finance_analyzer_graph_table_statistics;
 		finance_analyzer_graph_table_statistics = NULL;
 	}
-	if (finance_analyzer_sql_reader != NULL)
-	{
-		delete finance_analyzer_sql_reader;
-		finance_analyzer_sql_reader = NULL;
-	}
+	// if (finance_analyzer_sql_reader != NULL)
+	// {
+	// 	delete finance_analyzer_sql_reader;
+	// 	finance_analyzer_sql_reader = NULL;
+	// }
 	// RELEASE_DATABASE_TIME_RANGE()
 	RELEASE_WORKDAY_CANLENDAR()
 	RELEASE_MSG_DUMPER()
@@ -60,12 +60,12 @@ FinanceAnalyzerStatistics::~FinanceAnalyzerStatistics()
 
 unsigned short FinanceAnalyzerStatistics::initialize(STRING_LIST& src_email_address_list)
 {
-	finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
-	if (finance_analyzer_sql_reader == NULL)
-	{
-		WRITE_ERROR("Fail to allocate memory: finance_analyzer_sql_reader");
-		return RET_FAILURE_INSUFFICIENT_MEMORY; 
-	}
+	// finance_analyzer_sql_reader = new FinanceAnalyzerSqlReader();
+	// if (finance_analyzer_sql_reader == NULL)
+	// {
+	// 	WRITE_ERROR("Fail to allocate memory: finance_analyzer_sql_reader");
+	// 	return RET_FAILURE_INSUFFICIENT_MEMORY; 
+	// }
 	finance_analyzer_math_formula_statistics = new FinanceAnalyzerMathFormulaStatistics(this);
 	if (finance_analyzer_math_formula_statistics == NULL)
 	{

@@ -11,6 +11,9 @@ using namespace std;
 const char* FINANCE_DATABASE_MARKET_NAME = "Market";
 const char* FINANCE_DATABASE_STOCK_NAME_FORMAT = "Stock%02d";
 
+const int MARKET_SOURCE_TYPE_INDEX_LENGTH = FinanceSource_MarketEnd - FinanceSource_MarketStart;
+const int STOCK_SOURCE_TYPE_INDEX_LENGTH = FinanceSource_StockEnd - FinanceSource_StockStart;
+
 const char* DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
 const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%02d%02d";
 const char* CONFIG_FOLDER_NAME = "conf";
@@ -131,6 +134,15 @@ const char* SHOW_RES_TYPE_DESCRIPTION[] =
 	"All(Stdout/Email/File/Syslog)",
 };
 const int SHOW_RES_TYPE_SIZE = sizeof(SHOW_RES_TYPE_DESCRIPTION) / sizeof(SHOW_RES_TYPE_DESCRIPTION[0]);
+
+// const int SOURCE_KEY_FIELD_MASK = 0xFF << 8;
+const int SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET = 0;
+const int SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET = 8;
+const int SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET = 24;
+const int SOURCE_KEY_SOURCE_TYPE_INDEX_MASK = 0xFF << SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET;
+const int SOURCE_KEY_COMPANY_CODE_NUMBER_MASK = 0xFFFF << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET;
+const int SOURCE_KEY_COMPANY_GROUP_NUMBER_MASK = 0xFF << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET;
+const int NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Company profile field index

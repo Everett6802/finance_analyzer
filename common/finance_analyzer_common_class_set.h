@@ -5,6 +5,7 @@
 #include "finance_analyzer_common_definition.h"
 #include "finance_analyzer_common_function.h"
 #include "finance_analyzer_common_class_base.h"
+#include "finance_analyzer_common_class_smart_pointer.h"
 #include "finance_analyzer_common_class_company_profile.h"
 
 
@@ -49,7 +50,7 @@ SourceTypeIndexSet.insert(SourceIndex);\
 // 	QuerySet();
 // 	~QuerySet();
 
-// 	unsigned short add_query(int source_index, int field_index=-1);
+// 	unsigned short add_query(int source_type_index, int field_index=-1);
 // 	unsigned short add_query_done();
 // 	bool is_add_query_done()const;
 // 	int get_size()const;
@@ -94,7 +95,6 @@ SourceTypeIndexSet.insert(SourceIndex);\
 // };
 class QuerySet
 {
-
 protected:
 	DECLARE_MSG_DUMPER()
 
@@ -123,10 +123,12 @@ public:
 	QuerySet();
 	~QuerySet();
 
-	unsigned short add_query(int source_index, int field_index=-1);
+	unsigned short add_query(int source_type_index, int field_index=-1);
+	unsigned short add_query_list(int source_type_index, const PINT_DEQUE field_index_deque);
 	unsigned short add_query_done();
 	bool is_add_query_done()const;
 	int get_size()const;
+	unsigned short get_query_sub_set(int source_type_index, QuerySet** query_sub_set)const;
 
 	const INT_DEQUE& operator[](int source_type_index);
 };
@@ -139,13 +141,14 @@ typedef MarketQuerySet* PMARKET_QUERY_SET;
 class CompanyGroupSet
 {
 	DECLARE_MSG_DUMPER()
-	DECLARE_COMPANY_PROFILE()
+	// DECLARE_COMPANY_PROFILE()
 
 private:
 	static PINT_STRING_DEQUE_MAP whole_company_number_in_group_map;
-	PINT_STRING_DEQUE_MAP company_number_in_group_map;
+	mutable PINT_STRING_DEQUE_MAP company_number_in_group_map;
 
 	static void init_whole_company_number_in_group_map();
+	static int get_company_group_size();
 
 public:
 	class const_iterator
@@ -188,8 +191,8 @@ public:
 	StockQuerySet();
 	~StockQuerySet();
 
+	unsigned short add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
 	unsigned short add_company(int company_group_number, std::string company_code_number);
-	unsigned short add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque=NULL);
 	unsigned short add_company_group(int company_group_number);
 	const CompanyGroupSet& get_company_group_set()const;
 	CompanyGroupSet& get_company_group_set();
@@ -322,10 +325,10 @@ private:
 	std::map<unsigned short, unsigned short> data_set_mapping;
 	std::map<unsigned long, unsigned long> data_calculation_set_mapping;
 	FinanceCharDataPtrArray date_data;
-	bool check_date_data_mode;
+	mutable bool check_date_data_mode;
 	int data_set_mapping_size;
 
-	unsigned short find_data_pos(int source_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
+	unsigned short find_data_pos(int source_type_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
 	unsigned short add_calculation_set_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_rate(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
@@ -344,7 +347,7 @@ private:
 	unsigned short add_calculation_set_weighted_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_weighted_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_weighted_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
-	unsigned short add_calculation_set(int source_index, int field_index, ArrayElementCalculationType calculation_type);
+	unsigned short add_calculation_set(int source_type_index, int field_index, ArrayElementCalculationType calculation_type);
 
 public:
 	ResultSet();
@@ -381,10 +384,10 @@ public:
 	iterator begin() {return iterator(data_set_mapping.begin());}
 	iterator end() {return iterator(data_set_mapping.end());}
 
-	unsigned short add_set(int source_index, int field_index);
-	unsigned short add_set(int source_index, const INT_DEQUE& field_set);
+	unsigned short add_set(int source_type_index, int field_index);
+	unsigned short add_set(int source_type_index, const INT_DEQUE& field_set);
 	unsigned short set_date(const char* element_value);
-	unsigned short set_data(int source_index, int field_index, const char* data_string);
+	unsigned short set_data(int source_type_index, int field_index, const char* data_string);
 
 	void switch_to_check_date_mode();
 	unsigned short check_data()const;
@@ -397,14 +400,14 @@ public:
 	DECLARE_GET_ARRAY_FUNC_BY_POS(int, INT)
 	DECLARE_GET_ARRAY_FUNC_BY_POS(long, LONG)
 	DECLARE_GET_ARRAY_FUNC_BY_POS(float, FLOAT)
-#define DECLARE_GET_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array(int source_index, int field_index)const;
+#define DECLARE_GET_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array(int source_type_index, int field_index)const;
 	DECLARE_GET_ARRAY_FUNC(int, INT)
 	DECLARE_GET_ARRAY_FUNC(long, LONG)
 	DECLARE_GET_ARRAY_FUNC(float, FLOAT)
-	const PFINANCE_DATA_ARRAY_BASE get_array(int source_index, int field_index)const;
-	const PFINANCE_DATA_ARRAY_BASE get_array(int source_index, int field_index, ArrayElementCalculationType calculation_type);
+	const PFINANCE_DATA_ARRAY_BASE get_array(int source_type_index, int field_index)const;
+	const PFINANCE_DATA_ARRAY_BASE get_array(int source_type_index, int field_index, ArrayElementCalculationType calculation_type);
 	const PFINANCE_CHAR_DATA_PTR_ARRAY get_date_array()const;
-#define DECLARE_GET_ARRAY_ELEMENT_FUNC(n) n get_##n##_array_element(int source_index, int field_index, int index)const;
+#define DECLARE_GET_ARRAY_ELEMENT_FUNC(n) n get_##n##_array_element(int source_type_index, int field_index, int index)const;
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(int)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(long)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(float)
@@ -415,19 +418,21 @@ typedef ResultSet* PRESULT_SET;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class ResultSetGroup
+class ResultSetMap
 {
-	typedef std::map<std::string, PRESULT_SET> RESULT_SET_MAP;
+	typedef std::map<int, PRESULT_SET> RESULT_SET_MAP;
 	typedef RESULT_SET_MAP* PRESULT_SET_MAP;
 private:
 	RESULT_SET_MAP result_set_map;
+	ResultSetDataUnit result_set_data_unit;
 
 public:
-	ResultSetGroup();
-	~ResultSetGroup();
-	unsigned short register_result_set(std::string company_number, const PRESULT_SET result_set);
-	const PRESULT_SET lookup_result_set(std::string company_number)const;
+	ResultSetMap(ResultSetDataUnit data_unit=ResultSetDataUnit_NoSourceType);
+	~ResultSetMap();
+	ResultSetDataUnit get_data_unit()const;
+	unsigned short register_result_set(int source_key, const PRESULT_SET result_set);
+	const PRESULT_SET lookup_result_set(int source_key)const;
 };
-typedef ResultSetGroup* PRESULT_SET_GROUP;
+typedef ResultSetMap* PRESULT_SET_MAP;
 
 #endif

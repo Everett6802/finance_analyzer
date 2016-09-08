@@ -112,6 +112,7 @@ typedef INT_DEQUE* PINT_DEQUE;
 typedef std::map<int, PINT_DEQUE> INT_INT_DEQUE_MAP;
 typedef INT_INT_DEQUE_MAP* PINT_INT_DEQUE_MAP;
 typedef INT_INT_DEQUE_MAP::iterator INT_INT_DEQUE_MAP_ITER;
+typedef INT_INT_DEQUE_MAP::const_iterator INT_INT_DEQUE_MAP_CONST_ITER;
 typedef INT_INT_DEQUE_MAP_ITER* PINT_INT_DEQUE_MAP_ITER;
 
 typedef std::map<int, PSTRING_DEQUE> INT_STRING_DEQUE_MAP;
@@ -124,15 +125,22 @@ typedef INT_STRING_DEQUE_MAP_ITER* PINT_STRING_DEQUE_MAP_ITER;
 
 enum FinanceSourceType
 {
-	FinanceSource_StockExchangeAndVolume,
-	FinanceSource_StockTop3LegalPersonsNetBuyOrSell,
-	FinanceSource_StockMarginTradingAndShortSelling,
-	FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest,
-	FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest,
-	FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest,
-	FinanceSource_OptionPutCallRatio,
-	FinanceSource_FutureTop10DealersAndLegalPersons,
-	FinanceSourceSize
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Market data source
+	FinanceSource_MarketStart = 0, // Keep in mind to update the value at the right time 
+	FinanceSource_StockExchangeAndVolume = 0,
+	FinanceSource_StockTop3LegalPersonsNetBuyOrSell = 1,
+	FinanceSource_StockMarginTradingAndShortSelling = 2,
+	FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest = 3,
+	FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest = 4,
+	FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest = 5,
+	FinanceSource_OptionPutCallRatio = 6,
+	FinanceSource_FutureTop10DealersAndLegalPersons = 7,
+	FinanceSource_MarketEnd = 8, // Keep in mind to update the value at the right time
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Stock data source
+	FinanceSource_StockStart = 8 , // Keep in mind to update the value at the right time
+	FinanceSource_StockEnd = 8 // Keep in mind to update the value at the right time
 };
 
 enum FinanceFieldType
@@ -187,11 +195,20 @@ enum FinanceAnalysisMode
 	FinanceAnalysis_None
 };
 
+enum ResultSetDataUnit
+{
+	ResultSetDataUnit_NoSourceType,
+	ResultSetDataUnit_SourceType
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 
 extern const char* FINANCE_DATABASE_MARKET_NAME;
 extern const char* FINANCE_DATABASE_STOCK_NAME_FORMAT;
+
+extern const int MARKET_SOURCE_TYPE_INDEX_LENGTH;
+extern const int STOCK_SOURCE_TYPE_INDEX_LENGTH;
 
 extern const char* DAILY_FINANCE_FILENAME_FORMAT;
 extern const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT;
@@ -237,6 +254,15 @@ extern const int SHOW_RES_ALL;
 
 extern const char* SHOW_RES_TYPE_DESCRIPTION[];
 extern const int SHOW_RES_TYPE_SIZE;
+
+// extern const int SOURCE_KEY_FIELD_MASK;
+extern const int SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET;
+extern const int SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET;
+extern const int SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET;
+extern const int SOURCE_KEY_SOURCE_TYPE_INDEX_MASK;
+extern const int SOURCE_KEY_COMPANY_CODE_NUMBER_MASK;
+extern const int SOURCE_KEY_COMPANY_GROUP_NUMBER_MASK;
+extern const int NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Company profile field index

@@ -114,24 +114,24 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 	const PTIME_RANGE_CFG time_range_cfg, 
 	const PMARKET_QUERY_SET market_query_set, 
 	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
-	PRESULT_SET result_set
+	PRESULT_SET_MAP result_set_map
 	)
 {
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 	static string company_code_number_dummy("xxxx");
 
-	assert(finance_analyzer_sql_reader != NULL && time_range_cfg != NULL && market_query_set != NULL && result_set != NULL);
+	assert(finance_analyzer_sql_reader != NULL && time_range_cfg != NULL && market_query_set != NULL && result_set_map != NULL);
 	if (time_range_cfg->get_start_time() == NULL || time_range_cfg->get_end_time() == NULL)
 	{
 		WRITE_ERROR("The start/end time in time_range_cfg should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	if (time_range_cfg->is_month_type())
-	{
-		WRITE_ERROR("The time format of time_range_cfg should be Day type");
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
+	// if (time_range_cfg->is_month_type())
+	// {
+	// 	WRITE_ERROR("The time format of time_range_cfg should be Day type");
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
 	if (!market_query_set->is_add_query_done())
 	{
 		WRITE_ERROR("The setting of query data is NOT complete");
@@ -139,6 +139,10 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 	}
 
 	unsigned short ret = RET_SUCCESS;
+// Connect to the database
+	ret = finance_analyzer_sql_reader->try_connect_mysql(FINANCE_DATABASE_MARKET_NAME);
+	if (CHECK_FAILURE(ret))
+		return ret;
 // Check the boundary of each database
 	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
 	WRITE_FORMAT_DEBUG("The original search time range: %s", sp_restricted_time_range_cfg->to_string());
@@ -147,20 +151,89 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 		return ret;
 	WRITE_FORMAT_DEBUG("The new search time range: %s", sp_restricted_time_range_cfg->to_string());
 
-// Connect to the database
-	ret = finance_analyzer_sql_reader->try_connect_mysql(FINANCE_DATABASE_MARKET_NAME);
-	if (CHECK_FAILURE(ret))
-		return ret;
+	ResultSetDataUnit result_set_data_unit = result_set_map->get_data_unit();
+	switch (result_set_data_unit)
+	{
+		case ResultSetDataUnit_NoSourceType:
+		{
+// Query data from MySQL
+			PRESULT_SET result_set = new ResultSet();
+			if (result_set == NULL)
+			{
+				WRITE_ERROR("Fail to allocate memory: result_set");
+				ret = RET_FAILURE_INSUFFICIENT_MEMORY;
+				goto OUT;
+			}
 // Query the data from each table
-	ret = query_from_tables(
-		sp_restricted_time_range_cfg.get_instance(), 
-		market_query_set,
-		company_code_number_dummy,  // For stock mode only, ignored in market mode
-		finance_analyzer_sql_reader, 
-		result_set
-	);
-	if (CHECK_FAILURE(ret))
-		return ret;
+			ret = query_from_tables(
+				sp_restricted_time_range_cfg.get_instance(), 
+				market_query_set,
+				company_code_number_dummy,  // For stock mode only, ignored in market mode
+				finance_analyzer_sql_reader, 
+				result_set
+			);
+			if (CHECK_FAILURE(ret))
+				goto OUT;
+			ret = result_set_map->register_result_set(NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE, result_set);
+			if (CHECK_FAILURE(ret))
+				goto OUT;
+// Check the result
+			result_set->switch_to_check_date_mode();
+			ret = result_set->check_data();
+			if (CHECK_FAILURE(ret))
+				goto OUT;
+		}
+		break;
+		case ResultSetDataUnit_SourceType:
+		{
+			QuerySet::const_iterator iter = market_query_set.begin();			
+			while (iter != market_query_set.end())
+			{
+				int source_type_index = iter.get_first();
+				PQUERY_SET query_sub_set = NULL;
+				// const PINT_DEQUE field_index_deque = iter.get_second();
+// Initialize the sub query set
+				ret = market_query_set->get_query_sub_set(source_type_index, &query_sub_set);
+				if (CHECK_FAILURE(ret))
+					goto OUT;
+				SmartPointer<QuerySet> sp_query_sub_set;
+				sp_query_sub_set.set_new(query_sub_set);
+				sp_query_sub_set->add_query_done();
+// Query data from MySQL
+				PRESULT_SET result_set = new ResultSet();
+				if (result_set == NULL)
+				{
+					WRITE_ERROR("Fail to allocate memory: result_set");
+					ret = RET_FAILURE_INSUFFICIENT_MEMORY;
+					goto OUT;
+				}
+// Query the data from each table
+				ret = query_from_tables(
+					sp_restricted_time_range_cfg.get_instance(), 
+					sp_query_sub_set.get_instance(),
+					company_code_number_dummy,  // For stock mode only, ignored in market mode
+					finance_analyzer_sql_reader, 
+					result_set
+				);
+				if (CHECK_FAILURE(ret))
+					return ret;
+				int source_key = get_source_key(source_type_index);
+				ret = result_set_map->register_result_set(source_key, result_set);
+				if (CHECK_FAILURE(ret))
+					goto OUT;
+				++iter;
+			}
+		}
+		break;
+		default:
+		{
+			WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
+			ret = RET_FAILURE_INVALID_ARGUMENT;
+			goto OUT;
+		}
+		break;
+	}
+
 // 	for (MarketQuerySet::iterator iter = query_set.begin() ; iter < query_set.end() ; iter++)
 // 	// for (int source_index = 0 ; source_index < FinanceSourceSize ; source_index++)
 // 	{
@@ -186,50 +259,47 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 // 			return ret;
 // 	}
 
-// Disconnect from the database
-	ret = finance_analyzer_sql_reader->disconnect_mysql();
-	if (CHECK_FAILURE(ret))
-		return ret;
-	result_set->switch_to_check_date_mode();
-// Check the result
-	ret = result_set->check_data();
 // No need, keep them in the memory until the process is dead
 	// RELEASE_DATABASE_TIME_RANGE()
 	// RELEASE_MSG_DUMPER()
+// Disconnect from the database
+OUT:
+	finance_analyzer_sql_reader->disconnect_mysql();
+
 	return ret;
 }
 
 unsigned short FinanceAnalyzerSqlReader::query_market(
 	const PTIME_RANGE_CFG time_range_cfg, 
 	const PMARKET_QUERY_SET market_query_set, 
-	PRESULT_SET result_set
+	PRESULT_SET_MAP result_set_map
 	)
 {
 	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
-	return query_market(time_range_cfg, market_query_set, &finance_analyzer_sql_reader, result_set);
+	return query_market(time_range_cfg, market_query_set, &finance_analyzer_sql_reader, result_set_map);
 }
 
 unsigned short FinanceAnalyzerSqlReader::query_stock(
 	const PTIME_RANGE_CFG time_range_cfg, 
 	const PSTOCK_QUERY_SET stock_query_set, 
 	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
-	PRESULT_SET_GROUP result_set_group
+	PRESULT_SET_MAP result_set_map
 	)
 {
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 
-	assert(finance_analyzer_sql_reader != NULL && time_range_cfg != NULL && stock_query_set != NULL && result_set_group != NULL);
+	assert(finance_analyzer_sql_reader != NULL && time_range_cfg != NULL && stock_query_set != NULL && result_set_map != NULL);
 	if (time_range_cfg->get_start_time() == NULL || time_range_cfg->get_end_time() == NULL)
 	{
 		WRITE_ERROR("The start/end time in time_range_cfg should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	if (time_range_cfg->is_month_type())
-	{
-		WRITE_ERROR("The time format of time_range_cfg should be Day type");
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
+	// if (time_range_cfg->is_month_type())
+	// {
+	// 	WRITE_ERROR("The time format of time_range_cfg should be Day type");
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
 	if (!stock_query_set->is_add_query_done())
 	{
 		WRITE_ERROR("The setting of query data is NOT complete");
@@ -238,26 +308,24 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 
 	unsigned short ret = RET_SUCCESS;
 
-	static char database_stcok_name[32];
+	bool init_query_sub_set_array = false; // For ResultSetDataUnit_SourceType only
+	SmartPointer<QuerySet> sp_query_sub_set_array[STOCK_SOURCE_TYPE_INDEX_LENGTH]; // For ResultSetDataUnit_SourceType only
+
+	static char database_stock_name[32];
+	ResultSetDataUnit result_set_data_unit = result_set_map->get_data_unit();
 	CompanyGroupSet& company_group_set = stock_query_set->get_company_group_set();
 	for(CompanyGroupSet::const_iterator iter = company_group_set.begin() ; iter != company_group_set.end() ; ++iter)
 	{
-		int company_group = iter.get_first();
+		int company_group_number = iter.get_first();
 // Connect to the database
-		snprintf(database_stcok_name, 32, FINANCE_DATABASE_STOCK_NAME_FORMAT, company_group);
-		ret = finance_analyzer_sql_reader->try_connect_mysql(string(database_stcok_name));
+		snprintf(database_stock_name, 32, FINANCE_DATABASE_STOCK_NAME_FORMAT, company_group_number);
+		ret = finance_analyzer_sql_reader->try_connect_mysql(string(database_stock_name));
 		if (CHECK_FAILURE(ret))
 			return ret;
 		const STRING_DEQUE& company_code_number_deque = *iter;
 		for(STRING_DEQUE_CONST_ITER iter = company_code_number_deque.begin() ; iter != company_code_number_deque.end() ; ++iter)
 		{
 			string company_code_number = (string)*iter;
-			PRESULT_SET result_set = new ResultSet();
-			if (result_set == NULL)
-			{
-				WRITE_FORMAT_ERROR("Fail to allocate memory: result_set while reading %s table", company_code_number.c_str());
-				return RET_FAILURE_INSUFFICIENT_MEMORY;
-			}
 // Check the boundary of each database
 			SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
 			WRITE_FORMAT_DEBUG("The original search time range: %s", sp_restricted_time_range_cfg->to_string());
@@ -265,28 +333,105 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 			if (CHECK_FAILURE(ret))
 				return ret;
 			WRITE_FORMAT_DEBUG("The new search time range: %s", sp_restricted_time_range_cfg->to_string());
+
 // Query the data from each table
-			ret = query_from_tables(
-				sp_restricted_time_range_cfg.get_instance(), 
-				stock_query_set,
-				company_code_number,  // For stock mode only, ignored in market mode
-				finance_analyzer_sql_reader, 
-				result_set
-			);
-			if (CHECK_FAILURE(ret))
-				return ret;
-			result_set->switch_to_check_date_mode();
+			switch (result_set_data_unit)
+			{
+				case ResultSetDataUnit_NoSourceType:
+				{
+					PRESULT_SET result_set = new ResultSet();
+					if (result_set == NULL)
+					{
+						WRITE_FORMAT_ERROR("Fail to allocate memory: result_set while reading %s table", company_code_number.c_str());
+						ret = RET_FAILURE_INSUFFICIENT_MEMORY;
+						goto OUT;
+					}
+					ret = query_from_tables(
+						sp_restricted_time_range_cfg.get_instance(), 
+						stock_query_set,
+						company_code_number,  // For stock mode only, ignored in market mode
+						finance_analyzer_sql_reader, 
+						result_set
+					);
+					if (CHECK_FAILURE(ret))
+						goto OUT;
 // Check the result
-			ret = result_set->check_data();
+					result_set->switch_to_check_date_mode();
+					ret = result_set->check_data();
+					if (CHECK_FAILURE(ret))
+						goto OUT;
+					int source_key = get_source_key(company_group_number, company_code_number);
 // Add the result into group
- 			ret = result_set_group->register_result_set(company_code_number, result_set);
+				 	ret = result_set_map->register_result_set(source_key, result_set);
+					if (CHECK_FAILURE(ret))
+						goto OUT;
+				}
+				break;
+				case ResultSetDataUnit_SourceType:
+				{
+// Initialize the sub query set for the first time
+					if (!init_query_sub_set_array)
+					{
+						QuerySet::const_iterator iter = stock_query_set.begin();
+						while (iter != stock_query_set.end())
+						{
+							int source_type_index = iter.get_first();
+							int source_type_revised_index = source_type_index - FinanceSource_StockStart;
+							// const PINT_DEQUE field_index_deque = iter.get_second();
+							PQUERY_SET query_sub_set = NULL;
+							ret = stock_query_set->get_query_sub_set(source_type_index, &query_sub_set);
+							if (CHECK_FAILURE(ret))
+								goto OUT;
+							sp_query_sub_set_array[source_type_revised_index].set_new(query_sub_set);
+							sp_query_sub_set_array[source_type_revised_index]->add_query_done();
+						}
+						init_query_sub_set_array = true;
+					}
+					QuerySet::const_iterator iter = stock_query_set.begin();
+// Query data from MySQL
+					while (iter != stock_query_set.end())
+					{
+						int source_type_index = iter.get_first();
+						int source_type_revised_index = source_type_index - FinanceSource_StockStart;
+						PRESULT_SET result_set = new ResultSet();
+						if (result_set == NULL)
+						{
+							WRITE_ERROR("Fail to allocate memory: result_set");
+							ret = RET_FAILURE_INSUFFICIENT_MEMORY;
+							goto OUT;
+						}
+// Query the data from each table
+						ret = query_from_tables(
+							sp_restricted_time_range_cfg.get_instance(), 
+							sp_query_sub_set_array[source_type_revised_index].get_instance(),
+							company_code_number,  // For stock mode only, ignored in market mode
+							finance_analyzer_sql_reader, 
+							result_set
+						);
+						if (CHECK_FAILURE(ret))
+							goto OUT;
+						int source_key = get_source_key(source_type_index, company_code_number, company_group_number);
+						ret = result_set_map->register_result_set(source_key, result_set);
+						if (CHECK_FAILURE(ret))
+							goto OUT;
+						++iter;
+					}
+				}
+				break;
+				default:
+				{
+					WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
+					ret = RET_FAILURE_INVALID_ARGUMENT;
+					goto OUT;
+				}
+				break;
+			}
+// Disconnect from the database
+OUT:
+			finance_analyzer_sql_reader->disconnect_mysql();
 			if (CHECK_FAILURE(ret))
 				return ret;
 		}
-	// Disconnect from the database
-		ret = finance_analyzer_sql_reader->disconnect_mysql();
-		if (CHECK_FAILURE(ret))
-			return ret;
 	}
 
 	return ret;
@@ -295,11 +440,11 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 unsigned short FinanceAnalyzerSqlReader::query_stock(
 	const PTIME_RANGE_CFG time_range_cfg, 
 	const PSTOCK_QUERY_SET stock_query_set, 
-	PRESULT_SET_GROUP result_set_group
+	PRESULT_SET_MAP result_set_map
 	)
 {
 	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
-	return query_stock(time_range_cfg, stock_query_set, &finance_analyzer_sql_reader, result_set_group);	
+	return query_stock(time_range_cfg, stock_query_set, &finance_analyzer_sql_reader, result_set_map);	
 }
 
 

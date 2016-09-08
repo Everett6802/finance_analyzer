@@ -52,14 +52,14 @@ private:
 	);
 
 public:
+	static unsigned short query_market(const PTIME_RANGE_CFG time_range_cfg, const PMARKET_QUERY_SET market_query_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
+	static unsigned short query_market(const PTIME_RANGE_CFG time_range_cfg, const PMARKET_QUERY_SET market_query_set, PRESULT_SET_MAP result_set_map);
+
+	static unsigned short query_stock(const PTIME_RANGE_CFG time_range_cfg, const PSTOCK_QUERY_SET stock_query_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
+	static unsigned short query_stock(const PTIME_RANGE_CFG time_range_cfg, const PSTOCK_QUERY_SET stock_query_set, PRESULT_SET_MAP result_set_map);
+
 	FinanceAnalyzerSqlReader();
 	~FinanceAnalyzerSqlReader();
-
-	static unsigned short query_market(const PTIME_RANGE_CFG time_range_cfg, const PMARKET_QUERY_SET market_query_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET result_set);
-	static unsigned short query_market(const PTIME_RANGE_CFG time_range_cfg, const PMARKET_QUERY_SET market_query_set, PRESULT_SET result_set);
-
-	static unsigned short query_stock(const PTIME_RANGE_CFG time_range_cfg, const PSTOCK_QUERY_SET stock_query_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_GROUP result_set_group);
-	static unsigned short query_stock(const PTIME_RANGE_CFG time_range_cfg, const PSTOCK_QUERY_SET stock_query_set, PRESULT_SET_GROUP result_set_group);
 
 	unsigned short try_connect_mysql(const std::string database);
 	unsigned short disconnect_mysql();

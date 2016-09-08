@@ -7,8 +7,16 @@
 
 bool is_market_mode();
 bool is_stock_mode();
+int get_source_key(int source_type_index=-1);
+int get_source_key(int company_group_number, const std::string& company_code_number, int source_type_index=-1);
+int get_source_type(int source_key);
+std::string get_company_code_number(int source_key);
+int get_company_group_number(int source_key);
 const char* get_ret_description(unsigned short ret);
-const char* get_database_field_description(int source_index, int field_index);
+const char* get_database_field_description(int source_type_index, int field_index);
+bool check_source_type_index_in_range(int source_type_index);
+bool check_field_index_in_range(int source_type_index, int field_index);
+bool check_calculation_type_in_range(int calculation_type);
 bool check_file_exist(const char* filepath);
 bool check_config_file_exist(const char* filepath);
 unsigned short create_folder_if_not_exist(const char* path, int mode=0755);

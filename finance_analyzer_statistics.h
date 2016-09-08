@@ -20,7 +20,7 @@ class FinanceAnalyzerStatistics
 
 private:
 	STRING_LIST email_address_list;
-	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader;
+	// FinanceAnalyzerSqlReader* finance_analyzer_sql_reader;
 	FinanceAnalyzerMathFormulaStatistics* finance_analyzer_math_formula_statistics;
 	FinanceAnalyzerGraphTableStatistics* finance_analyzer_graph_table_statistics;
 
