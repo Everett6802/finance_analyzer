@@ -98,9 +98,6 @@ class QuerySet
 protected:
 	DECLARE_MSG_DUMPER()
 
-	INT_INT_DEQUE_MAP source_field_query_map;
-	bool add_done;
-
 public:
 	class const_iterator
 	{
@@ -117,11 +114,20 @@ public:
 		int get_first()const;
 		const PINT_DEQUE get_second()const;
 	};
-	const_iterator begin();
-	const_iterator end();
 
+protected:
+	INT_INT_DEQUE_MAP source_field_query_map;
+	bool add_done;
+	mutable PINT_SET source_type_index_set;
+
+	unsigned short init_source_type_index_set();
+
+public:
 	QuerySet();
 	~QuerySet();
+
+	const_iterator begin();
+	const_iterator end();
 
 	unsigned short add_query(int source_type_index, int field_index=-1);
 	unsigned short add_query_list(int source_type_index, const PINT_DEQUE field_index_deque);
@@ -129,6 +135,7 @@ public:
 	bool is_add_query_done()const;
 	int get_size()const;
 	unsigned short get_query_sub_set(int source_type_index, QuerySet** query_sub_set)const;
+	const PINT_SET get_source_type_index_set();
 
 	const INT_DEQUE& operator[](int source_type_index);
 };

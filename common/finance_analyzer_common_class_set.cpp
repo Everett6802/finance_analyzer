@@ -75,6 +75,24 @@ QuerySet::~QuerySet()
 	RELEASE_MSG_DUMPER()
 }
 
+unsigned short QuerySet::init_source_type_index_set()
+{
+	source_type_index_set = new INT_SET();
+	if (source_type_index_set == NULL)
+	{
+		WRITE_ERROR("Fail to allocate memory: source_type_index_set");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;		
+	}
+	const_iterator iter = source_field_query_map.begin();
+	while (iter != source_field_query_map.end())
+	{
+		int source_type_index = iter.get_first();
+		source_type_index_set->insert(source_type_index);
+		++iter;
+	}
+	return RET_SUCCESS;
+}
+
 unsigned short QuerySet::add_query(int source_type_index, int field_index)
 {
 	if (add_done)
@@ -251,6 +269,18 @@ unsigned short QuerySet::get_query_sub_set(int source_type_index, QuerySet** que
 	}
 	*query_sub_set = query_sub_set_tmp;
 	return ret;
+}
+
+const PINT_SET QuerySet::get_source_type_index_set()
+{
+	if (source_type_index_set == NULL)
+	{
+		unsigned short ret = init_source_type_index_set();
+		if (CHECK_FAILURE(ret))
+			throw bad_alloc();
+
+	}
+	return source_type_index_set;
 }
 
 const INT_DEQUE& QuerySet::operator[](int source_type_index)

@@ -7,6 +7,7 @@
 #include <vector>
 #include <deque>
 #include <map>
+#include <set>
 #include <string>
 #include <stdexcept>
 #include <iostream>
@@ -108,6 +109,8 @@ typedef std::list<std::string> STRING_LIST;
 typedef STRING_LIST* PSTRING_LIST;
 typedef std::deque<int> INT_DEQUE;
 typedef INT_DEQUE* PINT_DEQUE;
+typedef std::set<int> INT_SET;
+typedef INT_SET* PINT_SET;
 
 typedef std::map<int, PINT_DEQUE> INT_INT_DEQUE_MAP;
 typedef INT_INT_DEQUE_MAP* PINT_INT_DEQUE_MAP;

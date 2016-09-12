@@ -267,12 +267,15 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::restrict_time_range(const PQUER
 		WRITE_ERROR("query_set should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-// Collect the information that what kind of the data source will be queried
-	set<int> source_type_index_set;
-	for (int i = 0 ; i < FinanceSourceSize ; i++)
-	{
-		if (!(*query_set)[i].empty())
-			source_type_index_set.insert(i);
-	}
-	return restrict_time_range(source_type_index_set, time_range_cfg);
+// // Collect the information that what kind of the data source will be queried
+// 	set<int> source_type_index_set;
+// 	// for (int i = 0 ; i < FinanceSourceSize ; i++)
+// 	QuerySet::const_iterator iter = query_set->begin();
+// 	while (iter != query_set->end())
+// 	{
+// 		int source_type_index = iter.get_first();
+// 		source_type_index_set.insert(source_type_index);
+// 		++iter;
+// 	}
+	return restrict_time_range(*query_set->get_source_type_index_set(), time_range_cfg);
 }

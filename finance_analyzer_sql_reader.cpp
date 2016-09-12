@@ -186,8 +186,8 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 		break;
 		case ResultSetDataUnit_SourceType:
 		{
-			QuerySet::const_iterator iter = market_query_set.begin();			
-			while (iter != market_query_set.end())
+			QuerySet::const_iterator iter = market_query_set->begin();			
+			while (iter != market_query_set->end())
 			{
 				int source_type_index = iter.get_first();
 				PQUERY_SET query_sub_set = NULL;
@@ -372,8 +372,8 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 // Initialize the sub query set for the first time
 					if (!init_query_sub_set_array)
 					{
-						QuerySet::const_iterator iter = stock_query_set.begin();
-						while (iter != stock_query_set.end())
+						QuerySet::const_iterator iter = stock_query_set->begin();
+						while (iter != stock_query_set->end())
 						{
 							int source_type_index = iter.get_first();
 							int source_type_revised_index = source_type_index - FinanceSource_StockStart;
@@ -387,9 +387,9 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 						}
 						init_query_sub_set_array = true;
 					}
-					QuerySet::const_iterator iter = stock_query_set.begin();
+					QuerySet::const_iterator iter = stock_query_set->begin();
 // Query data from MySQL
-					while (iter != stock_query_set.end())
+					while (iter != stock_query_set->end())
 					{
 						int source_type_index = iter.get_first();
 						int source_type_revised_index = source_type_index - FinanceSource_StockStart;
