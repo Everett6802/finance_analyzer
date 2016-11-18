@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <set>
-#include "finance_analyzer_mgr.h"
+#include "finance_analyzer_mgr_base.h"
 #include "finance_analyzer_sql_reader.h"
 #include "finance_analyzer_statistics.h"
 #include "finance_analyzer_workday_canlendar.h"
@@ -14,8 +14,8 @@ using namespace std;
 
 DECLARE_MSG_DUMPER_PARAM()
 
-FinanceAnalyzerMgr::FinanceAnalyzerMgr() :
-	// finance_analyzer_sql_reader(NULL),
+FinanceAnalyzerMgrBase::FinanceAnalyzerMgrBase() :
+	finance_analyzer_sql_reader(NULL),
 	// finance_analyzer_math_formula_statistics(NULL),
 	finance_analyzer_statistics(NULL)
 {
@@ -24,7 +24,7 @@ FinanceAnalyzerMgr::FinanceAnalyzerMgr() :
 	// IMPLEMENT_DATABASE_TIME_RANGE()
 }
 
-FinanceAnalyzerMgr::~FinanceAnalyzerMgr()
+FinanceAnalyzerMgrBase::~FinanceAnalyzerMgrBase()
 {
 	if (finance_analyzer_statistics != NULL)
 	{
@@ -36,17 +36,17 @@ FinanceAnalyzerMgr::~FinanceAnalyzerMgr()
 	// 	delete finance_analyzer_graph_table_statistics;
 	// 	finance_analyzer_graph_table_statistics = NULL;
 	// }
-	// if (finance_analyzer_sql_reader != NULL)
-	// {
-	// 	delete finance_analyzer_sql_reader;
-	// 	finance_analyzer_sql_reader = NULL;
-	// }
+	if (finance_analyzer_sql_reader != NULL)
+	{
+		delete finance_analyzer_sql_reader;
+		finance_analyzer_sql_reader = NULL;
+	}
 	// RELEASE_DATABASE_TIME_RANGE()
 	// RELEASE_WORKDAY_CANLENDAR()
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short FinanceAnalyzerMgr::parse_config()
+unsigned short FinanceAnalyzerMgrBase::parse_config()
 {
 // Open the config file
 	char filepath[32];
@@ -119,7 +119,7 @@ unsigned short FinanceAnalyzerMgr::parse_config()
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerMgr::initialize()
+unsigned short FinanceAnalyzerMgrBase::initialize()
 {
 	unsigned short ret = RET_SUCCESS;
 	ret = parse_config();
@@ -129,26 +129,27 @@ unsigned short FinanceAnalyzerMgr::initialize()
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& time_range_cfg)
-{
-	unsigned short ret = RET_SUCCESS;
-	if (finance_analyzer_statistics == NULL)
-	{
-		finance_analyzer_statistics = new FinanceAnalyzerStatistics();
-		if (finance_analyzer_statistics == NULL)
-		{
-			WRITE_ERROR("Fail to allocate memory: finance_analyzer_statistics");
-			return RET_FAILURE_INSUFFICIENT_MEMORY;
-		}
-	// Initialize the parameters in its delegator
-		ret = finance_analyzer_statistics->initialize(email_address_list);
-		if (CHECK_FAILURE(ret))
-			return ret;
-	}
-	return finance_analyzer_statistics->get_statistics(statistics_method, time_range_cfg);
-}
+// unsigned short FinanceAnalyzerMgrBase::get_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& time_range_cfg)
+// {
+// 	unsigned short ret = RET_SUCCESS;
+// 	if (finance_analyzer_statistics == NULL)
+// 	{
+// 		finance_analyzer_statistics = new FinanceAnalyzerStatistics();
+// 		if (finance_analyzer_statistics == NULL)
+// 		{
+// 			WRITE_ERROR("Fail to allocate memory: finance_analyzer_statistics");
+// 			return RET_FAILURE_INSUFFICIENT_MEMORY;
+// 		}
+// 	// Initialize the parameters in its delegator
+// 		ret = finance_analyzer_statistics->initialize(email_address_list);
+// 		if (CHECK_FAILURE(ret))
+// 			return ret;
+// 	}
+// 	return RET_SUCCESS;
+// 	// return finance_analyzer_statistics->get_statistics(statistics_method, time_range_cfg);
+// }
 
-// unsigned short FinanceAnalyzerMgr::query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set)const
+// unsigned short FinanceAnalyzerMgrBase::query(const PTIME_RANGE_CFG time_range_cfg, const PQUERY_SET query_set, PRESULT_SET result_set)const
 // {
 // 	assert(time_range_cfg != NULL && query_set != NULL && result_set != NULL);
 // 	if (time_range_cfg->get_start_time() == NULL || time_range_cfg->get_end_time() == NULL)
@@ -241,7 +242,7 @@ unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_me
 // 	return ret;
 // }
 
-// unsigned short FinanceAnalyzerMgr::correlate(const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation, const PTIME_RANGE_CFG time_range_cfg)const
+// unsigned short FinanceAnalyzerMgrBase::correlate(const SmartPointer<ResultSetAccessParam>& access_param1, const SmartPointer<ResultSetAccessParam>& access_param2, float& correlation, const PTIME_RANGE_CFG time_range_cfg)const
 // {
 // 	assert(database_time_range != NULL && "database_time_range should NOT be NULL");
 // //	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
@@ -272,7 +273,7 @@ unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_me
 // 	return ret;
 // }
 
-// unsigned short FinanceAnalyzerMgr::output_2d(const SmartPointer<ResultSetAccessParam>& sp_access_param1, const SmartPointer<ResultSetAccessParam>& sp_access_param2, const char* output_filename, const PTIME_RANGE_CFG time_range_cfg)const
+// unsigned short FinanceAnalyzerMgrBase::output_2d(const SmartPointer<ResultSetAccessParam>& sp_access_param1, const SmartPointer<ResultSetAccessParam>& sp_access_param2, const char* output_filename, const PTIME_RANGE_CFG time_range_cfg)const
 // {
 // 	assert(database_time_range != NULL && "database_time_range should NOT be NULL");
 // //	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
@@ -303,7 +304,7 @@ unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_me
 // 	return ret;
 // }
 
-// unsigned short FinanceAnalyzerMgr::show_result(string result_str, const PTIME_CFG time_cfg, int show_result_type)const
+// unsigned short FinanceAnalyzerMgrBase::show_result(string result_str, const PTIME_CFG time_cfg, int show_result_type)const
 // {
 // 	static bool check_result_folder_exist = false;
 // 	assert(time_cfg != NULL && "time_cfg should NOT be NULL");
@@ -369,7 +370,7 @@ unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_me
 // 	return RET_SUCCESS;
 // }
 
-// unsigned short FinanceAnalyzerMgr::update_daily(int show_result_type)const
+// unsigned short FinanceAnalyzerMgrBase::update_daily(int show_result_type)const
 // {
 // 	static const int BUF_SIZE = 1024;
 // 	static char buf[BUF_SIZE];
@@ -546,7 +547,7 @@ unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_me
 
 // #define ANALYZE_CORRELATION_DIFF(S1, F1, C1, S2, F2, C2, O1) ANALYZE_CORRELATION(S1, F1, C1, S2, F2, C2, O1 + 1)
 
-// unsigned short FinanceAnalyzerMgr::analyze_daily(int show_result_type, int offset)const
+// unsigned short FinanceAnalyzerMgrBase::analyze_daily(int show_result_type, int offset)const
 // {
 // 	static const int BUF_SIZE = 512;
 // 	static char buf[BUF_SIZE];
@@ -693,7 +694,7 @@ unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_me
 
 // #define OUTPUT_FILE_DIFF(S1, F1, C1, S2, F2, C2, O1, TITLE) OUTPUT_FILE(S1, F1, C1, S2, F2, C2, O1 + 1, TITLE)
 
-// unsigned short FinanceAnalyzerMgr::output_daily(int offset)const
+// unsigned short FinanceAnalyzerMgrBase::output_daily(int offset)const
 // {
 // 	static const int BUF_SIZE = 512;
 // 	// static char buf[BUF_SIZE];
@@ -833,7 +834,7 @@ unsigned short FinanceAnalyzerMgr::get_statistics(StatisticsMethod statistics_me
 // }
 
 #ifdef DO_DEBUG
-unsigned short FinanceAnalyzerMgr::test()
+unsigned short FinanceAnalyzerMgrBase::test()
 {
 	PTIME_RANGE_CFG time_range_cfg = new TimeRangeCfg(2015, 8, 5, 2015, 11, 11);
 	PQUERY_SET query_set = new QuerySet();

@@ -111,6 +111,7 @@ typedef std::deque<int> INT_DEQUE;
 typedef INT_DEQUE* PINT_DEQUE;
 typedef std::set<int> INT_SET;
 typedef INT_SET* PINT_SET;
+typedef INT_SET::iterator INT_SET_ITER;
 
 typedef std::map<int, PINT_DEQUE> INT_INT_DEQUE_MAP;
 typedef INT_INT_DEQUE_MAP* PINT_INT_DEQUE_MAP;

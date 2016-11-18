@@ -278,7 +278,6 @@ const PINT_SET QuerySet::get_source_type_index_set()
 		unsigned short ret = init_source_type_index_set();
 		if (CHECK_FAILURE(ret))
 			throw bad_alloc();
-
 	}
 	return source_type_index_set;
 }

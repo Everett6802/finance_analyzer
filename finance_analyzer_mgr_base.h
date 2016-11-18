@@ -1,30 +1,32 @@
-#ifndef FINANCE_ANALYZER_MGR_H
-#define FINANCE_ANALYZER_MGR_H
+#ifndef FINANCE_ANALYZER_MGR_BASE_H
+#define FINANCE_ANALYZER_MGR_BASE_H
 
 #include "finance_analyzer_common.h"
+#include "finance_analyzer_mgr_inf.h"
 
 
-// class FinanceAnalyzerSqlReader;
+class FinanceAnalyzerSqlReader;
 class FinanceAnalyzerStatistics;
 // class FinanceAnalyzerMathFormulaStatistics;
 // class FinanceAnalyzerGraphTableStatistics;
 
-class FinanceAnalyzerMgr
+class FinanceAnalyzerMgrBase : public IFinanceAnalyzerMgr
 {
+protected:
 	enum ConfigFieldType{CONFIG_FIELD_UNKNOWN, CONFIG_FIELD_EMAIL_ADDRESS, CONFIG_FIELD_SIZE};
 	DECLARE_MSG_DUMPER()
 
-private:
 	// FinanceAnalyzerMathFormulaStatistics* finance_analyzer_math_formula_statistics;
 	// FinanceAnalyzerGraphTableStatistics* finance_analyzer_graph_table_statistics;
 	STRING_LIST email_address_list;
+	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader;
 	FinanceAnalyzerStatistics* finance_analyzer_statistics;
 
 	unsigned short parse_config();
 
 public:
-	FinanceAnalyzerMgr();
-	~FinanceAnalyzerMgr();
+	FinanceAnalyzerMgrBase();
+	~FinanceAnalyzerMgrBase();
 
 	unsigned short initialize();
 
@@ -35,7 +37,7 @@ public:
 	// unsigned short update_daily(int show_result_type)const;
 	// unsigned short analyze_daily(int show_result_type, int offset=1)const;
 	// unsigned short output_daily(int offset=1)const;
-	unsigned short get_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& time_range_cfg);
+	// unsigned short get_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& time_range_cfg);
 
 #ifdef DO_DEBUG
 	unsigned short test();

@@ -85,6 +85,7 @@ template class SmartPointer<TimeRangeCfg>;
 template class SmartPointer<QuerySet>;
 template class SmartPointer<ResultSet>;
 template class SmartPointer<ResultSetAccessParam>;
+template class SmartPointer<ResultSetMap>;
 template class SmartPointer<FinanceIntDataArray>;
 template class SmartPointer<FinanceLongDataArray>;
 template class SmartPointer<FinanceFloatDataArray>;
