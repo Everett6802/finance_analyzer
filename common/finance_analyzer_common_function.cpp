@@ -4,12 +4,13 @@
 #include <string.h>
 #include <stdexcept>
 #include <new>
+// #include <string>
 #include "finance_analyzer_common_function.h"
 
 
 using namespace std;
 
-static FinanceAnalysisMode get_finance_analysis_mode()
+FinanceAnalysisMode get_finance_analysis_mode()
 {
 	static FinanceAnalysisMode finance_analysis_mode = FinanceAnalysis_None;
 	if (finance_analysis_mode == FinanceAnalysis_None)
@@ -26,7 +27,7 @@ static FinanceAnalysisMode get_finance_analysis_mode()
 
 		static const unsigned int BUF_SIZE = 4;
 		char buf[BUF_SIZE];
-		unsigned short ret = RET_SUCCESS;
+		// unsigned short ret = RET_SUCCESS;
 		// WRITE_FORMAT_DEBUG("Parse the config file: %s", MARKET_STOCK_SWITCH_CONF_FILENAME);
 		FILE* fp = fopen(file_path, "r");
 		if (fp == NULL)
@@ -194,17 +195,43 @@ const char* get_database_field_description(int source_type_index, int field_inde
 
 bool check_source_type_index_in_range(int source_type_index)
 {
-    if (is_market_mode())
+    if (IS_FINANCE_MARKET_MODE)
     {
         if (source_type_index >= FinanceSource_MarketStart && source_type_index < FinanceSource_MarketEnd)
             return true;
     }
-    else if (is_stock_mode())
+    else if (IS_FINANCE_STOCK_MODE)
     {
         if (source_type_index >= FinanceSource_StockStart && source_type_index < FinanceSource_StockEnd)
             return true;
     }
     return false;
+}
+
+void get_source_type_index_range(int& source_type_index_start, int& source_type_index_end)
+{
+	if (IS_FINANCE_MARKET_MODE)
+	{
+		source_type_index_start = FinanceSource_MarketStart;
+		source_type_index_end = FinanceSource_MarketEnd;
+	}
+	else if (IS_FINANCE_STOCK_MODE)
+	{
+		source_type_index_start = FinanceSource_StockStart;
+		source_type_index_end = FinanceSource_StockEnd;
+	}
+	else
+		throw runtime_error(string("Unknown finance mode"));
+}
+
+int get_source_type_size()
+{
+	if (IS_FINANCE_MARKET_MODE)
+		return MARKET_SOURCE_TYPE_INDEX_LENGTH;
+	else if (IS_FINANCE_STOCK_MODE)
+		return STOCK_SOURCE_TYPE_INDEX_LENGTH;
+	else
+		throw runtime_error(string("Unknown finance mode"));
 }
 
 bool check_field_index_in_range(int source_type_index, int field_index)
@@ -220,7 +247,7 @@ bool check_field_index_in_range(int source_type_index, int field_index)
 
 bool check_calculation_type_in_range(int calculation_type)
 {
-    if (calculation_type >= 0 && calculation_type < ArrayElementCalculationSize)
+    if (calculation_type < 0 && calculation_type >= ArrayElementCalculationSize)
         return false;
     return true;
 }

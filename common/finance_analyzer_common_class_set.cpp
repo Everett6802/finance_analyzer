@@ -875,6 +875,8 @@ void ResultSet::generate_data_for_simulation(ResultSet& result_set)
 	char data[32];
 	for (int i = 1 ; i < 6 ; i++)
 		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
+	// printf("============= Data Mapping =============\n");
+	// result_set.show_data_mapping();
 	for (int i = 0 ; i < DATA_SIZE ; i++)
 	{
 		snprintf(data, 32, "%s", date[i]);
@@ -890,6 +892,8 @@ void ResultSet::generate_data_for_simulation(ResultSet& result_set)
 		snprintf(data, 32, "%s", field5[i]);
 		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
 	}
+	// printf("================= Data =================\n");
+	// result_set.show_data();
 }
 
 void ResultSet::generate_filtered_data_for_simulation(ResultSet& result_set, FinanceBoolDataArray& filter_data_array)
@@ -906,6 +910,8 @@ void ResultSet::generate_filtered_data_for_simulation(ResultSet& result_set, Fin
 	char data[32];
 	for (int i = 1 ; i < 6 ; i++)
 		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
+	// printf("============= Data Mapping =============\n");
+	// result_set.show_data_mapping();
 	for (int i = 0 ; i < DATA_SIZE ; i++)
 	{
 		snprintf(data, 32, "%s", date[i]);
@@ -920,9 +926,10 @@ void ResultSet::generate_filtered_data_for_simulation(ResultSet& result_set, Fin
 		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
 		snprintf(data, 32, "%s", field5[i]);
 		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-
 		filter_data_array.add(filter[i]);
 	}
+	// printf("================= Data =================\n");
+	// result_set.show_data();
 }
 
 ResultSet::ResultSet() :
@@ -1418,7 +1425,7 @@ unsigned short ResultSet::find_data_pos(int source_type_index, int field_index, 
 	if (iter == data_set_mapping.end())
 	{
 		char errmsg[64];
-		snprintf(errmsg, 64, "The key[%d] from (%d, %d) is NOT FOUND", key, source_type_index, field_index);
+		snprintf(errmsg, 64, "The key[%d] from (%d:%d) is NOT FOUND", key, source_type_index, field_index);
 		WRITE_ERROR(errmsg);
 //		throw invalid_argument(errmsg);
 		return RET_FAILURE_INVALID_ARGUMENT;
@@ -1491,7 +1498,7 @@ const PFINANCE_##m##_DATA_ARRAY ResultSet::get_##n##_array(int source_type_index
 	ret = find_data_pos(source_type_index, field_index, field_type_index, field_type_pos);\
 	if (CHECK_FAILURE(ret))\
 	{\
-		snprintf(errmsg, BUF_SIZE, "Fail to fail data position from (%d, %d)", source_type_index, field_index);\
+		snprintf(errmsg, BUF_SIZE, "Fail to get data position from (%d:%d)", source_type_index, field_index);\
 		WRITE_ERROR(errmsg);\
 		throw invalid_argument(errmsg);\
 	}\
@@ -1527,7 +1534,7 @@ const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array(int source_type_index, int f
 
 const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array(int source_type_index, int field_index, ArrayElementCalculationType calculation_type)
 {
-	static const int BUF_SIZE = 32;
+	static const int BUF_SIZE = 256;
 	static char errmsg[BUF_SIZE];
 
 	if (calculation_type == ArrayElementCalculation_None)
@@ -1666,6 +1673,35 @@ unsigned short ResultSet::check_data()const
 	return RET_SUCCESS;
 }
 
+
+unsigned short ResultSet::show_data_mapping()const
+{
+	if (!SHOW_CONSOLE)
+	{
+		WRITE_WARN("Disabled; No data will be shown on STDOUT/STDERR");
+		return RET_SUCCESS;
+	}
+	unsigned short key;
+	unsigned short value;
+	unsigned short source_type_index;
+	unsigned short field_index;
+	unsigned short field_type_index;
+	unsigned short field_type_pos;
+	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.begin();
+	while (iter != data_set_mapping.end())
+	{
+		key = iter->first;
+		value = iter->second;
+		source_type_index = get_upper_subindex(key);
+		field_index = get_lower_subindex(key);
+		field_type_index = get_upper_subindex(value);
+		field_type_pos = get_lower_subindex(value);
+		printf("%s:%s%d => %s:%d\n", FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index], MYSQL_FILED_NAME_BASE, field_index, FINANCE_FIELD_TYPE_DESCRIPTION[field_type_index], field_type_pos);
+		iter++;
+	}
+	return RET_SUCCESS;
+}
+
 unsigned short ResultSet::show_data()const
 {
 	static int STAR_LEN = 120;
@@ -1700,7 +1736,7 @@ unsigned short ResultSet::show_data()const
 	printf("\n");
 	for(int i = 0 ; i < STAR_LEN ; i++)
 		putchar('*');
-	printf("\n\n");
+	printf("\n");
 
 // Show the data info
 //	int date_data_size_tmp = date_data.get_size();

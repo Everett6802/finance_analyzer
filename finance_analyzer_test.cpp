@@ -85,6 +85,7 @@ void FinanceAnalyzerTest::test_check_array()
 //	if (show_test_case_detail) cout << "2 Avg10: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg10) << endl;
 //	if (show_test_case_detail) cout << "4 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff) << endl;
 //	if (show_test_case_detail) cout << "4 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5) << endl;
+	// result_set.show_data_mapping();
 
 	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1);
 	ret = data_array1->get_diff_array(*sp_long_data_array, 0);
@@ -452,7 +453,6 @@ void FinanceAnalyzerTest::test_check_array_statistics()
 		throw runtime_error(string(errmsg));
 	}
 	sp_float_data_array->reset_array();
-
 }
 
 void FinanceAnalyzerTest::test_check_filter_array()
@@ -555,7 +555,6 @@ void FinanceAnalyzerTest::test_check_filter_rule()
 		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
 		snprintf(data, 32, "%s", field5[i]);
 		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-
 //		filter_data_array.add(filter[i]);
 	}
 

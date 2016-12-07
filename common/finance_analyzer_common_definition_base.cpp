@@ -8,6 +8,10 @@
 
 using namespace std;
 
+FinanceAnalysisMode finance_analysis_mode = FinanceAnalysis_None;
+bool IS_FINANCE_MARKET_MODE = (finance_analysis_mode == FinanceAnalysis_Market ? true : false);
+bool IS_FINANCE_STOCK_MODE = (finance_analysis_mode == FinanceAnalysis_Stock ? true : false);
+
 const char* FINANCE_DATABASE_MARKET_NAME = "Market";
 const char* FINANCE_DATABASE_STOCK_NAME_FORMAT = "Stock%02d";
 

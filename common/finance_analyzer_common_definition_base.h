@@ -208,6 +208,10 @@ enum ResultSetDataUnit
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 
+extern FinanceAnalysisMode finance_analysis_mode;
+extern bool IS_FINANCE_MARKET_MODE;
+extern bool IS_FINANCE_STOCK_MODE;
+
 extern const char* FINANCE_DATABASE_MARKET_NAME;
 extern const char* FINANCE_DATABASE_STOCK_NAME_FORMAT;
 

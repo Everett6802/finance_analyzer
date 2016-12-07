@@ -318,7 +318,6 @@ typedef SHORT_MAP_ITER* PSHORT_MAP_ITER;
 class ResultSet : public DataSet
 {
 	// DECLARE_MSG_DUMPER()
-
 public:
 	static unsigned short get_combined_index(int x, int y);
 	static unsigned long get_combined_index_ex(int x, int y, ArrayElementCalculationType calculation_type=ArrayElementCalculation_None);
@@ -398,6 +397,7 @@ public:
 
 	void switch_to_check_date_mode();
 	unsigned short check_data()const;
+	unsigned short show_data_mapping()const;
 	unsigned short show_data()const;
 
 	int get_data_dimension()const;
