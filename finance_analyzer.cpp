@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <iostream>
 #include <stdexcept>
 #include "finance_analyzer_common.h"
@@ -9,6 +11,7 @@
 #include "finance_analyzer_stock_mgr.h"
 #include "finance_analyzer_mgr_inf.h"
 #include "finance_analyzer_mgr_factory.h"
+#include "finance_analyzer_interactive_server.h"
 
 
 using namespace std;
@@ -21,19 +24,25 @@ static bool param_help = false;
 static bool param_silent = false;
 static char* param_test = NULL;
 static bool param_test_verbose = false;
+static bool param_interactive_mode = false;
+static bool param_daemonize = false;
 
 static const int BUF_SIZE = 256;
 static char errmsg[BUF_SIZE];
 static PIFINANCE_ANALYZER_MGR finance_analyzer_mgr = NULL;
+DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
+DECLARE_MSG_DUMPER_PARAM();
 
-void show_usage_and_exit();
-void print_errmsg_and_exit(const char* errmsg);
-unsigned short parse_param(int argc, char** argv);
-unsigned short check_param();
-unsigned short setup_param();
-void run_test_cases_and_exit(const char* test_case_list, bool show_detail);
-int parse_show_res_type(const char* show_res_type_string);
-const char* get_statistics_method_description(StatisticsMethod statistics_method);
+static void show_usage_and_exit();
+static void print_errmsg_and_exit(const char* errmsg);
+static unsigned short parse_param(int argc, char** argv);
+static unsigned short check_param();
+static unsigned short setup_param();
+static void run_test_cases_and_exit(const char* test_case_list, bool show_detail);
+static int parse_show_res_type(const char* show_res_type_string);
+static const char* get_statistics_method_description(StatisticsMethod statistics_method);
+// static void daemonize();
+// static unsigned short init_interactive_server();
 
 void show_usage_and_exit()
 {
@@ -51,6 +60,8 @@ void show_usage_and_exit()
 	PRINT("\n");
 	PRINT("  Format: 1,2,4 (Start from 0)\n");
 	PRINT("  all: All types\n");
+	PRINT("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
+	PRINT("--daemonize\n Description: Daemonize the process\n Caution: Must be in the interactive mode\n");
 	// PRINT("--calculate_statistics\nDescription: Calculate the statistics by different analysis method\n");
 	// for (int i = 0 ; i < FORMULA_STATSTICS_METHOD_SIZE ; i++)
 	// 	PRINT("%s[%d] ", FORMULA_STATSTICS_METHOD_DESCRIPTION[i], i);
@@ -76,6 +87,7 @@ void print_errmsg_and_exit(const char* errmsg)
 {
 	assert(errmsg != NULL && "errmsg != NULL");
 	FPRINT(stderr, "%s\n", errmsg);
+	WRITE_ERROR(errmsg);
 	exit(EXIT_FAILURE);
 }
 
@@ -105,7 +117,7 @@ unsigned short parse_param(int argc, char** argv)
             	param_mode = FinanceAnalysis_Stock;
             offset = 1;  
         }
-		else if (strcmp(argv[index], "--help") == 0)
+		else if ((strcmp(argv[index], "--help") == 0) || (strcmp(argv[index], "-h") == 0))
 		{
 			param_help = true;
 			offset = 1;
@@ -130,6 +142,16 @@ unsigned short parse_param(int argc, char** argv)
 			param_test = argv[index + 1];
 			param_test_verbose = true;
 			offset = 2;
+		}
+		else if ((strcmp(argv[index], "--interactive_mode") == 0) || (strcmp(argv[index], "-i") == 0))
+		{
+			param_interactive_mode = true;
+			offset = 1;
+		}
+		else if (strcmp(argv[index], "--daemonize") == 0)
+		{
+			param_daemonize = true;
+			offset = 1;
 		}
 		// else if (strcmp(argv[index], "--calculate_statistics") == 0)
 		// {
@@ -240,6 +262,14 @@ unsigned short parse_param(int argc, char** argv)
 
 unsigned short check_param()
 {
+	if (param_daemonize)
+	{
+		if (!param_interactive_mode)
+		{
+			param_daemonize = false;
+			PRINT("WARNING: Daemonization must run in the interactive mode\n");
+		}
+	}
 	return RET_SUCCESS;
 }
 
@@ -320,6 +350,73 @@ int parse_show_res_type(const char* show_res_type_string)
 	return 0;
 }
 
+// void daemonize() 
+// { 
+// // Step 1: Fork off the parent process
+//  	pid_t pid = fork();
+//   	if (pid < 0) exit(EXIT_FAILURE);
+// 	if (pid != 0) exit (EXIT_SUCCESS);
+// // Step 2: Create a unique session ID
+//    	pid = setsid();
+// 	if (pid < -1) exit(EXIT_FAILURE);
+// // Step 3: Change the working directory
+// 	chdir ("/"); 
+// // Step 4: Close the standard file descriptors
+// 	int fd = open ("/dev/null", O_RDWR, 0);
+// 	if (fd != -1) 
+// 	{
+// 		dup2 (fd, STDIN_FILENO);
+// 		dup2 (fd, STDOUT_FILENO);
+// 		dup2 (fd, STDERR_FILENO);
+// 		if (fd > 2) close (fd);
+// 	}
+// // Step 5: Change the file mode mask
+// 	umask (0027);
+// }
+
+// unsigned short init_interactive_server()
+// {
+// 	// unsigned short ret = RET_SUCCESS;
+// 	int server_fd, client_fd;
+// 	sockaddr_in server_sock, client_sock;
+// 	socklen_t client_sock_len;
+// 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+// 	if (server_fd == -1)
+// 	{
+// 		WRITE_FORMAT_ERROR("socket() fails, error code: %d", errno);
+// 		return RET_FAILURE_SYSTEM_API;
+// 	}
+// 	bzero((char*)&server_sock, sizeof(server_sock));
+// 	server_sock.sin_family = AF_INET;
+// 	server_sock.sin_addr.s_addr = INADDR_ANY;
+// 	server_sock.sin_port = htons(INTERACTIVE_SERVER_PORT);
+// 	if(bind(server_fd, (struct sockaddr *)&server_sock, sizeof(server_sock)) < 0)
+// 	{
+// 		WRITE_FORMAT_ERROR("bind() fails, error code: %d", errno);
+// 		return RET_FAILURE_SYSTEM_API;
+// 	}
+// 	if (listen(server_fd, INTERACTIVE_SERVER_BACKLOG) < 0)
+// 	{
+// 		WRITE_FORMAT_ERROR("listen() fails, error code: %d", errno);
+// 		return RET_FAILURE_SYSTEM_API;
+// 	}
+// 	WRITE_DEBUG("Finance Analysis Server Ready, Wait for connection......");
+// 	while (true)
+// 	{
+// 		client_sock_len = sizeof(client_sock);
+// 		client_fd = accept(server_fd, (struct sockaddr *)&client_sock, &client_sock_len);
+// 		WRITE_DEBUG("Connection request from......");
+// 		if (client_fd == -1)
+// 		{
+// 			WRITE_FORMAT_ERROR("listen() fails, error code: %d", errno);
+// 			return RET_FAILURE_SYSTEM_API;
+// 		}
+// 		write(client_fd, INTERACTIVE_PROMPT, strlen(INTERACTIVE_PROMPT));
+// 	}
+
+// 	return RET_SUCCESS;
+// }
+
 int main(int argc, char** argv)
 {
 // Register the manager class to manager factory
@@ -340,68 +437,89 @@ int main(int argc, char** argv)
 	if (param_silent)
 		SHOW_CONSOLE = false;
 
-// Determine the finance mode
-    if (param_mode == FinanceAnalysis_None)
-    {
-    	finance_analysis_mode = get_finance_analysis_mode();
-        IS_FINANCE_MARKET_MODE = is_market_mode();
-        IS_FINANCE_STOCK_MODE = is_stock_mode();
-    }
-    else if (param_mode == FinanceAnalysis_Market)
-    {
-    	finance_analysis_mode = FinanceAnalysis_Market;
-        IS_FINANCE_MARKET_MODE = true;
-        IS_FINANCE_STOCK_MODE = false;
-    }
-    else if (param_mode == FinanceAnalysis_Stock)
-    {
-    	finance_analysis_mode = FinanceAnalysis_Stock;
-        IS_FINANCE_MARKET_MODE = false;
-        IS_FINANCE_STOCK_MODE = true;
-    }
-    else
-        throw runtime_error(string("Unknown mode !!!"));
-
-    if (param_help)
-    	show_usage_and_exit();
 // Check the parameters
     check_param();
+    if (param_daemonize)
+    {
+		// daemonize();
+		// sleep(100000);
+// Caution: When the program run as a daemon, the STDIN/STDOUT/STDERR is redirected to /dev/null
+// The functions related to STDIN/STDOUT/STDERR will hav erros.		
+// getchar(); Can't run this function when the program run a daemon
+    }
+    if (param_interactive_mode)
+    {
+    	// daemonize();
+    	// ret = init_interactive_server();
+    	DECLARE_AND_IMPLEMENT_STATIC_INTERACTIVE_SERVER()
+    	// ret = interactive_server->wait_for_connection();
+    	// if (CHECK_FAILURE(ret))
+    	// {
+    	// 	snprintf(errmsg, BUF_SIZE, "Fail to initialize the interactive server, error code: %d", ret);
+     //   		goto FAIL;
+     //   	}
+    }
+    else
+    {
+// Determine the finance mode
+	    if (param_mode == FinanceAnalysis_None)
+	    {
+	    	finance_analysis_mode = get_finance_analysis_mode();
+	        IS_FINANCE_MARKET_MODE = is_market_mode();
+	        IS_FINANCE_STOCK_MODE = is_stock_mode();
+	    }
+	    else if (param_mode == FinanceAnalysis_Market)
+	    {
+	    	finance_analysis_mode = FinanceAnalysis_Market;
+	        IS_FINANCE_MARKET_MODE = true;
+	        IS_FINANCE_STOCK_MODE = false;
+	    }
+	    else if (param_mode == FinanceAnalysis_Stock)
+	    {
+	    	finance_analysis_mode = FinanceAnalysis_Stock;
+	        IS_FINANCE_MARKET_MODE = false;
+	        IS_FINANCE_STOCK_MODE = true;
+	    }
+	    else
+	        throw runtime_error(string("Unknown mode !!!"));
 
-    if (IS_FINANCE_MARKET_MODE)
-    	PRINT("\n******* Initialize in Market Mode *******\n\n")
-   	else if (IS_FINANCE_STOCK_MODE)
-   		PRINT("\n*******Initialize in Stock Mode *******\n\n")
+	    if (param_help)
+	    	show_usage_and_exit();
 
 // Run the test cases
-    if (param_test != NULL)
-    {
-    	if (!IS_FINANCE_MARKET_MODE)
-    	{
-	    	snprintf(errmsg, BUF_SIZE, "%s", "Error!!! Can only run the cases in Market Mode");
+	    if (param_test != NULL)
+	    {
+	    	if (!IS_FINANCE_MARKET_MODE)
+	    	{
+		    	snprintf(errmsg, BUF_SIZE, "%s", "Error!!! Can only run the cases in Market Mode");
+				goto FAIL;
+			}
+	    	run_test_cases_and_exit(param_test, param_test_verbose);
+	    }
+// Create the instance of the manager class due to different mode
+		finance_analyzer_mgr = g_mgr_factory.get_instance(finance_analysis_mode);
+// Initialize the manager class
+		ret = finance_analyzer_mgr->initialize();
+		if (CHECK_FAILURE(ret))
+		{
+			snprintf(errmsg, BUF_SIZE, "Fail to initialize manager class, due to: %s", get_ret_description(ret));
 			goto FAIL;
 		}
-    	run_test_cases_and_exit(param_test, param_test_verbose);
-    }
-// Create the instance of the manager class due to different mode
-	finance_analyzer_mgr = g_mgr_factory.get_instance(finance_analysis_mode);
-// Initialize the manager class
-	ret = finance_analyzer_mgr->initialize();
-	if (CHECK_FAILURE(ret))
-	{
-		snprintf(errmsg, BUF_SIZE, "Fail to initialize manager class, due to: %s", get_ret_description(ret));
-		goto FAIL;
-	}
 
 // Setup the parameters
-	ret = setup_param();
-	if (CHECK_FAILURE(ret))
-	{
-		snprintf(errmsg, BUF_SIZE, "Fail to setup parameters, due to: %s", get_ret_description(ret));
-		goto FAIL;
-	}
+		ret = setup_param();
+		if (CHECK_FAILURE(ret))
+		{
+			snprintf(errmsg, BUF_SIZE, "Fail to setup parameters, due to: %s", get_ret_description(ret));
+			goto FAIL;
+		}
+    }
+    WRITE_DEBUG("Fuck3");
 
+	RELEASE_MSG_DUMPER();
 	exit(EXIT_SUCCESS);
 FAIL:
+	RELEASE_MSG_DUMPER();
 	print_errmsg_and_exit(errmsg);
 }
 

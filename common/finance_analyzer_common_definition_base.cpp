@@ -184,7 +184,12 @@ const unsigned short RET_FAILURE_IO_OPERATION = RET_FAILURE_BASE + 12;
 const unsigned short RET_FAILURE_HANDLE_THREAD = RET_FAILURE_BASE + 14;
 const unsigned short RET_FAILURE_SYSTEM_API = RET_FAILURE_BASE + 14;
 const unsigned short RET_FAILURE_MYSQL = RET_FAILURE_BASE + 15;
+const unsigned short RET_FAILURE_COMMAND_IMCOMPLETE = RET_FAILURE_BASE + 16;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variables
 bool SHOW_CONSOLE = true;
+
+const int INTERACTIVE_SERVER_PORT = 6802;
+const int INTERACTIVE_SERVER_BACKLOG = 5;
+const char* INTERACTIVE_PROMPT = "FA> ";

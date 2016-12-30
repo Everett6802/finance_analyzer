@@ -307,9 +307,14 @@ extern const unsigned short RET_FAILURE_IO_OPERATION;
 extern const unsigned short RET_FAILURE_HANDLE_THREAD;
 extern const unsigned short RET_FAILURE_SYSTEM_API;
 extern const unsigned short RET_FAILURE_MYSQL;
+extern const unsigned short RET_FAILURE_COMMAND_IMCOMPLETE;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variables
 extern bool SHOW_CONSOLE;
+
+extern const int INTERACTIVE_SERVER_PORT;
+extern const int INTERACTIVE_SERVER_BACKLOG;
+extern const char* INTERACTIVE_PROMPT;
 
 #endif

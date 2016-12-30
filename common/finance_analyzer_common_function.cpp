@@ -147,6 +147,7 @@ const char* get_ret_description(unsigned short ret)
 		"Failure_HandleThread",
 		"Failure_SystemAPI",
 		"Failure_MySQL",
+		"Failure_CommandIncomplete",
 	};
 	if (CHECK_FAILURE(ret))
 		return failure_ret_descriptions[ret - RET_FAILURE_BASE];
