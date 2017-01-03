@@ -4,11 +4,75 @@
 #include <string.h>
 #include <stdexcept>
 #include <new>
-// #include <string>
 #include "finance_analyzer_common_function.h"
 
 
 using namespace std;
+
+string get_usage_string(bool interactive)
+{
+	static string usage_string;
+	if (!usage_string.empty())
+		return usage_string;
+	static const int BUF_SIZE = 256;
+	static char buf[BUF_SIZE];
+	usage_string += string("====================== Usage ======================\n");
+	if (interactive)
+	{
+		usage_string += string("* get_finance_mode\n Description: Get current finance mode\n");
+		usage_string += string("* set_finance_mode\n Description: Set current finance mode\n");
+		usage_string += string(" Finance mode:\n");
+		char usage_buf[32];
+		for(int i = 0 ; i < FinanceAnalysisSize ; i++)
+		{
+			snprintf(usage_buf, 32, "  %s: %d\n", FINANCE_MODE_DESCRIPTION[i], i);
+			usage_string += string(usage_buf);
+		}
+		usage_string += string("\n");
+	}
+	else
+	{
+		char usage_buf[256];
+		snprintf(usage_buf, 256, "--market_mode --stock_mode\n Description: Switch the market/stock mode\n Caution: Read parameters from %s when NOT set\n", MARKET_STOCK_SWITCH_CONF_FILENAME);
+		usage_string += string(usage_buf);
+	}
+	// usage_string += string("-h|--help\n Description: The usage\n Caution: Other flags are ignored\n");
+	// usage_string += string("--silent\n Description: Disable print log on console\n");
+	// usage_string += string("--test\nDescription: Run test case\nCaution: Other flags are ignored\n");
+	// usage_string += string("--test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
+	// usage_string += string(" Test case list: ");
+	// int source_type_start_index, source_type_end_index;
+	// get_source_type_index_range(source_type_start_index, source_type_end_index);
+	// for (int i = source_type_start_index ; i < source_type_end_index ; i++)
+	// {
+	// 	snprintf(buf, BUF_SIZE, "%s[%d] ", TEST_TYPE_DESCRIPTION[i], i);
+	// 	usage_string += string(buf);
+	// }
+	// usage_string += string("\n");
+	// usage_string += string("  Format: 1,2,4 (Start from 0)\n");
+	// usage_string += string("  all: All types\n");
+	// usage_string += string("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
+	// usage_string += string("--daemonize\n Description: Daemonize the process\n Caution: Must be in the interactive mode\n");
+	// // usage_string += string("--calculate_statistics\nDescription: Calculate the statistics by different analysis method\n");
+	// // for (int i = 0 ; i < FORMULA_STATSTICS_METHOD_SIZE ; i++)
+	// // 	usage_string += string("%s[%d] ", FORMULA_STATSTICS_METHOD_DESCRIPTION[i], i);
+	// // usage_string += string("\n");
+	// // usage_string += string("--fillout_statistics\nDescription: Fillout the statistics by different analysis method\n");
+	// // for (int i = 0 ; i < TABLE_STATSTICS_METHOD_SIZE ; i++)
+	// // 	usage_string += string("%s[%d] ", TABLE_STATSTICS_METHOD_DESCRIPTION[i], i);
+	// // usage_string += string("\n");
+	// // usage_string += string("--plot_statistics\nDescription: Plot the statistics by different analysis method\n");
+	// // for (int i = 0 ; i < GRAPH_STATSTICS_METHOD_SIZE ; i++)
+	// // 	usage_string += string("%s[%d] ", GRAPH_STATSTICS_METHOD_DESCRIPTION[i], i);
+	// // usage_string += string("\n");
+	// // usage_string += string("--statistics_time_range\nDescription: The time range of statistics result\n");
+ // //    usage_string += string("  Format 1 (start_time): 2015-01-01\n");
+ // //    usage_string += string("  Format 2 (start_time,end_time): 2015-01-01,2015-09-04\n");
+ // //    usage_string += string("  Format 3 (,end_time): ,2015-09-04\n");
+	// // usage_string += string("\n");
+	usage_string += string("===================================================\n");
+	return usage_string;
+}
 
 FinanceAnalysisMode get_finance_analysis_mode()
 {
@@ -147,7 +211,7 @@ const char* get_ret_description(unsigned short ret)
 		"Failure_HandleThread",
 		"Failure_SystemAPI",
 		"Failure_MySQL",
-		"Failure_CommandIncomplete",
+		"Failure_InteractiveCommand",
 	};
 	if (CHECK_FAILURE(ret))
 		return failure_ret_descriptions[ret - RET_FAILURE_BASE];

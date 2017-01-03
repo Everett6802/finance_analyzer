@@ -46,40 +46,41 @@ static const char* get_statistics_method_description(StatisticsMethod statistics
 
 void show_usage_and_exit()
 {
-	PRINT("====================== Usage ======================\n");
-	PRINT("--market_mode --stock_mode\n Description: Switch the market/stock mode\n Caution: Read parameters from %s when NOT set\n", MARKET_STOCK_SWITCH_CONF_FILENAME);
-	PRINT("-h|--help\n Description: The usage\n Caution: Other flags are ignored\n");
-	PRINT("--silent\n Description: Disable print log on console\n");
-	PRINT("--test\nDescription: Run test case\nCaution: Other flags are ignored\n");
-	PRINT("--test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
-	PRINT(" Test case list: ");
-	int source_type_start_index, source_type_end_index;
-	get_source_type_index_range(source_type_start_index, source_type_end_index);
-	for (int i = source_type_start_index ; i < source_type_end_index ; i++)
-		PRINT("%s[%d] ", TEST_TYPE_DESCRIPTION[i], i);
-	PRINT("\n");
-	PRINT("  Format: 1,2,4 (Start from 0)\n");
-	PRINT("  all: All types\n");
-	PRINT("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
-	PRINT("--daemonize\n Description: Daemonize the process\n Caution: Must be in the interactive mode\n");
-	// PRINT("--calculate_statistics\nDescription: Calculate the statistics by different analysis method\n");
-	// for (int i = 0 ; i < FORMULA_STATSTICS_METHOD_SIZE ; i++)
-	// 	PRINT("%s[%d] ", FORMULA_STATSTICS_METHOD_DESCRIPTION[i], i);
+	// PRINT("====================== Usage ======================\n");
+	// PRINT("--market_mode --stock_mode\n Description: Switch the market/stock mode\n Caution: Read parameters from %s when NOT set\n", MARKET_STOCK_SWITCH_CONF_FILENAME);
+	// PRINT("-h|--help\n Description: The usage\n Caution: Other flags are ignored\n");
+	// PRINT("--silent\n Description: Disable print log on console\n");
+	// PRINT("--test\nDescription: Run test case\nCaution: Other flags are ignored\n");
+	// PRINT("--test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
+	// PRINT(" Test case list: ");
+	// int source_type_start_index, source_type_end_index;
+	// get_source_type_index_range(source_type_start_index, source_type_end_index);
+	// for (int i = source_type_start_index ; i < source_type_end_index ; i++)
+	// 	PRINT("%s[%d] ", TEST_TYPE_DESCRIPTION[i], i);
 	// PRINT("\n");
-	// PRINT("--fillout_statistics\nDescription: Fillout the statistics by different analysis method\n");
-	// for (int i = 0 ; i < TABLE_STATSTICS_METHOD_SIZE ; i++)
-	// 	PRINT("%s[%d] ", TABLE_STATSTICS_METHOD_DESCRIPTION[i], i);
-	// PRINT("\n");
-	// PRINT("--plot_statistics\nDescription: Plot the statistics by different analysis method\n");
-	// for (int i = 0 ; i < GRAPH_STATSTICS_METHOD_SIZE ; i++)
-	// 	PRINT("%s[%d] ", GRAPH_STATSTICS_METHOD_DESCRIPTION[i], i);
-	// PRINT("\n");
-	// PRINT("--statistics_time_range\nDescription: The time range of statistics result\n");
- //    PRINT("  Format 1 (start_time): 2015-01-01\n");
- //    PRINT("  Format 2 (start_time,end_time): 2015-01-01,2015-09-04\n");
- //    PRINT("  Format 3 (,end_time): ,2015-09-04\n");
-	// PRINT("\n");
-	PRINT("===================================================\n");
+	// PRINT("  Format: 1,2,4 (Start from 0)\n");
+	// PRINT("  all: All types\n");
+	// PRINT("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
+	// PRINT("--daemonize\n Description: Daemonize the process\n Caution: Must be in the interactive mode\n");
+	// // PRINT("--calculate_statistics\nDescription: Calculate the statistics by different analysis method\n");
+	// // for (int i = 0 ; i < FORMULA_STATSTICS_METHOD_SIZE ; i++)
+	// // 	PRINT("%s[%d] ", FORMULA_STATSTICS_METHOD_DESCRIPTION[i], i);
+	// // PRINT("\n");
+	// // PRINT("--fillout_statistics\nDescription: Fillout the statistics by different analysis method\n");
+	// // for (int i = 0 ; i < TABLE_STATSTICS_METHOD_SIZE ; i++)
+	// // 	PRINT("%s[%d] ", TABLE_STATSTICS_METHOD_DESCRIPTION[i], i);
+	// // PRINT("\n");
+	// // PRINT("--plot_statistics\nDescription: Plot the statistics by different analysis method\n");
+	// // for (int i = 0 ; i < GRAPH_STATSTICS_METHOD_SIZE ; i++)
+	// // 	PRINT("%s[%d] ", GRAPH_STATSTICS_METHOD_DESCRIPTION[i], i);
+	// // PRINT("\n");
+	// // PRINT("--statistics_time_range\nDescription: The time range of statistics result\n");
+ // //    PRINT("  Format 1 (start_time): 2015-01-01\n");
+ // //    PRINT("  Format 2 (start_time,end_time): 2015-01-01,2015-09-04\n");
+ // //    PRINT("  Format 3 (,end_time): ,2015-09-04\n");
+	// // PRINT("\n");
+	// PRINT("===================================================\n");
+	PRINT("%s", get_usage_string().c_str());
 	exit(EXIT_SUCCESS);
 }
 

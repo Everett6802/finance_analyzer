@@ -32,6 +32,10 @@
 #define FAILURE_IS_OUT_OF_RANGE(X) ((X == RET_FAILURE_OUT_OF_RANGE) ? true : false)
 #endif
 
+#ifndef FAILURE_IS_INTERACTIVE_COMMAND
+#define FAILURE_IS_INTERACTIVE_COMMAND(X) ((X == RET_FAILURE_INTERACTIVE_COMMAND) ? true : false)
+#endif
+
 #ifndef CHECK_SUCCESS_IGNORE_WARN
 #define CHECK_SUCCESS_IGNORE_WARN(X) !CHECK_FAILURE(X)
 #endif
@@ -205,12 +209,26 @@ enum ResultSetDataUnit
 	ResultSetDataUnit_SourceType
 };
 
+enum TestType{
+	Test_CheckArray, 
+	Test_CheckArrayStatistics, 
+	Test_CheckFilterArray, 
+	Test_CheckFilterRule, 
+	Test_CheckFormula, 
+	Test_CheckFilterFormula, 
+	// Test_CheckDataStatistics, 
+	Test_CheckHistogram, 
+	TestSize
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 
-extern FinanceAnalysisMode finance_analysis_mode;
-extern bool IS_FINANCE_MARKET_MODE;
-extern bool IS_FINANCE_STOCK_MODE;
+extern FinanceAnalysisMode finance_analysis_mode; // Caution: This variable is NOT used in interactive mode
+extern bool IS_FINANCE_MARKET_MODE; // Caution: This variable is NOT used in interactive mode
+extern bool IS_FINANCE_STOCK_MODE; // Caution: This variable is NOT used in interactive mode
+
+extern const char* FINANCE_MODE_DESCRIPTION[];
 
 extern const char* FINANCE_DATABASE_MARKET_NAME;
 extern const char* FINANCE_DATABASE_STOCK_NAME_FORMAT;
@@ -284,6 +302,10 @@ extern const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER;
 extern const int COMPANY_PROFILE_ENTRY_FIELD_SIZE;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Test Cases
+extern const char* TEST_TYPE_DESCRIPTION[];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Return values
 extern const unsigned short RET_SUCCESS;
 
@@ -307,7 +329,7 @@ extern const unsigned short RET_FAILURE_IO_OPERATION;
 extern const unsigned short RET_FAILURE_HANDLE_THREAD;
 extern const unsigned short RET_FAILURE_SYSTEM_API;
 extern const unsigned short RET_FAILURE_MYSQL;
-extern const unsigned short RET_FAILURE_COMMAND_IMCOMPLETE;
+extern const unsigned short RET_FAILURE_INTERACTIVE_COMMAND;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variables

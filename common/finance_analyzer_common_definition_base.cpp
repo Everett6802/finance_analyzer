@@ -12,6 +12,8 @@ FinanceAnalysisMode finance_analysis_mode = FinanceAnalysis_None;
 bool IS_FINANCE_MARKET_MODE = (finance_analysis_mode == FinanceAnalysis_Market ? true : false);
 bool IS_FINANCE_STOCK_MODE = (finance_analysis_mode == FinanceAnalysis_Stock ? true : false);
 
+const char* FINANCE_MODE_DESCRIPTION[] = {"Market", "Stock"};
+
 const char* FINANCE_DATABASE_MARKET_NAME = "Market";
 const char* FINANCE_DATABASE_STOCK_NAME_FORMAT = "Stock%02d";
 
@@ -160,6 +162,21 @@ const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER = 8;
 const int COMPANY_PROFILE_ENTRY_FIELD_SIZE = 9;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Test Cases
+
+const char* TEST_TYPE_DESCRIPTION[] =
+{
+	"Check Array",
+	"Check Array Statistics",
+	"Check Filter Array",
+	"Check Filter Rule",
+	"Check Formula",
+	"Check Filter Formula",
+	// "Check Data Statistics",
+	"Check Histogram"
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Return values
 
 const unsigned short RET_SUCCESS = 0;
@@ -184,7 +201,7 @@ const unsigned short RET_FAILURE_IO_OPERATION = RET_FAILURE_BASE + 12;
 const unsigned short RET_FAILURE_HANDLE_THREAD = RET_FAILURE_BASE + 14;
 const unsigned short RET_FAILURE_SYSTEM_API = RET_FAILURE_BASE + 14;
 const unsigned short RET_FAILURE_MYSQL = RET_FAILURE_BASE + 15;
-const unsigned short RET_FAILURE_COMMAND_IMCOMPLETE = RET_FAILURE_BASE + 16;
+const unsigned short RET_FAILURE_INTERACTIVE_COMMAND = RET_FAILURE_BASE + 16;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variables

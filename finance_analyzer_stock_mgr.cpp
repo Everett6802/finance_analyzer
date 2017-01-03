@@ -20,6 +20,6 @@ FinanceAnalyzerStockMgr::~FinanceAnalyzerStockMgr()
 unsigned short FinanceAnalyzerStockMgr::initialize()
 {
 	WRITE_DEBUG("Initialize FinanceAnalyzerStockMgr.....");
-	fprintf(stderr, "Initialize FinanceAnalyzerStockMgr.....\n");
+	// fprintf(stderr, "Initialize FinanceAnalyzerStockMgr.....\n");
 	return RET_SUCCESS;
 }

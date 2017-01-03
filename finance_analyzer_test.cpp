@@ -10,17 +10,6 @@
 
 using namespace std;
 
-const char* TEST_TYPE_DESCRIPTION[] =
-{
-	"Check Array",
-	"Check Array Statistics",
-	"Check Filter Array",
-	"Check Filter Rule",
-	"Check Formula",
-	"Check Filter Formula",
-	// "Check Data Statistics",
-	"Check Histogram"
-};
 //DECLARE_MSG_DUMPER_PARAM()
 
 FinanceAnalyzerTest::FinanceAnalyzerTest() :

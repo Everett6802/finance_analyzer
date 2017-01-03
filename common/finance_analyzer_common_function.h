@@ -2,9 +2,10 @@
 #define FINANCE_ANALYZER_COMMON_FUNCTION_H
 
 #include <stdlib.h>
+#include <string>
 #include "finance_analyzer_common_definition.h"
 
-
+std::string get_usage_string(bool interactive=false);
 FinanceAnalysisMode get_finance_analysis_mode();
 bool is_market_mode();
 bool is_stock_mode();

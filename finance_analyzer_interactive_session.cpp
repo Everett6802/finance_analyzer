@@ -2,19 +2,25 @@
 #include <signal.h>
 #include <poll.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <map>
 // #include <string>
+#include "finance_analyzer_market_mgr.h"
+#include "finance_analyzer_stock_mgr.h"
 #include "finance_analyzer_interactive_session.h"
 
 
 using namespace std;
 
 DECLARE_MSG_DUMPER_PARAM()
+#define REGISTER_CLASS(n, m) mgr_factory.register_class<n>(m)
 
 // Command type definition
 enum InteractiveSessionCommandType
 {
+	InteractiveSessionCommand_GetFinanceMode,
+	InteractiveSessionCommand_SetFinanceMode,
 	InteractiveSessionCommand_Help,
 	InteractiveSessionCommand_Exit,
 	InteractiveSessionCommandSize
@@ -22,36 +28,61 @@ enum InteractiveSessionCommandType
 
 static const char *interactive_session_command[InteractiveSessionCommandSize] = 
 {
+	"get_finance_mode",
+	"set_finance_mode",
 	"help",
 	"exit"
 };
 
 typedef map<string, InteractiveSessionCommandType> COMMAND_MAP;
 typedef COMMAND_MAP::iterator COMMAND_MAP_ITER;
-static COMMAND_MAP command_map;
 
-const int FinanceAnalyzerInteractiveSession::BUF_SIZE = 1024;
+static const char* INCORRECT_COMMAND_ARGUMENT_FORMAT = "Incorrect command[%s] argument: %s";
+
+static string welcome_phrases = "\n************** Welcome to Finance Analyzer **************\nCATUION: You should determine the finance mode before running other commands\n Two choices:\n Market Mode: market_mode, 0\n Stock Mode: stock_mode, 1\n\n";
+static string incomplete_command_phrases = "\nIncomplete Command\n\n";
+static string incorrect_command_phrases = "\nIncorrect Command\n\n";
+
+static COMMAND_MAP command_map;
+static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+
+const int FinanceAnalyzerInteractiveSession::REQ_BUF_SIZE = 1024;
+const int FinanceAnalyzerInteractiveSession::RSP_BUF_VERY_SHORT_SIZE = 32;
+const int FinanceAnalyzerInteractiveSession::RSP_BUF_SHORT_SIZE = 64;
+const int FinanceAnalyzerInteractiveSession::RSP_BUF_SIZE = 256;
+const int FinanceAnalyzerInteractiveSession::RSP_BUF_LONG_SIZE = 1024;
+const int FinanceAnalyzerInteractiveSession::RSP_BUF_VERY_LONG_SIZE = 4096;
 const int FinanceAnalyzerInteractiveSession::MAX_ARGC = 20;
+FinanceAnalyzerMgrFactory FinanceAnalyzerInteractiveSession::mgr_factory;
 
 void FinanceAnalyzerInteractiveSession::init_command_map()
 {
 	static bool init_map = false;
 	if (!init_map)
 	{
-		DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
-		DECLARE_MSG_DUMPER_PARAM();
-		for (int i = 0 ; i < InteractiveSessionCommandSize ; i++)
+		pthread_mutex_lock(&mtx);
+		if (!init_map)
 		{
-			command_map.insert(make_pair(string(interactive_session_command[i]), (InteractiveSessionCommandType)i));
+			DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
+			DECLARE_MSG_DUMPER_PARAM();
+			for (int i = 0 ; i < InteractiveSessionCommandSize ; i++)
+			{
+				command_map.insert(make_pair(string(interactive_session_command[i]), (InteractiveSessionCommandType)i));
+			}
+			for(COMMAND_MAP_ITER iter = command_map.begin() ; iter != command_map.end() ; iter++)
+			{
+				string command_description = (string)iter->first;
+				int command_type = (int)iter->second;
+				WRITE_FORMAT_DEBUG("Command %d: %s", command_type, command_description.c_str());
+			}
+			RELEASE_MSG_DUMPER();
+// Register the manager class to manager factory
+			// static FinanceAnalyzerMgrFactory mgr_factory;
+			REGISTER_CLASS(FinanceAnalyzerMarketMgr, FinanceAnalysis_Market);
+			REGISTER_CLASS(FinanceAnalyzerStockMgr, FinanceAnalysis_Stock);
+			init_map = true;
 		}
-		for(COMMAND_MAP_ITER iter = command_map.begin() ; iter != command_map.end() ; iter++)
-		{
-			string command_description = (string)iter->first;
-			int command_type = (int)iter->second;
-			WRITE_FORMAT_DEBUG("Command %d: %s", command_type, command_description.c_str());
-		}
-		RELEASE_MSG_DUMPER();
-		init_map = true;
+		pthread_mutex_unlock(&mtx);
 	}
 }
 
@@ -61,7 +92,9 @@ FinanceAnalyzerInteractiveSession::FinanceAnalyzerInteractiveSession(int client_
 	sock_fd(client_fd),
 	session_id(interactive_session_id),
 	event_notify(parent),
-	user_exit(false)
+	user_exit(false),
+	finance_analysis_mode(FinanceAnalysis_None),
+	finance_analyzer_mgr(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 	init_command_map();
@@ -137,7 +170,7 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 	unsigned short ret = RET_SUCCESS;
 
 	struct pollfd pollfds[1];
-	char buf[BUF_SIZE];
+	char req_buf[REQ_BUF_SIZE];
 	// int n;
 	FILE* sock_fp = NULL;
 	if ((sock_fp = fdopen(sock_fd, "a+")) == 0) 
@@ -145,7 +178,12 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 		WRITE_FORMAT_ERROR("Fail to transform FD to FP, due to: %s", strerror(errno));
 		return RET_FAILURE_SYSTEM_API;
 	}
-
+// Initliaze the finance manager class
+	ret = init_finance_manager(FinanceAnalysis_None);
+	if (CHECK_FAILURE(ret))
+		return ret;
+// Print the welcome phrases
+	print_to_console(welcome_phrases);
 // Print the prompt
 	print_prompt_to_console();
 // Parse the command from user
@@ -169,17 +207,17 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 			// return RET_FAILURE_SYSTEM_API;
 		}
 // Read the command and parse it
-    	if (fgets(buf, BUF_SIZE, sock_fp) == NULL)
+    	if (fgets(req_buf, REQ_BUF_SIZE, sock_fp) == NULL)
     		break;
-     	WRITE_FORMAT_DEBUG("Command Line: %s", buf);
+     	WRITE_FORMAT_DEBUG("Command Line: %s", req_buf);
 // Parse the command
-		char *command_line_outer =  buf;
+		char *command_line_outer = req_buf;
 		char *rest_command_line_outer =  NULL;
 		char *argv_outer[MAX_ARGC];
 		int cur_argc_outer = 0;
 		while ((argv_outer[cur_argc_outer] = strtok_r(command_line_outer, ";\t\n\r", &rest_command_line_outer)) != NULL)
 		{
-			WRITE_FORMAT_DEBUG("Command Argument[Outer]: %s, rest: %s", argv_outer[cur_argc_outer], rest_command_line_outer);
+			// WRITE_FORMAT_DEBUG("Command Argument[Outer]: %s, rest: %s", argv_outer[cur_argc_outer], rest_command_line_outer);
 			char *command_line_inner =  argv_outer[cur_argc_outer];
 			char *rest_command_line_inner =  NULL;
 			char *argv_inner[MAX_ARGC];
@@ -187,7 +225,7 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 			bool can_execute = true;
 			while ((argv_inner[cur_argc_inner] = strtok_r(command_line_inner, " ", &rest_command_line_inner)) != NULL)
 			{
-				WRITE_FORMAT_DEBUG("Command Argument[Inner]: %s, rest: %s", argv_inner[cur_argc_inner], rest_command_line_inner);
+				// WRITE_FORMAT_DEBUG("Command Argument[Inner]: %s, rest: %s", argv_inner[cur_argc_inner], rest_command_line_inner);
 				if (command_line_inner != NULL)
 				{
 // Check if the command exist
@@ -196,8 +234,9 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 					{
 						WRITE_FORMAT_ERROR("Error!! Unknown command: %s", argv_inner[0]);
 						static char unknown_command_error[64];
-						snprintf(unknown_command_error, 64, "Unknown command: %s", argv_inner[0]);
-						write(sock_fd, unknown_command_error, strlen(unknown_command_error));
+						snprintf(unknown_command_error, 64, "Unknown command: %s\n", argv_inner[0]);
+						print_to_console(string(unknown_command_error));
+						// write(sock_fd, unknown_command_error, strlen(unknown_command_error));
 						can_execute = false;
 						break;
 					}
@@ -211,21 +250,25 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 			if (can_execute)
 			{
 				ret = handle_command(cur_argc_inner, argv_inner);
-				if (ret == RET_FAILURE_COMMAND_IMCOMPLETE)
+				if (CHECK_FAILURE(ret))
 				{
-// Show warning if the command is incomplete
-					WRITE_FORMAT_ERROR("Warning!! Incomplete command: %s,", argv_inner[0]);
-					static char incomplete_command_waring[64];
-					snprintf(incomplete_command_waring, 64, "Incomplete command: %s", argv_inner[0]);
-					write(sock_fd, incomplete_command_waring, strlen(incomplete_command_waring));
-				}	
+					if (!FAILURE_IS_INTERACTIVE_COMMAND(ret))
+					{
+						char rsp_buf[RSP_BUF_SIZE];
+						snprintf(rsp_buf, RSP_BUF_SIZE, "Error occurs while executing the %s command, due to: %s\n Close the session: %s", argv_inner[0], get_ret_description(ret), session_tag);
+	// Show warning if error occurs while executing the command
+						WRITE_ERROR(rsp_buf);
+						print_to_console(string(rsp_buf));
+						return ret;
+					}						
+				}
 			}
 			if (command_line_outer != NULL)
 				command_line_outer = NULL;
 			cur_argc_outer++;
 		}
-		if (CHECK_FAILURE(ret))
-			return ret;
+		// if (CHECK_FAILURE(ret))
+		// 	return ret;
 		if (exit == 0)
 		{
 // Print the prompt again
@@ -265,11 +308,47 @@ unsigned short FinanceAnalyzerInteractiveSession::print_prompt_to_console()const
 	return print_to_console(prompt);
 }
 
+unsigned short FinanceAnalyzerInteractiveSession::init_finance_manager(FinanceAnalysisMode new_finance_analysis_mode)
+{
+	if (finance_analysis_mode == FinanceAnalysis_None)
+	{
+		finance_analysis_mode = get_finance_analysis_mode();
+	}
+	else
+	{
+		if (finance_analysis_mode == new_finance_analysis_mode)
+		{
+			WRITE_FORMAT_DEBUG("No need to switch to the finance mode: %d", finance_analysis_mode);
+			return RET_SUCCESS;
+		}
+// Release the old manager object
+		if (finance_analyzer_mgr != NULL)
+		{
+			delete finance_analyzer_mgr;
+			finance_analyzer_mgr = NULL;
+		}
+		finance_analysis_mode = new_finance_analysis_mode;
+	}
+// Create the instance of the manager class due to different mode
+	finance_analyzer_mgr = mgr_factory.get_instance(finance_analysis_mode);
+// Initialize the manager class
+	WRITE_FORMAT_DEBUG("Initialize the finance manager: %d", finance_analysis_mode);
+	unsigned short ret = finance_analyzer_mgr->initialize();
+	if (CHECK_FAILURE(ret))
+	{
+		WRITE_FORMAT_ERROR("Fail to initialize manager class, due to: %s", get_ret_description(ret));
+		return ret;
+	}
+	return RET_SUCCESS;
+}
+
 unsigned short FinanceAnalyzerInteractiveSession::handle_command(int argc, char **argv)
 {
 	typedef unsigned short (FinanceAnalyzerInteractiveSession::*handle_command_func_ptr)(int argc, char**argv);
 	static handle_command_func_ptr handle_command_func_array[] =
 	{
+		&FinanceAnalyzerInteractiveSession::handle_get_finance_mode_command,
+		&FinanceAnalyzerInteractiveSession::handle_set_finance_mode_command,
 		&FinanceAnalyzerInteractiveSession::handle_help_command,
 		&FinanceAnalyzerInteractiveSession::handle_exit_command
 	};
@@ -281,14 +360,63 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_command(int argc, char 
 	return (this->*(handle_command_func_array[command_type]))(argc, argv);
 }
 
+unsigned short FinanceAnalyzerInteractiveSession::handle_get_finance_mode_command(int argc, char **argv)
+{
+	if (argc != 1)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+	char rsp_buf[RSP_BUF_SHORT_SIZE];
+	snprintf(rsp_buf, RSP_BUF_SHORT_SIZE, "\nFinance Mode: %s\n", FINANCE_MODE_DESCRIPTION[finance_analysis_mode]);
+	print_to_console(string(rsp_buf));
+// Get the finance mode
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_set_finance_mode_command(int argc, char **argv)
+{
+	unsigned short ret = RET_SUCCESS;
+	if (argc != 2)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+// Set the finance mode
+	FinanceAnalysisMode new_finance_analysis_mode = FinanceAnalysis_None;
+	try
+	{		
+		int new_finance_analysis_mode_value = atoi(argv[1]);
+		if (new_finance_analysis_mode_value < 0 || new_finance_analysis_mode_value >= FinanceAnalysisSize)
+			throw invalid_argument(string("Unsupported finance mode"));
+		new_finance_analysis_mode = (FinanceAnalysisMode)new_finance_analysis_mode_value;
+	}
+	catch(exception &e)
+	{
+		char rsp_buf[RSP_BUF_SIZE];
+		snprintf(rsp_buf, RSP_BUF_SIZE, INCORRECT_COMMAND_ARGUMENT_FORMAT, argv[0], argv[1]);
+		WRITE_ERROR(rsp_buf);
+		print_to_console(string(rsp_buf) + string("\n"));
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+
+	ret = init_finance_manager(new_finance_analysis_mode);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	return ret;
+}
+
 unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, char **argv)
 {
 	unsigned short ret = RET_SUCCESS;
 	// WRITE_DEBUG("Command: Help");
 	// n = write(sock_fd, INTERACTIVE_PROMPT, INTERACTIVE_PROMPT_LEN);
-	ret = print_to_console(string("\nTBD\n"));
+	ret = print_to_console(get_usage_string(true));
 	return ret;
 }
+
 unsigned short FinanceAnalyzerInteractiveSession::handle_exit_command(int argc, char **argv)
 {
 	print_to_console(string("Bye bye !!!"));

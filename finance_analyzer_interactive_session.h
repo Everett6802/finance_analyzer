@@ -10,6 +10,8 @@
 #include <pthread.h>
 #include <string>
 #include "finance_analyzer_common.h"
+#include "finance_analyzer_mgr_factory.h"
+#include "finance_analyzer_mgr_inf.h"
 
 
 enum InteractiveSessionEventType
@@ -22,8 +24,14 @@ class FinanceAnalyzerInteractiveSession
 {
 	DECLARE_MSG_DUMPER()
 private:
-	static const int BUF_SIZE;
+	static const int REQ_BUF_SIZE;
+	static const int RSP_BUF_VERY_SHORT_SIZE;
+	static const int RSP_BUF_SHORT_SIZE;
+	static const int RSP_BUF_SIZE;
+	static const int RSP_BUF_LONG_SIZE;
+	static const int RSP_BUF_VERY_LONG_SIZE;
 	static const int MAX_ARGC;
+	static FinanceAnalyzerMgrFactory mgr_factory;
 	static void init_command_map();
 	static void* thread_handler(void* void_tr);
 
@@ -35,13 +43,19 @@ private:
 	int session_id;
 	PIEVENT_NOTIFY event_notify;
 	bool user_exit;
+	FinanceAnalysisMode finance_analysis_mode;
+	PIFINANCE_ANALYZER_MGR finance_analyzer_mgr;
 
 	unsigned short thread_handler_internal();
 	unsigned short handle_command(int argc, char **argv);
+	unsigned short handle_get_finance_mode_command(int argc, char **argv);
+	unsigned short handle_set_finance_mode_command(int argc, char **argv);
 	unsigned short handle_help_command(int argc, char **argv);
 	unsigned short handle_exit_command(int argc, char **argv);
 	unsigned short print_to_console(std::string response)const;
 	unsigned short print_prompt_to_console()const;
+	unsigned short init_finance_manager(FinanceAnalysisMode new_finance_analysis_mode);
+
 public:
 	FinanceAnalyzerInteractiveSession(int client_fd, sockaddr_in& client_sockaddress, int interactive_session_id, PIEVENT_NOTIFY parent);
 	~FinanceAnalyzerInteractiveSession();
