@@ -9,7 +9,7 @@
 
 using namespace std;
 
-string get_usage_string(bool interactive)
+string get_usage_string(bool interactive, FinanceAnalysisMode finance_analysis_mode)
 {
 	static string usage_string;
 	if (!usage_string.empty())
@@ -22,36 +22,58 @@ string get_usage_string(bool interactive)
 		usage_string += string("* get_finance_mode\n Description: Get current finance mode\n");
 		usage_string += string("* set_finance_mode\n Description: Set current finance mode\n");
 		usage_string += string(" Finance mode:\n");
-		char usage_buf[32];
 		for(int i = 0 ; i < FinanceAnalysisSize ; i++)
 		{
-			snprintf(usage_buf, 32, "  %s: %d\n", FINANCE_MODE_DESCRIPTION[i], i);
-			usage_string += string(usage_buf);
+			snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_MODE_DESCRIPTION[i], i);
+			usage_string += string(buf);
 		}
 		usage_string += string("\n");
 	}
 	else
 	{
-		char usage_buf[256];
-		snprintf(usage_buf, 256, "--market_mode --stock_mode\n Description: Switch the market/stock mode\n Caution: Read parameters from %s when NOT set\n", MARKET_STOCK_SWITCH_CONF_FILENAME);
-		usage_string += string(usage_buf);
+		snprintf(buf, BUF_SIZE, "--market_mode --stock_mode\n Description: Switch the market/stock mode\n Caution: Read parameters from %s when NOT set\n", MARKET_STOCK_SWITCH_CONF_FILENAME);
+		usage_string += string(buf);
 	}
-	// usage_string += string("-h|--help\n Description: The usage\n Caution: Other flags are ignored\n");
-	// usage_string += string("--silent\n Description: Disable print log on console\n");
-	// usage_string += string("--test\nDescription: Run test case\nCaution: Other flags are ignored\n");
-	// usage_string += string("--test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
-	// usage_string += string(" Test case list: ");
-	// int source_type_start_index, source_type_end_index;
-	// get_source_type_index_range(source_type_start_index, source_type_end_index);
-	// for (int i = source_type_start_index ; i < source_type_end_index ; i++)
-	// {
-	// 	snprintf(buf, BUF_SIZE, "%s[%d] ", TEST_TYPE_DESCRIPTION[i], i);
-	// 	usage_string += string(buf);
-	// }
-	// usage_string += string("\n");
-	// usage_string += string("  Format: 1,2,4 (Start from 0)\n");
-	// usage_string += string("  all: All types\n");
-	// usage_string += string("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
+	if (interactive)
+		usage_string += string("* help\n Description: The usage\n\n");
+	else
+		usage_string += string("-h|--help\n Description: The usage\n Caution: Other flags are ignored\n");
+	if (!interactive)
+		usage_string += string("--silent\n Description: Disable print log on console\n");
+	if (interactive)
+	{
+// No support in interactive mode
+		// usage_string += string("* test\n Description: Run test case\n");
+		// usage_string += string("* test_verbose\n Description: Run test case and show detailed steps\n");
+		// usage_string += string(" Test case list:");
+		// int source_type_start_index, source_type_end_index;
+		// get_source_type_index_range(source_type_start_index, source_type_end_index, finance_analysis_mode);
+		// for (int i = source_type_start_index ; i < source_type_end_index ; i++)
+		// {
+		// 	snprintf(buf, BUF_SIZE, "  %s: %d\n", TEST_TYPE_DESCRIPTION[i], i);
+		// 	usage_string += string(buf);
+		// }
+		// usage_string += string("  Format: 1,2,4 (Start from 0)\n");
+		// usage_string += string("  all: All types\n");
+	}
+	else
+	{
+		usage_string += string("--test\nDescription: Run test case\nCaution: Other flags are ignored\n");
+		usage_string += string("--test_verbose\nDescription: Run test case and show detailed steps\nCaution: Other flags are ignored\n");
+		usage_string += string(" Test case list: ");
+		int source_type_start_index, source_type_end_index;
+		get_source_type_index_range(source_type_start_index, source_type_end_index);
+		for (int i = source_type_start_index ; i < source_type_end_index ; i++)
+		{
+			snprintf(buf, BUF_SIZE, "%s[%d] ", TEST_TYPE_DESCRIPTION[i], i);
+			usage_string += string(buf);
+		}
+		usage_string += string("\n");
+		usage_string += string("  Format: 1,2,4 (Start from 0)\n");
+		usage_string += string("  all: All types\n");	
+	}
+	if (!interactive)
+		usage_string += string("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
 	// usage_string += string("--daemonize\n Description: Daemonize the process\n Caution: Must be in the interactive mode\n");
 	// // usage_string += string("--calculate_statistics\nDescription: Calculate the statistics by different analysis method\n");
 	// // for (int i = 0 ; i < FORMULA_STATSTICS_METHOD_SIZE ; i++)
@@ -273,20 +295,42 @@ bool check_source_type_index_in_range(int source_type_index)
     return false;
 }
 
-void get_source_type_index_range(int& source_type_index_start, int& source_type_index_end)
+void get_source_type_index_range(int& source_type_index_start, int& source_type_index_end, FinanceAnalysisMode finance_analysis_mode)
 {
-	if (IS_FINANCE_MARKET_MODE)
+	switch(finance_analysis_mode)
+	{
+	case FinanceAnalysis_None:
+	{
+		if (IS_FINANCE_MARKET_MODE)
+		{
+			source_type_index_start = FinanceSource_MarketStart;
+			source_type_index_end = FinanceSource_MarketEnd;
+		}
+		else if (IS_FINANCE_STOCK_MODE)
+		{
+			source_type_index_start = FinanceSource_StockStart;
+			source_type_index_end = FinanceSource_StockEnd;
+		}
+		else
+			throw runtime_error(string("Unknown finance mode"));
+	}	
+	break;
+	case FinanceAnalysis_Market:
 	{
 		source_type_index_start = FinanceSource_MarketStart;
 		source_type_index_end = FinanceSource_MarketEnd;
 	}
-	else if (IS_FINANCE_STOCK_MODE)
+	break;
+	case FinanceAnalysis_Stock:
 	{
 		source_type_index_start = FinanceSource_StockStart;
 		source_type_index_end = FinanceSource_StockEnd;
 	}
-	else
-		throw runtime_error(string("Unknown finance mode"));
+	break;
+	default:
+		throw std::invalid_argument(string("Unknown finance analysis mode"));
+	break;
+	}
 }
 
 int get_source_type_size()

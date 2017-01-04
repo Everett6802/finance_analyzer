@@ -356,7 +356,6 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_command(int argc, char 
 	// assert (iter != command_map.end() && "Unknown command");
 	COMMAND_MAP::iterator iter = command_map.find(string(argv[0]));
 	int command_type = (int)iter->second;
-	// WRITE_FORMAT_DEBUG("Inner command type: %s, %d", ((string)iter->first).c_str(), (int)iter_fuck->second);
 	return (this->*(handle_command_func_array[command_type]))(argc, argv);
 }
 
@@ -368,10 +367,10 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_finance_mode_comman
 		print_to_console(incorrect_command_phrases);
 		return RET_FAILURE_INTERACTIVE_COMMAND;
 	}
+// Get the finance mode
 	char rsp_buf[RSP_BUF_SHORT_SIZE];
 	snprintf(rsp_buf, RSP_BUF_SHORT_SIZE, "\nFinance Mode: %s\n", FINANCE_MODE_DESCRIPTION[finance_analysis_mode]);
 	print_to_console(string(rsp_buf));
-// Get the finance mode
 	return RET_SUCCESS;
 }
 
@@ -411,9 +410,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_finance_mode_comman
 unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, char **argv)
 {
 	unsigned short ret = RET_SUCCESS;
-	// WRITE_DEBUG("Command: Help");
-	// n = write(sock_fd, INTERACTIVE_PROMPT, INTERACTIVE_PROMPT_LEN);
-	ret = print_to_console(get_usage_string(true));
+	ret = print_to_console(get_usage_string(true, finance_analysis_mode));
 	return ret;
 }
 
