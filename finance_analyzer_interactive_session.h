@@ -45,6 +45,7 @@ private:
 	bool user_exit;
 	FinanceAnalysisMode finance_analysis_mode;
 	PIFINANCE_ANALYZER_MGR finance_analyzer_mgr;
+	// unsigned short thread_ret;
 
 	unsigned short thread_handler_internal();
 	unsigned short handle_command(int argc, char **argv);

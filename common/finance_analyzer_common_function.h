@@ -34,5 +34,6 @@ int get_array_index(int value, const int array[], int array_size);
 int get_array_sum(const int array[], int array_size);
 unsigned short read_text_file(STRING_LIST& text_result_list, const char* text_filepath);
 unsigned short read_text_file(std::string& text_result_string, const char* text_filepath);
+void daemonize();
 
 #endif

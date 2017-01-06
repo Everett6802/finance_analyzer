@@ -63,19 +63,16 @@ void FinanceAnalyzerInteractiveSession::init_command_map()
 		pthread_mutex_lock(&mtx);
 		if (!init_map)
 		{
-			DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
-			DECLARE_MSG_DUMPER_PARAM();
 			for (int i = 0 ; i < InteractiveSessionCommandSize ; i++)
 			{
 				command_map.insert(make_pair(string(interactive_session_command[i]), (InteractiveSessionCommandType)i));
 			}
-			for(COMMAND_MAP_ITER iter = command_map.begin() ; iter != command_map.end() ; iter++)
-			{
-				string command_description = (string)iter->first;
-				int command_type = (int)iter->second;
-				WRITE_FORMAT_DEBUG("Command %d: %s", command_type, command_description.c_str());
-			}
-			RELEASE_MSG_DUMPER();
+			// for(COMMAND_MAP_ITER iter = command_map.begin() ; iter != command_map.end() ; iter++)
+			// {
+			// 	string command_description = (string)iter->first;
+			// 	int command_type = (int)iter->second;
+			// 	STATIC_WRITE_FORMAT_DEBUG("Command %d: %s", command_type, command_description.c_str());
+			// }
 // Register the manager class to manager factory
 			// static FinanceAnalyzerMgrFactory mgr_factory;
 			REGISTER_CLASS(FinanceAnalyzerMarketMgr, FinanceAnalysis_Market);
@@ -125,6 +122,7 @@ unsigned short FinanceAnalyzerInteractiveSession::initialize()
 
 void FinanceAnalyzerInteractiveSession::notify_exit()
 {
+	WRITE_FORMAT_DEBUG("The worker thread of interactive session[%s] is notified to exit", session_tag);
 	if (pid == 0)
 		return;
 	int kill_ret = pthread_kill(pid, 0);
@@ -147,10 +145,20 @@ void FinanceAnalyzerInteractiveSession::notify_exit()
 	void* status;
 	WRITE_FORMAT_DEBUG("Wait for the worker thread of interactive session[%s]'s death......", session_tag);
 	pthread_join(pid, (void**)&status);
-	if (status == NULL)
-		WRITE_FORMAT_DEBUG("The worker thread of interactive session[%s]'s is dead......", session_tag);
-	else
-		WRITE_FORMAT_ERROR("Error occur in the worker thread of interactive session[%s], due to: %s", session_tag, (char*)status);
+// The return value of status is incorrect after the second thread die for unknown reason......
+// 	if (status == NULL)
+// 	{
+// // WRITE_FORMAT_DEBUG can NOT called in this place, since the vfprintf function throws the exception for unknown reason
+// 		// WRITE_FORMAT_DEBUG("The worker thread of interactive session[%s]'s is dead......", session_tag);
+// 		WRITE_DEBUG("The seesion is closed successfully");
+// 	}
+// 	else
+// 	{
+// // WRITE_FORMAT_ERROR can NOT called in this place, since the vfprintf function throws the exception for unknown reason
+// 		// WRITE_FORMAT_ERROR("Error occur in the worker thread of interactive session[%s], due to: %s", session_tag, (char*)status);
+// 		WRITE_ERROR("Error occurs while trying to close the session");
+// 	}
+	WRITE_DEBUG("The session is closed......");
 	pid = 0;
 }
 
@@ -159,19 +167,20 @@ void* FinanceAnalyzerInteractiveSession::thread_handler(void* void_ptr)
 	if (void_ptr == NULL)
 		throw invalid_argument(string("void_ptr should NOT be NULL"));
 	PFINANCE_ANALYZER_INTERACTIVE_SESSION this_ptr = (PFINANCE_ANALYZER_INTERACTIVE_SESSION)void_ptr;
-	unsigned short ret = this_ptr->thread_handler_internal();
-	pthread_exit((CHECK_SUCCESS(ret) ? NULL : (void*)get_ret_description(ret)));
+	this_ptr->thread_handler_internal();
+// STATIC_WRITE_FORMAT_DEBUG can NOT called in this place, since the vfprintf function throws the exception for unknown reason
+	// STATIC_WRITE_FORMAT_DEBUG("The result in the worker thread of interactive session[%s]: %s", this_ptr->session_tag, get_ret_description(ret));
+	// pthread_exit((CHECK_SUCCESS(ret) ? NULL : (void*)get_ret_description(ret)));
+	pthread_exit(NULL);
 }
 
 unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 {
-	// static const int INTERACTIVE_PROMPT_LEN = strlen(INTERACTIVE_PROMPT);
 	WRITE_FORMAT_INFO("The worker thread of interactive session[%s] is running", session_tag);
 	unsigned short ret = RET_SUCCESS;
 
 	struct pollfd pollfds[1];
 	char req_buf[REQ_BUF_SIZE];
-	// int n;
 	FILE* sock_fp = NULL;
 	if ((sock_fp = fdopen(sock_fd, "a+")) == 0) 
 	{
@@ -209,7 +218,7 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 // Read the command and parse it
     	if (fgets(req_buf, REQ_BUF_SIZE, sock_fp) == NULL)
     		break;
-     	WRITE_FORMAT_DEBUG("Command Line: %s", req_buf);
+     	// WRITE_FORMAT_DEBUG("Command Line: %s", req_buf);
 // Parse the command
 		char *command_line_outer = req_buf;
 		char *rest_command_line_outer =  NULL;
@@ -233,10 +242,9 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 					if (iter == command_map.end())
 					{
 						WRITE_FORMAT_ERROR("Error!! Unknown command: %s", argv_inner[0]);
-						static char unknown_command_error[64];
+						char unknown_command_error[64];
 						snprintf(unknown_command_error, 64, "Unknown command: %s\n", argv_inner[0]);
 						print_to_console(string(unknown_command_error));
-						// write(sock_fd, unknown_command_error, strlen(unknown_command_error));
 						can_execute = false;
 						break;
 					}
@@ -256,7 +264,7 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 					{
 						char rsp_buf[RSP_BUF_SIZE];
 						snprintf(rsp_buf, RSP_BUF_SIZE, "Error occurs while executing the %s command, due to: %s\n Close the session: %s", argv_inner[0], get_ret_description(ret), session_tag);
-	// Show warning if error occurs while executing the command
+// Show warning if error occurs while executing the command
 						WRITE_ERROR(rsp_buf);
 						print_to_console(string(rsp_buf));
 						return ret;
@@ -267,8 +275,6 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 				command_line_outer = NULL;
 			cur_argc_outer++;
 		}
-		// if (CHECK_FAILURE(ret))
-		// 	return ret;
 		if (exit == 0)
 		{
 // Print the prompt again

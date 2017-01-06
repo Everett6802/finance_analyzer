@@ -215,6 +215,7 @@ unsigned short FinanceAnalyzerInteractiveServer::notify(int event_type, void* ev
 		case InteractiveSessionEvent_Exit:
 		{
 			int session_id = *(int*)event_data;
+			WRITE_FORMAT_DEBUG("Session[%d] notify the parent to exit", session_id);
 			PFINANCE_ANALYZER_INTERACTIVE_SESSION interactive_session = interactive_session_deque[session_id];
 			interactive_session_deque[session_id] = NULL;
 			interactive_session->notify_exit();

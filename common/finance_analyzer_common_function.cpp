@@ -1,10 +1,12 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 #include <stdexcept>
 #include <new>
 #include "finance_analyzer_common_function.h"
+#include "msg_dumper_wrapper.h"
 
 
 using namespace std;
@@ -561,4 +563,30 @@ unsigned short read_text_file(string& text_result_string, const char* text_filep
 		}
 	}
 	return ret;
+}
+
+void daemonize() 
+{ 
+// Step 1: Fork off the parent process
+ 	pid_t pid = fork();
+  	if (pid < 0) exit(EXIT_FAILURE);
+	if (pid != 0) exit (EXIT_SUCCESS);
+// Step 2: Create a unique session ID
+   	pid = setsid();
+	if (pid < -1) exit(EXIT_FAILURE);
+// Step 3: Change the working directory
+	chdir ("/"); 
+// Step 4: Close the standard file descriptors
+	int fd = open ("/dev/null", O_RDWR, 0);
+	if (fd != -1) 
+	{
+		dup2 (fd, STDIN_FILENO);
+		dup2 (fd, STDOUT_FILENO);
+		dup2 (fd, STDERR_FILENO);
+		if (fd > 2) close (fd);
+	}
+// Step 5: Change the file mode mask
+	umask (0027);
+	// RELEASE_MSG_DUMPER();
+	closelog();
 }

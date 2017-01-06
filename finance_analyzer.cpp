@@ -13,6 +13,11 @@
 #include "finance_analyzer_mgr_factory.h"
 #include "finance_analyzer_interactive_server.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 using namespace std;
 
@@ -42,7 +47,7 @@ static void run_test_cases_and_exit(const char* test_case_list, bool show_detail
 static int parse_show_res_type(const char* show_res_type_string);
 static const char* get_statistics_method_description(StatisticsMethod statistics_method);
 // static void daemonize();
-// static unsigned short init_interactive_server();
+static unsigned short init_interactive_server();
 
 void show_usage_and_exit()
 {
@@ -341,58 +346,65 @@ int parse_show_res_type(const char* show_res_type_string)
 // 	umask (0027);
 // }
 
-// unsigned short init_interactive_server()
-// {
-// 	// unsigned short ret = RET_SUCCESS;
-// 	int server_fd, client_fd;
-// 	sockaddr_in server_sock, client_sock;
-// 	socklen_t client_sock_len;
-// 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
-// 	if (server_fd == -1)
-// 	{
-// 		WRITE_FORMAT_ERROR("socket() fails, error code: %d", errno);
-// 		return RET_FAILURE_SYSTEM_API;
-// 	}
-// 	bzero((char*)&server_sock, sizeof(server_sock));
-// 	server_sock.sin_family = AF_INET;
-// 	server_sock.sin_addr.s_addr = INADDR_ANY;
-// 	server_sock.sin_port = htons(INTERACTIVE_SERVER_PORT);
-// 	if(bind(server_fd, (struct sockaddr *)&server_sock, sizeof(server_sock)) < 0)
-// 	{
-// 		WRITE_FORMAT_ERROR("bind() fails, error code: %d", errno);
-// 		return RET_FAILURE_SYSTEM_API;
-// 	}
-// 	if (listen(server_fd, INTERACTIVE_SERVER_BACKLOG) < 0)
-// 	{
-// 		WRITE_FORMAT_ERROR("listen() fails, error code: %d", errno);
-// 		return RET_FAILURE_SYSTEM_API;
-// 	}
-// 	WRITE_DEBUG("Finance Analysis Server Ready, Wait for connection......");
-// 	while (true)
-// 	{
-// 		client_sock_len = sizeof(client_sock);
-// 		client_fd = accept(server_fd, (struct sockaddr *)&client_sock, &client_sock_len);
-// 		WRITE_DEBUG("Connection request from......");
-// 		if (client_fd == -1)
-// 		{
-// 			WRITE_FORMAT_ERROR("listen() fails, error code: %d", errno);
-// 			return RET_FAILURE_SYSTEM_API;
-// 		}
-// 		write(client_fd, INTERACTIVE_PROMPT, strlen(INTERACTIVE_PROMPT));
-// 	}
+unsigned short init_interactive_server()
+{
+	// unsigned short ret = RET_SUCCESS;
+	int server_fd, client_fd;
+	sockaddr_in server_sock, client_sock;
+	socklen_t client_sock_len;
+	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (server_fd == -1)
+	{
+		WRITE_FORMAT_ERROR("socket() fails, error code: %d", errno);
+		return RET_FAILURE_SYSTEM_API;
+	}
+	int val = 1;
+	setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&val, sizeof(val));
+	bzero((char*)&server_sock, sizeof(server_sock));
+	server_sock.sin_family = AF_INET;
+	server_sock.sin_addr.s_addr = INADDR_ANY;
+	server_sock.sin_port = htons(INTERACTIVE_SERVER_PORT);
+	if(bind(server_fd, (struct sockaddr *)&server_sock, sizeof(server_sock)) < 0)
+	{
+		WRITE_FORMAT_ERROR("bind() fails, error code: %d", errno);
+		return RET_FAILURE_SYSTEM_API;
+	}
+	if (listen(server_fd, INTERACTIVE_SERVER_BACKLOG) < 0)
+	{
+		WRITE_FORMAT_ERROR("listen() fails, error code: %d", errno);
+		return RET_FAILURE_SYSTEM_API;
+	}
+	WRITE_DEBUG("Finance Analysis Server Ready, Wait for connection......");
+	while (true)
+	{
+		client_sock_len = sizeof(client_sock);
+		client_fd = accept(server_fd, (struct sockaddr *)&client_sock, &client_sock_len);
+		WRITE_DEBUG("Connection request from......");
+		if (client_fd == -1)
+		{
+			WRITE_FORMAT_ERROR("listen() fails, error code: %d", errno);
+			return RET_FAILURE_SYSTEM_API;
+		}
+		write(client_fd, INTERACTIVE_PROMPT, strlen(INTERACTIVE_PROMPT));
+	}
 
-// 	return RET_SUCCESS;
-// }
+	return RET_SUCCESS;
+}
 
 int main(int argc, char** argv)
 {
+	// printf("Fuck1\n");
+ //    daemonize();
+ //    init_interactive_server();
+ //    printf("Fuck\n");
+ //    exit(EXIT_SUCCESS);
+
 // Register the manager class to manager factory
 	FinanceAnalyzerMgrFactory g_mgr_factory;
 	REGISTER_CLASS(FinanceAnalyzerMarketMgr, FinanceAnalysis_Market);
 	REGISTER_CLASS(FinanceAnalyzerStockMgr, FinanceAnalysis_Stock);
 
 	unsigned short ret = RET_SUCCESS;
-
 // Parse the parameters.....
 	ret = parse_param(argc, argv);
 	if (CHECK_FAILURE(ret))
@@ -411,7 +423,7 @@ int main(int argc, char** argv)
 		// daemonize();
 		// sleep(100000);
 // Caution: When the program run as a daemon, the STDIN/STDOUT/STDERR is redirected to /dev/null
-// The functions related to STDIN/STDOUT/STDERR will hav erros.		
+// The functions related to STDIN/STDOUT/STDERR will have errors.		
 // getchar(); Can't run this function when the program run a daemon
     }
     if (param_interactive_mode)
@@ -419,12 +431,6 @@ int main(int argc, char** argv)
     	// daemonize();
     	// ret = init_interactive_server();
     	DECLARE_AND_IMPLEMENT_STATIC_INTERACTIVE_SERVER()
-    	// ret = interactive_server->wait_for_connection();
-    	// if (CHECK_FAILURE(ret))
-    	// {
-    	// 	snprintf(errmsg, BUF_SIZE, "Fail to initialize the interactive server, error code: %d", ret);
-     //   		goto FAIL;
-     //   	}
     }
     else
     {
@@ -481,7 +487,6 @@ int main(int argc, char** argv)
 			goto FAIL;
 		}
     }
-    WRITE_DEBUG("Fuck3");
 
 	RELEASE_MSG_DUMPER();
 	exit(EXIT_SUCCESS);
