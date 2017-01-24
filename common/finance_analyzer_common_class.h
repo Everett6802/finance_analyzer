@@ -5,5 +5,6 @@
 #include "finance_analyzer_common_class_company_profile.h"
 #include "finance_analyzer_common_class_set.h"
 #include "finance_analyzer_common_class_smart_pointer.h"
+#include "finance_analyzer_common_class_output.h"
 
 #endif

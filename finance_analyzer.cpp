@@ -391,6 +391,9 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
+#include <string>
+using namespace std;
+
 int main(int argc, char** argv)
 {
 	// printf("Fuck1\n");
@@ -398,6 +401,23 @@ int main(int argc, char** argv)
  //    init_interactive_server();
  //    printf("Fuck\n");
  //    exit(EXIT_SUCCESS);
+
+	// OutputMailStreamCfg output_mail_stream_cfg;
+	// output_mail_stream_cfg.address_list.push_back(string("Everett6802@hotmail.com"));
+	// output_mail_stream_cfg.title = string("Decorator Test");
+	// POUTPUT_STREAM oms = new OutputMailStream(&output_mail_stream_cfg);
+
+	// OutputFileStreamCfg output_file_stream_cfg;
+	// output_file_stream_cfg.file_path = string("/home/super/test.log");
+	// output_file_stream_cfg.file_attribute = string("a+");
+	// POUTPUT_STREAM ofs = new OutputFileStream(&output_file_stream_cfg, oms);
+
+	// POUTPUT_STREAM omos = new OutputMonitorStream(ofs);
+
+	// omos->output("Fuck You !\nGo to Hell !!!\n");
+	// delete omos;
+
+	// exit(EXIT_SUCCESS);
 
 // Register the manager class to manager factory
 	FinanceAnalyzerMgrFactory g_mgr_factory;
