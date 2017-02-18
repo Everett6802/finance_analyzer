@@ -6,8 +6,7 @@
 #include <assert.h>
 #include <map>
 // #include <string>
-#include "finance_analyzer_market_mgr.h"
-#include "finance_analyzer_stock_mgr.h"
+#include "finance_analyzer_mgr.h"
 #include "finance_analyzer_interactive_session.h"
 
 

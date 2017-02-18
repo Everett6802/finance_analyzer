@@ -7,9 +7,7 @@
 #include <stdexcept>
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_test.h"
-#include "finance_analyzer_market_mgr.h"
-#include "finance_analyzer_stock_mgr.h"
-#include "finance_analyzer_mgr_inf.h"
+#include "finance_analyzer_mgr.h"
 #include "finance_analyzer_mgr_factory.h"
 #include "finance_analyzer_interactive_server.h"
 
@@ -27,6 +25,8 @@ using namespace std;
 static FinanceAnalysisMode param_mode = FinanceAnalysis_None;
 static bool param_help = false;
 static bool param_silent = false;
+static char* param_log_level = NULL;
+static char* param_syslog_level = NULL;
 static char* param_test = NULL;
 static bool param_test_verbose = false;
 static bool param_interactive_mode = false;
@@ -99,6 +99,20 @@ unsigned short parse_param(int argc, char** argv)
 			// SHOW_CONSOLE = false;
 			param_silent = true;
 			offset = 1;
+		}
+		else if (strcmp(argv[index], "--log_level") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'log_level' parameter");
+			param_log_level = argv[index + 1];
+			offset = 2;
+		}
+		else if (strcmp(argv[index], "--syslog_level") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'syslog_level' parameter");
+			param_syslog_level = argv[index + 1];
+			offset = 2;
 		}
 		else if (strcmp(argv[index], "--test") == 0)
 		{
@@ -234,6 +248,8 @@ unsigned short parse_param(int argc, char** argv)
 
 unsigned short check_param()
 {
+	static const int ERROR_MSG_SIZE = 256;
+	static char error_msg[ERROR_MSG_SIZE];
 	if (param_daemonize)
 	{
 		if (!param_interactive_mode)
@@ -242,11 +258,35 @@ unsigned short check_param()
 			PRINT("WARNING: Daemonization must run in the interactive mode\n");
 		}
 	}
+	if (param_log_level != NULL)
+	{
+		unsigned short log_level = atoi(param_log_level);
+		if (log_level < 0 || log_level >= SEVERITY_NAME_SIZE)
+		{
+			snprintf(error_msg, ERROR_MSG_SIZE, "Unknown log level: %s", param_log_level);
+			print_errmsg_and_exit(error_msg);
+		}
+	}
+	if (param_syslog_level != NULL)
+	{
+		unsigned short syslog_level = atoi(param_syslog_level);
+		if (syslog_level < 0 || syslog_level >= SEVERITY_NAME_SIZE)
+		{
+			snprintf(error_msg, ERROR_MSG_SIZE, "Unknown syslog level: %s", param_syslog_level);
+			print_errmsg_and_exit(error_msg);
+		}
+	}
 	return RET_SUCCESS;
 }
 
 unsigned short setup_param()
 {
+	if (param_log_level != NULL)
+		STATIC_SET_LOG_SEVERITY(atoi(param_log_level));
+	if (param_syslog_level != NULL)
+		STATIC_SET_SYSLOG_SEVERITY(atoi(param_syslog_level));
+	// finance_analyzer_mgr->set_log_severity_config(2);
+	// finance_analyzer_mgr->set_syslog_severity_config(0);
 	return RET_SUCCESS;
 }
 
@@ -391,11 +431,33 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
-#include <string>
-using namespace std;
 
 int main(int argc, char** argv)
 {
+	// STATIC_SET_LOG_SEVERITY_CONFIG(3);
+	// STATIC_SET_SYSLOG_SEVERITY_CONFIG(3);
+	// STATIC_WRITE_DEBUG("Fuck DEBUG");
+	// STATIC_WRITE_INFO("Fuck INFO");
+	// STATIC_WRITE_WARN("Fuck WARN");
+	// STATIC_WRITE_ERROR("Fuck ERROR");
+
+	// static const int FILE_PATH_SIZE = 256;
+	// char current_working_directory[FILE_PATH_SIZE];
+	// getcwd(current_working_directory, FILE_PATH_SIZE);
+	// char conf_filepath[FILE_PATH_SIZE];
+	// snprintf(conf_filepath, FILE_PATH_SIZE, "%s/%s", current_working_directory, "conf/dumper_param.conf");
+	// FILE* fp_set = popen("sed -i 's/^Log=[A-Z].*/Log=DEBUG/g' ./conf/dumper_param.conf", "w");
+	// pclose(fp_set);
+
+	// FILE* fp_get = popen("cat conf/dumper_param.conf | grep 'Log='", "r");
+	// static const int LINE_SIZE = 64;
+	// char line[LINE_SIZE], level[LINE_SIZE];
+	// fgets(line, LINE_SIZE, fp_get);
+	// printf("Line: %s\n", line);
+	// sscanf(line, "Log=%s", level);
+	// printf("Level: %s\n", level);
+	// pclose(fp_get);
+
 	// printf("Fuck1\n");
  //    daemonize();
  //    init_interactive_server();
@@ -506,7 +568,14 @@ int main(int argc, char** argv)
 			snprintf(errmsg, BUF_SIZE, "Fail to setup parameters, due to: %s", get_ret_description(ret));
 			goto FAIL;
 		}
+
+// Let's do something
+		STATIC_WRITE_DEBUG("Fuck DEBUG");
+		STATIC_WRITE_INFO("Fuck INFO");
+		STATIC_WRITE_WARN("Fuck WARN");
+		STATIC_WRITE_ERROR("Fuck ERROR");
     }
+    sleep(2);
 
 	RELEASE_MSG_DUMPER();
 	exit(EXIT_SUCCESS);

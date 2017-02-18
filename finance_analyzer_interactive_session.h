@@ -11,7 +11,7 @@
 #include <string>
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_mgr_factory.h"
-#include "finance_analyzer_mgr_inf.h"
+#include "finance_analyzer_mgr.h"
 
 
 enum InteractiveSessionEventType

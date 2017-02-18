@@ -64,5 +64,6 @@ public:
 	unsigned short try_connect_mysql(const std::string database);
 	unsigned short disconnect_mysql();
 };
+typedef FinanceAnalyzerSqlReader* PFINANCE_ANALYZER_SQL_READER;
 
 #endif

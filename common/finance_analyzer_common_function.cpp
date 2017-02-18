@@ -44,6 +44,24 @@ string get_usage_string(bool interactive, FinanceAnalysisMode finance_analysis_m
 		usage_string += string("--silent\n Description: Disable print log on console\n");
 	if (interactive)
 	{
+		usage_string += string("get_log_level\n Get Log Severity Level\n");
+		usage_string += string("get_syslog_level\n Get Syslog Severity Level\n");
+		usage_string += string("set_log_level\n Set Log Severity Level\n");
+		usage_string += string("set_syslog_level\n Set Syslog Severity Level\n");
+	}
+	else
+	{
+		usage_string += string("--log_level\n Set Log Severity Level\n");
+		usage_string += string("--syslog_level\n Set Sysog Severity Level\n");
+	}
+	usage_string += string(" Severity level list:\n");
+	for (int i = 0 ; i < SEVERITY_NAME_SIZE ; i++)
+	{
+		snprintf(buf, BUF_SIZE, "  %s: %d\n", SEVERITY_NAME[i], i);
+		usage_string += string(buf);
+	}
+	if (interactive)
+	{
 // No support in interactive mode
 		// usage_string += string("* test\n Description: Run test case\n");
 		// usage_string += string("* test_verbose\n Description: Run test case and show detailed steps\n");

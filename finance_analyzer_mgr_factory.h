@@ -4,10 +4,11 @@
 #include <map>
 #include <string>
 #include "finance_analyzer_common.h"
-#include "finance_analyzer_mgr_inf.h"
+#include "finance_analyzer_mgr.h"
 
 
 template <class T> PIFINANCE_ANALYZER_MGR construct(){return (PIFINANCE_ANALYZER_MGR)new T();}
+// template <class T> PIFINANCE_ANALYZER_MGR construct(){return T::create_instance();}
 
 class FinanceAnalyzerMgrFactory
 {
