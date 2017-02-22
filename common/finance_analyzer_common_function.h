@@ -5,7 +5,6 @@
 #include <string>
 #include "finance_analyzer_common_definition.h"
 
-std::string get_usage_string(bool interactive=false, FinanceAnalysisMode finance_analysis_mode=FinanceAnalysis_None);
 FinanceAnalysisMode get_finance_analysis_mode();
 bool is_market_mode();
 bool is_stock_mode();
@@ -17,7 +16,7 @@ int get_company_group_number(int source_key);
 const char* get_ret_description(unsigned short ret);
 const char* get_database_field_description(int source_type_index, int field_index);
 bool check_source_type_index_in_range(int source_type_index);
-void get_source_type_index_range(int& source_type_index_start, int& source_type_index_end, FinanceAnalysisMode finance_analysis_mode=FinanceAnalysis_None);
+void get_source_type_index_range(int& source_type_index_start, int& source_type_index_end, FinanceAnalysisMode finance_analysis_mode);
 int get_source_type_size();
 bool check_field_index_in_range(int source_type_index, int field_index);
 bool check_calculation_type_in_range(int calculation_type);

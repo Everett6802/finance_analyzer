@@ -28,7 +28,7 @@ static bool param_silent = false;
 static char* param_log_level = NULL;
 static char* param_syslog_level = NULL;
 static char* param_test = NULL;
-static bool param_test_verbose = false;
+static bool param_show_test_verbose = false;
 static bool param_interactive_mode = false;
 static bool param_daemonize = false;
 
@@ -51,7 +51,51 @@ static unsigned short init_interactive_server();
 
 void show_usage_and_exit()
 {
-	PRINT("%s", get_usage_string().c_str());
+	static const int BUF_SIZE = 256;
+	static char buf[BUF_SIZE];
+	PRINT("====================== Usage ======================\n");
+// Finance Mode
+	PRINT("--market_mode --stock_mode\n Description: Switch the market/stock mode\n Caution: Read parameters from %s when NOT set\n", MARKET_STOCK_SWITCH_CONF_FILENAME);
+	PRINT("-h|--help\n Description: The usage\n Caution: Other flags are ignored\n");
+	PRINT("--silent\n Description: Disable print log on console\n");
+// Log/Syslog Severity
+	PRINT("--log_level\n Set Log Severity Level\n");
+	PRINT("--syslog_level\n Set Sysog Severity Level\n");
+	PRINT(" Severity level list:\n");
+	for (int i = 0 ; i < SEVERITY_NAME_SIZE ; i++)
+		PRINT("  %s: %d\n", SEVERITY_NAME[i], i);
+// Test cases
+	PRINT("--test_case\nDescription: Run test case\nCaution: Exit when tests are done\n");
+	PRINT("--show_test_verbose\nDescription: Show detailed steps while running test case\nCaution: Exit when tests are done\n");
+	PRINT(" Test case list:\n");
+	for (int i = 0 ; i < TestTypeSize ; i++)
+		PRINT("  %s: %d\n", TEST_TYPE_DESCRIPTION[i], i);
+	PRINT("  Format: Test Case Index/Index Range *Ex: 1;2-4;6\n");
+// Source type
+	PRINT("-s|--source\nDescription: List of source type\nDefault: all source types\n");
+	int source_type_start_index, source_type_end_index;
+	get_source_type_index_range(source_type_start_index, source_type_end_index, finance_analysis_mode);
+	for (int i = source_type_start_index ; i < source_type_end_index ; i++)
+		PRINT("  %s: %d\n", FINANCE_DATABASE_DESCRIPTION_LIST[i], i);
+	PRINT("  Format 1: All source types/fields (ex. all)\n");	
+	PRINT("  Format 2: Format 2: Source type index/index range (ex. 1,2-4,6)\n");
+	PRINT("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-4,5),2-4(12-16,5),6,8(1,3,5,6,7,8))\n");
+	PRINT("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
+// Time range
+	PRINT("-t|--time_range\nDescription: Time range\nDefault: full time range\n");
+	PRINT("  Format 1: Start time: (ex. 2015-01-01)\n");
+	PRINT("  Format 2: Start time,End time: (ex. 2015-01-01,2015-09-04)\n");
+	PRINT("  Format 3: ,End time: (ex. ,2015-09-04)\n");
+// Company
+	if (IS_FINANCE_STOCK_MODE)
+	{
+		PRINT("-c|--company\nDescription: List of company code number\nDefault: All company code nubmers\n");
+		PRINT("  Format 1: Company code number (ex. 2347)\n");
+		PRINT("  Format 2: Company code number range (ex. 2100-2200)\n");
+		PRINT("  Format 3: Company group number (ex. [Gg]12)\n");
+		PRINT("  Format 4: Company code number/number range/group hybrid (ex. 2347,2100-2200,G12,2362,g2,1500-1510)\n");
+	}
+	PRINT("===================================================\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -126,7 +170,7 @@ unsigned short parse_param(int argc, char** argv)
 			if (index + 1 >= argc)
 				print_errmsg_and_exit("No argument found in 'test_verbose' parameter");
 			param_test = argv[index + 1];
-			param_test_verbose = true;
+			param_show_test_verbose = true;
 			offset = 2;
 		}
 		else if ((strcmp(argv[index], "--interactive_mode") == 0) || (strcmp(argv[index], "-i") == 0))
@@ -549,7 +593,7 @@ int main(int argc, char** argv)
 		    	snprintf(errmsg, BUF_SIZE, "%s", "Error!!! Can only run the cases in Market Mode");
 				goto FAIL;
 			}
-	    	run_test_cases_and_exit(param_test, param_test_verbose);
+	    	run_test_cases_and_exit(param_test, param_show_test_verbose);
 	    }
 // Create the instance of the manager class due to different mode
 		finance_analyzer_mgr = g_mgr_factory.get_instance(finance_analysis_mode);

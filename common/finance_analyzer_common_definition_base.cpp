@@ -164,20 +164,20 @@ const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NAME = 7;
 const int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER = 8;
 const int COMPANY_PROFILE_ENTRY_FIELD_SIZE = 9;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Test Cases
+// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// // Test Cases
 
-const char* TEST_TYPE_DESCRIPTION[] =
-{
-	"Check Array",
-	"Check Array Statistics",
-	"Check Filter Array",
-	"Check Filter Rule",
-	"Check Formula",
-	"Check Filter Formula",
-	// "Check Data Statistics",
-	"Check Histogram"
-};
+// const char* TEST_TYPE_DESCRIPTION[] =
+// {
+// 	"Check Array",
+// 	"Check Array Statistics",
+// 	"Check Filter Array",
+// 	"Check Filter Rule",
+// 	"Check Formula",
+// 	"Check Filter Formula",
+// 	// "Check Data Statistics",
+// 	"Check Histogram"
+// };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Return values

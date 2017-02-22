@@ -414,8 +414,53 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_finance_mode_comman
 
 unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, char **argv)
 {
+	static const int BUF_SIZE = 256;
+	static char buf[BUF_SIZE];
 	unsigned short ret = RET_SUCCESS;
-	ret = print_to_console(get_usage_string(true, finance_analysis_mode));
+	string usage_string;
+	usage_string += string("====================== Usage ======================\n");
+// Finance Mode
+	usage_string += string("* get_finance_mode\n Description: Get finance mode\n");
+	usage_string += string("* set_finance_mode\n Description: Set finance mode\n");
+	usage_string += string(" Finance mode:\n");
+	for(int i = 0 ; i < FinanceAnalysisSize ; i++)
+	{
+		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_MODE_DESCRIPTION[i], i);
+		usage_string += string(buf);
+	}
+	usage_string += string("* help\n Description: The usage\n");
+// Source type
+	usage_string += string("* get_source\nDescription: Get list of source type\n");
+	usage_string += string("* set_source\nDescription: Set list of source type\n");
+	int source_type_start_index, source_type_end_index;
+	get_source_type_index_range(source_type_start_index, source_type_end_index, finance_analysis_mode);
+	for (int i = source_type_start_index ; i < source_type_end_index ; i++)
+	{
+		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_DATABASE_DESCRIPTION_LIST[i], i);
+		usage_string += string(buf);
+	}
+	usage_string += string("  Format 1: All source types/fields (ex. all)\n");	
+	usage_string += string("  Format 2: Source type index/index range (ex. 1,2-4,6)\n");
+	usage_string += string("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-4,5),2-4(12-16,5),6,8(1,3,5,6,7,8))\n");
+// Time range
+	usage_string += string("* get_time_range\nDescription: Get time range\n");
+	usage_string += string("* set_time_range\nDescription: Set time range\n");
+	usage_string += string("  Format 1: Start time: (ex. 2015-01-01)\n");
+	usage_string += string("  Format 2: Start time,End time: (ex. 2015-01-01,2015-09-04)\n");
+	usage_string += string("  Format 3: ,End time: (ex. ,2015-09-04)\n");
+// Company
+	if (finance_analysis_mode == FinanceAnalysis_Stock)
+	{
+		usage_string += string("* get_company\nDescription: Get list of company code number\n");
+		usage_string += string("* set_company\nDescription: Set list of company code number\n");
+		usage_string += string("  Format 1: Company code number (ex. 2347)\n");
+		usage_string += string("  Format 2: Company code number range (ex. 2100-2200)\n");
+		usage_string += string("  Format 3: Company group number (ex. [Gg]12)\n");
+		usage_string += string("  Format 4: Company code number/number range/group hybrid (ex. 2347,2100-2200,G12,2362,g2,1500-1510)\n");
+	}
+	usage_string += string("===================================================\n");
+
+	ret = print_to_console(usage_string);
 	return ret;
 }
 

@@ -4,6 +4,20 @@
 #include "finance_analyzer_common.h"
 
 
+enum FinanceAnalyzerTestType
+{
+	TestType_CheckArray,
+	TestType_CheckArrayStatistics,
+	TestType_CheckFilterArray,
+	TestType_CheckFilterRule,
+	TestType_CheckFormula,
+	TestType_CheckFilterFormula,
+	TestType_CheckHistogram,
+	TestTypeSize
+};
+
+extern char* TEST_TYPE_DESCRIPTION[TestTypeSize];
+
 class FinanceAnalyzerTest
 {
 //	DECLARE_MSG_DUMPER()

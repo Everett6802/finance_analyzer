@@ -12,6 +12,17 @@ using namespace std;
 
 //DECLARE_MSG_DUMPER_PARAM()
 
+char* TEST_TYPE_DESCRIPTION[TestTypeSize] = 
+{
+	"Check Array",
+	"Check Array Statistics",
+	"Check Filter Array",
+	"Check Filter Rule",
+	"Check Formula",
+	"Check Filter Formula",
+	"Check Histogram"
+};
+
 FinanceAnalyzerTest::FinanceAnalyzerTest() :
 		show_test_case_detail(false)
 {
