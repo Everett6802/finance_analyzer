@@ -34,5 +34,7 @@ int get_array_sum(const int array[], int array_size);
 unsigned short read_text_file(STRING_LIST& text_result_list, const char* text_filepath);
 unsigned short read_text_file(std::string& text_result_string, const char* text_filepath);
 void daemonize();
+void get_int_deque_from_range_string(const char* int_range_string, INT_DEQUE& int_deque);
+void get_int_deque_from_partial_string(char* int_range_string, int int_range_string_len, INT_DEQUE& int_deque);
 
 #endif

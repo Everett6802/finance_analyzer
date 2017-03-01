@@ -11,6 +11,130 @@ using namespace std;
 
 DECLARE_MSG_DUMPER_PARAM()
 
+unsigned short QuerySet::create_instance_from_string(const char* source_string, QuerySet** query_set)
+{
+	assert(source_string != NULL && "soruce_string should NOT be NULL");
+	assert(query_set != NULL && "query_set should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	QuerySet* query_set_tmp = new QuerySet();
+	char* source_string_copy = new char[strlen(source_string) + 1];
+	if (query_set_tmp == NULL || source_string_copy == NULL)
+	{
+		STATIC_WRITE_ERROR("Fail to allocate the memory: query_set_tmp/source_string_copy");
+		if (query_set_tmp != NULL) delete query_set_tmp;
+		if (source_string_copy != NULL) delete source_string_copy;
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+
+	strcpy(source_string_copy, source_string);
+	char* source_buf = source_string_copy;
+	char* source_type_outer = NULL;
+	char* rest_source_type_outer = NULL;
+// Parse the source type
+	while ((source_type_outer = strtok_r(source_buf, ",", &rest_source_type_outer)) != NULL)
+	{
+// Parse the field
+		char* close_parenthesis_pos = strrchr(source_type_outer, ')');
+		if (close_parenthesis_pos != NULL)
+		{
+// Add the source type with the field
+			char* open_parenthesis_pos = strchr(source_type_outer, '(');
+			if (open_parenthesis_pos == NULL)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect format: %s", source_type_outer);
+				ret = RET_FAILURE_INVALID_ARGUMENT;
+				goto OUT;
+			}
+			int open_parenthesis_index = open_parenthesis_pos - source_type_outer;
+			int close_parenthesis_index = close_parenthesis_pos - source_type_outer;
+			int source_type_string_len = open_parenthesis_index;
+// Check source type/type range
+			if (source_type_string_len <= 0)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect source type format: %s", source_type_outer);
+				ret = RET_FAILURE_INVALID_ARGUMENT;
+				goto OUT;
+			}
+// Check field/field range
+			int field_string_len = close_parenthesis_index - (open_parenthesis_index + 1);
+			if (field_string_len <= 2)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect field format: %s", source_type_outer);
+				ret = RET_FAILURE_INVALID_ARGUMENT;
+				goto OUT;
+			}
+// Parse the sourc type
+			INT_DEQUE source_type_index_deque;
+			get_int_deque_from_partial_string(source_type_outer, source_type_string_len, source_type_index_deque);
+// Parse the field
+			INT_DEQUE field_index_deque;
+			char* source_buf_inner = &source_type_outer[open_parenthesis_index + 1];
+			char* source_type_inner = NULL;
+			char* rest_source_type_inner = NULL;
+			// fprintf(stderr, "source_type_outer: %s, open_parenthesis_index: %d, close_parenthesis_index: %d\n", source_type_outer, open_parenthesis_index, close_parenthesis_index);
+			while ((source_type_inner = strtok_r(source_buf_inner, ";", &rest_source_type_inner)) != NULL)
+			{
+				// fprintf(stderr, "source_type_inner: %s, rest_source_type_inner: %s\n", source_type_inner, rest_source_type_inner);
+				get_int_deque_from_partial_string(source_type_inner, strlen(source_type_inner), field_index_deque);
+				if (source_buf_inner != NULL)
+					source_buf_inner = NULL;
+			}	
+			INT_DEQUE::iterator iter_source_type = source_type_index_deque.begin();
+			while (iter_source_type != source_type_index_deque.end())
+			{
+				// INT_DEQUE::iterator iter_field = field_index_deque.begin();
+				// while (iter_field != field_index_deque.end())
+				// {
+				// 	printf("Add field: %d into QuerySet1\n", *iter_field);
+				// 	iter_field++;
+				// }
+				// printf("Add source type: %d into QuerySet1\n", *iter_source_type);
+				ret = query_set_tmp->add_query_list(*iter_source_type, &field_index_deque);
+				if (CHECK_FAILURE(ret))
+					goto OUT;
+				iter_source_type++;
+			}
+		}
+		else
+		{
+// Add the source type without the field
+// Parse the source type
+			INT_DEQUE source_type_index_deque;
+			get_int_deque_from_partial_string(source_type_outer, strlen(source_type_outer), source_type_index_deque);
+			INT_DEQUE::iterator iter = source_type_index_deque.begin();
+			while (iter != source_type_index_deque.end())
+			{
+				// printf("Add source type: %d into QuerySet2\n", *iter);
+				ret = query_set_tmp->add_query(*iter);
+				if (CHECK_FAILURE(ret))
+					goto OUT;
+				iter++;
+			}
+		}
+		if (source_buf != NULL)
+			source_buf = NULL;
+	}
+	ret = query_set_tmp->add_query_done();
+	if (CHECK_FAILURE(ret))
+		goto OUT;
+	*query_set = query_set_tmp;
+OUT:
+	if (source_string_copy != NULL)
+	{
+		delete source_string_copy;
+		source_string_copy = NULL;
+	}
+	if (CHECK_FAILURE(ret))
+	{
+		if (query_set_tmp != NULL)
+		{
+			delete query_set_tmp;
+			query_set_tmp = NULL;
+		}		
+	}
+	return ret;
+}
+
 QuerySet::const_iterator::const_iterator(INT_INT_DEQUE_MAP_ITER iterator) : iter(iterator){}
 
 QuerySet::const_iterator QuerySet::const_iterator::operator++()
@@ -54,7 +178,8 @@ const PINT_DEQUE QuerySet::const_iterator::get_second()const
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 QuerySet::QuerySet() :
-	add_done(false)
+	add_done(false),
+	source_type_index_set(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 }
@@ -75,6 +200,40 @@ QuerySet::~QuerySet()
 	RELEASE_MSG_DUMPER()
 }
 
+const std::string& QuerySet::to_string()
+{
+	static const int BUF_SIZE = 256;
+	static char buf[BUF_SIZE];
+	if (!add_done)
+	{
+		WRITE_ERROR("Fail to add another data");
+		throw runtime_error(string("the add_done flag is NOT true"));
+	}
+	if (query_set_string.empty())
+	{
+		get_source_type_index_set();
+		INT_SET_ITER iter_source_type_set = source_type_index_set->begin();
+		while (iter_source_type_set != source_type_index_set->end())
+		{
+			int source_type_index = (int)*iter_source_type_set;
+			const PINT_DEQUE source_field_queue = source_field_query_map[source_type_index];
+			assert(source_field_queue != NULL && "source_field_queue should NOT be NULL");
+			snprintf(buf, BUF_SIZE, "%2d|", *iter_source_type_set);
+			query_set_string += string(buf);
+			INT_DEQUE_ITER iter_field_deque = source_field_queue->begin();
+			while (iter_field_deque != source_field_queue->end())
+			{
+				snprintf(buf, BUF_SIZE, " %2d", *iter_field_deque);
+				query_set_string += string(buf);
+				iter_field_deque++;
+			}
+			iter_source_type_set++;
+			query_set_string += string("\n");
+		}
+	}
+	return query_set_string;
+}
+
 unsigned short QuerySet::init_source_type_index_set()
 {
 	source_type_index_set = new INT_SET();
@@ -93,6 +252,21 @@ unsigned short QuerySet::init_source_type_index_set()
 	return RET_SUCCESS;
 }
 
+unsigned short QuerySet::init_source_field_query_map_element(int source_type_index)
+{
+	if (source_field_query_map[source_type_index] == NULL)
+	{
+		PINT_DEQUE int_queue = new INT_DEQUE();
+		if (int_queue == NULL)
+		{
+			WRITE_ERROR("Fail to allocate the memory: int_queue");
+			return RET_FAILURE_INSUFFICIENT_MEMORY;			
+		}
+		source_field_query_map[source_type_index] = int_queue;
+	}
+	return RET_SUCCESS;
+}
+
 unsigned short QuerySet::add_query(int source_type_index, int field_index)
 {
 	if (add_done)
@@ -107,11 +281,14 @@ unsigned short QuerySet::add_query(int source_type_index, int field_index)
 		WRITE_ERROR("source_type_index is out of range in QuerySet");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
+// Initialize a list of keeping track of the field index in certain a source type
+	unsigned short ret = init_source_field_query_map_element(source_type_index);
+	if(CHECK_FAILURE(ret))
+		return ret;
 	assert(source_field_query_map[source_type_index] != NULL && "source_field_query_map[source_type_index] should NOT be NULL");
 
 	if(!check_field_index_in_range(source_type_index, field_index))
 	{
-
 		WRITE_ERROR("field_index is out of range in QuerySet");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
@@ -150,6 +327,10 @@ unsigned short QuerySet::add_query_list(int source_type_index, const PINT_DEQUE 
 		WRITE_ERROR("source_type_index is out of range in QuerySet");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
+// Initialize a list of keeping track of the field index in certain a source type
+	unsigned short ret = init_source_field_query_map_element(source_type_index);
+	if(CHECK_FAILURE(ret))
+		return ret;
 	assert(source_field_query_map[source_type_index] != NULL && "source_field_query_map[source_type_index] should NOT be NULL");
 
 	INT_DEQUE::iterator iter = field_index_deque->begin();

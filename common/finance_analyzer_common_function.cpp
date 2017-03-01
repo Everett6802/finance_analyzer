@@ -503,3 +503,63 @@ void daemonize()
 	// RELEASE_MSG_DUMPER();
 	closelog();
 }
+
+void get_int_deque_from_range_string(const char* int_range_string, INT_DEQUE& int_deque)
+{
+	static const int ERRMSG_SIZE = 64;
+	static char errmsg[ERRMSG_SIZE];
+	if (int_range_string == NULL)
+		throw invalid_argument("int_range_string should NOT be NULL");
+	if (strchr(int_range_string, '-') == NULL)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The string[%s] is NOT a range string", int_range_string);
+		throw invalid_argument(errmsg);
+	}
+	int int_range_start, int_range_end;
+	sscanf(int_range_string, "%d-%d", &int_range_start, &int_range_end);
+	if (int_range_start > int_range_end)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The start integer[%d] should NOT be greater than the end one[%d]", int_range_start, int_range_end);
+		throw invalid_argument(errmsg);
+	}
+	for (int i = int_range_start ; i <= int_range_end ; i++)
+	{
+		// printf("Add index: %d into Deque\n", i);
+		int_deque.push_back(i);
+	}
+}
+
+void get_int_deque_from_partial_string(char* int_range_string, int int_range_string_len, INT_DEQUE& int_deque)
+{
+	// static const int ERRMSG_SIZE = 64;
+	// static char errmsg[ERRMSG_SIZE];
+	if (int_range_string == NULL)
+		throw invalid_argument("int_range_string should NOT be NULL");
+	int int_range_string_actual_len = strlen(int_range_string);
+	char* int_range_string_tmp = NULL;
+	bool full_string = false;
+	if (int_range_string_actual_len <= int_range_string_len)
+	{
+		int_range_string_len = int_range_string_actual_len;
+		int_range_string_tmp = int_range_string;
+		full_string = true;
+	}
+	else
+	{
+		int_range_string_tmp = new char[int_range_string_len + 1];
+		if (int_range_string_tmp == NULL)
+			throw invalid_argument("Fail to allocate memory: int_range_string_tmp");
+		memset(int_range_string_tmp, 0x0, sizeof(char) * (int_range_string_len + 1));
+		memcpy(int_range_string_tmp, int_range_string, sizeof(char) * int_range_string_len);
+	}
+	if (strchr(int_range_string_tmp, '-') != NULL)
+		get_int_deque_from_range_string(int_range_string_tmp, int_deque);
+	else
+	{
+		int value = atoi(int_range_string_tmp);
+		// printf("Add index: %d into Deque\n", value);
+		int_deque.push_back(value);
+	}
+	if (!full_string)
+		delete [] int_range_string_tmp; 
+}

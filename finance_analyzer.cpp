@@ -27,10 +27,13 @@ static bool param_help = false;
 static bool param_silent = false;
 static char* param_log_level = NULL;
 static char* param_syslog_level = NULL;
-static char* param_test = NULL;
+static char* param_test_case = NULL;
 static bool param_show_test_verbose = false;
 static bool param_interactive_mode = false;
 static bool param_daemonize = false;
+static char* param_source = NULL;
+static char* param_time_range = NULL;
+static char* param_company = NULL;
 
 static const int BUF_SIZE = 256;
 static char errmsg[BUF_SIZE];
@@ -71,6 +74,8 @@ void show_usage_and_exit()
 	for (int i = 0 ; i < TestTypeSize ; i++)
 		PRINT("  %s: %d\n", TEST_TYPE_DESCRIPTION[i], i);
 	PRINT("  Format: Test Case Index/Index Range *Ex: 1;2-4;6\n");
+// Interactive mode
+	PRINT("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
 // Source type
 	PRINT("-s|--source\nDescription: List of source type\nDefault: all source types\n");
 	int source_type_start_index, source_type_end_index;
@@ -79,8 +84,7 @@ void show_usage_and_exit()
 		PRINT("  %s: %d\n", FINANCE_DATABASE_DESCRIPTION_LIST[i], i);
 	PRINT("  Format 1: All source types/fields (ex. all)\n");	
 	PRINT("  Format 2: Format 2: Source type index/index range (ex. 1,2-4,6)\n");
-	PRINT("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-4,5),2-4(12-16,5),6,8(1,3,5,6,7,8))\n");
-	PRINT("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
+	PRINT("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-4;5),2-4(12-16;25),6,8(1;3;5-7;8))\n");
 // Time range
 	PRINT("-t|--time_range\nDescription: Time range\nDefault: full time range\n");
 	PRINT("  Format 1: Start time: (ex. 2015-01-01)\n");
@@ -158,20 +162,17 @@ unsigned short parse_param(int argc, char** argv)
 			param_syslog_level = argv[index + 1];
 			offset = 2;
 		}
-		else if (strcmp(argv[index], "--test") == 0)
+		else if (strcmp(argv[index], "--test_case") == 0)
 		{
 			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'test' parameter");
-			param_test = argv[index + 1];
+				print_errmsg_and_exit("No argument found in 'test_case' parameter");
+			param_test_case = argv[index + 1];
 			offset = 2;
 		}
-		else if (strcmp(argv[index], "--test_verbose") == 0)
+		else if (strcmp(argv[index], "--test_show_test_verbose") == 0)
 		{
-			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'test_verbose' parameter");
-			param_test = argv[index + 1];
 			param_show_test_verbose = true;
-			offset = 2;
+			offset = 1;
 		}
 		else if ((strcmp(argv[index], "--interactive_mode") == 0) || (strcmp(argv[index], "-i") == 0))
 		{
@@ -182,6 +183,27 @@ unsigned short parse_param(int argc, char** argv)
 		{
 			param_daemonize = true;
 			offset = 1;
+		}
+		else if ((strcmp(argv[index], "--source") == 0) || (strcmp(argv[index], "-s") == 0))
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'source' parameter");
+			param_source = argv[index + 1];
+			offset = 2;
+		}
+		else if ((strcmp(argv[index], "--time_range") == 0) || (strcmp(argv[index], "-t") == 0))
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'time_range' parameter");
+			param_time_range = argv[index + 1];
+			offset = 2;
+		}
+		else if ((strcmp(argv[index], "--company") == 0) || (strcmp(argv[index], "-c") == 0))
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'company' parameter");
+			param_company = argv[index + 1];
+			offset = 2;
 		}
 		// else if (strcmp(argv[index], "--calculate_statistics") == 0)
 		// {
@@ -318,6 +340,14 @@ unsigned short check_param()
 		{
 			snprintf(error_msg, ERROR_MSG_SIZE, "Unknown syslog level: %s", param_syslog_level);
 			print_errmsg_and_exit(error_msg);
+		}
+	}
+	if (param_company != NULL)
+	{
+		if (param_mode != FinanceAnalysis_Stock)
+		{
+			param_company = NULL;
+			PRINT("WARNING: the Company argument is ignored in the Finance Stock mode\n");
 		}
 	}
 	return RET_SUCCESS;
@@ -522,7 +552,6 @@ int main(int argc, char** argv)
 
 	// omos->output("Fuck You !\nGo to Hell !!!\n");
 	// delete omos;
-
 	// exit(EXIT_SUCCESS);
 
 // Register the manager class to manager factory
@@ -586,14 +615,14 @@ int main(int argc, char** argv)
 	    	show_usage_and_exit();
 
 // Run the test cases
-	    if (param_test != NULL)
+	    if (param_test_case != NULL)
 	    {
 	    	if (!IS_FINANCE_MARKET_MODE)
 	    	{
 		    	snprintf(errmsg, BUF_SIZE, "%s", "Error!!! Can only run the cases in Market Mode");
 				goto FAIL;
 			}
-	    	run_test_cases_and_exit(param_test, param_show_test_verbose);
+	    	run_test_cases_and_exit(param_test_case, param_show_test_verbose);
 	    }
 // Create the instance of the manager class due to different mode
 		finance_analyzer_mgr = g_mgr_factory.get_instance(finance_analysis_mode);
@@ -614,10 +643,15 @@ int main(int argc, char** argv)
 		}
 
 // Let's do something
-		STATIC_WRITE_DEBUG("Fuck DEBUG");
-		STATIC_WRITE_INFO("Fuck INFO");
-		STATIC_WRITE_WARN("Fuck WARN");
-		STATIC_WRITE_ERROR("Fuck ERROR");
+		PQUERY_SET query_set = NULL;
+		ret = QuerySet::create_instance_from_string("0-1(2;4;5-7),3-4(2;3-5;7),6", &query_set);
+		if (CHECK_FAILURE(ret))
+			fprintf(stderr, "Fail, due to: %s\n", get_ret_description(ret));
+		printf("QuerySet:\n%s", query_set->to_string().c_str());
+		// STATIC_WRITE_DEBUG("Fuck DEBUG");
+		// STATIC_WRITE_INFO("Fuck INFO");
+		// STATIC_WRITE_WARN("Fuck WARN");
+		// STATIC_WRITE_ERROR("Fuck ERROR");
     }
     sleep(2);
 

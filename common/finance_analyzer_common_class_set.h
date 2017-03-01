@@ -95,6 +95,9 @@ SourceTypeIndexSet.insert(SourceIndex);\
 // };
 class QuerySet
 {
+public: 
+	static unsigned short create_instance_from_string(const char* source_string, QuerySet** query_set);
+
 protected:
 	DECLARE_MSG_DUMPER()
 
@@ -116,15 +119,19 @@ public:
 	};
 
 protected:
-	INT_INT_DEQUE_MAP source_field_query_map;
 	bool add_done;
+	mutable INT_INT_DEQUE_MAP source_field_query_map;
 	mutable PINT_SET source_type_index_set;
+	mutable std::string query_set_string;
 
+	unsigned short init_source_field_query_map_element(int source_type_index);
 	unsigned short init_source_type_index_set();
 
 public:
 	QuerySet();
 	~QuerySet();
+
+	const std::string& to_string();
 
 	const_iterator begin();
 	const_iterator end();
