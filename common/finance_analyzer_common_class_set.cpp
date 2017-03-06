@@ -51,17 +51,14 @@ const PINT_DEQUE QuerySet::const_iterator::get_second()const
 	return (PINT_DEQUE)iter->second;
 }
 
-unsigned short QuerySet::create_instance_from_string(const char* source_string, QuerySet** query_set)
+unsigned short QuerySet::create_instance_from_string(const char* source_string, QuerySet& query_set)
 {
 	assert(source_string != NULL && "soruce_string should NOT be NULL");
-	assert(query_set != NULL && "query_set should NOT be NULL");
 	unsigned short ret = RET_SUCCESS;
-	QuerySet* query_set_tmp = new QuerySet();
 	char* source_string_copy = new char[strlen(source_string) + 1];
-	if (query_set_tmp == NULL || source_string_copy == NULL)
+	if (source_string_copy == NULL)
 	{
-		STATIC_WRITE_ERROR("Fail to allocate the memory: query_set_tmp/source_string_copy");
-		if (query_set_tmp != NULL) delete query_set_tmp;
+		STATIC_WRITE_ERROR("Fail to allocate the memory: source_string_copy");
 		if (source_string_copy != NULL) delete source_string_copy;
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
@@ -129,7 +126,7 @@ unsigned short QuerySet::create_instance_from_string(const char* source_string, 
 				// 	iter_field++;
 				// }
 				// printf("Add source type: %d into QuerySet1\n", *iter_source_type);
-				ret = query_set_tmp->add_query_list(*iter_source_type, &field_index_deque);
+				ret = query_set.add_query_list(*iter_source_type, &field_index_deque);
 				if (CHECK_FAILURE(ret))
 					goto OUT;
 				iter_source_type++;
@@ -145,7 +142,7 @@ unsigned short QuerySet::create_instance_from_string(const char* source_string, 
 			while (iter != source_type_index_deque.end())
 			{
 				// printf("Add source type: %d into QuerySet2\n", *iter);
-				ret = query_set_tmp->add_query(*iter);
+				ret = query_set.add_query(*iter);
 				if (CHECK_FAILURE(ret))
 					goto OUT;
 				iter++;
@@ -154,24 +151,33 @@ unsigned short QuerySet::create_instance_from_string(const char* source_string, 
 		if (source_buf != NULL)
 			source_buf = NULL;
 	}
-	ret = query_set_tmp->add_query_done();
-	if (CHECK_FAILURE(ret))
-		goto OUT;
-	*query_set = query_set_tmp;
+	ret = query_set.add_query_done();
 OUT:
 	if (source_string_copy != NULL)
 	{
 		delete source_string_copy;
 		source_string_copy = NULL;
 	}
+	return ret;
+}
+
+unsigned short QuerySet::create_instance_from_string(const char* source_string, QuerySet** query_set)
+{
+	assert(query_set != NULL && "query_set should NOT be NULL");
+	QuerySet* query_set_tmp = new QuerySet();
+	if (query_set_tmp == NULL)
+	{
+		STATIC_WRITE_ERROR("Fail to allocate the memory: query_set_tmp");
+		if (query_set_tmp != NULL) delete query_set_tmp;
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+	unsigned short ret = create_instance_from_string(source_string, *query_set_tmp);
 	if (CHECK_FAILURE(ret))
 	{
-		if (query_set_tmp != NULL)
-		{
-			delete query_set_tmp;
-			query_set_tmp = NULL;
-		}		
+		delete query_set_tmp;
+		query_set_tmp = NULL;
 	}
+	*query_set = query_set_tmp;
 	return ret;
 }
 
@@ -206,7 +212,7 @@ const std::string& QuerySet::to_string()
 	static char buf[BUF_SIZE];
 	if (!add_done)
 	{
-		WRITE_ERROR("Fail to add another data");
+		WRITE_ERROR("the add_done flag is NOT true");
 		throw runtime_error(string("the add_done flag is NOT true"));
 	}
 	if (query_set_string.empty())
@@ -271,7 +277,7 @@ unsigned short QuerySet::add_query(int source_type_index, int field_index)
 {
 	if (add_done)
 	{
-		WRITE_ERROR("Fail to add another data");
+		WRITE_ERROR("the add_done flag is NOT true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 
@@ -318,7 +324,7 @@ unsigned short QuerySet::add_query_list(int source_type_index, const PINT_DEQUE 
 	assert(field_index_deque != NULL && "field_index_deque should NOT be NULL");
 	if (add_done)
 	{
-		WRITE_ERROR("Fail to add another data");
+		WRITE_ERROR("the add_done flag is NOT true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 // Check if the index is out of range
@@ -372,7 +378,7 @@ unsigned short QuerySet::add_query_done()
 {
 	if (add_done)
 	{
-		WRITE_ERROR("Fail to add another data");
+		WRITE_ERROR("the add_done flag is NOT true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 	const_iterator iter = source_field_query_map.begin();
@@ -570,17 +576,14 @@ int CompanyGroupSet::get_company_group_size()
 	return COMPANY_GROUP_SIZE;
 }
 
-unsigned short CompanyGroupSet::create_instance_from_string(const char* source_string, CompanyGroupSet** company_group_set)
+unsigned short CompanyGroupSet::create_instance_from_string(const char* source_string, CompanyGroupSet& company_group_set)
 {
 	assert(source_string != NULL && "soruce_string should NOT be NULL");
-	assert(company_group_set != NULL && "company_group_set should NOT be NULL");
 	unsigned short ret = RET_SUCCESS;
-	CompanyGroupSet* company_group_set_tmp = new CompanyGroupSet();
 	char* source_string_copy = new char[strlen(source_string) + 1];
-	if (company_group_set_tmp == NULL || source_string_copy == NULL)
+	if (source_string_copy == NULL)
 	{
-		STATIC_WRITE_ERROR("Fail to allocate the memory: company_group_set_tmp/source_string_copy");
-		if (company_group_set_tmp != NULL) delete company_group_set_tmp;
+		STATIC_WRITE_ERROR("Fail to allocate the memory: source_string_copy");
 		if (source_string_copy != NULL) delete source_string_copy;
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
@@ -621,7 +624,7 @@ unsigned short CompanyGroupSet::create_instance_from_string(const char* source_s
 		{
 			int company_group = *iter_company;
 			// printf("Add Company Group: %d\n", company_group);
-			ret = company_group_set_tmp->add_company_group(company_group);
+			ret = company_group_set.add_company_group(company_group);
 			if (CHECK_FAILURE(ret))
 				goto OUT;
 			iter_company++;
@@ -640,7 +643,7 @@ unsigned short CompanyGroupSet::create_instance_from_string(const char* source_s
 // Check if the company number exist
 			if (company_profile->is_company_exist(company_number_string))
 			{
-				ret = company_group_set_tmp->add_company(company_number_string);
+				ret = company_group_set.add_company(company_number_string);
 				// printf("Add Company Number: %s\n", company_number_string);
 				if (CHECK_FAILURE(ret))
 					goto OUT;
@@ -648,24 +651,34 @@ unsigned short CompanyGroupSet::create_instance_from_string(const char* source_s
 			iter_company++;
 		}
 	}
-	ret = company_group_set_tmp->add_company_done();
-	if (CHECK_FAILURE(ret))
-		goto OUT;
-	*company_group_set = company_group_set_tmp;
+	ret = company_group_set.add_company_done();
 OUT:
 	if (source_string_copy != NULL)
 	{
 		delete source_string_copy;
 		source_string_copy = NULL;
 	}
+	return ret;
+}
+
+unsigned short CompanyGroupSet::create_instance_from_string(const char* source_string, CompanyGroupSet** company_group_set)
+{
+	assert(company_group_set != NULL && "company_group_set should NOT be NULL");
+	CompanyGroupSet* company_group_set_tmp = new CompanyGroupSet();
+	if (company_group_set_tmp == NULL)
+	{
+		STATIC_WRITE_ERROR("Fail to allocate the memory: company_group_set_tmp");
+		if (company_group_set_tmp != NULL) delete company_group_set_tmp;
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+	unsigned short ret = create_instance_from_string(source_string, *company_group_set_tmp);
+	ret = company_group_set_tmp->add_company_done();
 	if (CHECK_FAILURE(ret))
 	{
-		if (company_group_set_tmp != NULL)
-		{
-			delete company_group_set_tmp;
-			company_group_set_tmp = NULL;
-		}		
+		delete company_group_set_tmp;
+		company_group_set_tmp = NULL;	
 	}
+	*company_group_set = company_group_set_tmp;
 	return ret;
 }
 
@@ -969,12 +982,57 @@ CompanyGroupSet::const_iterator CompanyGroupSet::end()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-StockQuerySet::StockQuerySet()
+unsigned short StockQuerySet::create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet& stock_query_set)
+{
+	assert(query_source_string != NULL && "query_soruce_string should NOT be NULL");
+	assert(company_source_string != NULL && "company_soruce_string should NOT be NULL");
+	unsigned short ret = QuerySet::create_instance_from_string(query_source_string, *(PQUERY_SET)&stock_query_set);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	ret = CompanyGroupSet::create_instance_from_string(company_source_string, stock_query_set.company_group_set);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	return RET_SUCCESS;
+}
+
+unsigned short StockQuerySet::create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet** stock_query_set)
+{
+	assert(stock_query_set != NULL && "stock_query_set should NOT be NULL");
+	StockQuerySet* stock_query_set_tmp = new StockQuerySet();
+	if (stock_query_set_tmp == NULL)
+	{
+		STATIC_WRITE_ERROR("Fail to allocate the memory: stock_query_set_tmp");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+	unsigned short ret = create_instance_from_string(query_source_string, company_source_string, *stock_query_set_tmp);
+	if (CHECK_FAILURE(ret))
+	{
+		delete stock_query_set_tmp;
+		stock_query_set_tmp = NULL;
+	}
+	*stock_query_set = stock_query_set_tmp;
+	return ret;
+}
+
+StockQuerySet::StockQuerySet() :
+	add_done(false)
 {
 }
 
 StockQuerySet::~StockQuerySet()
 {
+}
+
+const std::string& StockQuerySet::to_string()
+{
+	if (query_set_string.empty())
+	{
+		QuerySet::to_string();
+		string company_set_string = company_group_set.to_string();
+		query_set_string += "\n";
+		query_set_string += company_set_string;
+	}
+	return query_set_string;
 }
 
 unsigned short StockQuerySet::add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque)
@@ -987,10 +1045,29 @@ unsigned short StockQuerySet::add_company(int company_group_number, std::string 
 	return company_group_set.add_company(company_group_number, company_code_number);
 }
 
+unsigned short StockQuerySet::add_company(std::string company_code_number)
+{
+	return company_group_set.add_company(company_code_number);
+}
+
 unsigned short StockQuerySet::add_company_group(int company_group_number)
 {
 	return company_group_set.add_company_group(company_group_number);
 }
+
+unsigned short StockQuerySet::add_query_done()
+{
+	unsigned short ret = QuerySet::add_query_done();
+	if (CHECK_FAILURE(ret))
+		return ret;
+	ret = company_group_set.add_company_done();
+	if (CHECK_FAILURE(ret))
+		return ret;
+	add_done = true;
+	return RET_SUCCESS;
+}
+
+bool StockQuerySet::is_add_query_done()const{return add_done;}
 
 const CompanyGroupSet& StockQuerySet::get_company_group_set()const
 {

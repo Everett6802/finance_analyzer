@@ -115,6 +115,7 @@ public:
 		const PINT_DEQUE get_second()const;
 	};
 public: 
+	static unsigned short create_instance_from_string(const char* source_string, QuerySet& query_set);
 	static unsigned short create_instance_from_string(const char* source_string, QuerySet** query_set);
 
 protected:
@@ -164,7 +165,9 @@ private:
 	static int get_company_group_size();
 
 public: 
+	static unsigned short create_instance_from_string(const char* source_string, CompanyGroupSet& company_group_set);
 	static unsigned short create_instance_from_string(const char* source_string, CompanyGroupSet** company_group_set);
+
 
 public:
 	class const_iterator
@@ -213,19 +216,28 @@ typedef CompanyGroupSet* PCOMPANY_GROUP_SET;
 
 class StockQuerySet : public QuerySet
 {
+public: 
+	static unsigned short create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet& stock_query_set);
+	static unsigned short create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet** stock_query_set);
+
 protected:
+	bool add_done;
 	CompanyGroupSet company_group_set;
 
 public:
+	const std::string& to_string();
+
 	StockQuerySet();
 	~StockQuerySet();
 
 	unsigned short add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
 	unsigned short add_company(int company_group_number, std::string company_code_number);
+	unsigned short add_company(std::string company_code_number);
 	unsigned short add_company_group(int company_group_number);
+	unsigned short add_query_done();
+	bool is_add_query_done()const;
 	const CompanyGroupSet& get_company_group_set()const;
 	CompanyGroupSet& get_company_group_set();
-	// unsigned short add_query_done();
 };
 typedef StockQuerySet* PSTOCK_QUERY_SET;
 

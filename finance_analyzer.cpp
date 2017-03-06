@@ -650,11 +650,18 @@ int main(int argc, char** argv)
 		// 	fprintf(stderr, "Add QuerySet Fail, due to: %s\n", get_ret_description(ret));
 		// printf("QuerySet:\n%s", query_set->to_string().c_str());
 
-		PCOMPANY_GROUP_SET company_group_set = NULL;
-		ret = CompanyGroupSet::create_instance_from_string("2347,g3-5,G12,2362,g2,1500-1510", &company_group_set);
+		// PCOMPANY_GROUP_SET company_group_set = NULL;
+		// ret = CompanyGroupSet::create_instance_from_string("2347,g3-5,G12,2362,g2,1500-1510", &company_group_set);
+		// if (CHECK_FAILURE(ret))
+		// 	fprintf(stderr, "Add CompanyGroupSet Fail, due to: %s\n", get_ret_description(ret));
+		// printf("CompanyGroupSet:\n%s", company_group_set->to_string().c_str());
+
+		PSTOCK_QUERY_SET stock_query_set = NULL;
+		ret = StockQuerySet::create_instance_from_string("0-1(2;4;5-7),3-4(1;2-4;6;7),6", "2347,g3-5,G12,2362,g2,1500-1510", &stock_query_set);
 		if (CHECK_FAILURE(ret))
-			fprintf(stderr, "Add CompanyGroupSet Fail, due to: %s\n", get_ret_description(ret));
-		printf("CompanyGroupSet:\n%s", company_group_set->to_string().c_str());
+			fprintf(stderr, "Add StockQuerySet Fail, due to: %s\n", get_ret_description(ret));
+		printf("StockQuerySet:\n%s", stock_query_set->to_string().c_str());
+
 		// STATIC_WRITE_DEBUG("Fuck DEBUG");
 		// // STATIC_WRITE_INFO("Fuck INFO");
 		// STATIC_WRITE_WARN("Fuck WARN");
