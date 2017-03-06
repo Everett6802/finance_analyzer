@@ -11,130 +11,6 @@ using namespace std;
 
 DECLARE_MSG_DUMPER_PARAM()
 
-unsigned short QuerySet::create_instance_from_string(const char* source_string, QuerySet** query_set)
-{
-	assert(source_string != NULL && "soruce_string should NOT be NULL");
-	assert(query_set != NULL && "query_set should NOT be NULL");
-	unsigned short ret = RET_SUCCESS;
-	QuerySet* query_set_tmp = new QuerySet();
-	char* source_string_copy = new char[strlen(source_string) + 1];
-	if (query_set_tmp == NULL || source_string_copy == NULL)
-	{
-		STATIC_WRITE_ERROR("Fail to allocate the memory: query_set_tmp/source_string_copy");
-		if (query_set_tmp != NULL) delete query_set_tmp;
-		if (source_string_copy != NULL) delete source_string_copy;
-		return RET_FAILURE_INSUFFICIENT_MEMORY;
-	}
-
-	strcpy(source_string_copy, source_string);
-	char* source_buf = source_string_copy;
-	char* source_type_outer = NULL;
-	char* rest_source_type_outer = NULL;
-// Parse the source type
-	while ((source_type_outer = strtok_r(source_buf, ",", &rest_source_type_outer)) != NULL)
-	{
-// Parse the field
-		char* close_parenthesis_pos = strrchr(source_type_outer, ')');
-		if (close_parenthesis_pos != NULL)
-		{
-// Add the source type with the field
-			char* open_parenthesis_pos = strchr(source_type_outer, '(');
-			if (open_parenthesis_pos == NULL)
-			{
-				STATIC_WRITE_FORMAT_ERROR("Incorrect format: %s", source_type_outer);
-				ret = RET_FAILURE_INVALID_ARGUMENT;
-				goto OUT;
-			}
-			int open_parenthesis_index = open_parenthesis_pos - source_type_outer;
-			int close_parenthesis_index = close_parenthesis_pos - source_type_outer;
-			int source_type_string_len = open_parenthesis_index;
-// Check source type/type range
-			if (source_type_string_len <= 0)
-			{
-				STATIC_WRITE_FORMAT_ERROR("Incorrect source type format: %s", source_type_outer);
-				ret = RET_FAILURE_INVALID_ARGUMENT;
-				goto OUT;
-			}
-// Check field/field range
-			int field_string_len = close_parenthesis_index - (open_parenthesis_index + 1);
-			if (field_string_len <= 2)
-			{
-				STATIC_WRITE_FORMAT_ERROR("Incorrect field format: %s", source_type_outer);
-				ret = RET_FAILURE_INVALID_ARGUMENT;
-				goto OUT;
-			}
-// Parse the sourc type
-			INT_DEQUE source_type_index_deque;
-			get_int_deque_from_partial_string(source_type_outer, source_type_string_len, source_type_index_deque);
-// Parse the field
-			INT_DEQUE field_index_deque;
-			char* source_buf_inner = &source_type_outer[open_parenthesis_index + 1];
-			char* source_type_inner = NULL;
-			char* rest_source_type_inner = NULL;
-			// fprintf(stderr, "source_type_outer: %s, open_parenthesis_index: %d, close_parenthesis_index: %d\n", source_type_outer, open_parenthesis_index, close_parenthesis_index);
-			while ((source_type_inner = strtok_r(source_buf_inner, ";", &rest_source_type_inner)) != NULL)
-			{
-				// fprintf(stderr, "source_type_inner: %s, rest_source_type_inner: %s\n", source_type_inner, rest_source_type_inner);
-				get_int_deque_from_partial_string(source_type_inner, strlen(source_type_inner), field_index_deque);
-				if (source_buf_inner != NULL)
-					source_buf_inner = NULL;
-			}	
-			INT_DEQUE::iterator iter_source_type = source_type_index_deque.begin();
-			while (iter_source_type != source_type_index_deque.end())
-			{
-				// INT_DEQUE::iterator iter_field = field_index_deque.begin();
-				// while (iter_field != field_index_deque.end())
-				// {
-				// 	printf("Add field: %d into QuerySet1\n", *iter_field);
-				// 	iter_field++;
-				// }
-				// printf("Add source type: %d into QuerySet1\n", *iter_source_type);
-				ret = query_set_tmp->add_query_list(*iter_source_type, &field_index_deque);
-				if (CHECK_FAILURE(ret))
-					goto OUT;
-				iter_source_type++;
-			}
-		}
-		else
-		{
-// Add the source type without the field
-// Parse the source type
-			INT_DEQUE source_type_index_deque;
-			get_int_deque_from_partial_string(source_type_outer, strlen(source_type_outer), source_type_index_deque);
-			INT_DEQUE::iterator iter = source_type_index_deque.begin();
-			while (iter != source_type_index_deque.end())
-			{
-				// printf("Add source type: %d into QuerySet2\n", *iter);
-				ret = query_set_tmp->add_query(*iter);
-				if (CHECK_FAILURE(ret))
-					goto OUT;
-				iter++;
-			}
-		}
-		if (source_buf != NULL)
-			source_buf = NULL;
-	}
-	ret = query_set_tmp->add_query_done();
-	if (CHECK_FAILURE(ret))
-		goto OUT;
-	*query_set = query_set_tmp;
-OUT:
-	if (source_string_copy != NULL)
-	{
-		delete source_string_copy;
-		source_string_copy = NULL;
-	}
-	if (CHECK_FAILURE(ret))
-	{
-		if (query_set_tmp != NULL)
-		{
-			delete query_set_tmp;
-			query_set_tmp = NULL;
-		}		
-	}
-	return ret;
-}
-
 QuerySet::const_iterator::const_iterator(INT_INT_DEQUE_MAP_ITER iterator) : iter(iterator){}
 
 QuerySet::const_iterator QuerySet::const_iterator::operator++()
@@ -173,6 +49,130 @@ int QuerySet::const_iterator::get_first()const
 const PINT_DEQUE QuerySet::const_iterator::get_second()const
 {
 	return (PINT_DEQUE)iter->second;
+}
+
+unsigned short QuerySet::create_instance_from_string(const char* source_string, QuerySet** query_set)
+{
+	assert(source_string != NULL && "soruce_string should NOT be NULL");
+	assert(query_set != NULL && "query_set should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	QuerySet* query_set_tmp = new QuerySet();
+	char* source_string_copy = new char[strlen(source_string) + 1];
+	if (query_set_tmp == NULL || source_string_copy == NULL)
+	{
+		STATIC_WRITE_ERROR("Fail to allocate the memory: query_set_tmp/source_string_copy");
+		if (query_set_tmp != NULL) delete query_set_tmp;
+		if (source_string_copy != NULL) delete source_string_copy;
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+
+	strcpy(source_string_copy, source_string);
+	char* source_buf = source_string_copy;
+	char* source_type_data_outer = NULL;
+	char* rest_source_type_data_outer = NULL;
+// Parse the source type. ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7)
+	while ((source_type_data_outer = strtok_r(source_buf, ",", &rest_source_type_data_outer)) != NULL)
+	{
+// Parse the field
+		char* close_parenthesis_pos = strrchr(source_type_data_outer, ')');
+		if (close_parenthesis_pos != NULL)
+		{
+// Add the source type with the field
+			char* open_parenthesis_pos = strchr(source_type_data_outer, '(');
+			if (open_parenthesis_pos == NULL)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect format: %s", source_type_data_outer);
+				ret = RET_FAILURE_INVALID_ARGUMENT;
+				goto OUT;
+			}
+			int open_parenthesis_index = open_parenthesis_pos - source_type_data_outer;
+			int close_parenthesis_index = close_parenthesis_pos - source_type_data_outer;
+			int source_type_string_len = open_parenthesis_index;
+// Check source type/type range
+			if (source_type_string_len <= 0)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect source type format: %s", source_type_data_outer);
+				ret = RET_FAILURE_INVALID_ARGUMENT;
+				goto OUT;
+			}
+// Check field/field range
+			int field_string_len = close_parenthesis_index - (open_parenthesis_index + 1);
+			if (field_string_len <= 2)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect field format: %s", source_type_data_outer);
+				ret = RET_FAILURE_INVALID_ARGUMENT;
+				goto OUT;
+			}
+// Parse the sourc type
+			INT_DEQUE source_type_index_deque;
+			get_int_deque_from_partial_string(source_type_data_outer, source_type_string_len, source_type_index_deque);
+// Parse the field
+			INT_DEQUE field_index_deque;
+			char* source_buf_inner = &source_type_data_outer[open_parenthesis_index + 1];
+			char* source_type_data_innner = NULL;
+			char* rest_source_type_data_innner = NULL;
+			// fprintf(stderr, "source_type_data_outer: %s, open_parenthesis_index: %d, close_parenthesis_index: %d\n", source_type_data_outer, open_parenthesis_index, close_parenthesis_index);
+			while ((source_type_data_innner = strtok_r(source_buf_inner, ";", &rest_source_type_data_innner)) != NULL)
+			{
+				// fprintf(stderr, "source_type_data_innner: %s, rest_source_type_data_innner: %s\n", source_type_data_innner, rest_source_type_data_innner);
+				get_int_deque_from_partial_string(source_type_data_innner, strlen(source_type_data_innner), field_index_deque);
+				if (source_buf_inner != NULL)
+					source_buf_inner = NULL;
+			}	
+			INT_DEQUE::iterator iter_source_type = source_type_index_deque.begin();
+			while (iter_source_type != source_type_index_deque.end())
+			{
+				// INT_DEQUE::iterator iter_field = field_index_deque.begin();
+				// while (iter_field != field_index_deque.end())
+				// {
+				// 	printf("Add field: %d into QuerySet1\n", *iter_field);
+				// 	iter_field++;
+				// }
+				// printf("Add source type: %d into QuerySet1\n", *iter_source_type);
+				ret = query_set_tmp->add_query_list(*iter_source_type, &field_index_deque);
+				if (CHECK_FAILURE(ret))
+					goto OUT;
+				iter_source_type++;
+			}
+		}
+		else
+		{
+// Add the source type without the field
+// Parse the source type
+			INT_DEQUE source_type_index_deque;
+			get_int_deque_from_partial_string(source_type_data_outer, strlen(source_type_data_outer), source_type_index_deque);
+			INT_DEQUE::iterator iter = source_type_index_deque.begin();
+			while (iter != source_type_index_deque.end())
+			{
+				// printf("Add source type: %d into QuerySet2\n", *iter);
+				ret = query_set_tmp->add_query(*iter);
+				if (CHECK_FAILURE(ret))
+					goto OUT;
+				iter++;
+			}
+		}
+		if (source_buf != NULL)
+			source_buf = NULL;
+	}
+	ret = query_set_tmp->add_query_done();
+	if (CHECK_FAILURE(ret))
+		goto OUT;
+	*query_set = query_set_tmp;
+OUT:
+	if (source_string_copy != NULL)
+	{
+		delete source_string_copy;
+		source_string_copy = NULL;
+	}
+	if (CHECK_FAILURE(ret))
+	{
+		if (query_set_tmp != NULL)
+		{
+			delete query_set_tmp;
+			query_set_tmp = NULL;
+		}		
+	}
+	return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -570,11 +570,111 @@ int CompanyGroupSet::get_company_group_size()
 	return COMPANY_GROUP_SIZE;
 }
 
+unsigned short CompanyGroupSet::create_instance_from_string(const char* source_string, CompanyGroupSet** company_group_set)
+{
+	assert(source_string != NULL && "soruce_string should NOT be NULL");
+	assert(company_group_set != NULL && "company_group_set should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	CompanyGroupSet* company_group_set_tmp = new CompanyGroupSet();
+	char* source_string_copy = new char[strlen(source_string) + 1];
+	if (company_group_set_tmp == NULL || source_string_copy == NULL)
+	{
+		STATIC_WRITE_ERROR("Fail to allocate the memory: company_group_set_tmp/source_string_copy");
+		if (company_group_set_tmp != NULL) delete company_group_set_tmp;
+		if (source_string_copy != NULL) delete source_string_copy;
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+
+	strcpy(source_string_copy, source_string);
+	char* source_buf = source_string_copy;
+	char* company_data = NULL;
+	char* rest_company_data = NULL;
+// Parse the string. Ex. 2347,g3-5,G12,2362,g2,1500-1510
+	INT_DEQUE company_group_deque;
+	INT_DEQUE company_number_deque;
+	while ((company_data = strtok_r(source_buf, ",", &rest_company_data)) != NULL)
+	{
+// Check if it's a group
+		bool is_group = (*company_data == 'G' || *company_data == 'g') ? true : false;
+		int company_data_len = strlen(company_data);
+		if (is_group)
+		{
+// Keep track of the company group
+			get_int_deque_from_partial_string(&company_data[1], company_data_len - 1, company_group_deque);
+		}
+		else
+		{
+// Keep track of the company number
+			get_int_deque_from_partial_string(company_data, company_data_len, company_number_deque);
+		}
+		if (source_buf != NULL)
+			source_buf = NULL;
+	}
+	INT_DEQUE_ITER iter_company;
+	static const int COMPANY_NUMBER_STRING_BUF = 8;
+	char company_number_string[COMPANY_NUMBER_STRING_BUF];
+// Add the company due to the company group
+	if (!company_group_deque.empty())
+	{
+		iter_company = company_group_deque.begin();
+		while (iter_company != company_group_deque.end())
+		{
+			int company_group = *iter_company;
+			// printf("Add Company Group: %d\n", company_group);
+			ret = company_group_set_tmp->add_company_group(company_group);
+			if (CHECK_FAILURE(ret))
+				goto OUT;
+			iter_company++;
+		}
+	}
+// Add the company due to the company number
+	if (!company_number_deque.empty())
+	{
+		DECLARE_AND_IMPLEMENT_STATIC_COMPANY_PROFILE()
+		iter_company = company_number_deque.begin();
+		while (iter_company != company_number_deque.end())
+		{
+			int company_number = *iter_company;
+			memset(company_number_string, 0x0, sizeof(char) * COMPANY_NUMBER_STRING_BUF);
+			snprintf(company_number_string, COMPANY_NUMBER_STRING_BUF, "%04d", company_number);
+// Check if the company number exist
+			if (company_profile->is_company_exist(company_number_string))
+			{
+				ret = company_group_set_tmp->add_company(company_number_string);
+				// printf("Add Company Number: %s\n", company_number_string);
+				if (CHECK_FAILURE(ret))
+					goto OUT;
+			}
+			iter_company++;
+		}
+	}
+	ret = company_group_set_tmp->add_company_done();
+	if (CHECK_FAILURE(ret))
+		goto OUT;
+	*company_group_set = company_group_set_tmp;
+OUT:
+	if (source_string_copy != NULL)
+	{
+		delete source_string_copy;
+		source_string_copy = NULL;
+	}
+	if (CHECK_FAILURE(ret))
+	{
+		if (company_group_set_tmp != NULL)
+		{
+			delete company_group_set_tmp;
+			company_group_set_tmp = NULL;
+		}		
+	}
+	return ret;
+}
+
 CompanyGroupSet::CompanyGroupSet() :
+	add_done(false),
 	company_number_in_group_map(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
-	// IMPLEMENT_COMPANY_PROFILE()
+	IMPLEMENT_COMPANY_PROFILE()
 }
 
 CompanyGroupSet::~CompanyGroupSet()
@@ -596,14 +696,21 @@ CompanyGroupSet::~CompanyGroupSet()
 		delete company_number_in_group_map;
 		company_number_in_group_map = NULL;
 	}
-	// RELEASE_COMPANY_PROFILE()
+	RELEASE_COMPANY_PROFILE()
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short CompanyGroupSet::add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque)
+unsigned short CompanyGroupSet::init_company_number_in_group_map_elememnt(int company_group_number)
 {
 	if (company_number_in_group_map == NULL)
 	{
+		if (add_done)
+		{
+			// init_whole_company_number_in_group_map();
+			// company_number_in_group_map = whole_company_number_in_group_map;
+			WRITE_ERROR("The add_done flag is true");
+			return RET_FAILURE_INCORRECT_OPERATION;
+		}
 		company_number_in_group_map = new INT_STRING_DEQUE_MAP();
 		if (company_number_in_group_map == NULL)
 		{
@@ -611,9 +718,13 @@ unsigned short CompanyGroupSet::add_company_list(int company_group_number, const
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
 	}
-	STRING_DEQUE_ITER iter;
 	if (company_number_in_group_map->find(company_group_number) == company_number_in_group_map->end())
 	{
+		if (add_done)
+		{
+			WRITE_ERROR("The add_done flag is true");
+			return RET_FAILURE_INCORRECT_OPERATION;
+		}
 		PSTRING_DEQUE company_number_deque = new STRING_DEQUE();
 		if (company_number_deque == NULL)
 		{
@@ -626,76 +737,174 @@ unsigned short CompanyGroupSet::add_company_list(int company_group_number, const
 	{
 		if ((*company_number_in_group_map)[company_group_number] == NULL)
 		{
-			WRITE_FORMAT_ERROR("The company group[%d] has already been set to NULL", company_group_number);
-			return RET_FAILURE_INCORRECT_OPERATION;	
+			WRITE_FORMAT_WARN("The company group[%d] has already been set to NULL", company_group_number);
+			// return RET_FAILURE_INCORRECT_OPERATION;	
 		}
 	}
-	iter = company_code_number_in_group_deque->begin();
-	PSTRING_DEQUE company_code_number_in_group_deque_in_map = (*company_number_in_group_map)[company_group_number];
-	assert(company_code_number_in_group_deque_in_map != NULL && "company_code_number_in_group_deque_in_map should NOT be NULL");
-	while (iter != company_code_number_in_group_deque->end())
+	return RET_SUCCESS;	
+}
+
+PSTRING_DEQUE CompanyGroupSet::get_company_number_in_group_map_elememnt(int company_group_number)
+{
+	static const int ERRMSG_SIZE = 64;
+	static char errmsg[ERRMSG_SIZE];
+	if (company_group_number < 0 || company_group_number >= get_company_group_size())
 	{
-		string company_code_number = (string)*iter;
-		STRING_DEQUE_ITER iter = company_code_number_in_group_deque_in_map->begin();
-		if (find(company_code_number_in_group_deque_in_map->begin(), company_code_number_in_group_deque_in_map->end(), company_code_number) != company_code_number_in_group_deque_in_map->end())
-		// if ((*company_number_in_group_map)[company_group_number]->find(company_code_number) != (*company_number_in_group_map)[company_group_number]->end())
-		{
-			WRITE_FORMAT_WARN("The company code number[%s] has already been added to the group[%d]", company_code_number.c_str(), company_group_number);
-			continue;
-		}
-		(*company_number_in_group_map)[company_group_number]->push_back(company_code_number);
-		iter++;
+		snprintf(errmsg, ERRMSG_SIZE, "The company group number[%d] is NOT in range [0, %d)", company_group_number, get_company_group_size());
+		throw out_of_range(errmsg);
 	}
+	unsigned short ret = init_company_number_in_group_map_elememnt(company_group_number);
+	if (CHECK_FAILURE(ret))
+	{
+// Should NOT fail
+		snprintf(errmsg, ERRMSG_SIZE, "Fail to initialize the element of company group[%d]", company_group_number);
+		throw runtime_error(errmsg);
+	}
+	PSTRING_DEQUE company_code_number_in_group_deque_in_map = (*company_number_in_group_map)[company_group_number];
+	// assert(company_code_number_in_group_deque_in_map != NULL && "company_code_number_in_group_deque_in_map should NOT be NULL");
+	return company_code_number_in_group_deque_in_map;
+}
+
+unsigned short CompanyGroupSet::add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque)
+{
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	PSTRING_DEQUE company_code_number_in_group_deque_in_map = get_company_number_in_group_map_elememnt(company_group_number);
+	if (company_code_number_in_group_deque_in_map != NULL)
+	{
+// Insert each company code number into the mapss
+		STRING_DEQUE_ITER iter = company_code_number_in_group_deque->begin();
+		while (iter != company_code_number_in_group_deque->end())
+		{
+			string company_code_number = (string)*iter;
+			int cur_company_group_number = company_profile->get_company_group_number(company_code_number);
+// Check if the company is in the same group
+			if (cur_company_group_number != company_group_number)
+			{
+				WRITE_FORMAT_ERROR("The company [%s] belongs to the group[%d], not group[%d]", company_code_number.c_str(), company_group_number, cur_company_group_number);
+				return RET_FAILURE_INVALID_ARGUMENT;
+			}
+			STRING_DEQUE_ITER iter = company_code_number_in_group_deque_in_map->begin();
+			if (find(company_code_number_in_group_deque_in_map->begin(), company_code_number_in_group_deque_in_map->end(), company_code_number) != company_code_number_in_group_deque_in_map->end())
+			// if ((*company_number_in_group_map)[company_group_number]->find(company_code_number) != (*company_number_in_group_map)[company_group_number]->end())
+				WRITE_FORMAT_WARN("The company code number[%s] has already been added to the group[%d]", company_code_number.c_str(), company_group_number);
+			else
+				company_code_number_in_group_deque_in_map->push_back(company_code_number);
+			iter++;
+		}
+	}
+	else
+		WRITE_FORMAT_WARN("The entire company group[%d] is added", company_group_number);
 	return RET_SUCCESS;
 }
 
 unsigned short CompanyGroupSet::add_company(int company_group_number, std::string company_code_number)
 {
-	STRING_DEQUE company_code_number_in_group_deque;
-	company_code_number_in_group_deque.push_back(company_code_number);
-	return add_company_list(company_group_number, &company_code_number_in_group_deque);
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	PSTRING_DEQUE company_code_number_in_group_deque_in_map = get_company_number_in_group_map_elememnt(company_group_number);
+	if (company_code_number_in_group_deque_in_map != NULL)
+	{
+		if (find(company_code_number_in_group_deque_in_map->begin(), company_code_number_in_group_deque_in_map->end(), company_code_number) != company_code_number_in_group_deque_in_map->end())
+			WRITE_FORMAT_WARN("The company code number[%s] has already been added to the group[%d]", company_code_number.c_str(), company_group_number);
+		else
+			company_code_number_in_group_deque_in_map->push_back(company_code_number);
+	}
+	else
+		WRITE_FORMAT_WARN("The entire company group[%d] is added", company_group_number);
+	return RET_SUCCESS;
+	// STRING_DEQUE company_code_number_in_group_deque;
+	// company_code_number_in_group_deque.push_back(company_code_number);
+	// return add_company_list_in_group(company_group_number, &company_code_number_in_group_deque);
+}
+
+unsigned short CompanyGroupSet::add_company(std::string company_code_number)
+{
+	assert(company_profile != NULL && "company_profile should NOT be NULL");
+	int company_group_number = company_profile->get_company_group_number(company_code_number);
+	return add_company(company_group_number, company_code_number);
 }
 
 unsigned short CompanyGroupSet::add_company_group(int company_group_number)
 {
-	if (company_number_in_group_map == NULL)
+	if (add_done)
 	{
-		company_number_in_group_map = new INT_STRING_DEQUE_MAP();
-		if (company_number_in_group_map == NULL)
-		{
-			WRITE_ERROR("Fail to allocate memory: company_number_in_group_map");
-			return RET_FAILURE_INSUFFICIENT_MEMORY;
-		}
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	STRING_DEQUE_ITER iter;
-	if (company_number_in_group_map->find(company_group_number) != company_number_in_group_map->end())
+	PSTRING_DEQUE company_code_number_in_group_deque_in_map = get_company_number_in_group_map_elememnt(company_group_number);
+	if (company_code_number_in_group_deque_in_map != NULL)
 	{
-		if ((*company_number_in_group_map)[company_group_number] != NULL)
+		STRING_DEQUE_ITER iter;
+		if (company_number_in_group_map->find(company_group_number) != company_number_in_group_map->end())
 		{
-			PSTRING_DEQUE company_code_number_in_group_deque = (*company_number_in_group_map)[company_group_number];
-			delete company_code_number_in_group_deque;
-			WRITE_FORMAT_WARN("Select all company group[%d], ignore the original settings......", company_group_number);
+			if ((*company_number_in_group_map)[company_group_number] != NULL)
+			{
+				PSTRING_DEQUE company_code_number_in_group_deque = (*company_number_in_group_map)[company_group_number];
+				delete company_code_number_in_group_deque;
+				WRITE_FORMAT_WARN("Select all company group[%d], ignore the original settings......", company_group_number);
+			}
 		}
+		(*company_number_in_group_map)[company_group_number] = NULL;
 	}
-	(*company_number_in_group_map)[company_group_number] = NULL;
+	else
+		WRITE_FORMAT_WARN("The entire company group[%d] is added", company_group_number);
 	return RET_SUCCESS;
 }
+
+unsigned short CompanyGroupSet::add_company_done()
+{
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	if (company_number_in_group_map == NULL)
+	{
+		init_whole_company_number_in_group_map();
+		company_number_in_group_map = whole_company_number_in_group_map;
+	}
+	else
+	{
+		INT_STRING_DEQUE_MAP_ITER iter = company_number_in_group_map->begin();
+		while (iter != company_number_in_group_map->end())
+		{
+			int company_group_index = iter->first;
+			if ((*company_number_in_group_map)[company_group_index] == NULL)
+			{
+				if (whole_company_number_in_group_map == NULL)
+					init_whole_company_number_in_group_map();
+				(*company_number_in_group_map)[company_group_index] = (*whole_company_number_in_group_map)[company_group_index];
+			}
+			++iter;
+		}	
+	}
+	add_done = true;
+	return RET_SUCCESS;
+}
+
+bool CompanyGroupSet::is_add_company_done()const{return add_done;}
 
 const PSTRING_DEQUE CompanyGroupSet::get_company_number_in_group_list(int company_group_index)const
 {
 	static const int ERRMSG_SIZE = 128;
 	static char errmsg[ERRMSG_SIZE];
-// // Check if index is Out of range
-// 	assert((company_group_index >= 0 && company_group_index < CompanyGroupSet::get_company_group_size()) && "company_group_index should NOT be out-of-range");
-// 	{
-// 		snprintf(errmsg, ERRMSG_SIZE, "The company group index[%d] is NOT in range [0, %d)", company_group_index, CompanyGroupSet::get_company_group_size());
-// 		throw out_of_range(errmsg);
-// 	}
-	if (company_number_in_group_map == NULL)
+	if (!add_done)
 	{
-		if (whole_company_number_in_group_map == NULL)
-			init_whole_company_number_in_group_map();
-		company_number_in_group_map = whole_company_number_in_group_map;
+		WRITE_ERROR("The add_done flag is false");
+		throw runtime_error("The add_done flag is false");
+	}
+// Check if index is Out of range
+	if(company_group_index < 0 && company_group_index >= get_company_group_size())
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "The company group index[%d] is NOT in range [0, %d)", company_group_index, get_company_group_size());
+		throw out_of_range(errmsg);
 	}
 // Check if the company group index is added into data structure
 	if (company_number_in_group_map->find(company_group_index) == company_number_in_group_map->end())
@@ -703,15 +912,37 @@ const PSTRING_DEQUE CompanyGroupSet::get_company_number_in_group_list(int compan
 		snprintf(errmsg, ERRMSG_SIZE, "The company group index[%d] is NOT found in data structure", company_group_index);
 		throw invalid_argument(errmsg);
 	}
-		
-	PSTRING_DEQUE company_number_deque = (*company_number_in_group_map)[company_group_index];
-	if (company_number_deque == NULL)
+	return (*company_number_in_group_map)[company_group_index];
+}
+
+const std::string& CompanyGroupSet::to_string()
+{
+	static const int BUF_SIZE = 1024;
+	static char buf[BUF_SIZE];
+	if (company_group_set_string.empty())
 	{
-		if (whole_company_number_in_group_map == NULL)
-			init_whole_company_number_in_group_map();
-		company_number_deque = (*whole_company_number_in_group_map)[company_group_index];
+		if (company_number_in_group_map != NULL)
+		{
+			for (int company_group_index = 0 ; company_group_index < get_company_group_size() ; company_group_index++)
+			{
+				if (company_number_in_group_map->find(company_group_index) == company_number_in_group_map->end())
+					continue;
+				snprintf(buf, BUF_SIZE, "%2d|", company_group_index);
+				company_group_set_string += string(buf);
+				PSTRING_DEQUE company_code_number_in_group_deque_in_map = get_company_number_in_group_map_elememnt(company_group_index);
+				STRING_DEQUE_ITER iter = company_code_number_in_group_deque_in_map->begin();
+				while (iter != company_code_number_in_group_deque_in_map->end())
+				{
+					string company_code_number = *iter;
+					snprintf(buf, BUF_SIZE, " %s", company_code_number.c_str());
+					company_group_set_string += string(buf);
+					iter++;
+				}
+				company_group_set_string += string("\n");
+			}
+		}
 	}
-	return company_number_deque;
+	return company_group_set_string;
 }
 
 CompanyGroupSet::const_iterator CompanyGroupSet::begin() 
@@ -746,9 +977,9 @@ StockQuerySet::~StockQuerySet()
 {
 }
 
-unsigned short StockQuerySet::add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque)
+unsigned short StockQuerySet::add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque)
 {
-	return company_group_set.add_company_list(company_group_number, company_code_number_in_group_deque);
+	return company_group_set.add_company_list_in_group(company_group_number, company_code_number_in_group_deque);
 }
 
 unsigned short StockQuerySet::add_company(int company_group_number, std::string company_code_number)

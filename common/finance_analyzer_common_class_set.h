@@ -95,9 +95,6 @@ SourceTypeIndexSet.insert(SourceIndex);\
 // };
 class QuerySet
 {
-public: 
-	static unsigned short create_instance_from_string(const char* source_string, QuerySet** query_set);
-
 protected:
 	DECLARE_MSG_DUMPER()
 
@@ -117,6 +114,8 @@ public:
 		int get_first()const;
 		const PINT_DEQUE get_second()const;
 	};
+public: 
+	static unsigned short create_instance_from_string(const char* source_string, QuerySet** query_set);
 
 protected:
 	bool add_done;
@@ -154,15 +153,18 @@ typedef MarketQuerySet* PMARKET_QUERY_SET;
 
 class CompanyGroupSet
 {
+private:
 	DECLARE_MSG_DUMPER()
-	// DECLARE_COMPANY_PROFILE()
+	DECLARE_COMPANY_PROFILE()
 
 private:
 	static PINT_STRING_DEQUE_MAP whole_company_number_in_group_map;
-	mutable PINT_STRING_DEQUE_MAP company_number_in_group_map;
 
 	static void init_whole_company_number_in_group_map();
 	static int get_company_group_size();
+
+public: 
+	static unsigned short create_instance_from_string(const char* source_string, CompanyGroupSet** company_group_set);
 
 public:
 	class const_iterator
@@ -181,15 +183,28 @@ public:
 		const PSTRING_DEQUE get_second()const;
 	};
 
+private:
+	bool add_done;
+	mutable PINT_STRING_DEQUE_MAP company_number_in_group_map;
+	mutable std::string company_group_set_string;
+	unsigned short init_company_number_in_group_map_elememnt(int company_group_number);
+	PSTRING_DEQUE get_company_number_in_group_map_elememnt(int company_group_number);
+
+public:
+	const std::string& to_string();
+
 	const_iterator begin();
 	const_iterator end();
 
 	CompanyGroupSet();
 	~CompanyGroupSet();
 
-	unsigned short add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
+	unsigned short add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
 	unsigned short add_company(int company_group_number, std::string company_code_number);
+	unsigned short add_company(std::string company_code_number);
 	unsigned short add_company_group(int company_group_number);
+	unsigned short add_company_done();
+	bool is_add_company_done()const;
 	const PSTRING_DEQUE get_company_number_in_group_list(int company_group_index)const;
 };
 typedef CompanyGroupSet* PCOMPANY_GROUP_SET;
@@ -205,7 +220,7 @@ public:
 	StockQuerySet();
 	~StockQuerySet();
 
-	unsigned short add_company_list(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
+	unsigned short add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
 	unsigned short add_company(int company_group_number, std::string company_code_number);
 	unsigned short add_company_group(int company_group_number);
 	const CompanyGroupSet& get_company_group_set()const;

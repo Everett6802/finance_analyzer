@@ -441,7 +441,6 @@ const PSTRING_DEQUE FinanceAnalyzerCompanyProfile::lookup_company_profile(string
 		snprintf(errmsg, ERRMSG_SIZE, "Fail to find the company profile of company number: %s", company_number.c_str());
 		throw invalid_argument(string(errmsg));
 	}
-
 	return ((PCOMPANY_PROFILE_ENTRY)iter->second)->profile_element_deque;
 }
 
@@ -458,6 +457,13 @@ string FinanceAnalyzerCompanyProfile::lookup_company_group_name(string company_n
 string FinanceAnalyzerCompanyProfile::lookup_company_group_number(string company_number)const
 {
 	return (*lookup_company_profile(company_number))[COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER];
+}
+
+int FinanceAnalyzerCompanyProfile::get_company_group_number(string company_number)const
+{
+	string company_group_number = lookup_company_group_number(company_number);
+	int company_group_number_int = atoi(company_group_number.c_str());
+	return company_group_number_int;
 }
 
 bool FinanceAnalyzerCompanyProfile::is_company_exist(std::string company_number)const

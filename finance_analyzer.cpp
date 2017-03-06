@@ -84,7 +84,7 @@ void show_usage_and_exit()
 		PRINT("  %s: %d\n", FINANCE_DATABASE_DESCRIPTION_LIST[i], i);
 	PRINT("  Format 1: All source types/fields (ex. all)\n");	
 	PRINT("  Format 2: Format 2: Source type index/index range (ex. 1,2-4,6)\n");
-	PRINT("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-4;5),2-4(12-16;25),6,8(1;3;5-7;8))\n");
+	PRINT("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7))\n");
 // Time range
 	PRINT("-t|--time_range\nDescription: Time range\nDefault: full time range\n");
 	PRINT("  Format 1: Start time: (ex. 2015-01-01)\n");
@@ -97,7 +97,8 @@ void show_usage_and_exit()
 		PRINT("  Format 1: Company code number (ex. 2347)\n");
 		PRINT("  Format 2: Company code number range (ex. 2100-2200)\n");
 		PRINT("  Format 3: Company group number (ex. [Gg]12)\n");
-		PRINT("  Format 4: Company code number/number range/group hybrid (ex. 2347,2100-2200,G12,2362,g2,1500-1510)\n");
+		PRINT("  Format 3: Company group number range (ex. [Gg]12-15)\n");
+		PRINT("  Format 4: Company code number/number range/group/group range hybrid (ex. 2347,g3-5,G12,2362,g2,1500-1510)\n");
 	}
 	PRINT("===================================================\n");
 	exit(EXIT_SUCCESS);
@@ -643,13 +644,19 @@ int main(int argc, char** argv)
 		}
 
 // Let's do something
-		PQUERY_SET query_set = NULL;
-		ret = QuerySet::create_instance_from_string("0-1(2;4;5-7),3-4(2;3-5;7),6", &query_set);
+		// PQUERY_SET query_set = NULL;
+		// ret = QuerySet::create_instance_from_string("0-1(2;4;5-7),3-4(2;3-5;7),6", &query_set);
+		// if (CHECK_FAILURE(ret))
+		// 	fprintf(stderr, "Add QuerySet Fail, due to: %s\n", get_ret_description(ret));
+		// printf("QuerySet:\n%s", query_set->to_string().c_str());
+
+		PCOMPANY_GROUP_SET company_group_set = NULL;
+		ret = CompanyGroupSet::create_instance_from_string("2347,g3-5,G12,2362,g2,1500-1510", &company_group_set);
 		if (CHECK_FAILURE(ret))
-			fprintf(stderr, "Fail, due to: %s\n", get_ret_description(ret));
-		printf("QuerySet:\n%s", query_set->to_string().c_str());
+			fprintf(stderr, "Add CompanyGroupSet Fail, due to: %s\n", get_ret_description(ret));
+		printf("CompanyGroupSet:\n%s", company_group_set->to_string().c_str());
 		// STATIC_WRITE_DEBUG("Fuck DEBUG");
-		// STATIC_WRITE_INFO("Fuck INFO");
+		// // STATIC_WRITE_INFO("Fuck INFO");
 		// STATIC_WRITE_WARN("Fuck WARN");
 		// STATIC_WRITE_ERROR("Fuck ERROR");
     }
