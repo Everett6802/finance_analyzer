@@ -356,11 +356,88 @@ bool TimeRangeCfg::time_in_range(const TimeRangeCfg* time_range_cfg, int year, i
 	return time_in_range(time_range_cfg, time_cfg);
 }
 
+unsigned short TimeRangeCfg::create_instance_from_string(const char* source_string, TimeRangeCfg& time_range_cfg)
+{
+	assert(source_string != NULL && "soruce_string should NOT be NULL");
+	int source_string_copy_size = strlen(source_string) + 1;
+	char* source_string_copy = new char[source_string_copy_size];
+	if (source_string_copy == NULL)
+	{
+		STATIC_WRITE_ERROR("Fail to allocate the memory: source_string_copy");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+	memcpy(source_string_copy, source_string, sizeof(char) * source_string_copy_size);
+	unsigned short ret = RET_SUCCESS;
+	char* time_start_str = NULL; 
+	char* time_end_str = NULL;
+	char* comma_pos = strchr(source_string_copy, ',');
+	if (comma_pos == NULL)
+	{
+// Only the start time
+		time_start_str = source_string_copy;
+	}
+	else
+	{
+		int comma_index = comma_pos - source_string_copy;
+		if (comma_index == 0)
+		{
+// Only the end time
+			time_end_str = &source_string_copy[1];
+		}
+		else
+		{
+// The time range
+			source_string_copy[comma_index] = '\0';
+			time_start_str = source_string_copy;
+			time_end_str = &source_string_copy[comma_index + 1];
+		}
+	}
+	time_range_cfg.add_time(time_start_str, time_end_str);
+	ret = time_range_cfg.add_time_done();
+	if (source_string_copy != NULL)
+	{
+		delete source_string_copy;
+		source_string_copy = NULL;
+	}
+	return ret;
+}
+
+unsigned short TimeRangeCfg::create_instance_from_string(const char* source_string, TimeRangeCfg** time_range_cfg)
+{
+	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
+	TimeRangeCfg* time_range_cfg_tmp = new TimeRangeCfg();
+	if (time_range_cfg_tmp == NULL)
+	{
+		STATIC_WRITE_ERROR("Fail to allocate the memory: time_range_cfg_tmp");
+		if (time_range_cfg_tmp != NULL) delete time_range_cfg_tmp;
+		return RET_FAILURE_INSUFFICIENT_MEMORY;
+	}
+	unsigned short ret = create_instance_from_string(source_string, *time_range_cfg_tmp);
+	if (CHECK_FAILURE(ret))
+	{
+		delete time_range_cfg_tmp;
+		time_range_cfg_tmp = NULL;
+	}
+	*time_range_cfg = time_range_cfg_tmp;
+	return ret;
+}
+
+TimeRangeCfg::TimeRangeCfg() :
+	time_start_cfg(NULL),
+	time_end_cfg(NULL),
+	time_range_description(NULL),
+	type_is_month(false),
+	add_done(false)
+{
+	IMPLEMENT_MSG_DUMPER()
+}
+
 TimeRangeCfg::TimeRangeCfg(const char* time_start_str, const char* time_end_str) :
 	time_start_cfg(NULL),
 	time_end_cfg(NULL),
 	time_range_description(NULL),
-	type_is_month(false)
+	type_is_month(false),
+	add_done(true)
 {
 	IMPLEMENT_MSG_DUMPER()
 
@@ -399,7 +476,8 @@ TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int year_end, int mo
 	time_start_cfg(NULL),
 	time_end_cfg(NULL),
 	time_range_description(NULL),
-	type_is_month(false)
+	type_is_month(false),
+	add_done(true)
 {
 	IMPLEMENT_MSG_DUMPER()
 	time_start_cfg = new TimeCfg(year_start, month_start);
@@ -415,7 +493,8 @@ TimeRangeCfg::TimeRangeCfg(int year_start, int month_start, int day_start, int y
 	time_start_cfg(NULL),
 	time_end_cfg(NULL),
 	time_range_description(NULL),
-	type_is_month(false)
+	type_is_month(false),
+	add_done(true)
 {
 	IMPLEMENT_MSG_DUMPER()
 	time_start_cfg = new TimeCfg(year_start, month_start, day_start);
@@ -431,7 +510,8 @@ TimeRangeCfg::TimeRangeCfg(const TimeRangeCfg& another_time_range_cfg) :
 	time_start_cfg(NULL),
 	time_end_cfg(NULL),
 	time_range_description(NULL),
-	type_is_month(false)
+	type_is_month(false),
+	add_done(true)
 {
 	IMPLEMENT_MSG_DUMPER()
 	time_start_cfg = new TimeCfg(*another_time_range_cfg.get_start_time());
@@ -464,88 +544,110 @@ TimeRangeCfg::~TimeRangeCfg()
 	RELEASE_MSG_DUMPER()
 }
 
-bool TimeRangeCfg::is_single_time()const
+void TimeRangeCfg::add_start_time(const PTIME_CFG new_start_time_cfg)
 {
-	if (time_start_cfg != NULL && time_end_cfg != NULL)
-		return time_start_cfg->equal_to(time_end_cfg);
-	return false;
-}
-
-const char* TimeRangeCfg::to_string()
-{
-	if (time_range_description == NULL)
+	if (add_done)
 	{
-		time_range_description = new char[32];
-		if (time_range_description == NULL)
-			throw bad_alloc();
-		if (time_start_cfg != NULL && time_end_cfg != NULL)
-			snprintf(time_range_description, 32, "%s:%s", time_start_cfg->to_string(), time_end_cfg->to_string());
-		else if (time_start_cfg != NULL)
-			snprintf(time_range_description, 32, "%s", time_start_cfg->to_string());
-		else if (time_end_cfg != NULL)
-			snprintf(time_range_description, 32, "%s", time_end_cfg->to_string());
+		WRITE_ERROR("the add_done flag is true");
+		throw runtime_error(string("the add_done flag is true"));
 	}
-	return time_range_description;
-}
-
-const PTIME_CFG TimeRangeCfg::get_start_time()const
-{
-//	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
-	return time_start_cfg;
-}
-
-const PTIME_CFG TimeRangeCfg::get_end_time()const
-{
-//	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
-	return time_end_cfg;
-}
-
-// PTIME_CFG TimeRangeCfg::get_start_time()
-// {
-// //	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
-// 	return time_start_cfg;
-// }
-
-// PTIME_CFG TimeRangeCfg::get_end_time()
-// {
-// //	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
-// 	return time_end_cfg;
-// }
-
-void TimeRangeCfg::reset_start_time(const PTIME_CFG new_start_time_cfg)
-{
 	assert(new_start_time_cfg != NULL && "new_start_time_cfg should NOT be NULL");
+	time_start_cfg = new TimeCfg(new_start_time_cfg);
 	if (time_start_cfg == NULL)
+		throw bad_alloc();
+}
+
+void TimeRangeCfg::add_end_time(const PTIME_CFG new_end_time_cfg)
+{
+	if (add_done)
 	{
-		time_start_cfg = new TimeCfg(new_start_time_cfg);
-		if (time_start_cfg == NULL)
-			throw bad_alloc();
+		WRITE_ERROR("the add_done flag is true");
+		throw runtime_error(string("the add_done flag is true"));
 	}
-	else
-		time_start_cfg->reset(new_start_time_cfg);
+	assert(new_end_time_cfg != NULL && "new_end_time_cfg should NOT be NULL");
+	time_end_cfg = new TimeCfg(new_end_time_cfg);
+	if (time_end_cfg == NULL)
+		throw bad_alloc();
+}
+
+void TimeRangeCfg::add_time(const PTIME_CFG new_start_time_cfg, const PTIME_CFG new_end_time_cfg)
+{
+	assert((new_start_time_cfg != NULL || new_end_time_cfg != NULL) && "new_start_time_cfg/new_end_time_cfg should NOT be both NULL");
+	if (new_start_time_cfg != NULL)
+		add_start_time(new_start_time_cfg);
+	if (new_end_time_cfg != NULL)
+		add_end_time(new_end_time_cfg);
+}
+
+void TimeRangeCfg::add_start_time(const char* new_start_time_str)
+{
+	assert(new_start_time_str != NULL && "new_start_time_str should NOT be NULL");
+	TimeCfg new_start_time_cfg(new_start_time_str);
+	add_start_time((const PTIME_CFG)&new_start_time_cfg);
+}
+
+void TimeRangeCfg::add_end_time(const char* new_end_time_str)
+{
+	assert(new_end_time_str != NULL && "new_end_time_str should NOT be NULL");
+	TimeCfg new_end_time_cfg(new_end_time_str);
+	add_end_time((const PTIME_CFG)&new_end_time_cfg);
+}
+
+void TimeRangeCfg::add_time(const char* new_start_time_str, const char* new_end_time_str)
+{
+	assert((new_start_time_str != NULL || new_end_time_str != NULL) && "new_start_time_str/new_end_time_str should NOT be both NULL");
+	if (new_start_time_str != NULL)
+		add_start_time(new_start_time_str);
+	if (new_end_time_str != NULL)
+		add_end_time(new_end_time_str);
+}
+
+unsigned short TimeRangeCfg::add_time_done()
+{
+	if (add_done)
+	{
+		WRITE_ERROR("the add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
 	if (time_range_description != NULL)
 	{
 		delete time_range_description;
 		time_range_description = NULL;
 	}
+	add_done = true;
+	return RET_SUCCESS;
+}
+
+void TimeRangeCfg::reset_start_time(const PTIME_CFG new_start_time_cfg)
+{
+	if (!add_done)
+	{
+		WRITE_ERROR("the add_done flag is NOT true");
+		throw runtime_error(string("the add_done flag is NOT true"));
+	}
+	assert(new_start_time_cfg != NULL && "new_start_time_cfg should NOT be NULL");
+	add_done = false;
+	if (time_start_cfg == NULL)
+		add_start_time(new_start_time_cfg);
+	else
+		time_start_cfg->reset(new_start_time_cfg);
+	add_time_done();
 }
 
 void TimeRangeCfg::reset_end_time(const PTIME_CFG new_end_time_cfg)
 {
-	assert(new_end_time_cfg != NULL && "new_end_time_cfg should NOT be NULL");
-	if (time_end_cfg == NULL)
+	if (!add_done)
 	{
-		time_end_cfg = new TimeCfg(new_end_time_cfg);
-		if (time_end_cfg == NULL)
-			throw bad_alloc();
+		WRITE_ERROR("the add_done flag is NOT true");
+		throw runtime_error(string("the add_done flag is NOT true"));
 	}
+	assert(new_end_time_cfg != NULL && "new_end_time_cfg should NOT be NULL");
+	add_done = false;
+	if (time_end_cfg == NULL)
+		add_end_time(new_end_time_cfg);
 	else
 		time_end_cfg->reset(new_end_time_cfg);
-	if (time_range_description != NULL)
-	{
-		delete time_range_description;
-		time_range_description = NULL;
-	}
+	add_time_done();
 }
 
 void TimeRangeCfg::reset_time(const PTIME_CFG new_start_time_cfg, const PTIME_CFG new_end_time_cfg)
@@ -578,6 +680,72 @@ void TimeRangeCfg::reset_time(const char* new_start_time_str, const char* new_en
 		reset_end_time(new_end_time_str);
 }
 
+bool TimeRangeCfg::is_month_type()const{return type_is_month;}
+
+bool TimeRangeCfg::is_single_time()const
+{
+	if (time_start_cfg != NULL && time_end_cfg != NULL)
+		return time_start_cfg->equal_to(time_end_cfg);
+	return false;
+}
+
+bool TimeRangeCfg::is_add_time_done()const{return add_done;}
+
+const char* TimeRangeCfg::to_string()
+{
+	if (!add_done)
+	{
+		WRITE_ERROR("the add_done flag is NOT true");
+		throw runtime_error(string("the add_done flag is NOT true"));
+	}
+	if (time_range_description == NULL)
+	{
+		time_range_description = new char[32];
+		if (time_range_description == NULL)
+			throw bad_alloc();
+		if (time_start_cfg != NULL && time_end_cfg != NULL)
+			snprintf(time_range_description, 32, "%s:%s", time_start_cfg->to_string(), time_end_cfg->to_string());
+		else if (time_start_cfg != NULL)
+			snprintf(time_range_description, 32, "%s", time_start_cfg->to_string());
+		else if (time_end_cfg != NULL)
+			snprintf(time_range_description, 32, "%s", time_end_cfg->to_string());
+	}
+	return time_range_description;
+}
+
+const PTIME_CFG TimeRangeCfg::get_start_time()const
+{
+	if (!add_done)
+	{
+		WRITE_ERROR("the add_done flag is NOT true");
+		throw runtime_error(string("the add_done flag is NOT true"));
+	}
+//	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+	return time_start_cfg;
+}
+
+const PTIME_CFG TimeRangeCfg::get_end_time()const
+{
+	if (!add_done)
+	{
+		WRITE_ERROR("the add_done flag is NOT true");
+		throw runtime_error(string("the add_done flag is NOT true"));
+	}
+//	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
+	return time_end_cfg;
+}
+
+// PTIME_CFG TimeRangeCfg::get_start_time()
+// {
+// //	assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+// 	return time_start_cfg;
+// }
+
+// PTIME_CFG TimeRangeCfg::get_end_time()
+// {
+// //	assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
+// 	return time_end_cfg;
+// }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -129,6 +129,7 @@ protected:
 
 public:
 	QuerySet();
+	QuerySet(const QuerySet& another_query_set);
 	~QuerySet();
 
 	const std::string& to_string();
@@ -147,8 +148,8 @@ public:
 	const INT_DEQUE& operator[](int source_type_index);
 };
 typedef QuerySet* PQUERY_SET;
-typedef QuerySet MarketQuerySet;
-typedef MarketQuerySet* PMARKET_QUERY_SET;
+// typedef QuerySet MarketQuerySet;
+// typedef MarketQuerySet* PMARKET_QUERY_SET;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -167,7 +168,6 @@ private:
 public: 
 	static unsigned short create_instance_from_string(const char* source_string, CompanyGroupSet& company_group_set);
 	static unsigned short create_instance_from_string(const char* source_string, CompanyGroupSet** company_group_set);
-
 
 public:
 	class const_iterator
@@ -200,6 +200,7 @@ public:
 	const_iterator end();
 
 	CompanyGroupSet();
+	CompanyGroupSet(const CompanyGroupSet& another_company_group_set);
 	~CompanyGroupSet();
 
 	unsigned short add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
@@ -214,32 +215,73 @@ typedef CompanyGroupSet* PCOMPANY_GROUP_SET;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class StockQuerySet : public QuerySet
-{
-public: 
-	static unsigned short create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet& stock_query_set);
-	static unsigned short create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet** stock_query_set);
+// class StockQuerySet : public QuerySet
+// {
+// public: 
+// 	static unsigned short create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet& stock_query_set);
+// 	static unsigned short create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet** stock_query_set);
 
-protected:
+// protected:
+// 	bool add_done;
+// 	CompanyGroupSet company_group_set;
+
+// public:
+// 	const std::string& to_string();
+
+// 	StockQuerySet();
+// 	~StockQuerySet();
+
+// 	unsigned short add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
+// 	unsigned short add_company(int company_group_number, std::string company_code_number);
+// 	unsigned short add_company(std::string company_code_number);
+// 	unsigned short add_company_group(int company_group_number);
+// 	unsigned short add_query_done();
+// 	bool is_add_query_done()const;
+// 	const CompanyGroupSet& get_company_group_set()const;
+// 	CompanyGroupSet& get_company_group_set();
+// };
+// typedef StockQuerySet* PSTOCK_QUERY_SET;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class SearchRuleSet
+{
+private:
+	DECLARE_MSG_DUMPER()
+
+public: 
+	static unsigned short create_instance_from_string(FinanceAnalysisMode new_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set);
+	static unsigned short create_instance_from_string(FinanceAnalysisMode new_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set);
+
+private:
 	bool add_done;
-	CompanyGroupSet company_group_set;
+	FinanceAnalysisMode finance_analysis_mode;
+	PQUERY_SET query_set;
+	PTIME_RANGE_CFG time_range_cfg;
+	PCOMPANY_GROUP_SET company_group_set;
+	mutable std::string search_rule_set_string;
 
 public:
 	const std::string& to_string();
 
-	StockQuerySet();
-	~StockQuerySet();
+	SearchRuleSet();
+	~SearchRuleSet();
 
-	unsigned short add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque);
-	unsigned short add_company(int company_group_number, std::string company_code_number);
-	unsigned short add_company(std::string company_code_number);
-	unsigned short add_company_group(int company_group_number);
-	unsigned short add_query_done();
-	bool is_add_query_done()const;
-	const CompanyGroupSet& get_company_group_set()const;
-	CompanyGroupSet& get_company_group_set();
+	unsigned short set_finance_mode(FinanceAnalysisMode new_finance_analysis_mode);
+	unsigned short add_query_rule(const PQUERY_SET new_query_set);
+	unsigned short add_query_rule(const char* query_source_string);
+	unsigned short add_time_rule(const PTIME_RANGE_CFG new_time_range_cfg);
+	unsigned short add_time_rule(const char* time_source_string);
+	unsigned short add_company_rule(const PCOMPANY_GROUP_SET new_company_group_set);
+	unsigned short add_company_rule(const char* company_source_string);
+	unsigned short add_rule_done();
+	bool is_add_rule_done()const;
+	FinanceAnalysisMode get_finance_mode()const;
+	const PQUERY_SET get_query_rule()const;
+	const PTIME_RANGE_CFG get_time_rule()const;
+	const PCOMPANY_GROUP_SET get_company_rule()const;
 };
-typedef StockQuerySet* PSTOCK_QUERY_SET;
+typedef SearchRuleSet* PSEARCH_RULE_SET;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -362,6 +404,7 @@ public:
 	static void generate_filtered_data_for_simulation(ResultSet& result_set, FinanceBoolDataArray& filter_data_array);
 
 private:
+	mutable std::string result_set_string;
 	std::map<unsigned short, unsigned short> data_set_mapping;
 	std::map<unsigned long, unsigned long> data_calculation_set_mapping;
 	FinanceCharDataPtrArray date_data;
@@ -392,6 +435,7 @@ private:
 public:
 	ResultSet();
 	~ResultSet();
+	const std::string& to_string();
 
 	class iterator
 	{

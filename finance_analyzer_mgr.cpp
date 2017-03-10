@@ -184,6 +184,13 @@ unsigned short FinanceAnalyzerMarketMgr::initialize()
 	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
 	return RET_SUCCESS;
 }
+
+unsigned short FinanceAnalyzerMarketMgr::search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET result_set)
+{
+	WRITE_DEBUG("Initialize FinanceAnalyzerMarketMgr.....");
+	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
+	return RET_SUCCESS;
+}
 /////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -213,6 +220,13 @@ unsigned short FinanceAnalyzerStockMgr::initialize()
 {
 	WRITE_DEBUG("Initialize FinanceAnalyzerStockMgr.....");
 	// fprintf(stderr, "Initialize FinanceAnalyzerStockMgr.....\n");
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerStockMgr::search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET result_set)
+{
+	WRITE_DEBUG("Initialize FinanceAnalyzerStockMgr.....");
+	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
 	return RET_SUCCESS;
 }
 ///////////////////////////////////////////////////////////////////////////////////

@@ -37,10 +37,25 @@ private:
 		FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
 		PRESULT_SET result_set
 	);
+	static unsigned short query_market(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
+	// static unsigned short query_market(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, PRESULT_SET_MAP result_set_map);
+	static unsigned short query_stock(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, const PCOMPANY_GROUP_SET company_group_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
+	// static unsigned short query_stock(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, const PCOMPANY_GROUP_SET company_group_set, PRESULT_SET_MAP result_set_map);
 
+public:
+	static unsigned short query(const PSEARCH_RULE_SET search_rule_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
+	static unsigned short query(const PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map);
+
+private:
 	MYSQL* connection;
 	char cmd_buf[CMD_BUF_SIZE];
 	std::string database_name;
+// public:
+	FinanceAnalyzerSqlReader();
+	~FinanceAnalyzerSqlReader();
+
+	unsigned short try_connect_mysql(const std::string database);
+	unsigned short disconnect_mysql();
 
 	unsigned short select_data(
 		int source_index,
@@ -50,19 +65,6 @@ private:
 		const PTIME_RANGE_CFG time_range_cfg,
 		PRESULT_SET result_set
 	);
-
-public:
-	static unsigned short query_market(const PTIME_RANGE_CFG time_range_cfg, const PMARKET_QUERY_SET market_query_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
-	static unsigned short query_market(const PTIME_RANGE_CFG time_range_cfg, const PMARKET_QUERY_SET market_query_set, PRESULT_SET_MAP result_set_map);
-
-	static unsigned short query_stock(const PTIME_RANGE_CFG time_range_cfg, const PSTOCK_QUERY_SET stock_query_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
-	static unsigned short query_stock(const PTIME_RANGE_CFG time_range_cfg, const PSTOCK_QUERY_SET stock_query_set, PRESULT_SET_MAP result_set_map);
-
-	FinanceAnalyzerSqlReader();
-	~FinanceAnalyzerSqlReader();
-
-	unsigned short try_connect_mysql(const std::string database);
-	unsigned short disconnect_mysql();
 };
 typedef FinanceAnalyzerSqlReader* PFINANCE_ANALYZER_SQL_READER;
 

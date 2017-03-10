@@ -59,7 +59,6 @@ unsigned short QuerySet::create_instance_from_string(const char* source_string, 
 	if (source_string_copy == NULL)
 	{
 		STATIC_WRITE_ERROR("Fail to allocate the memory: source_string_copy");
-		if (source_string_copy != NULL) delete source_string_copy;
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
 
@@ -188,6 +187,40 @@ QuerySet::QuerySet() :
 	source_type_index_set(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
+}
+
+QuerySet::QuerySet(const QuerySet& another_query_set) :
+	add_done(false),
+	source_type_index_set(NULL)
+{
+	IMPLEMENT_MSG_DUMPER()
+	if (!another_query_set.is_add_query_done())
+		throw runtime_error(string("the the another_query_set::add_done flag is NOT true"));
+	const INT_INT_DEQUE_MAP& another_source_field_query_map = another_query_set.source_field_query_map;
+	INT_INT_DEQUE_MAP_CONST_ITER iter = another_source_field_query_map.begin();
+	while (iter != another_source_field_query_map.end())
+	{
+		int another_source_type_index = (int)iter->first;
+		PINT_DEQUE another_field_deque = (PINT_DEQUE)iter->second;
+// Initialize a list of keeping track of the field index in certain a source type
+		unsigned short ret = init_source_field_query_map_element(another_source_type_index);
+		if(CHECK_FAILURE(ret))
+		{
+			const int ERRMSG_SIZE = 256;
+			char errmsg[ERRMSG_SIZE];
+			snprintf(errmsg, ERRMSG_SIZE, "init_source_field_query_map_element(%d) fails, due to: %s", another_source_type_index, get_ret_description(ret));
+			throw invalid_argument(errmsg);
+		}
+		INT_DEQUE_ITER iter_field = another_field_deque->begin();
+		while (iter_field != another_field_deque->end())
+		{
+			int another_field_index = *iter_field;
+			source_field_query_map[another_source_type_index]->push_back(another_field_index);
+			iter_field++;
+		}
+		iter++;
+	}
+	add_done = true;
 }
 
 QuerySet::~QuerySet()
@@ -690,6 +723,42 @@ CompanyGroupSet::CompanyGroupSet() :
 	IMPLEMENT_COMPANY_PROFILE()
 }
 
+CompanyGroupSet::CompanyGroupSet(const CompanyGroupSet& another_company_group_set) :
+	add_done(false),
+	company_number_in_group_map(NULL)
+{
+	IMPLEMENT_MSG_DUMPER()
+	IMPLEMENT_COMPANY_PROFILE()
+	if (!another_company_group_set.is_add_company_done())
+		throw runtime_error(string("the the another_company_group_set::add_done flag is NOT true"));
+	assert(another_company_group_set.company_number_in_group_map != NULL && "another_company_group_set.company_number_in_group_map should NOT be NULL");
+	PINT_STRING_DEQUE_MAP another_company_number_in_group_map = another_company_group_set.company_number_in_group_map;
+	INT_STRING_DEQUE_MAP_ITER iter = another_company_number_in_group_map->begin();
+	while (iter != company_number_in_group_map->end())
+	{
+		int another_company_group_number = (int)iter->first;
+		PSTRING_DEQUE another_company_number_deque = (PSTRING_DEQUE)iter->second;
+// Initialize a list of keeping track of the company number in certain a company group
+		unsigned short ret = init_company_number_in_group_map_elememnt(another_company_group_number);
+		if(CHECK_FAILURE(ret))
+		{
+			const int ERRMSG_SIZE = 256;
+			char errmsg[ERRMSG_SIZE];
+			snprintf(errmsg, ERRMSG_SIZE, "init_company_number_in_group_map_elememnt(%d) fails, due to: %s", another_company_group_number, get_ret_description(ret));
+			throw invalid_argument(errmsg);
+		}
+		STRING_DEQUE_ITER iter_company_number = another_company_number_deque->begin();
+		while (iter_company_number != another_company_number_deque->end())
+		{
+			string company_number = *iter_company_number;
+			(*company_number_in_group_map)[another_company_group_number]->push_back(company_number);
+			iter_company_number++;
+		}
+		iter++;
+	}
+	add_done = true;
+}
+
 CompanyGroupSet::~CompanyGroupSet()
 {
 	if (company_number_in_group_map != NULL && company_number_in_group_map != whole_company_number_in_group_map)
@@ -932,6 +1001,11 @@ const std::string& CompanyGroupSet::to_string()
 {
 	static const int BUF_SIZE = 1024;
 	static char buf[BUF_SIZE];
+	if (!add_done)
+	{
+		WRITE_ERROR("The add_done flag is false");
+		throw runtime_error("The add_done flag is false");
+	}
 	if (company_group_set_string.empty())
 	{
 		if (company_number_in_group_map != NULL)
@@ -982,100 +1056,391 @@ CompanyGroupSet::const_iterator CompanyGroupSet::end()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned short StockQuerySet::create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet& stock_query_set)
+// unsigned short StockQuerySet::create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet& stock_query_set)
+// {
+// 	assert(query_source_string != NULL && "query_soruce_string should NOT be NULL");
+// 	assert(company_source_string != NULL && "company_soruce_string should NOT be NULL");
+// 	unsigned short ret = QuerySet::create_instance_from_string(query_source_string, *(PQUERY_SET)&stock_query_set);
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	ret = CompanyGroupSet::create_instance_from_string(company_source_string, stock_query_set.company_group_set);
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	return RET_SUCCESS;
+// }
+
+// unsigned short StockQuerySet::create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet** stock_query_set)
+// {
+// 	assert(stock_query_set != NULL && "stock_query_set should NOT be NULL");
+// 	StockQuerySet* stock_query_set_tmp = new StockQuerySet();
+// 	if (stock_query_set_tmp == NULL)
+// 	{
+// 		STATIC_WRITE_ERROR("Fail to allocate the memory: stock_query_set_tmp");
+// 		return RET_FAILURE_INSUFFICIENT_MEMORY;
+// 	}
+// 	unsigned short ret = create_instance_from_string(query_source_string, company_source_string, *stock_query_set_tmp);
+// 	if (CHECK_FAILURE(ret))
+// 	{
+// 		delete stock_query_set_tmp;
+// 		stock_query_set_tmp = NULL;
+// 	}
+// 	*stock_query_set = stock_query_set_tmp;
+// 	return ret;
+// }
+
+// StockQuerySet::StockQuerySet() :
+// 	add_done(false)
+// {
+// }
+
+// StockQuerySet::~StockQuerySet()
+// {
+// }
+
+// const std::string& StockQuerySet::to_string()
+// {
+// 	if (query_set_string.empty())
+// 	{
+// 		QuerySet::to_string();
+// 		string company_set_string = company_group_set.to_string();
+// 		query_set_string += "\n";
+// 		query_set_string += company_set_string;
+// 	}
+// 	return query_set_string;
+// }
+
+// unsigned short StockQuerySet::add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque)
+// {
+// 	return company_group_set.add_company_list_in_group(company_group_number, company_code_number_in_group_deque);
+// }
+
+// unsigned short StockQuerySet::add_company(int company_group_number, std::string company_code_number)
+// {
+// 	return company_group_set.add_company(company_group_number, company_code_number);
+// }
+
+// unsigned short StockQuerySet::add_company(std::string company_code_number)
+// {
+// 	return company_group_set.add_company(company_code_number);
+// }
+
+// unsigned short StockQuerySet::add_company_group(int company_group_number)
+// {
+// 	return company_group_set.add_company_group(company_group_number);
+// }
+
+// unsigned short StockQuerySet::add_query_done()
+// {
+// 	unsigned short ret = QuerySet::add_query_done();
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	ret = company_group_set.add_company_done();
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	add_done = true;
+// 	return RET_SUCCESS;
+// }
+
+// bool StockQuerySet::is_add_query_done()const{return add_done;}
+
+// const CompanyGroupSet& StockQuerySet::get_company_group_set()const
+// {
+// 	return company_group_set;
+// }
+
+// CompanyGroupSet& StockQuerySet::get_company_group_set()
+// {
+// 	return company_group_set;
+// }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode new_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set)
 {
-	assert(query_source_string != NULL && "query_soruce_string should NOT be NULL");
-	assert(company_source_string != NULL && "company_soruce_string should NOT be NULL");
-	unsigned short ret = QuerySet::create_instance_from_string(query_source_string, *(PQUERY_SET)&stock_query_set);
+	unsigned ret = RET_SUCCESS;
+	if (query_source_string != NULL)
+	{
+		ret = search_rule_set.add_query_rule(query_source_string);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	if (time_source_string != NULL)
+	{
+		ret = search_rule_set.add_time_rule(time_source_string);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	if (company_source_string != NULL)
+	{
+		ret = search_rule_set.add_company_rule(company_source_string);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	ret = search_rule_set.set_finance_mode(new_finance_analysis_mode);
 	if (CHECK_FAILURE(ret))
 		return ret;
-	ret = CompanyGroupSet::create_instance_from_string(company_source_string, stock_query_set.company_group_set);
+	ret = search_rule_set.add_rule_done();
 	if (CHECK_FAILURE(ret))
 		return ret;
 	return RET_SUCCESS;
 }
 
-unsigned short StockQuerySet::create_instance_from_string(const char* query_source_string, const char* company_source_string, StockQuerySet** stock_query_set)
+unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode new_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set)
 {
-	assert(stock_query_set != NULL && "stock_query_set should NOT be NULL");
-	StockQuerySet* stock_query_set_tmp = new StockQuerySet();
-	if (stock_query_set_tmp == NULL)
+	assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
+	SearchRuleSet* search_rule_set_tmp = new SearchRuleSet();
+	if (search_rule_set_tmp == NULL)
 	{
-		STATIC_WRITE_ERROR("Fail to allocate the memory: stock_query_set_tmp");
+		STATIC_WRITE_ERROR("Fail to allocate the memory: search_rule_set_tmp");
+		if (search_rule_set_tmp != NULL) delete search_rule_set_tmp;
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
-	unsigned short ret = create_instance_from_string(query_source_string, company_source_string, *stock_query_set_tmp);
+	unsigned short ret = create_instance_from_string(new_finance_analysis_mode, query_source_string, time_source_string, company_source_string, *search_rule_set_tmp);
 	if (CHECK_FAILURE(ret))
 	{
-		delete stock_query_set_tmp;
-		stock_query_set_tmp = NULL;
+		delete search_rule_set_tmp;
+		search_rule_set_tmp = NULL;	
 	}
-	*stock_query_set = stock_query_set_tmp;
+	*search_rule_set = search_rule_set_tmp;
 	return ret;
 }
 
-StockQuerySet::StockQuerySet() :
-	add_done(false)
+const string& SearchRuleSet::to_string()
 {
-}
-
-StockQuerySet::~StockQuerySet()
-{
-}
-
-const std::string& StockQuerySet::to_string()
-{
-	if (query_set_string.empty())
+	if (!add_done)
 	{
-		QuerySet::to_string();
-		string company_set_string = company_group_set.to_string();
-		query_set_string += "\n";
-		query_set_string += company_set_string;
+		WRITE_ERROR("the add_done flag is NOT true");
+		throw runtime_error(string("the add_done flag is NOT true"));
 	}
-	return query_set_string;
+	if (search_rule_set_string.empty())
+	{
+		if (query_set != NULL)
+			search_rule_set_string += query_set->to_string();
+		if (time_range_cfg != NULL)
+			search_rule_set_string += time_range_cfg->to_string();
+		if (company_group_set != NULL)
+			search_rule_set_string += company_group_set->to_string();
+	}
+	return search_rule_set_string;
+
 }
 
-unsigned short StockQuerySet::add_company_list_in_group(int company_group_number, const PSTRING_DEQUE company_code_number_in_group_deque)
+SearchRuleSet::SearchRuleSet() :
+	add_done(false),
+	finance_analysis_mode(FinanceAnalysis_None),
+	query_set(NULL),
+	time_range_cfg(NULL),
+	company_group_set(NULL)
 {
-	return company_group_set.add_company_list_in_group(company_group_number, company_code_number_in_group_deque);
+	IMPLEMENT_MSG_DUMPER()
 }
 
-unsigned short StockQuerySet::add_company(int company_group_number, std::string company_code_number)
+SearchRuleSet::~SearchRuleSet()
 {
-	return company_group_set.add_company(company_group_number, company_code_number);
+	if (company_group_set != NULL)
+	{
+		delete company_group_set;
+		company_group_set = NULL;
+	}
+	if (time_range_cfg != NULL)
+	{
+		delete time_range_cfg;
+		time_range_cfg = NULL;
+	}
+	if (query_set != NULL)
+	{
+		delete query_set;
+		query_set = NULL;
+	}
+	RELEASE_MSG_DUMPER()
 }
 
-unsigned short StockQuerySet::add_company(std::string company_code_number)
+unsigned short SearchRuleSet::set_finance_mode(FinanceAnalysisMode new_finance_analysis_mode)
 {
-	return company_group_set.add_company(company_code_number);
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	finance_analysis_mode = new_finance_analysis_mode;
+	return RET_SUCCESS;
 }
 
-unsigned short StockQuerySet::add_company_group(int company_group_number)
+unsigned short SearchRuleSet::add_query_rule(const PQUERY_SET new_query_set)
 {
-	return company_group_set.add_company_group(company_group_number);
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	assert(new_query_set != NULL && "new_query_set should NOT be NULL");
+	if (query_set != NULL)
+	{
+		WRITE_ERROR("query_set is NOT NULL");
+		return RET_FAILURE_INCORRECT_OPERATION;	
+	}
+	query_set = new QuerySet(*new_query_set);
+	if (query_set != NULL)
+	{
+		WRITE_ERROR("fail to allocate memory: query_set");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;	
+	}	
+	return RET_SUCCESS;
 }
 
-unsigned short StockQuerySet::add_query_done()
+unsigned short SearchRuleSet::add_query_rule(const char* query_source_string)
 {
-	unsigned short ret = QuerySet::add_query_done();
-	if (CHECK_FAILURE(ret))
-		return ret;
-	ret = company_group_set.add_company_done();
-	if (CHECK_FAILURE(ret))
-		return ret;
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	return QuerySet::create_instance_from_string(query_source_string, &query_set);
+}
+
+unsigned short SearchRuleSet::add_time_rule(const PTIME_RANGE_CFG new_time_range_cfg)
+{
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	assert(new_time_range_cfg != NULL && "new_time_range_cfg should NOT be NULL");
+	if (time_range_cfg != NULL)
+	{
+		WRITE_ERROR("time_range_cfg is NOT NULL");
+		return RET_FAILURE_INCORRECT_OPERATION;	
+	}
+	time_range_cfg = new TimeRangeCfg(*new_time_range_cfg);
+	if (time_range_cfg != NULL)
+	{
+		WRITE_ERROR("fail to allocate memory: time_range_cfg");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;	
+	}	
+	return RET_SUCCESS;
+}
+
+unsigned short SearchRuleSet::add_time_rule(const char* time_source_string)
+{
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	return TimeRangeCfg::create_instance_from_string(time_source_string, &time_range_cfg);
+}
+
+unsigned short SearchRuleSet::add_company_rule(const PCOMPANY_GROUP_SET new_company_group_set)
+{
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	assert(new_company_group_set != NULL && "new_company_group_set should NOT be NULL");
+	if (company_group_set != NULL)
+	{
+		WRITE_ERROR("company_group_set is NOT NULL");
+		return RET_FAILURE_INCORRECT_OPERATION;	
+	}
+	company_group_set = new CompanyGroupSet(*new_company_group_set);
+	if (company_group_set != NULL)
+	{
+		WRITE_ERROR("fail to allocate memory: company_group_set");
+		return RET_FAILURE_INSUFFICIENT_MEMORY;	
+	}	
+	return RET_SUCCESS;
+}
+
+unsigned short SearchRuleSet::add_company_rule(const char* company_source_string)
+{
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	return CompanyGroupSet::create_instance_from_string(company_source_string, &company_group_set);
+}
+
+unsigned short SearchRuleSet::add_rule_done()
+{
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+    if (finance_analysis_mode == FinanceAnalysis_None)
+	{
+		WRITE_ERROR("The finance_analysis_mode variable is FinanceAnalysis_None");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	unsigned short ret = RET_SUCCESS;
+	if (query_set != NULL)
+	{
+		ret = query_set->add_query_done();
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	if (time_range_cfg != NULL)
+	{
+		ret = time_range_cfg->add_time_done();
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	if (company_group_set != NULL)
+	{
+		ret = company_group_set->add_company_done();
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
 	add_done = true;
 	return RET_SUCCESS;
 }
 
-bool StockQuerySet::is_add_query_done()const{return add_done;}
+bool SearchRuleSet::is_add_rule_done()const{return add_done;}
 
-const CompanyGroupSet& StockQuerySet::get_company_group_set()const
+FinanceAnalysisMode SearchRuleSet::get_finance_mode()const
 {
-	return company_group_set;
+	if (!add_done)
+	{
+		WRITE_ERROR("The add_done flag is false");
+		throw runtime_error("The add_done flag is false");
+	}
+	return finance_analysis_mode;
 }
 
-CompanyGroupSet& StockQuerySet::get_company_group_set()
+const PQUERY_SET SearchRuleSet::get_query_rule()const
 {
+	if (!add_done)
+	{
+		WRITE_ERROR("The add_done flag is false");
+		throw runtime_error("The add_done flag is false");
+	}
+	return query_set;
+}
+
+const PTIME_RANGE_CFG SearchRuleSet::get_time_rule()const
+{
+	if (!add_done)
+	{
+		WRITE_ERROR("The add_done flag is false");
+		throw runtime_error("The add_done flag is false");
+	}
+	return time_range_cfg;
+}
+
+const PCOMPANY_GROUP_SET SearchRuleSet::get_company_rule()const
+{
+	if (!add_done)
+	{
+		WRITE_ERROR("The add_done flag is false");
+		throw runtime_error("The add_done flag is false");
+	}
+	if (finance_analysis_mode != FinanceAnalysis_Stock)
+	{
+		WRITE_ERROR("finance_analysis_mode is NOT FinanceAnalysis_Stock");
+		throw runtime_error("finance_analysis_mode is NOT FinanceAnalysis_Stock");
+	}
 	return company_group_set;
 }
 
@@ -1431,6 +1796,21 @@ ResultSet::ResultSet() :
 ResultSet::~ResultSet()
 {
 	// RELEASE_MSG_DUMPER()
+}
+
+const std::string& ResultSet::to_string()
+{
+	// static const int BUF_SIZE = 256;
+	// static char buf[BUF_SIZE];
+	// if (!add_done)
+	// {
+	// 	WRITE_ERROR("the add_done flag is NOT true");
+	// 	throw runtime_error(string("the add_done flag is NOT true"));
+	// }
+	if (result_set_string.empty())
+	{
+	}
+	return result_set_string;
 }
 
 unsigned short ResultSet::add_set(int source_type_index, int field_index)

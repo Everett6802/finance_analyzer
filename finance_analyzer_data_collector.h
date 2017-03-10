@@ -11,13 +11,12 @@ class FinanceAnalyzerDataCollectorBase
 {
 protected:
 	DECLARE_MSG_DUMPER()
-	QuerySet* query_set;
-	FinanceAnalyzerSqlReader* sql_reader;
+	SearchRuleSet* search_rule_set;
 	ResultSetMap* result_set_map;
 
-	unsigned short init_query_set_from_finance_mode(FinanceAnalysisMode mode);
-	virtual unsigned short init_query_set()=0;
-	void cleanup_query_set();
+	// unsigned short init_query_set_from_finance_mode(FinanceAnalysisMode mode);
+	unsigned short init_search_rule_set();
+	void cleanup_search_rule_set();
 	unsigned short init_result_set_map();
 	void cleanup_result_set_map();
 
@@ -32,9 +31,6 @@ public:
 class FinanceAnalyzerMarketDataCollector : public FinanceAnalyzerDataCollectorBase
 {
 private:
-	MarketQuerySet* market_query_set;
-
-	virtual unsigned short init_query_set();
 
 public:
 	FinanceAnalyzerMarketDataCollector();
@@ -48,9 +44,6 @@ typedef FinanceAnalyzerMarketDataCollector* PFINANCE_ANALYZER_MARKET_DATA_COLLEC
 class FinanceAnalyzerStockDataCollector : public FinanceAnalyzerDataCollectorBase
 {
 private:
-	StockQuerySet* stock_query_set;
-
-	virtual unsigned short init_query_set();
 
 public:
 	FinanceAnalyzerStockDataCollector();

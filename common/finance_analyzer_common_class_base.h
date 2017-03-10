@@ -111,38 +111,54 @@ typedef TimeCfg* PTIME_CFG;
 
 class TimeRangeCfg
 {
+private:
 	DECLARE_MSG_DUMPER()
+
+public:
+	static bool time_in_range(const TimeRangeCfg* time_range_cfg, const TimeCfg* time_cfg);
+	static bool time_in_range(const TimeRangeCfg* time_range_cfg, int year, int month, int day);
+	static unsigned short create_instance_from_string(const char* source_string, TimeRangeCfg& time_range_cfg);
+	static unsigned short create_instance_from_string(const char* source_string, TimeRangeCfg** time_range_cfg);
+
 protected:
 	PTIME_CFG time_start_cfg;
 	PTIME_CFG time_end_cfg;
 	char* time_range_description;
 	bool type_is_month;
+	bool add_done;
 
 public:
-	static bool time_in_range(const TimeRangeCfg* time_range_cfg, const TimeCfg* time_cfg);
-	static bool time_in_range(const TimeRangeCfg* time_range_cfg, int year, int month, int day);
-
+	TimeRangeCfg();
 	TimeRangeCfg(const char* time_start_str, const char* time_end_str);
 	TimeRangeCfg(int year_start, int month_start, int year_end, int month_end);
 	TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end);
 	TimeRangeCfg(const TimeRangeCfg& another_time_range_cfg);
 	~TimeRangeCfg();
 
-	bool is_month_type()const{return type_is_month;}
+	void add_start_time(const PTIME_CFG new_start_time_cfg);
+	void add_end_time(const PTIME_CFG new_end_time_cfg);
+	void add_time(const PTIME_CFG new_start_time_cfg, const PTIME_CFG new_end_time_cfg);
+	void add_start_time(const char* new_start_time_str);
+	void add_end_time(const char* new_end_time_str);
+	void add_time(const char* new_start_time_str, const char* new_end_time_str);
+	unsigned short add_time_done();
+
+	void reset_start_time(const PTIME_CFG new_start_time_cfg);
+	void reset_end_time(const PTIME_CFG new_end_time_cfg);
+	void reset_time(const PTIME_CFG new_start_time_cfg, const PTIME_CFG new_end_time_cfg);
+	void reset_start_time(const char* new_start_time_str);
+	void reset_end_time(const char* new_end_time_str);
+	void reset_time(const char* new_start_time_str, const char* new_end_time_str);
+
+	bool is_month_type()const;
 	bool is_single_time()const;
+	bool is_add_time_done()const;
 	const char* to_string();
 	const PTIME_CFG get_start_time()const;
 	const PTIME_CFG get_end_time()const;
 // Don't modify the start/end time in the following way
 	// PTIME_CFG get_start_time();
 	// PTIME_CFG get_end_time();
-	void reset_start_time(const PTIME_CFG new_start_time_cfg);
-	void reset_end_time(const PTIME_CFG new_end_time_cfg);
-	void reset_time(const PTIME_CFG new_start_time_cfg, const PTIME_CFG new_end_time_cfg);
-
-	void reset_start_time(const char* new_start_time_str);
-	void reset_end_time(const char* new_end_time_str);
-	void reset_time(const char* new_start_time_str, const char* new_end_time_str);
 };
 typedef TimeRangeCfg* PTIME_RANGE_CFG;
 

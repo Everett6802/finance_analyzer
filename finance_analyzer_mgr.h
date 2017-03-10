@@ -21,6 +21,7 @@ public:
 
 	virtual ~IFinanceAnalyzerMgr(){}
 	virtual unsigned short initialize()=0;
+	virtual unsigned short search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET result_set)=0;
 };
 typedef IFinanceAnalyzerMgr* PIFINANCE_ANALYZER_MGR;
 ///////////////////////////////////////////////////////////////////////////////////
@@ -66,6 +67,8 @@ public:
 	virtual ~FinanceAnalyzerMarketMgr();
 
 	virtual unsigned short initialize();
+	virtual unsigned short search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET result_set);
+
 };
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -83,7 +86,8 @@ public:
 	FinanceAnalyzerStockMgr();
 	virtual ~FinanceAnalyzerStockMgr();
 
-	unsigned short initialize();
+	virtual unsigned short initialize();
+	virtual unsigned short search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET result_set);
 };
 ///////////////////////////////////////////////////////////////////////////////////
 
