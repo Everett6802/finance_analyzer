@@ -817,10 +817,12 @@ FinanceDataArrayTemplate<T>::~FinanceDataArrayTemplate()
 }
 
 template <typename T>
-void FinanceDataArrayTemplate<T>::alloc_new()
+void FinanceDataArrayTemplate<T>::alloc_new(int new_array_size)
 {
 	T* array_data_old = array_data;
-	array_size <<= 1;
+	do{
+		array_size <<= 1;
+	}while(array_size >= new_array_size);
 	array_data = (T*)realloc(array_data_old, sizeof(T) * array_size);
 	if (array_data == NULL)
 		throw bad_alloc();
@@ -834,12 +836,7 @@ void FinanceDataArrayTemplate<T>::set_data_array(const T* array, int size)
 
 	bool need_allocate_memory = (size > array_size ? true : false);
 	if (need_allocate_memory)
-	{
-		do{
-			array_size <<= 1;
-		}while(array_size >= size);
-		alloc_new();
-	}
+		alloc_new(size);
 	memcpy(array_data, array, sizeof(T) * size);
 	array_pos = size;
 }
@@ -848,14 +845,21 @@ template <typename T>
 const T* FinanceDataArrayTemplate<T>::get_data_array()const{return array_data;}
 
 template <typename T>
-void FinanceDataArrayTemplate<T>::add(T data)
+void FinanceDataArrayTemplate<T>::add_data(T data)
 {
 	if (array_pos + 1 >= array_size)
-		alloc_new();
-
+		alloc_new(array_pos + 1);
 	array_data[array_pos++] = data;
 }
 
+template <typename T>
+void FinanceDataArrayTemplate<T>::add_data_array(const T* data, int size)
+{
+	if (array_pos + size >= array_size)
+		alloc_new(array_pos + size);
+	memcpy(&array_data[array_pos], data, sizeof(T) * size);
+	array_pos += size;
+}
 // template <typename T>
 // unsigned short FinanceDataArrayTemplate<T>::get_data_range(T& data_min, T& data_max)const
 // {
@@ -1096,10 +1100,13 @@ FinanceDataPtrArrayTemplate<T>::~FinanceDataPtrArrayTemplate()
 }
 
 template <typename T>
-void FinanceDataPtrArrayTemplate<T>::alloc_new()
+void FinanceDataPtrArrayTemplate<T>::alloc_new(int new_array_size)
 {
 	T** array_data_old = array_data;
-	array_size <<= 1;
+	do{
+		array_size <<= 1;
+	}while(array_size >= new_array_size);
+	// array_size <<= 1;
 	array_data = (T**)realloc(array_data_old, sizeof(T*) * array_size);
 	if (array_data == NULL)
 		throw bad_alloc();
@@ -1127,16 +1134,31 @@ void FinanceDataPtrArrayTemplate<T>::alloc_new()
 // const T* FinanceDataPtrArrayTemplate<T>::get_data_array()const{return array_data;}
 
 template <typename T>
-void FinanceDataPtrArrayTemplate<T>::add(const T* data, size_t data_size)
+void FinanceDataPtrArrayTemplate<T>::add_data(const T* data, size_t data_size)
 {
 	if (array_pos + 1 >= array_size)
-		alloc_new();
-
+		alloc_new(array_pos + 1);
 	T* data_new = (T*)calloc(data_size, sizeof(char));
 	if (data_new == NULL)
 		throw bad_alloc();
 	memcpy((void*)data_new, (void*)data, sizeof(char) * data_size);
 	array_data[array_pos++] = data_new;
+}
+
+template <typename T>
+void FinanceDataPtrArrayTemplate<T>::add_data_array(const T** data, size_t data_size, int size)
+{
+	if (array_pos + size >= array_size)
+		alloc_new(array_pos + size);
+	for (int i = 0 ; i < size ; i++)
+	{
+		T* data_new = (T*)calloc(data_size, sizeof(char));
+		if (data_new == NULL)
+			throw bad_alloc();
+		memcpy((void*)data_new, (void*)*(data + i), sizeof(char) * data_size);
+		array_data[array_pos + i] = data_new;		
+	}
+	array_pos += size;
 }
 
 template <typename T>
@@ -1322,7 +1344,7 @@ unsigned short Finance##m##DataArray::get_sub_array(Finance##m##DataArray& new_d
 	{\
 		if (filter_array != NULL && !(*filter_array)[i])\
 			continue;\
-		new_data_array.add(array_data[i]);\
+		new_data_array.add_data(array_data[i]);\
 	}\
 	return RET_SUCCESS;\
 }\
@@ -1344,7 +1366,7 @@ unsigned short Finance##m##DataArray::get_diff_array(Finance##m##DataArray& new_
 		return RET_FAILURE_INVALID_ARGUMENT;\
 	}\
 	for (int i = start_index + 1; i < end_index ; i++)\
-		new_data_array.add(array_data[i] - array_data[i - 1]);\
+		new_data_array.add_data(array_data[i] - array_data[i - 1]);\
 	return RET_SUCCESS;\
 }\
 unsigned short Finance##m##DataArray::get_rate_array(FinanceFloatDataArray& new_data_array, int start_index, int end_index)\
@@ -1363,7 +1385,7 @@ unsigned short Finance##m##DataArray::get_rate_array(FinanceFloatDataArray& new_
 	for (int i = start_index + 1; i < end_index ; i++)\
 	{\
 		assert (array_data[i - 1] != 0 && "The data should NOT be zero");\
-		new_data_array.add((float)(array_data[i] - array_data[i - 1])/array_data[i - 1]);\
+		new_data_array.add_data((float)(array_data[i] - array_data[i - 1])/array_data[i - 1]);\
 	}\
 	return RET_SUCCESS;\
 }\
@@ -1391,7 +1413,7 @@ unsigned short Finance##m##DataArray::get_sum_array(Finance##m##DataArray& new_d
 	int buffer_pos = 0;\
 	int i = start_index + N;\
 	do{\
-		new_data_array.add(sum);\
+		new_data_array.add_data(sum);\
 		if (i >= end_index)\
 			break;\
 		sum -= buffer[buffer_pos];\
@@ -1435,7 +1457,7 @@ unsigned short Finance##m##DataArray::get_avg_array(FinanceFloatDataArray& new_d
 	int i = start_index + N;\
 	do{\
 		average = (float)sum / N;\
-		new_data_array.add(average);\
+		new_data_array.add_data(average);\
 		if (i >= end_index)\
 			break;\
 		sum -= buffer[buffer_pos];\
@@ -1496,7 +1518,7 @@ unsigned short Finance##m##DataArray::get_weighted_avg_array(FinanceFloatDataArr
 			sum += WEIGHTED_PARAM[weighted_index][j] * array_data[i + j];\
 		}\
 		weighted_average = (float)sum / WEIGHTED_PARAM_SUM[weighted_index];\
-		new_data_array.add(weighted_average);\
+		new_data_array.add_data(weighted_average);\
 	}\
 	if (buffer != NULL)\
 	{\
@@ -1540,11 +1562,19 @@ void FinanceBoolDataArray::reset_array()
 	FinanceDataArrayBase::reset_array();
 }
 
-void FinanceBoolDataArray::add(bool data)
+void FinanceBoolDataArray::add_data(bool data)
 {
-	FinanceDataArrayTemplate<bool>::add(data);
+	FinanceDataArrayTemplate<bool>::add_data(data);
 	if (data)
 		true_cnt++;
+}
+
+void FinanceBoolDataArray::add_data_array(bool* data, int size)
+{
+	FinanceDataArrayTemplate<bool>::add_data_array(data, size);
+	for (int i = 0 ; i < size ; i++)
+		if (data[i])
+			true_cnt++;
 }
 
 int FinanceBoolDataArray::get_true_cnt()const{return true_cnt;}

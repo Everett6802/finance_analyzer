@@ -439,9 +439,9 @@ unsigned short filter(
 			}
 		}
 		if (check_can_exit)
-			filter_array.add(((filter_operator_type == FilterOperator_AND) ? false : true));
+			filter_array.add_data(((filter_operator_type == FilterOperator_AND) ? false : true));
 		else
-			filter_array.add(((filter_operator_type == FilterOperator_AND) ? true : false));
+			filter_array.add_data(((filter_operator_type == FilterOperator_AND) ? true : false));
 	}
 
 	return RET_SUCCESS;

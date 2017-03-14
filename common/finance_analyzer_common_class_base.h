@@ -203,14 +203,14 @@ class FinanceDataArrayTemplate : public FinanceDataArrayBase
 protected:
 	T* array_data;
 
-	void alloc_new();
+	void alloc_new(int new_array_size);
 
 public:
 	FinanceDataArrayTemplate();
 	FinanceDataArrayTemplate(const FinanceDataArrayTemplate& another);
 	~FinanceDataArrayTemplate();
 
-	void set_data_array(const T* array, int size);
+	void set_data_array(const T* array, int size); // Set the data from 0 postion of the array
 	const T* get_data_array()const;
 	const T operator[](int index)const;
 //	unsigned short get_sub_array(FinanceDataArrayTemplate& new_data_array, int start_index, int end_index=-1);
@@ -221,7 +221,8 @@ public:
 //	FinanceDataArrayTemplate<T>& operator+=(const FinanceDataArrayTemplate& another);
 //	FinanceDataArrayTemplate<T> operator+(const FinanceDataArrayTemplate& another);
 
-	void add(T data);
+	void add_data(T data); // Add the data after last postion of the array
+	void add_data_array(const T* data, int size); // Add the data after last postion of the array
 	// unsigned short get_data_range(T& data_min, T& data_max)const;
 	// unsigned short get_histogram_interval(int interval_amount, SmartPointer<T> &sp_histogram_interval)const;
 	// unsigned short get_histogram(int interval_amount, const T* histogram_interval, SmartPointer<int> &sp_histogram_statistics)const;
@@ -234,7 +235,7 @@ class FinanceDataPtrArrayTemplate : public FinanceDataArrayBase
 protected:
 	T** array_data;
 
-	void alloc_new();
+	void alloc_new(int new_array_size);
 public:
 	FinanceDataPtrArrayTemplate();
 	FinanceDataPtrArrayTemplate(const FinanceDataPtrArrayTemplate& another);
@@ -243,9 +244,11 @@ public:
 	// void set_data_array(const T** array, int size);
 	// const T** get_data_array()const;
 	const T* operator[](int index)const;
-	void add(const T* data, size_t data_size);
+	void add_data(const T* data, size_t data_size); // Add the data after last postion of the array
+	void add_data_array(const T** data, size_t data_size, int size); // Add the data after last postion of the array
 };
 
+class FinanceCharDataArray;
 class FinanceIntDataArray;
 class FinanceLongDataArray;
 class FinanceFloatDataArray;
@@ -326,7 +329,8 @@ public:
 
 	DECLARE_DATA_ARRAY_OPERATOR_EQUAL(Bool, bool)
 	void reset_array();
-	void add(bool data);
+	void add_data(bool data);
+	void add_data_array(bool* data, int size);
 	int get_true_cnt()const;
 	float get_probability()const;
 };

@@ -1780,7 +1780,7 @@ void ResultSet::generate_filtered_data_for_simulation(ResultSet& result_set, Fin
 		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
 		snprintf(data, 32, "%s", field5[i]);
 		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
-		filter_data_array.add(filter[i]);
+		filter_data_array.add_data(filter[i]);
 	}
 	// printf("================= Data =================\n");
 	// result_set.show_data();
@@ -2275,7 +2275,7 @@ unsigned short ResultSet::set_date(const char* element_value)
 	}
 	else
 	{
-		date_data.add(element_value, strlen(element_value) + 1);
+		date_data.add_data(element_value, strlen(element_value) + 1);
 		date_data_size++;
 	}
 	return RET_SUCCESS;
@@ -2323,13 +2323,13 @@ unsigned short ResultSet::set_data(int source_type_index, int field_index, const
 	switch(field_type_index)
 	{
 	case FinanceField_INT:
-		int_data_set[field_type_pos]->add(atoi(data_string));
+		int_data_set[field_type_pos]->add_data(atoi(data_string));
 		break;
 	case FinanceField_LONG:
-		long_data_set[field_type_pos]->add(atol(data_string));
+		long_data_set[field_type_pos]->add_data(atol(data_string));
 		break;
 	case FinanceField_FLOAT:
-		float_data_set[field_type_pos]->add(atof(data_string));
+		float_data_set[field_type_pos]->add_data(atof(data_string));
 		break;
 	default:
 		WRITE_FORMAT_ERROR("Unsupported field_type_index: %d", field_type_index);
