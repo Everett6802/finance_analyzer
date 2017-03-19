@@ -1374,25 +1374,26 @@ unsigned short SearchRuleSet::add_rule_done()
 		WRITE_ERROR("The finance_analysis_mode variable is FinanceAnalysis_None");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	unsigned short ret = RET_SUCCESS;
-	if (query_set != NULL)
-	{
-		ret = query_set->add_query_done();
-		if (CHECK_FAILURE(ret))
-			return ret;
-	}
-	if (time_range_cfg != NULL)
-	{
-		ret = time_range_cfg->add_time_done();
-		if (CHECK_FAILURE(ret))
-			return ret;
-	}
-	if (company_group_set != NULL)
-	{
-		ret = company_group_set->add_company_done();
-		if (CHECK_FAILURE(ret))
-			return ret;
-	}
+// No need, is implemented in each class
+	// unsigned short ret = RET_SUCCESS;
+	// if (query_set != NULL)
+	// {
+	// 	ret = query_set->add_query_done();
+	// 	if (CHECK_FAILURE(ret))
+	// 		return ret;
+	// }
+	// if (time_range_cfg != NULL)
+	// {
+	// 	ret = time_range_cfg->add_time_done();
+	// 	if (CHECK_FAILURE(ret))
+	// 		return ret;
+	// }
+	// if (company_group_set != NULL)
+	// {
+	// 	ret = company_group_set->add_company_done();
+	// 	if (CHECK_FAILURE(ret))
+	// 		return ret;
+	// }
 	add_done = true;
 	return RET_SUCCESS;
 }
@@ -1716,6 +1717,112 @@ unsigned short ResultSet::get_calculation_subindex(unsigned long x)
 	return (unsigned short)((x >> 16) & 0xFF);
 }
 
+void ResultSet::get_metadata_string(const ResultSet& result_set, string &result_set_metadata_string)
+{
+	const int BUF_SIZE = 32;
+	char buf[BUF_SIZE];
+	const std::map<unsigned short, unsigned short>& data_set_mapping = result_set.data_set_mapping;
+	map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.begin();
+	while (iter != data_set_mapping.end())
+	{
+		unsigned short key = iter->first;
+		unsigned short source_type_index = get_upper_subindex(key);
+		unsigned short field_index = get_lower_subindex(key);
+		switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index])
+		{
+		case FinanceField_INT:
+		{
+// 9 space, extra 1 space for prefix and postfix of string
+			if (field_index < 10)
+				snprintf(buf, BUF_SIZE, "| %s%d    ", MYSQL_FILED_NAME_BASE, field_index);
+			else if (field_index >= 10 && field_index < 100)
+				snprintf(buf, BUF_SIZE, "| %s%d   ", MYSQL_FILED_NAME_BASE, field_index);
+			else
+				snprintf(buf, BUF_SIZE, "| %s%d  ", MYSQL_FILED_NAME_BASE, field_index);
+		}
+		break;
+		case FinanceField_LONG:
+		{
+// 12 space, extra 1 space for prefix and postfix of string
+			if (field_index < 10)
+				snprintf(buf, BUF_SIZE, "| %s%d       ", MYSQL_FILED_NAME_BASE, field_index);
+			else if (field_index >= 10 && field_index < 100)
+				snprintf(buf, BUF_SIZE, "| %s%d      ", MYSQL_FILED_NAME_BASE, field_index);
+			else
+				snprintf(buf, BUF_SIZE, "| %s%d     ", MYSQL_FILED_NAME_BASE, field_index);
+		}
+		break;
+		case FinanceField_FLOAT:
+		{
+// 10 space, extra 1 space for prefix and postfix of string
+			if (field_index < 10)
+				snprintf(buf, BUF_SIZE, "| %s%d     ", MYSQL_FILED_NAME_BASE, field_index);
+			else if (field_index >= 10 && field_index < 100)
+				snprintf(buf, BUF_SIZE, "| %s%d    ", MYSQL_FILED_NAME_BASE, field_index);
+			else
+				snprintf(buf, BUF_SIZE, "| %s%d   ", MYSQL_FILED_NAME_BASE, field_index);
+		}
+		break;
+		case FinanceField_DATE:
+		{
+// 9 space, extra 1 space for prefix and postfix of string
+			snprintf(buf, BUF_SIZE, "| %s      ", MYSQL_DATE_FILED_NAME);
+		}
+		break;
+		default:
+			throw invalid_argument("Unsupported field type");
+		}
+		result_set_metadata_string += string(buf);
+		iter++;
+	}
+	result_set_metadata_string += string("|\n"); 
+}
+
+void ResultSet::get_string(const ResultSet& result_set, string &result_set_string)
+{
+	const int BUF_SIZE = 32;
+	char buf[BUF_SIZE];
+	const std::map<unsigned short, unsigned short>& data_set_mapping = result_set.data_set_mapping;
+	for (int i = 0 ; i < result_set.date_data_size ; i++)
+	{
+		map<unsigned short, unsigned short>::const_iterator iter = data_set_mapping.begin();
+		while (iter != data_set_mapping.end())
+		{
+			unsigned short key = iter->first;
+			unsigned short source_type_index = get_upper_subindex(key);
+			unsigned short field_index = get_lower_subindex(key);
+			switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index])
+			{
+			case FinanceField_INT:
+			{
+				snprintf(buf, BUF_SIZE, "| %9d ", result_set.get_int_array_element(source_type_index, field_index, i));
+			}
+			break;
+			case FinanceField_LONG:
+			{
+				snprintf(buf, BUF_SIZE, "| %12ld ", result_set.get_long_array_element(source_type_index, field_index, i));
+			}
+			break;
+			case FinanceField_FLOAT:
+			{
+				snprintf(buf, BUF_SIZE, "| %8.2f ", result_set.get_float_array_element(source_type_index, field_index, i));
+			}
+			break;
+			case FinanceField_DATE:
+			{
+				snprintf(buf, BUF_SIZE, "| %s ", result_set.get_date_array_element(i));
+			}
+			break;
+			default:
+				throw invalid_argument("Unsupported field type");
+			}
+			result_set_string += string(buf);
+			iter++;
+		}
+		result_set_string += string("|\n"); 
+	}
+}
+
 void ResultSet::generate_data_for_simulation(ResultSet& result_set)
 {
 	static const char* date[] = {"2016-01-04", "2016-01-05", "2016-01-06", "2016-01-07", "2016-01-08", "2016-01-11", "2016-01-12", "2016-01-13", "2016-01-14", "2016-01-15"};
@@ -1798,17 +1905,20 @@ ResultSet::~ResultSet()
 	// RELEASE_MSG_DUMPER()
 }
 
+const std::string& ResultSet::to_metadata_string()
+{
+	if (result_set_metadata_string.empty())
+	{
+		ResultSet::get_metadata_string(*this, result_set_metadata_string);
+	}
+	return result_set_metadata_string;
+}
+
 const std::string& ResultSet::to_string()
 {
-	// static const int BUF_SIZE = 256;
-	// static char buf[BUF_SIZE];
-	// if (!add_done)
-	// {
-	// 	WRITE_ERROR("the add_done flag is NOT true");
-	// 	throw runtime_error(string("the add_done flag is NOT true"));
-	// }
 	if (result_set_string.empty())
 	{
+		ResultSet::get_string(*this, result_set_string);
 	}
 	return result_set_string;
 }
@@ -2652,7 +2762,7 @@ ResultSetMap::ResultSetMap(ResultSetDataUnit data_unit) : result_set_data_unit(d
 
 ResultSetMap::~ResultSetMap()
 {
-	RESULT_SET_MAP::iterator iter = result_set_map.begin();
+	INT_RESULT_SET_MAP::iterator iter = result_set_map.begin();
 	while (iter != result_set_map.end())
 	{
 		PRESULT_SET result_set = (PRESULT_SET)iter->second;
@@ -2660,6 +2770,63 @@ ResultSetMap::~ResultSetMap()
 		iter++;
 		delete result_set;
 	}
+}
+
+const std::string& ResultSetMap::to_metadata_string()
+{
+	if (result_set_map_metadata_string.empty())
+	{
+		if (result_set_map.empty())
+			return result_set_map_metadata_string;
+		INT_RESULT_SET_MAP_ITER iter = result_set_map.begin();
+		PRESULT_SET result_set = iter->second;
+		assert(result_set != NULL && "result_set should NOT be NULL");
+		result_set_map_metadata_string = result_set->to_metadata_string();
+	}
+	return result_set_map_metadata_string;
+}
+
+const std::string& ResultSetMap::to_string()
+{
+	if (result_set_map_string.empty())
+	{
+		if (result_set_map.empty())
+			return result_set_map_string;
+		if (result_set_map.size() == 1 && result_set_map.find(NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE) != result_set_map.end())
+		{
+			result_set_map_string += string("========== Market ==========\n");
+			result_set_map_string += result_set_map[NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE]->to_string();
+		}
+		else
+		{
+			const int MAX_MEMORY_SIZE_IN_MEGA = 8;
+			const int MAX_MEMORY_SIZE = MAX_MEMORY_SIZE_IN_MEGA * 1024 * 1024; // 8 M
+			int memory_size_count = 0;
+			const int BUF_SIZE = 32;
+			char buf[BUF_SIZE];
+			INT_RESULT_SET_MAP_ITER iter = result_set_map.begin();
+			while (iter != result_set_map.end())
+			{
+				int company_number = iter->first;
+				PRESULT_SET result_set = iter->second;
+				assert(result_set != NULL && "result_set should NOT be NULL");
+				if (memory_size_count + result_set->to_string().size() > MAX_MEMORY_SIZE)
+				{
+					snprintf(buf, BUF_SIZE, "========== SKIP !!! (The string occupies more than %d M memory) ==========\n", MAX_MEMORY_SIZE_IN_MEGA);
+					result_set_map_string += string(buf);
+					break;
+				}
+				else
+				{
+					snprintf(buf, BUF_SIZE, "========== Stock:%04d ==========\n", company_number);
+					result_set_map_string += string(buf);
+					result_set_map_string += result_set->to_string();
+				}
+				iter++;
+			}
+		}
+	}
+	return result_set_map_string;
 }
 
 ResultSetDataUnit ResultSetMap::get_data_unit()const
@@ -2670,7 +2837,7 @@ ResultSetDataUnit ResultSetMap::get_data_unit()const
 unsigned short ResultSetMap::register_result_set(int source_key, const PRESULT_SET result_set)
 {
 	assert(result_set != NULL && "result_set should NOT be NULL");
-	RESULT_SET_MAP::const_iterator iter = result_set_map.find(source_key);
+	INT_RESULT_SET_MAP::const_iterator iter = result_set_map.find(source_key);
 	if (iter != result_set_map.end()) 
 	{
 		static const int ERRMSG_SIZE = 256;
@@ -2684,7 +2851,7 @@ unsigned short ResultSetMap::register_result_set(int source_key, const PRESULT_S
 
 const PRESULT_SET ResultSetMap::lookup_result_set(int source_key)const
 {
-	RESULT_SET_MAP::const_iterator iter = result_set_map.find(source_key);
+	INT_RESULT_SET_MAP::const_iterator iter = result_set_map.find(source_key);
 	if (iter == result_set_map.end()) 
 	{
 		static const int ERRMSG_SIZE = 256;

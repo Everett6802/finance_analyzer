@@ -200,6 +200,11 @@ typedef FinanceDataArrayBase* PFINANCE_DATA_ARRAY_BASE;
 template <typename T>
 class FinanceDataArrayTemplate : public FinanceDataArrayBase
 {
+private:
+// Since the memory can only be calcuated in FinanceDataArrayTemplate, not in FinanceDataPtrArrayTemplate.
+// The memory restriction is NOT implemented in FinanceDataPtrArrayTemplate
+	static const int MAX_MEMORY_SIZE = 2 * 1024 * 1024; // 2M
+	bool over_max_memroy_size;
 protected:
 	T* array_data;
 
@@ -210,6 +215,7 @@ public:
 	FinanceDataArrayTemplate(const FinanceDataArrayTemplate& another);
 	~FinanceDataArrayTemplate();
 
+	bool is_over_max_memroy_size()const;
 	void set_data_array(const T* array, int size); // Set the data from 0 postion of the array
 	const T* get_data_array()const;
 	const T operator[](int index)const;

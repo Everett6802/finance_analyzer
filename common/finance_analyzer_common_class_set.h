@@ -400,10 +400,13 @@ public:
 	static unsigned short get_upper_subindex(unsigned short x);
 	static unsigned short get_lower_subindex(unsigned short x);
 	static unsigned short get_calculation_subindex(unsigned long x);
+	static void get_metadata_string(const ResultSet& result_set, std::string &result_set_metadata_string);
+	static void get_string(const ResultSet& result_set, std::string &result_set_string);
 	static void generate_data_for_simulation(ResultSet& result_set);
 	static void generate_filtered_data_for_simulation(ResultSet& result_set, FinanceBoolDataArray& filter_data_array);
 
 private:
+	mutable std::string result_set_metadata_string;
 	mutable std::string result_set_string;
 	std::map<unsigned short, unsigned short> data_set_mapping;
 	std::map<unsigned long, unsigned long> data_calculation_set_mapping;
@@ -435,6 +438,7 @@ private:
 public:
 	ResultSet();
 	~ResultSet();
+	const std::string& to_metadata_string();
 	const std::string& to_string();
 
 	class iterator
@@ -505,15 +509,21 @@ typedef ResultSet* PRESULT_SET;
 
 class ResultSetMap
 {
-	typedef std::map<int, PRESULT_SET> RESULT_SET_MAP;
-	typedef RESULT_SET_MAP* PRESULT_SET_MAP;
+	typedef std::map<int, PRESULT_SET> INT_RESULT_SET_MAP;
+	typedef INT_RESULT_SET_MAP* PINT_RESULT_SET_MAP;
+	typedef INT_RESULT_SET_MAP::iterator INT_RESULT_SET_MAP_ITER;
+
 private:
-	RESULT_SET_MAP result_set_map;
+	mutable std::string result_set_map_metadata_string;
+	mutable std::string result_set_map_string;
+	INT_RESULT_SET_MAP result_set_map;
 	ResultSetDataUnit result_set_data_unit;
 
 public:
 	ResultSetMap(ResultSetDataUnit data_unit=ResultSetDataUnit_NoSourceType);
 	~ResultSetMap();
+	const std::string& to_metadata_string();
+	const std::string& to_string();
 	ResultSetDataUnit get_data_unit()const;
 	unsigned short register_result_set(int source_key, const PRESULT_SET result_set);
 	const PRESULT_SET lookup_result_set(int source_key)const;
