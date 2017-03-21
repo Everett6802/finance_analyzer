@@ -43,14 +43,28 @@ private:
 	int session_id;
 	PIEVENT_NOTIFY event_notify;
 	bool user_exit;
+	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
 	FinanceAnalysisMode finance_analysis_mode;
 	PIFINANCE_ANALYZER_MGR finance_analyzer_mgr;
+	char* source_string_param;
+	char* time_range_string_param;
+	char* company_string_param;
+	bool search_rule_need_reset;
+	// PSEARCH_RULE_SET search_rule_set;
+	PRESULT_SET_MAP result_set_map;
 	// unsigned short thread_ret;
 
 	unsigned short thread_handler_internal();
 	unsigned short handle_command(int argc, char **argv);
 	unsigned short handle_get_finance_mode_command(int argc, char **argv);
 	unsigned short handle_set_finance_mode_command(int argc, char **argv);
+	unsigned short handle_get_source_command(int argc, char **argv);
+	unsigned short handle_set_source_command(int argc, char **argv);
+	unsigned short handle_get_time_range_command(int argc, char **argv);
+	unsigned short handle_set_time_range_command(int argc, char **argv);
+	unsigned short handle_get_company_command(int argc, char **argv);
+	unsigned short handle_set_company_command(int argc, char **argv);
+	unsigned short handle_search_command(int argc, char **argv);
 	unsigned short handle_help_command(int argc, char **argv);
 	unsigned short handle_exit_command(int argc, char **argv);
 	unsigned short print_to_console(std::string response)const;

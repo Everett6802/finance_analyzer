@@ -20,6 +20,13 @@ enum InteractiveSessionCommandType
 {
 	InteractiveSessionCommand_GetFinanceMode,
 	InteractiveSessionCommand_SetFinanceMode,
+	InteractiveSessionCommand_GetSource,
+	InteractiveSessionCommand_SetSource,
+	InteractiveSessionCommand_GetTimeRange,
+	InteractiveSessionCommand_SetTimeRange,
+	InteractiveSessionCommand_GetCompany,
+	InteractiveSessionCommand_SetCompany,
+	InteractiveSessionCommand_Search,
 	InteractiveSessionCommand_Help,
 	InteractiveSessionCommand_Exit,
 	InteractiveSessionCommandSize
@@ -29,6 +36,13 @@ static const char *interactive_session_command[InteractiveSessionCommandSize] =
 {
 	"get_finance_mode",
 	"set_finance_mode",
+	"get_source",
+	"set_source",
+	"get_time_range",
+	"set_time_range",
+	"get_company",
+	"set_company",
+	"search",
 	"help",
 	"exit"
 };
@@ -90,7 +104,13 @@ FinanceAnalyzerInteractiveSession::FinanceAnalyzerInteractiveSession(int client_
 	event_notify(parent),
 	user_exit(false),
 	finance_analysis_mode(FinanceAnalysis_None),
-	finance_analyzer_mgr(NULL)
+	finance_analyzer_mgr(NULL),
+	source_string_param(NULL),
+	time_range_string_param(NULL),
+	company_string_param(NULL),
+	search_rule_need_reset(true),
+	// search_rule_set(NULL),
+	result_set_map(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 	init_command_map();
@@ -101,6 +121,36 @@ FinanceAnalyzerInteractiveSession::FinanceAnalyzerInteractiveSession(int client_
 	
 FinanceAnalyzerInteractiveSession::~FinanceAnalyzerInteractiveSession()
 {
+	if (finance_analyzer_mgr != NULL)
+	{
+		delete finance_analyzer_mgr;
+		finance_analyzer_mgr = NULL;
+	}
+	if (source_string_param != NULL)
+	{
+		delete[] source_string_param;
+		source_string_param = NULL;
+	}
+	if (time_range_string_param != NULL)
+	{
+		delete[] time_range_string_param;
+		time_range_string_param = NULL;
+	}
+	if (company_string_param != NULL)
+	{
+		delete[] company_string_param;
+		company_string_param = NULL;
+	}
+	if (search_rule_set != NULL)
+	{
+		delete search_rule_set;
+		search_rule_set = NULL;
+	}
+	if (result_set_map != NULL)
+	{
+		delete result_set_map;
+		result_set_map = NULL;
+	}
 	if (sock_fd > 0)
 	{
 		close(sock_fd);
@@ -354,6 +404,12 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_command(int argc, char 
 	{
 		&FinanceAnalyzerInteractiveSession::handle_get_finance_mode_command,
 		&FinanceAnalyzerInteractiveSession::handle_set_finance_mode_command,
+		&FinanceAnalyzerInteractiveSession::handle_get_source_command,
+		&FinanceAnalyzerInteractiveSession::handle_set_source_command,
+		&FinanceAnalyzerInteractiveSession::handle_get_time_range_command,
+		&FinanceAnalyzerInteractiveSession::handle_set_time_range_command,
+		&FinanceAnalyzerInteractiveSession::handle_get_company_command,
+		&FinanceAnalyzerInteractiveSession::handle_set_company_command,
 		&FinanceAnalyzerInteractiveSession::handle_help_command,
 		&FinanceAnalyzerInteractiveSession::handle_exit_command
 	};
@@ -373,7 +429,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_finance_mode_comman
 		return RET_FAILURE_INTERACTIVE_COMMAND;
 	}
 // Get the finance mode
-	char rsp_buf[RSP_BUF_SHORT_SIZE];
+	static char rsp_buf[RSP_BUF_SHORT_SIZE];
 	snprintf(rsp_buf, RSP_BUF_SHORT_SIZE, "\nFinance Mode: %s\n", FINANCE_MODE_DESCRIPTION[finance_analysis_mode]);
 	print_to_console(string(rsp_buf));
 	return RET_SUCCESS;
@@ -410,6 +466,166 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_finance_mode_comman
 	if (CHECK_FAILURE(ret))
 		return ret;
 	return ret;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_get_source_command(int argc, char **argv)
+{
+	if (argc != 1)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+// Get the source type
+	static char rsp_buf[RSP_BUF_SHORT_SIZE];
+	if (source_string_param != NULL)
+		snprintf(rsp_buf, RSP_BUF_SHORT_SIZE, "\nSource Type: %s\n", source_string_param);
+	else
+		snprintf(rsp_buf, RSP_BUF_SHORT_SIZE, "\nSource Type: Not Set\n");
+	print_to_console(string(rsp_buf));
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_set_source_command(int argc, char **argv)
+{
+	unsigned short ret = RET_SUCCESS;
+	if (argc != 2)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+// Set the source type
+	if (source_string_param != NULL)
+	{
+		WRITE_DEBUG_WARN("Cleanup the old source type: %s", source_string_param);
+		delete[] source_string_param;
+		source_string_param = NULL;
+	}
+	search_rule_need_reset = true;
+	int source_string_param_size = strlen(argv[1]) + 1;
+	source_string_param = new char[source_string_param_size];
+	if (source_string_param == NULL)
+		throw bad_alloc();
+	memcpy(source_string_param, argv[1], sizeof(char) * source_string_param_size);
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_get_time_range_command(int argc, char **argv)
+{
+	if (argc != 1)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+// Get the time range
+	static char rsp_buf[RSP_BUF_SHORT_SIZE];
+	if (time_range_string_param != NULL)
+		snprintf(rsp_buf, RSP_BUF_SHORT_SIZE, "\nTime Range: %s\n", time_range_string_param);
+	else
+		snprintf(rsp_buf, RSP_BUF_SHORT_SIZE, "\nTime Range: Not Set\n");
+	print_to_console(string(rsp_buf));
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_set_time_range_command(int argc, char **argv)
+{
+	unsigned short ret = RET_SUCCESS;
+	if (argc != 2)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+// Set the time range
+	if (time_range_string_param != NULL)
+	{
+		WRITE_DEBUG_WARN("Cleanup the old time range: %s", time_range_string_param);
+		delete[] time_range_string_param;
+		time_range_string_param = NULL;
+	}
+	search_rule_need_reset = true;
+	int time_range_string_param_size = strlen(argv[1]) + 1;
+	time_range_string_param = new char[time_range_string_param_size];
+	if (time_range_string_param == NULL)
+		throw bad_alloc();
+	memcpy(time_range_string_param, argv[1], sizeof(char) * time_range_string_param_size);
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_get_company_command(int argc, char **argv)
+{
+	if (argc != 1)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+// Get the company
+	static char rsp_buf[RSP_BUF_SIZE];
+	if (time_range_string_param != NULL)
+		snprintf(rsp_buf, RSP_BUF_SIZE, "\nCompany: %s\n", company_string_param);
+	else
+		snprintf(rsp_buf, RSP_BUF_SIZE, "\nCompany: Not Set\n");
+	print_to_console(string(rsp_buf));
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_set_company_command(int argc, char **argv)
+{
+	unsigned short ret = RET_SUCCESS;
+	if (argc != 2)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+// Set the company
+	if (company_string_param != NULL)
+	{
+		WRITE_DEBUG_WARN("Cleanup the old company: %s", company_string_param);
+		delete[] company_string_param;
+		company_string_param = NULL;
+	}
+	search_rule_need_reset = true;
+	int company_string_param_size = strlen(argv[1]) + 1;
+	company_string_param = new char[company_string_param_size];
+	if (company_string_param == NULL)
+		throw bad_alloc();
+	memcpy(company_string_param, argv[1], sizeof(char) * company_string_param_size);
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_search_command(int argc, char **argv)
+{
+	if (argc != 1)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_FAILURE_INTERACTIVE_COMMAND;
+	}
+	unsigned short ret = RET_SUCCESS;
+	if (search_rule_need_reset)
+	{
+		if (result_set_map != NULL)
+			delete result_set_map;
+		unsigned short ret = RET_SUCCESS;
+		SearchRuleSet search_rule_set;
+// Set search rule
+		ret = SearchRuleSet::create_instance_from_string(finance_analysis_mode, source_string_param, time_range_string_param, company_string_param, search_rule_set);
+		if (CHECK_FAILURE(ret))
+			return ret;
+		result_set_map = new ResultSetMap();
+		if (result_set_map == NULL)
+			throw bad_alloc();
+		ret = FinanceAnalyzerSqlReader::query(&search_rule_set, &finance_analyzer_sql_reader, result_set_map);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	assert(result_set_map != NULL && "result_set_map should NOT be NULL");
+	print_to_console(result_set_map->to_string());
+	return RET_SUCCESS;
 }
 
 unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, char **argv)
