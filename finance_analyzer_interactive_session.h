@@ -12,6 +12,7 @@
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_mgr_factory.h"
 #include "finance_analyzer_mgr.h"
+#include "finance_analyzer_sql_reader.h"
 
 
 enum InteractiveSessionEventType
@@ -43,9 +44,9 @@ private:
 	int session_id;
 	PIEVENT_NOTIFY event_notify;
 	bool user_exit;
-	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
+	PFINANCE_ANALYZER_SQL_READER sql_reader;
 	FinanceAnalysisMode finance_analysis_mode;
-	PIFINANCE_ANALYZER_MGR finance_analyzer_mgr;
+	PIFINANCE_ANALYZER_MGR manager;
 	char* source_string_param;
 	char* time_range_string_param;
 	char* company_string_param;

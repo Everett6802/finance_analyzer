@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <map>
 // #include <string>
-#include "finance_analyzer_mgr.h"
 #include "finance_analyzer_interactive_session.h"
 
 
@@ -103,8 +102,9 @@ FinanceAnalyzerInteractiveSession::FinanceAnalyzerInteractiveSession(int client_
 	session_id(interactive_session_id),
 	event_notify(parent),
 	user_exit(false),
+	sql_reader(NULL),
 	finance_analysis_mode(FinanceAnalysis_None),
-	finance_analyzer_mgr(NULL),
+	manager(NULL),
 	source_string_param(NULL),
 	time_range_string_param(NULL),
 	company_string_param(NULL),
@@ -121,10 +121,15 @@ FinanceAnalyzerInteractiveSession::FinanceAnalyzerInteractiveSession(int client_
 	
 FinanceAnalyzerInteractiveSession::~FinanceAnalyzerInteractiveSession()
 {
-	if (finance_analyzer_mgr != NULL)
+	if (sql_reader != NULL)
 	{
-		delete finance_analyzer_mgr;
-		finance_analyzer_mgr = NULL;
+		delete sql_reader;
+		sql_reader = NULL;
+	}
+	if (manager != NULL)
+	{
+		delete manager;
+		manager = NULL;
 	}
 	if (source_string_param != NULL)
 	{
@@ -141,11 +146,11 @@ FinanceAnalyzerInteractiveSession::~FinanceAnalyzerInteractiveSession()
 		delete[] company_string_param;
 		company_string_param = NULL;
 	}
-	if (search_rule_set != NULL)
-	{
-		delete search_rule_set;
-		search_rule_set = NULL;
-	}
+	// if (search_rule_set != NULL)
+	// {
+	// 	delete search_rule_set;
+	// 	search_rule_set = NULL;
+	// }
 	if (result_set_map != NULL)
 	{
 		delete result_set_map;
@@ -377,18 +382,18 @@ unsigned short FinanceAnalyzerInteractiveSession::init_finance_manager(FinanceAn
 			return RET_SUCCESS;
 		}
 // Release the old manager object
-		if (finance_analyzer_mgr != NULL)
+		if (manager != NULL)
 		{
-			delete finance_analyzer_mgr;
-			finance_analyzer_mgr = NULL;
+			delete manager;
+			manager = NULL;
 		}
 		finance_analysis_mode = new_finance_analysis_mode;
 	}
 // Create the instance of the manager class due to different mode
-	finance_analyzer_mgr = mgr_factory.get_instance(finance_analysis_mode);
+	manager = mgr_factory.get_instance(finance_analysis_mode);
 // Initialize the manager class
 	WRITE_FORMAT_DEBUG("Initialize the finance manager: %d", finance_analysis_mode);
-	unsigned short ret = finance_analyzer_mgr->initialize();
+	unsigned short ret = manager->initialize();
 	if (CHECK_FAILURE(ret))
 	{
 		WRITE_FORMAT_ERROR("Fail to initialize manager class, due to: %s", get_ret_description(ret));
@@ -498,7 +503,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_source_command(int 
 // Set the source type
 	if (source_string_param != NULL)
 	{
-		WRITE_DEBUG_WARN("Cleanup the old source type: %s", source_string_param);
+		WRITE_FORMAT_DEBUG("Cleanup the old source type: %s", source_string_param);
 		delete[] source_string_param;
 		source_string_param = NULL;
 	}
@@ -541,7 +546,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_time_range_command(
 // Set the time range
 	if (time_range_string_param != NULL)
 	{
-		WRITE_DEBUG_WARN("Cleanup the old time range: %s", time_range_string_param);
+		WRITE_FORMAT_DEBUG("Cleanup the old time range: %s", time_range_string_param);
 		delete[] time_range_string_param;
 		time_range_string_param = NULL;
 	}
@@ -584,7 +589,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_company_command(int
 // Set the company
 	if (company_string_param != NULL)
 	{
-		WRITE_DEBUG_WARN("Cleanup the old company: %s", company_string_param);
+		WRITE_FORMAT_DEBUG("Cleanup the old company: %s", company_string_param);
 		delete[] company_string_param;
 		company_string_param = NULL;
 	}
@@ -616,10 +621,14 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_search_command(int argc
 		ret = SearchRuleSet::create_instance_from_string(finance_analysis_mode, source_string_param, time_range_string_param, company_string_param, search_rule_set);
 		if (CHECK_FAILURE(ret))
 			return ret;
+		sql_reader = new FinanceAnalyzerSqlReader();
+		if (sql_reader == NULL)
+			throw bad_alloc();
 		result_set_map = new ResultSetMap();
 		if (result_set_map == NULL)
 			throw bad_alloc();
-		ret = FinanceAnalyzerSqlReader::query(&search_rule_set, &finance_analyzer_sql_reader, result_set_map);
+// Query the data
+		ret = FinanceAnalyzerSqlReader::query(&search_rule_set, sql_reader, result_set_map);
 		if (CHECK_FAILURE(ret))
 			return ret;
 	}

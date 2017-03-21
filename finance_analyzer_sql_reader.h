@@ -11,6 +11,7 @@
 class FinanceAnalyzerSqlReader
 {
 	DECLARE_MSG_DUMPER()
+	friend class FinanceAnalyzerInteractiveSession;
 
 private:
 	static const char* MYSQL_SERVER;

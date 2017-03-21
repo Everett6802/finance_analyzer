@@ -13,4 +13,4 @@ finance_analyzer_common(deprecated).cpp
 .company_profile.conf
 .company_group.conf
 conf/market_stock_switch.conf
-
+core

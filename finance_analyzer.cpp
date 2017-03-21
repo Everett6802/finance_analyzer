@@ -38,9 +38,9 @@ static bool param_search = false;
 
 static const int ERRMSG_SIZE = 256;
 static char errmsg[ERRMSG_SIZE];
-static PIFINANCE_ANALYZER_MGR finance_analyzer_mgr = NULL;
+static PIFINANCE_ANALYZER_MGR manager = NULL;
 static SearchRuleSet search_rule_set;
-static ResultSet result_set;
+// static ResultSetMap result_set_map;
 DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
 DECLARE_MSG_DUMPER_PARAM();
 
@@ -477,8 +477,8 @@ unsigned short setup_param()
 		// 	fprintf(stderr, "Add StockQuerySet Fail, due to: %s\n", get_ret_description(ret));
 		// printf("StockQuerySet:\n%s", stock_query_set->to_string().c_str());
 
-	// finance_analyzer_mgr->set_log_severity_config(2);
-	// finance_analyzer_mgr->set_syslog_severity_config(0);
+	// manager->set_log_severity_config(2);
+	// manager->set_syslog_severity_config(0);
 	return RET_SUCCESS;
 }
 
@@ -528,11 +528,11 @@ void run_test_cases_and_exit()
 void show_search_result_and_exit()
 {
 	assert(search_rule_set.is_add_rule_done() && "SearchRuleSet::add_done is NOT true");
-	ResultSet result_set;
-	unsigned short ret = finance_analyzer_mgr->search(&search_rule_set, &result_set);
+	ResultSetMap result_set_map;
+	unsigned short ret = manager->search(&search_rule_set, &result_set_map);
 	if (CHECK_SUCCESS(ret))
 	{
-		PRINT("\n***Result***\n%s\n", result_set.to_string().c_str());
+		PRINT("\n***Result***\n%s\n", result_set_map.to_string().c_str());
 	}
 	else
 	{
@@ -759,9 +759,9 @@ int main(int argc, char** argv)
 	    	run_test_cases_and_exit();
 	    }
 // Create the instance of the manager class due to different mode
-		finance_analyzer_mgr = g_mgr_factory.get_instance(finance_analysis_mode);
+		manager = g_mgr_factory.get_instance(finance_analysis_mode);
 // Initialize the manager class
-		ret = finance_analyzer_mgr->initialize();
+		ret = manager->initialize();
 		if (CHECK_FAILURE(ret))
 		{
 			snprintf(errmsg, ERRMSG_SIZE, "Fail to initialize manager class, due to: %s", get_ret_description(ret));
