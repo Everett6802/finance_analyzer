@@ -65,19 +65,19 @@ unsigned short FinanceAnalyzerDataStatisticsBase::generate_general_query_set(Que
 const PQUERY_SET FinanceAnalyzerDataStatisticsBase::get_general_query_set()
 {
 	static QuerySet query_set;
-	if (!query_set.is_add_query_done())
-	{
-		unsigned short ret = FinanceAnalyzerDataStatisticsBase::generate_general_query_set(query_set);
-		if (CHECK_FAILURE(ret))
-		{
-			const int BUF_SIZE = 256;
-			char buf[BUF_SIZE];
-			snprintf(buf, BUF_SIZE, "Fail to generate generate query set, due to: %s", get_ret_description(ret));
-			throw runtime_error(string(buf));
-		}
-		query_set.add_query_done();	
-		// WRITE_FORMAT_DEBUG("There are totally %d query items", query_set.get_size());
-	}
+	// if (!query_set.is_add_query_done())
+	// {
+	// 	unsigned short ret = FinanceAnalyzerDataStatisticsBase::generate_general_query_set(query_set);
+	// 	if (CHECK_FAILURE(ret))
+	// 	{
+	// 		const int BUF_SIZE = 256;
+	// 		char buf[BUF_SIZE];
+	// 		snprintf(buf, BUF_SIZE, "Fail to generate generate query set, due to: %s", get_ret_description(ret));
+	// 		throw runtime_error(string(buf));
+	// 	}
+	// 	query_set.add_query_done();	
+	// 	// WRITE_FORMAT_DEBUG("There are totally %d query items", query_set.get_size());
+	// }
 	return &query_set;
 }
 
@@ -239,14 +239,14 @@ const char* FinanceAnalyzerDataStatisticsBase::get_description_head(const PRESUL
 			}
 		}
 	}
-	int data_amount = end_index - start_index;
-	snprintf(buf, BUF_SIZE, "%s:%s %s:%s %d", 
-		FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
-		get_database_field_description(result_set_access_param->get_finance_source_type(), result_set_access_param->get_finance_field_no()),
-		result_set->get_date_array_element(start_index),
-		result_set->get_date_array_element(end_index),
-		data_amount
-	);
+	// int data_amount = end_index - start_index;
+	// snprintf(buf, BUF_SIZE, "%s:%s %s:%s %d", 
+	// 	FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+	// 	get_database_field_description(result_set_access_param->get_finance_source_type(), result_set_access_param->get_finance_field_no()),
+	// 	result_set->get_date_array_element(start_index),
+	// 	result_set->get_date_array_element(end_index),
+	// 	data_amount
+	// );
 	return buf;
 }
 
@@ -258,12 +258,12 @@ const char* FinanceAnalyzerDataStatisticsBase::get_no_data_description(int sourc
 	static const int BUF_SIZE = 512;
 	static char buf[BUF_SIZE];
 
-	snprintf(buf, BUF_SIZE, "%s:%s %s:%s *** No Data in MySQL ***", 
-		FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index],
-		get_database_field_description(source_type_index, field_index),
-		time_range_cfg->get_start_time()->to_string(),
-		time_range_cfg->get_end_time()->to_string()
-	);
+	// snprintf(buf, BUF_SIZE, "%s:%s %s:%s *** No Data in MySQL ***", 
+	// 	FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index],
+	// 	get_database_field_description(source_type_index, field_index),
+	// 	time_range_cfg->get_start_time()->to_string(),
+	// 	time_range_cfg->get_end_time()->to_string()
+	// );
 	return buf;
 }
 

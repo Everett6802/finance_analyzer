@@ -225,9 +225,9 @@ enum TestType{
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 
-extern FinanceAnalysisMode finance_analysis_mode; // Caution: This variable is NOT used in interactive mode
-extern bool IS_FINANCE_MARKET_MODE; // Caution: This variable is NOT used in interactive mode
-extern bool IS_FINANCE_STOCK_MODE; // Caution: This variable is NOT used in interactive mode
+// extern FinanceAnalysisMode g_finance_analysis_mode; // Caution: This variable is NOT used in interactive mode
+// extern bool IS_FINANCE_MARKET_MODE; // Caution: This variable is NOT used in interactive mode
+// extern bool IS_FINANCE_STOCK_MODE; // Caution: This variable is NOT used in interactive mode
 
 extern const char* FINANCE_MODE_DESCRIPTION[];
 

@@ -61,14 +61,16 @@ unsigned short FinanceAnalyzerSqlReader::query_from_tables(
 	const PTIME_RANGE_CFG restricted_time_range_cfg, 
 	const PQUERY_SET query_set,
 	const std::string& company_code_number,  // For stock mode only, ignored in market mode
-	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader,
+	FinanceAnalysisMode finance_analysis_mode,
 	PRESULT_SET result_set
 	)
 {
+	assert(!(finance_analysis_mode == FinanceAnalysis_Market || finance_analysis_mode == FinanceAnalysis_Stock) && "finance_analysis_mode is NOT FinanceAnalysis_Market/FinanceAnalysis_Stock");
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	DECLARE_AND_IMPLEMENT_STATIC_COMPANY_PROFILE()
-	if (is_stock_mode())
+	if (finance_analysis_mode == FinanceAnalysis_Stock)
 	{
 		if (!company_profile->is_company_exist(company_code_number))
 		{
@@ -94,7 +96,7 @@ unsigned short FinanceAnalyzerSqlReader::query_from_tables(
 		FinanceAnalyzerSqlReader::get_sql_field_command(source_type_index, query_field, field_cmd);
 // Search for each table
 		table_name = string(FINANCE_TABLE_NAME_LIST[source_type_index]);
-		if (is_stock_mode())
+		if (finance_analysis_mode == FinanceAnalysis_Stock)
 			table_name = company_code_number + table_name;
 		ret = finance_analyzer_sql_reader->select_data(
 			source_type_index, 
@@ -164,6 +166,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 				query_set,
 				company_code_number_dummy,  // For stock mode only, ignored in market mode
 				finance_analyzer_sql_reader, 
+				FinanceAnalysis_Market,
 				result_set
 			);
 			if (CHECK_FAILURE(ret))
@@ -192,7 +195,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 					goto OUT;
 				SmartPointer<QuerySet> sp_query_sub_set;
 				sp_query_sub_set.set_new(query_sub_set);
-				sp_query_sub_set->add_query_done();
+				// sp_query_sub_set->add_query_done();
 // Query data from MySQL
 				PRESULT_SET result_set = new ResultSet();
 				if (result_set == NULL)
@@ -206,7 +209,8 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 					sp_restricted_time_range_cfg.get_instance(), 
 					sp_query_sub_set.get_instance(),
 					company_code_number_dummy,  // For stock mode only, ignored in market mode
-					finance_analyzer_sql_reader, 
+					finance_analyzer_sql_reader,
+					FinanceAnalysis_Market, 
 					result_set
 				);
 				if (CHECK_FAILURE(ret))
@@ -348,6 +352,7 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 						query_set,
 						company_code_number,  // For stock mode only, ignored in market mode
 						finance_analyzer_sql_reader, 
+						FinanceAnalysis_Stock,
 						result_set
 					);
 					if (CHECK_FAILURE(ret))
@@ -380,7 +385,7 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 							if (CHECK_FAILURE(ret))
 								goto OUT;
 							sp_query_sub_set_array[source_type_revised_index].set_new(query_sub_set);
-							sp_query_sub_set_array[source_type_revised_index]->add_query_done();
+							// sp_query_sub_set_array[source_type_revised_index]->add_query_done();
 						}
 						init_query_sub_set_array = true;
 					}
@@ -403,6 +408,7 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 							sp_query_sub_set_array[source_type_revised_index].get_instance(),
 							company_code_number,  // For stock mode only, ignored in market mode
 							finance_analyzer_sql_reader, 
+							FinanceAnalysis_Stock,
 							result_set
 						);
 						if (CHECK_FAILURE(ret))
@@ -520,7 +526,6 @@ unsigned short FinanceAnalyzerSqlReader::try_connect_mysql(const string database
 		WRITE_FORMAT_DEBUG("The %s database is created", database_name.c_str());
 	}
 	WRITE_DEBUG("Try to connect to the MySQL database server...... Successfully");
-
 // Select the database
 	if (mysql_select_db(connection, database_name.c_str()))
 	{

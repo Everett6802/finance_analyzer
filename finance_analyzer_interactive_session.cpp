@@ -372,7 +372,7 @@ unsigned short FinanceAnalyzerInteractiveSession::init_finance_manager(FinanceAn
 {
 	if (finance_analysis_mode == FinanceAnalysis_None)
 	{
-		finance_analysis_mode = get_finance_analysis_mode();
+		finance_analysis_mode = get_finance_analysis_mode_from_file();
 	}
 	else
 	{
@@ -415,6 +415,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_command(int argc, char 
 		&FinanceAnalyzerInteractiveSession::handle_set_time_range_command,
 		&FinanceAnalyzerInteractiveSession::handle_get_company_command,
 		&FinanceAnalyzerInteractiveSession::handle_set_company_command,
+		&FinanceAnalyzerInteractiveSession::handle_search_command,
 		&FinanceAnalyzerInteractiveSession::handle_help_command,
 		&FinanceAnalyzerInteractiveSession::handle_exit_command
 	};
@@ -493,7 +494,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_source_command(int 
 
 unsigned short FinanceAnalyzerInteractiveSession::handle_set_source_command(int argc, char **argv)
 {
-	unsigned short ret = RET_SUCCESS;
+	// unsigned short ret = RET_SUCCESS;
 	if (argc != 2)
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
@@ -536,7 +537,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_time_range_command(
 
 unsigned short FinanceAnalyzerInteractiveSession::handle_set_time_range_command(int argc, char **argv)
 {
-	unsigned short ret = RET_SUCCESS;
+	// unsigned short ret = RET_SUCCESS;
 	if (argc != 2)
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
@@ -569,7 +570,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_company_command(int
 	}
 // Get the company
 	static char rsp_buf[RSP_BUF_SIZE];
-	if (time_range_string_param != NULL)
+	if (company_string_param != NULL)
 		snprintf(rsp_buf, RSP_BUF_SIZE, "\nCompany: %s\n", company_string_param);
 	else
 		snprintf(rsp_buf, RSP_BUF_SIZE, "\nCompany: Not Set\n");
@@ -579,7 +580,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_company_command(int
 
 unsigned short FinanceAnalyzerInteractiveSession::handle_set_company_command(int argc, char **argv)
 {
-	unsigned short ret = RET_SUCCESS;
+	// unsigned short ret = RET_SUCCESS;
 	if (argc != 2)
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
@@ -610,23 +611,26 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_search_command(int argc
 		print_to_console(incorrect_command_phrases);
 		return RET_FAILURE_INTERACTIVE_COMMAND;
 	}
-	unsigned short ret = RET_SUCCESS;
 	if (search_rule_need_reset)
 	{
+		if (sql_reader == NULL)
+		{
+			sql_reader = new FinanceAnalyzerSqlReader();
+			if (sql_reader == NULL)
+				throw bad_alloc();
+		}
 		if (result_set_map != NULL)
 			delete result_set_map;
+		result_set_map = new ResultSetMap();
+		if (result_set_map == NULL)
+			throw bad_alloc();
+		search_rule_need_reset = true;
 		unsigned short ret = RET_SUCCESS;
 		SearchRuleSet search_rule_set;
 // Set search rule
 		ret = SearchRuleSet::create_instance_from_string(finance_analysis_mode, source_string_param, time_range_string_param, company_string_param, search_rule_set);
 		if (CHECK_FAILURE(ret))
 			return ret;
-		sql_reader = new FinanceAnalyzerSqlReader();
-		if (sql_reader == NULL)
-			throw bad_alloc();
-		result_set_map = new ResultSetMap();
-		if (result_set_map == NULL)
-			throw bad_alloc();
 // Query the data
 		ret = FinanceAnalyzerSqlReader::query(&search_rule_set, sql_reader, result_set_map);
 		if (CHECK_FAILURE(ret))
@@ -666,7 +670,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, 
 	}
 	usage_string += string("  Format 1: All source types/fields (ex. all)\n");	
 	usage_string += string("  Format 2: Source type index/index range (ex. 1,2-4,6)\n");
-	usage_string += string("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-4,5),2-4(12-16,5),6,8(1,3,5,6,7,8))\n");
+	usage_string += string("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7))\n");
 // Time range
 	usage_string += string("* get_time_range\nDescription: Get time range\n");
 	usage_string += string("* set_time_range\nDescription: Set time range\n");
@@ -681,8 +685,14 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, 
 		usage_string += string("  Format 1: Company code number (ex. 2347)\n");
 		usage_string += string("  Format 2: Company code number range (ex. 2100-2200)\n");
 		usage_string += string("  Format 3: Company group number (ex. [Gg]12)\n");
-		usage_string += string("  Format 4: Company code number/number range/group hybrid (ex. 2347,2100-2200,G12,2362,g2,1500-1510)\n");
+		usage_string += string("  Format 4: Company group number range (ex. [Gg]12-15)\n");
+		usage_string += string("  Format 4: Company code number/number range/group/group range hybrid (ex. 2347,2100-2200,G12,2362,g2,1500-1510)\n");
 	}
+// Search
+	if (finance_analysis_mode == FinanceAnalysis_Market)
+		usage_string += string("* search\n Description: Search the database under the rule of source type and time range\n");
+	else if (finance_analysis_mode == FinanceAnalysis_Stock)
+		usage_string += string("* search\n Description: Search the database under the rule of source type, time range and company number\n");
 	usage_string += string("===================================================\n");
 
 	ret = print_to_console(usage_string);

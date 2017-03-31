@@ -8,9 +8,9 @@
 
 using namespace std;
 
-FinanceAnalysisMode finance_analysis_mode = FinanceAnalysis_None;
-bool IS_FINANCE_MARKET_MODE = (finance_analysis_mode == FinanceAnalysis_Market ? true : false);
-bool IS_FINANCE_STOCK_MODE = (finance_analysis_mode == FinanceAnalysis_Stock ? true : false);
+// FinanceAnalysisMode g_finance_analysis_mode = FinanceAnalysis_None;
+// bool IS_FINANCE_MARKET_MODE = (g_finance_analysis_mode == FinanceAnalysis_Market ? true : false);
+// bool IS_FINANCE_STOCK_MODE = (g_finance_analysis_mode == FinanceAnalysis_Stock ? true : false);
 
 const char* FINANCE_MODE_DESCRIPTION[] = {"Market", "Stock"};
 

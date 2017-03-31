@@ -95,7 +95,7 @@ SourceTypeIndexSet.insert(SourceIndex);\
 // };
 class QuerySet
 {
-protected:
+private:
 	DECLARE_MSG_DUMPER()
 
 public:
@@ -114,12 +114,13 @@ public:
 		int get_first()const;
 		const PINT_DEQUE get_second()const;
 	};
-public: 
-	static unsigned short create_instance_from_string(const char* source_string, QuerySet& query_set);
-	static unsigned short create_instance_from_string(const char* source_string, QuerySet** query_set);
 
-protected:
+	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* source_string, QuerySet& query_set);
+	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* source_string, QuerySet** query_set);
+
+private:
 	bool add_done;
+	FinanceAnalysisMode finance_analysis_mode;
 	mutable INT_INT_DEQUE_MAP source_field_query_map;
 	mutable PINT_SET source_type_index_set;
 	mutable std::string query_set_string;
@@ -139,7 +140,7 @@ public:
 
 	unsigned short add_query(int source_type_index, int field_index=-1);
 	unsigned short add_query_list(int source_type_index, const PINT_DEQUE field_index_deque);
-	unsigned short add_query_done();
+	unsigned short add_query_done(FinanceAnalysisMode cur_finance_analysis_mode);
 	bool is_add_query_done()const;
 	int get_size()const;
 	unsigned short get_query_sub_set(int source_type_index, QuerySet** query_sub_set)const;
@@ -250,8 +251,8 @@ private:
 	DECLARE_MSG_DUMPER()
 
 public: 
-	static unsigned short create_instance_from_string(FinanceAnalysisMode new_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set);
-	static unsigned short create_instance_from_string(FinanceAnalysisMode new_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set);
+	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set);
+	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set);
 
 private:
 	bool add_done;
@@ -261,13 +262,14 @@ private:
 	PCOMPANY_GROUP_SET company_group_set;
 	mutable std::string search_rule_set_string;
 
-public:
-	const std::string& to_string();
+	unsigned short set_finance_mode(FinanceAnalysisMode cur_finance_analysis_mode);
 
+public:
 	SearchRuleSet();
+	SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode);
 	~SearchRuleSet();
 
-	unsigned short set_finance_mode(FinanceAnalysisMode new_finance_analysis_mode);
+	const std::string& to_string();
 	unsigned short add_query_rule(const PQUERY_SET new_query_set);
 	unsigned short add_query_rule(const char* query_source_string);
 	unsigned short add_time_rule(const PTIME_RANGE_CFG new_time_range_cfg);

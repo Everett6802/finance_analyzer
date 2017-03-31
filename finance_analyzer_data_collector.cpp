@@ -46,10 +46,10 @@ FinanceAnalyzerDataCollectorBase::~FinanceAnalyzerDataCollectorBase()
 
 unsigned short FinanceAnalyzerDataCollectorBase::init_search_rule_set()
 {
-	cleanup_search_rule_set();
-	search_rule_set = new SearchRuleSet();
-	if (search_rule_set == NULL)
-		throw bad_alloc();
+	// cleanup_search_rule_set();
+	// search_rule_set = new SearchRuleSet();
+	// if (search_rule_set == NULL)
+	// 	throw bad_alloc();
 	return RET_SUCCESS;
 }
 

@@ -51,7 +51,7 @@ const PINT_DEQUE QuerySet::const_iterator::get_second()const
 	return (PINT_DEQUE)iter->second;
 }
 
-unsigned short QuerySet::create_instance_from_string(const char* source_string, QuerySet& query_set)
+unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* source_string, QuerySet& query_set)
 {
 	assert(source_string != NULL && "soruce_string should NOT be NULL");
 	unsigned short ret = RET_SUCCESS;
@@ -150,7 +150,7 @@ unsigned short QuerySet::create_instance_from_string(const char* source_string, 
 		if (source_buf != NULL)
 			source_buf = NULL;
 	}
-	ret = query_set.add_query_done();
+	ret = query_set.add_query_done(cur_finance_analysis_mode);
 OUT:
 	if (source_string_copy != NULL)
 	{
@@ -160,7 +160,7 @@ OUT:
 	return ret;
 }
 
-unsigned short QuerySet::create_instance_from_string(const char* source_string, QuerySet** query_set)
+unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* source_string, QuerySet** query_set)
 {
 	assert(query_set != NULL && "query_set should NOT be NULL");
 	QuerySet* query_set_tmp = new QuerySet();
@@ -170,7 +170,7 @@ unsigned short QuerySet::create_instance_from_string(const char* source_string, 
 		if (query_set_tmp != NULL) delete query_set_tmp;
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
-	unsigned short ret = create_instance_from_string(source_string, *query_set_tmp);
+	unsigned short ret = create_instance_from_string(cur_finance_analysis_mode, source_string, *query_set_tmp);
 	if (CHECK_FAILURE(ret))
 	{
 		delete query_set_tmp;
@@ -184,6 +184,7 @@ unsigned short QuerySet::create_instance_from_string(const char* source_string, 
 
 QuerySet::QuerySet() :
 	add_done(false),
+	finance_analysis_mode(FinanceAnalysis_None),
 	source_type_index_set(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
@@ -313,13 +314,12 @@ unsigned short QuerySet::add_query(int source_type_index, int field_index)
 		WRITE_ERROR("the add_done flag is NOT true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-
 // Check if the index is out of range
-	if(!check_source_type_index_in_range(source_type_index))
-	{
-		WRITE_ERROR("source_type_index is out of range in QuerySet");
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
+	// if(!check_source_type_index_in_range(source_type_index))
+	// {
+	// 	WRITE_FORMAT_ERROR("source_type_index[%d] is out of range in QuerySet", source_type_index);
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
 // Initialize a list of keeping track of the field index in certain a source type
 	unsigned short ret = init_source_field_query_map_element(source_type_index);
 	if(CHECK_FAILURE(ret))
@@ -361,11 +361,11 @@ unsigned short QuerySet::add_query_list(int source_type_index, const PINT_DEQUE 
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 // Check if the index is out of range
-	if(!check_source_type_index_in_range(source_type_index))
-	{
-		WRITE_ERROR("source_type_index is out of range in QuerySet");
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
+	// if(!check_source_type_index_in_range(source_type_index))
+	// {
+	// 	WRITE_ERROR("source_type_index is out of range in QuerySet");
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
 // Initialize a list of keeping track of the field index in certain a source type
 	unsigned short ret = init_source_field_query_map_element(source_type_index);
 	if(CHECK_FAILURE(ret))
@@ -407,13 +407,19 @@ unsigned short QuerySet::add_query_list(int source_type_index, const PINT_DEQUE 
 	return RET_SUCCESS;
 }
 
-unsigned short QuerySet::add_query_done()
+unsigned short QuerySet::add_query_done(FinanceAnalysisMode cur_finance_analysis_mode)
 {
 	if (add_done)
 	{
 		WRITE_ERROR("the add_done flag is NOT true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
+	finance_analysis_mode = cur_finance_analysis_mode;
+	if (finance_analysis_mode == FinanceAnalysis_None)
+	{
+		WRITE_ERROR("the finance_analysis_mode variable is FinanceAnalysis_None");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}	
 	const_iterator iter = source_field_query_map.begin();
 	while (iter != source_field_query_map.end())
 	{
@@ -427,6 +433,12 @@ unsigned short QuerySet::add_query_done()
 		// 		field_queue.push_back(field_index);
 		// }
 		int source_type_index = iter.get_first();
+// Check if source_type_index is in range
+		if (!check_source_type_index_in_range(source_type_index, cur_finance_analysis_mode))
+		{
+			WRITE_FORMAT_ERROR("source_type_index[%d] is out of range in QuerySet", source_type_index);
+			return RET_FAILURE_INVALID_ARGUMENT;
+		}
 		assert(source_field_query_map[source_type_index] != NULL && "source_field_query_map[source_type_index] should NOT be NULL");
 		PINT_DEQUE field_deque = source_field_query_map[source_type_index];
 		if ((*field_deque)[0] == -1)
@@ -434,6 +446,21 @@ unsigned short QuerySet::add_query_done()
 			field_deque->clear();
 			for (int field_index = 1 ; field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] ; field_index++) // Caution: Don't include the "date" field
 				field_deque->push_back(field_index);
+		}
+		else
+		{
+// Check if field_index of source_type_index is in range
+			INT_DEQUE_ITER iter_field = field_deque->begin();
+			while (iter_field != field_deque->end())
+			{
+				int field_index = *iter_field;
+				if (!check_field_index_in_range(source_type_index, field_index))
+				{
+					WRITE_FORMAT_ERROR("field_index[%d] of source_type_index[%d] is out of range in QuerySet", field_index, source_type_index);
+					return RET_FAILURE_INVALID_ARGUMENT;
+				}
+				iter_field++;		
+			}
 		}
 		++iter;
 	}
@@ -462,11 +489,11 @@ unsigned short QuerySet::get_query_sub_set(int source_type_index, QuerySet** que
 {
 	assert(query_sub_set != NULL && "query_sub_set should NOT be NULL");
 // Check if the index is out of range
-	if(!check_source_type_index_in_range(source_type_index))
-	{
-		WRITE_ERROR("source_type_index is out of range in QuerySet");
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
+	// if(!check_source_type_index_in_range(source_type_index))
+	// {
+	// 	WRITE_ERROR("source_type_index is out of range in QuerySet");
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
 // Can't call map::operator[] in const member function, since std doesn't provide the const version of operator[]
 	// const PINT_DEQUE field_index_deque = (const PINT_DEQUE)source_field_query_map[source_type_index];
 	INT_INT_DEQUE_MAP_CONST_ITER iter = source_field_query_map.find(source_type_index);
@@ -487,6 +514,9 @@ unsigned short QuerySet::get_query_sub_set(int source_type_index, QuerySet** que
 		query_sub_set_tmp = NULL;
 		return ret;
 	}
+	ret = query_sub_set_tmp->add_query_done(finance_analysis_mode);
+	if (CHECK_FAILURE(ret))
+		return ret;
 	*query_sub_set = query_sub_set_tmp;
 	return ret;
 }
@@ -1155,9 +1185,12 @@ CompanyGroupSet::const_iterator CompanyGroupSet::end()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode new_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set)
+unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set)
 {
 	unsigned ret = RET_SUCCESS;
+	ret = search_rule_set.set_finance_mode(cur_finance_analysis_mode);
+	if (CHECK_FAILURE(ret))
+		return ret;
 	if (query_source_string != NULL)
 	{
 		ret = search_rule_set.add_query_rule(query_source_string);
@@ -1172,20 +1205,24 @@ unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode ne
 	}
 	if (company_source_string != NULL)
 	{
-		ret = search_rule_set.add_company_rule(company_source_string);
-		if (CHECK_FAILURE(ret))
-			return ret;
+		if (cur_finance_analysis_mode != FinanceAnalysis_Stock)
+		{
+			STATIC_WRITE_FORMAT_WARN("The finance_analysis_mode[%d] variable is NOT FinanceAnalysis_Stock, ignore it......", cur_finance_analysis_mode);
+		}
+		else
+		{
+			ret = search_rule_set.add_company_rule(company_source_string);
+			if (CHECK_FAILURE(ret))
+				return ret;			
+		}
 	}
-	ret = search_rule_set.set_finance_mode(new_finance_analysis_mode);
-	if (CHECK_FAILURE(ret))
-		return ret;
 	ret = search_rule_set.add_rule_done();
 	if (CHECK_FAILURE(ret))
 		return ret;
 	return RET_SUCCESS;
 }
 
-unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode new_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set)
+unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set)
 {
 	assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
 	SearchRuleSet* search_rule_set_tmp = new SearchRuleSet();
@@ -1195,7 +1232,7 @@ unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode ne
 		if (search_rule_set_tmp != NULL) delete search_rule_set_tmp;
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
-	unsigned short ret = create_instance_from_string(new_finance_analysis_mode, query_source_string, time_source_string, company_source_string, *search_rule_set_tmp);
+	unsigned short ret = create_instance_from_string(cur_finance_analysis_mode, query_source_string, time_source_string, company_source_string, *search_rule_set_tmp);
 	if (CHECK_FAILURE(ret))
 	{
 		delete search_rule_set_tmp;
@@ -1235,6 +1272,16 @@ SearchRuleSet::SearchRuleSet() :
 	IMPLEMENT_MSG_DUMPER()
 }
 
+SearchRuleSet::SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode) :
+	add_done(false),
+	finance_analysis_mode(cur_finance_analysis_mode),
+	query_set(NULL),
+	time_range_cfg(NULL),
+	company_group_set(NULL)
+{
+	IMPLEMENT_MSG_DUMPER()
+}
+
 SearchRuleSet::~SearchRuleSet()
 {
 	if (company_group_set != NULL)
@@ -1255,14 +1302,24 @@ SearchRuleSet::~SearchRuleSet()
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short SearchRuleSet::set_finance_mode(FinanceAnalysisMode new_finance_analysis_mode)
+unsigned short SearchRuleSet::set_finance_mode(FinanceAnalysisMode cur_finance_analysis_mode)
 {
 	if (add_done)
 	{
 		WRITE_ERROR("The add_done flag is true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	finance_analysis_mode = new_finance_analysis_mode;
+	if (finance_analysis_mode != FinanceAnalysis_None)
+	{
+		WRITE_ERROR("finance_analysis_mode is NOT finance_analysis_mode");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	finance_analysis_mode = cur_finance_analysis_mode;
+	if (finance_analysis_mode == FinanceAnalysis_None)
+	{
+		WRITE_ERROR("finance_analysis_mode is finance_analysis_mode");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
 	return RET_SUCCESS;
 }
 
@@ -1295,7 +1352,7 @@ unsigned short SearchRuleSet::add_query_rule(const char* query_source_string)
 		WRITE_ERROR("The add_done flag is true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	return QuerySet::create_instance_from_string(query_source_string, &query_set);
+	return QuerySet::create_instance_from_string(finance_analysis_mode, query_source_string, &query_set);
 }
 
 unsigned short SearchRuleSet::add_time_rule(const PTIME_RANGE_CFG new_time_range_cfg)
@@ -1925,11 +1982,11 @@ const std::string& ResultSet::to_string()
 
 unsigned short ResultSet::add_set(int source_type_index, int field_index)
 {
-	if(!check_source_type_index_in_range(source_type_index))
-	{
-		WRITE_ERROR("source_type_index is out of range in ResultSet");
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
+	// if(!check_source_type_index_in_range(source_type_index))
+	// {
+	// 	WRITE_ERROR("source_type_index is out of range in ResultSet");
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
 	if(!check_field_index_in_range(source_type_index, field_index))
 	{
 		WRITE_ERROR("field_index is out of range in ResultSet");
@@ -2339,11 +2396,11 @@ unsigned short ResultSet::add_calculation_set(int source_type_index, int field_i
 //		return add_set(source_type_index, field_index);
 	}
 // Check the index boundary
-	if(!check_source_type_index_in_range(source_type_index))
-	{
-		WRITE_ERROR("source_type_index is out of range in ResultSet");
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
+	// if(!check_source_type_index_in_range(source_type_index))
+	// {
+	// 	WRITE_ERROR("source_type_index is out of range in ResultSet");
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
 	if(!check_field_index_in_range(source_type_index, field_index))
 	{
 		WRITE_ERROR("field_index is out of range in ResultSet");

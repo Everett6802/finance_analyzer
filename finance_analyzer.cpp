@@ -38,8 +38,9 @@ static bool param_search = false;
 
 static const int ERRMSG_SIZE = 256;
 static char errmsg[ERRMSG_SIZE];
+static FinanceAnalysisMode g_finance_analysis_mode = FinanceAnalysis_None;
 static PIFINANCE_ANALYZER_MGR manager = NULL;
-static SearchRuleSet search_rule_set;
+static PSEARCH_RULE_SET search_rule_set = NULL;
 // static ResultSetMap result_set_map;
 DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
 DECLARE_MSG_DUMPER_PARAM();
@@ -82,11 +83,11 @@ void show_usage_and_exit()
 // Source type
 	PRINT("-s|--source\nDescription: List of source type\nDefault: all source types\n");
 	int source_type_start_index, source_type_end_index;
-	get_source_type_index_range(source_type_start_index, source_type_end_index, finance_analysis_mode);
+	get_source_type_index_range(source_type_start_index, source_type_end_index, g_finance_analysis_mode);
 	for (int i = source_type_start_index ; i < source_type_end_index ; i++)
 		PRINT("  %s: %d\n", FINANCE_DATABASE_DESCRIPTION_LIST[i], i);
 	PRINT("  Format 1: All source types/fields (ex. all)\n");	
-	PRINT("  Format 2: Format 2: Source type index/index range (ex. 1,2-4,6)\n");
+	PRINT("  Format 2: Source type index/index range (ex. 1,2-4,6)\n");
 	PRINT("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7))\n");
 // Time range
 	PRINT("-t|--time_range\nDescription: Time range\nDefault: full time range\n");
@@ -94,21 +95,21 @@ void show_usage_and_exit()
 	PRINT("  Format 2: Start time,End time: (ex. 2015-01-01,2015-09-04)\n");
 	PRINT("  Format 3: ,End time: (ex. ,2015-09-04)\n");
 // Company
-	if (IS_FINANCE_STOCK_MODE)
+	if (g_finance_analysis_mode == FinanceAnalysis_Stock)
 	{
 		PRINT("-c|--company\nDescription: List of company code number\nDefault: All company code nubmers\n");
 		PRINT("  Format 1: Company code number (ex. 2347)\n");
 		PRINT("  Format 2: Company code number range (ex. 2100-2200)\n");
 		PRINT("  Format 3: Company group number (ex. [Gg]12)\n");
-		PRINT("  Format 3: Company group number range (ex. [Gg]12-15)\n");
-		PRINT("  Format 4: Company code number/number range/group/group range hybrid (ex. 2347,g3-5,G12,2362,g2,1500-1510)\n");
+		PRINT("  Format 4: Company group number range (ex. [Gg]12-15)\n");
+		PRINT("  Format 5: Company code number/number range/group/group range hybrid (ex. 2347,g3-5,G12,2362,g2,1500-1510)\n");
 	}
 // Search
-	if (IS_FINANCE_MARKET_MODE)
+	if (g_finance_analysis_mode == FinanceAnalysis_Market)
 	{
 		PRINT("--search\n Description: Search the database under the rule of source type and time range\n");
 	}
-	else if (IS_FINANCE_STOCK_MODE)
+	else if (g_finance_analysis_mode == FinanceAnalysis_Stock)
 	{
 		PRINT("--search\n Description: Search the database under the rule of source type, time range and company number\n");
 	}
@@ -383,9 +384,23 @@ unsigned short setup_param()
 	if (param_syslog_level != NULL)
 		STATIC_SET_SYSLOG_SEVERITY(atoi(param_syslog_level));
 	unsigned short ret = RET_SUCCESS;
+	bool need_set_search_rule = false;
+	if (param_source != NULL || param_time_range != NULL || param_company != NULL)
+		need_set_search_rule = true;
+// Initialize the search rule	
+	if (need_set_search_rule)
+	{
+		search_rule_set = new SearchRuleSet(g_finance_analysis_mode);
+		if (search_rule_set == NULL)
+		{
+			print_errmsg("Fail to allocate memory: search_rule_set");
+			return RET_FAILURE_INSUFFICIENT_MEMORY;
+		}		
+	}
+// Add the source type into the search rule
 	if (param_source != NULL)
 	{
-		ret = search_rule_set.add_query_rule(param_source);
+		ret = search_rule_set->add_query_rule(param_source);
 		if (CHECK_FAILURE(ret))
 		{
 			snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_query_rule() fails, due to: %s", get_ret_description(ret));
@@ -393,9 +408,10 @@ unsigned short setup_param()
 			return ret;
 		}
 	}
+// Add the time range into the search rule
 	if (param_time_range != NULL)
 	{
-		ret = search_rule_set.add_time_rule(param_time_range);
+		ret = search_rule_set->add_time_rule(param_time_range);
 		if (CHECK_FAILURE(ret))
 		{
 			snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_time_rule() fails, due to: %s", get_ret_description(ret));
@@ -403,9 +419,10 @@ unsigned short setup_param()
 			return ret;
 		}
 	}
+// Add the company into the search rule
 	if (param_company != NULL)
 	{
-		ret = search_rule_set.add_company_rule(param_company);
+		ret = search_rule_set->add_company_rule(param_company);
 		if (CHECK_FAILURE(ret))
 		{
 			snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_company_rule() fails, due to: %s", get_ret_description(ret));
@@ -413,16 +430,9 @@ unsigned short setup_param()
 			return ret;
 		}
 	}
-	if (param_search)
+	if (need_set_search_rule)
 	{
-		ret = search_rule_set.set_finance_mode(finance_analysis_mode);
-		if (CHECK_FAILURE(ret))
-		{
-			snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::set_finance_mode() fails, due to: %s", get_ret_description(ret));
-			print_errmsg(errmsg);
-			return ret;
-		}
-		ret = search_rule_set.add_rule_done();
+		ret = search_rule_set->add_rule_done();
 		if (CHECK_FAILURE(ret))
 		{
 			snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_rule_done() fails, due to: %s", get_ret_description(ret));
@@ -430,55 +440,6 @@ unsigned short setup_param()
 			return ret;
 		}
 	}
-	// if (IS_FINANCE_MARKET_MODE)
-	// {
-	// 	if (param_source != NULL)
-	// 	{
-	// 		PQUERY_SET query_set = NULL;
-	// 		ret = MarketQuerySet::create_instance_from_string(param_source, market_query_set);
-	// 		if (CHECK_FAILURE(ret))
-	// 		{
-	// 			WRITE_ERROR("Fail to add data into MarketQuerySet");
-	// 			return ret;
-	// 		}
-	// 		// PRINT("MarketQuerySet:\n%s", market_query_set->to_string().c_str());
-	// 	}
-	// }
-	// else if (IS_FINANCE_STOCK_MODE)
-	// {
-	// 	if (param_source != NULL || param_company != NULL)
-	// 	{
-	// 		PQUERY_SET query_set = NULL;
-	// 		ret = StockQuerySet::create_instance_from_string(param_source, param_company, stock_query_set);
-	// 		if (CHECK_FAILURE(ret))
-	// 		{
-	// 			WRITE_ERROR("Fail to add data into StockQuerySet");
-	// 			return ret;
-	// 		}
-	// 		// PRINT("StockQuerySet:\n%s", stock_query_set->to_string().c_str());
-	// 	}
-	// }
-// Let's do something
-		// PQUERY_SET query_set = NULL;
-		// ret = QuerySet::create_instance_from_string("0-1(2;4;5-7),3-4(2;3-5;7),6", &query_set);
-		// if (CHECK_FAILURE(ret))
-		// 	fprintf(stderr, "Add QuerySet Fail, due to: %s\n", get_ret_description(ret));
-		// printf("QuerySet:\n%s", query_set->to_string().c_str());
-
-		// PCOMPANY_GROUP_SET company_group_set = NULL;
-		// ret = CompanyGroupSet::create_instance_from_string("2347,g3-5,G12,2362,g2,1500-1510", &company_group_set);
-		// if (CHECK_FAILURE(ret))
-		// 	fprintf(stderr, "Add CompanyGroupSet Fail, due to: %s\n", get_ret_description(ret));
-		// printf("CompanyGroupSet:\n%s", company_group_set->to_string().c_str());
-
-		// PSTOCK_QUERY_SET stock_query_set = NULL;
-		// ret = StockQuerySet::create_instance_from_string("0-1(2;4;5-7),3-4(1;2-4;6;7),6", "2347,g3-5,G12,2362,g2,1500-1510", &stock_query_set);
-		// if (CHECK_FAILURE(ret))
-		// 	fprintf(stderr, "Add StockQuerySet Fail, due to: %s\n", get_ret_description(ret));
-		// printf("StockQuerySet:\n%s", stock_query_set->to_string().c_str());
-
-	// manager->set_log_severity_config(2);
-	// manager->set_syslog_severity_config(0);
 	return RET_SUCCESS;
 }
 
@@ -527,9 +488,10 @@ void run_test_cases_and_exit()
 
 void show_search_result_and_exit()
 {
-	assert(search_rule_set.is_add_rule_done() && "SearchRuleSet::add_done is NOT true");
+	assert(search_rule_set != NULL && "search_rule_set is NOT NULL");
+	assert(search_rule_set->is_add_rule_done() && "SearchRuleSet::add_done is NOT true");
 	ResultSetMap result_set_map;
-	unsigned short ret = manager->search(&search_rule_set, &result_set_map);
+	unsigned short ret = manager->search(search_rule_set, &result_set_map);
 	if (CHECK_SUCCESS(ret))
 	{
 		PRINT("\n***Result***\n%s\n", result_set_map.to_string().c_str());
@@ -701,7 +663,6 @@ int main(int argc, char** argv)
 		snprintf(errmsg, ERRMSG_SIZE, "Fail to parse parameters, due to: %s", get_ret_description(ret));
 		goto FAIL;
 	}
-
 	if (param_silent)
 		SHOW_CONSOLE = false;
 
@@ -726,32 +687,26 @@ int main(int argc, char** argv)
 // Determine the finance mode
 	    if (param_mode == FinanceAnalysis_None)
 	    {
-	    	finance_analysis_mode = get_finance_analysis_mode();
-	        IS_FINANCE_MARKET_MODE = is_market_mode();
-	        IS_FINANCE_STOCK_MODE = is_stock_mode();
+	    	g_finance_analysis_mode = get_finance_analysis_mode_from_file();
 	    }
 	    else if (param_mode == FinanceAnalysis_Market)
 	    {
-	    	finance_analysis_mode = FinanceAnalysis_Market;
-	        IS_FINANCE_MARKET_MODE = true;
-	        IS_FINANCE_STOCK_MODE = false;
+	    	g_finance_analysis_mode = FinanceAnalysis_Market;
 	    }
 	    else if (param_mode == FinanceAnalysis_Stock)
 	    {
-	    	finance_analysis_mode = FinanceAnalysis_Stock;
-	        IS_FINANCE_MARKET_MODE = false;
-	        IS_FINANCE_STOCK_MODE = true;
+	    	g_finance_analysis_mode = FinanceAnalysis_Stock;
 	    }
 	    else
 	        throw runtime_error(string("Unknown mode !!!"));
-
+	    // IS_FINANCE_MARKET_MODE = (g_finance_analysis_mode == FinanceAnalysis_Market ? true : false);
+	    // IS_FINANCE_STOCK_MODE = (g_finance_analysis_mode == FinanceAnalysis_Stock ? true : false);
 	    if (param_help)
 	    	show_usage_and_exit();
-
 // Run the test cases
 	    if (param_test_case != NULL)
 	    {
-	    	if (!IS_FINANCE_MARKET_MODE)
+	    	if (g_finance_analysis_mode != FinanceAnalysis_Market)
 	    	{
 		    	snprintf(errmsg, ERRMSG_SIZE, "%s", "Error!!! Can only run the cases in Market Mode");
 				goto FAIL;
@@ -759,7 +714,7 @@ int main(int argc, char** argv)
 	    	run_test_cases_and_exit();
 	    }
 // Create the instance of the manager class due to different mode
-		manager = g_mgr_factory.get_instance(finance_analysis_mode);
+		manager = g_mgr_factory.get_instance(g_finance_analysis_mode);
 // Initialize the manager class
 		ret = manager->initialize();
 		if (CHECK_FAILURE(ret))
@@ -777,26 +732,8 @@ int main(int argc, char** argv)
 		if (param_search)
 			show_search_result_and_exit();
 // Let's do something
-		// PQUERY_SET query_set = NULL;
-		// ret = QuerySet::create_instance_from_string("0-1(2;4;5-7),3-4(2;3-5;7),6", &query_set);
-		// if (CHECK_FAILURE(ret))
-		// 	fprintf(stderr, "Add QuerySet Fail, due to: %s\n", get_ret_description(ret));
-		// printf("QuerySet:\n%s", query_set->to_string().c_str());
-
-		// PCOMPANY_GROUP_SET company_group_set = NULL;
-		// ret = CompanyGroupSet::create_instance_from_string("2347,g3-5,G12,2362,g2,1500-1510", &company_group_set);
-		// if (CHECK_FAILURE(ret))
-		// 	fprintf(stderr, "Add CompanyGroupSet Fail, due to: %s\n", get_ret_description(ret));
-		// printf("CompanyGroupSet:\n%s", company_group_set->to_string().c_str());
-
-		// PSTOCK_QUERY_SET stock_query_set = NULL;
-		// ret = StockQuerySet::create_instance_from_string("0-1(2;4;5-7),3-4(1;2-4;6;7),6", "2347,g3-5,G12,2362,g2,1500-1510", &stock_query_set);
-		// if (CHECK_FAILURE(ret))
-		// 	fprintf(stderr, "Add StockQuerySet Fail, due to: %s\n", get_ret_description(ret));
-		// printf("StockQuerySet:\n%s", stock_query_set->to_string().c_str());
-
 		// STATIC_WRITE_DEBUG("Fuck DEBUG");
-		// // STATIC_WRITE_INFO("Fuck INFO");
+		// STATIC_WRITE_INFO("Fuck INFO");
 		// STATIC_WRITE_WARN("Fuck WARN");
 		// STATIC_WRITE_ERROR("Fuck ERROR");
     }

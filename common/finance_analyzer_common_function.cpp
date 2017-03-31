@@ -11,7 +11,7 @@
 
 using namespace std;
 
-FinanceAnalysisMode get_finance_analysis_mode()
+FinanceAnalysisMode get_finance_analysis_mode_from_file()
 {
 	static FinanceAnalysisMode finance_analysis_mode = FinanceAnalysis_None;
 	if (finance_analysis_mode == FinanceAnalysis_None)
@@ -25,7 +25,6 @@ FinanceAnalysisMode get_finance_analysis_mode()
 			snprintf(errmsg, ERRMSG_SIZE, "The %s config file does NOT exist", MARKET_STOCK_SWITCH_CONF_FILENAME);
 			throw runtime_error(string(errmsg));
 		}
-
 		static const unsigned int BUF_SIZE = 4;
 		char buf[BUF_SIZE];
 		// unsigned short ret = RET_SUCCESS;
@@ -64,13 +63,15 @@ FinanceAnalysisMode get_finance_analysis_mode()
 	}
 	return finance_analysis_mode;
 }
-bool is_market_mode(){return get_finance_analysis_mode() == FinanceAnalysis_Market;}
-bool is_stock_mode(){return get_finance_analysis_mode() == FinanceAnalysis_Stock;}
+// bool is_market_mode(){return get_finance_analysis_mode() == FinanceAnalysis_Market;}
+// bool is_stock_mode(){return get_finance_analysis_mode() == FinanceAnalysis_Stock;}
 
-int get_source_key(int source_type_index)
+int get_source_key(int source_type_index/*, FinanceAnalysisMode finance_analysis_mode*/)
 {
-	if (!is_market_mode())
-		throw logic_error(string("It's NOT Market mode"));
+	// if (finance_analysis_mode == FinanceAnalysis_None)
+	// 	finance_analysis_mode = g_finance_analysis_mode;
+	// if (finance_analysis_mode != FinanceAnalysis_Market)
+	// 	throw logic_error(string("It's NOT Market mode"));
 	if (source_type_index == -1)
 	{
 // No source type mode
@@ -83,10 +84,12 @@ int get_source_key(int source_type_index)
 	}
 }
 
-int get_source_key(int company_group_number, const string& company_code_number, int source_type_index)
+int get_source_key(int company_group_number, const string& company_code_number, int source_type_index/*, FinanceAnalysisMode finance_analysis_mode*/)
 {
-	if (!is_stock_mode())
-		throw logic_error(string("It's NOT Stock mode"));
+	// if (finance_analysis_mode == FinanceAnalysis_None)
+	// 	finance_analysis_mode = g_finance_analysis_mode;
+	// if (finance_analysis_mode != FinanceAnalysis_Stock)
+	// 	throw logic_error(string("It's NOT Stock mode"));
 	int company_code_number_int = atoi(company_code_number.c_str());
 	if (source_type_index == -1)
 	{
@@ -107,8 +110,6 @@ int get_source_type(int source_key)
 
 string get_company_code_number(int source_key)
 {
-	if (!is_stock_mode())
-		throw logic_error(string("It's NOT Stock mode"));
 	static const int COMPANY_CODE_NUMBER_LEN = 4;
 	static char company_code_number[COMPANY_CODE_NUMBER_LEN];
 	snprintf(company_code_number, COMPANY_CODE_NUMBER_LEN, "%04d", (source_key & SOURCE_KEY_COMPANY_CODE_NUMBER_MASK) >> SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET);
@@ -116,8 +117,6 @@ string get_company_code_number(int source_key)
 }
 int get_company_group_number(int source_key)
 {
-	if (!is_stock_mode())
-		throw logic_error(string("It's NOT Stock mode"));
 	return ((source_key & SOURCE_KEY_COMPANY_GROUP_NUMBER_MASK) >> SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET);
 }
 
@@ -158,13 +157,12 @@ const char* get_ret_description(unsigned short ret)
 		return success_ret_description;
 }
 
-const char* get_database_field_description(int source_type_index, int field_index)
+const char* get_database_field_description(int source_type_index, int field_index, FinanceAnalysisMode finance_analysis_mode)
 {
 	// assert((source_type_index >= 0 && source_type_index < FinanceSourceSize) && "source_type_index is out of range");
 	// assert((field_index >= 0 && field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index]) && "field_index is out of range");
-	assert(check_source_type_index_in_range(source_type_index) && "source_type_index is out of range");
+	// assert(check_source_type_index_in_range(source_type_index, finance_analysis_mode) && "source_type_index is out of range");
 	assert(check_field_index_in_range(source_type_index, field_index) && "field_index is out of range");
-
 	switch(source_type_index)
 	{
 		case FinanceSource_StockExchangeAndVolume:
@@ -195,41 +193,29 @@ const char* get_database_field_description(int source_type_index, int field_inde
 	return NULL;
 }
 
-bool check_source_type_index_in_range(int source_type_index)
+bool check_source_type_index_in_range(int source_type_index, FinanceAnalysisMode finance_analysis_mode)
 {
-    if (IS_FINANCE_MARKET_MODE)
+    if (finance_analysis_mode == FinanceAnalysis_Market)
     {
         if (source_type_index >= FinanceSource_MarketStart && source_type_index < FinanceSource_MarketEnd)
             return true;
     }
-    else if (IS_FINANCE_STOCK_MODE)
+    else if (finance_analysis_mode == FinanceAnalysis_Stock)
     {
         if (source_type_index >= FinanceSource_StockStart && source_type_index < FinanceSource_StockEnd)
             return true;
     }
+    else
+    	throw invalid_argument(string("finance_analysis_mode should NOT be FinanceAnalysis_None"));
     return false;
 }
 
 void get_source_type_index_range(int& source_type_index_start, int& source_type_index_end, FinanceAnalysisMode finance_analysis_mode)
 {
+	// if (finance_analysis_mode == FinanceAnalysis_None)
+	// 	finance_analysis_mode = g_finance_analysis_mode;
 	switch(finance_analysis_mode)
 	{
-	case FinanceAnalysis_None:
-	{
-		if (IS_FINANCE_MARKET_MODE)
-		{
-			source_type_index_start = FinanceSource_MarketStart;
-			source_type_index_end = FinanceSource_MarketEnd;
-		}
-		else if (IS_FINANCE_STOCK_MODE)
-		{
-			source_type_index_start = FinanceSource_StockStart;
-			source_type_index_end = FinanceSource_StockEnd;
-		}
-		else
-			throw runtime_error(string("Unknown finance mode"));
-	}	
-	break;
 	case FinanceAnalysis_Market:
 	{
 		source_type_index_start = FinanceSource_MarketStart;
@@ -248,11 +234,13 @@ void get_source_type_index_range(int& source_type_index_start, int& source_type_
 	}
 }
 
-int get_source_type_size()
+int get_source_type_size(FinanceAnalysisMode finance_analysis_mode)
 {
-	if (IS_FINANCE_MARKET_MODE)
+	// if (finance_analysis_mode == FinanceAnalysis_None)
+	// 	finance_analysis_mode = g_finance_analysis_mode;
+	if (finance_analysis_mode == FinanceAnalysis_Market)
 		return MARKET_SOURCE_TYPE_INDEX_LENGTH;
-	else if (IS_FINANCE_STOCK_MODE)
+	else if (finance_analysis_mode == FinanceAnalysis_Stock)
 		return STOCK_SOURCE_TYPE_INDEX_LENGTH;
 	else
 		throw runtime_error(string("Unknown finance mode"));

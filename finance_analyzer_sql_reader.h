@@ -36,6 +36,7 @@ private:
 		const PQUERY_SET query_set,
 		const std::string& company_code_number,  // For stock mode only, ignored in market mode
 		FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+		FinanceAnalysisMode finance_analysis_mode,
 		PRESULT_SET result_set
 	);
 	static unsigned short query_market(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
