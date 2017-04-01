@@ -1262,9 +1262,9 @@ const string& SearchRuleSet::to_string()
 
 }
 
-SearchRuleSet::SearchRuleSet() :
+SearchRuleSet::SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode) :
 	add_done(false),
-	finance_analysis_mode(FinanceAnalysis_None),
+	finance_analysis_mode(cur_finance_analysis_mode),
 	query_set(NULL),
 	time_range_cfg(NULL),
 	company_group_set(NULL)
@@ -1272,9 +1272,9 @@ SearchRuleSet::SearchRuleSet() :
 	IMPLEMENT_MSG_DUMPER()
 }
 
-SearchRuleSet::SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode) :
+SearchRuleSet::SearchRuleSet() :
 	add_done(false),
-	finance_analysis_mode(cur_finance_analysis_mode),
+	finance_analysis_mode(FinanceAnalysis_None),
 	query_set(NULL),
 	time_range_cfg(NULL),
 	company_group_set(NULL)
@@ -2856,9 +2856,9 @@ const std::string& ResultSetMap::to_string()
 		}
 		else
 		{
-			const int MAX_MEMORY_SIZE_IN_MEGA = 8;
-			const int MAX_MEMORY_SIZE = MAX_MEMORY_SIZE_IN_MEGA * 1024 * 1024; // 8 M
-			int memory_size_count = 0;
+			const unsigned int MAX_MEMORY_SIZE_IN_MEGA = 8;
+			const unsigned int MAX_MEMORY_SIZE = MAX_MEMORY_SIZE_IN_MEGA * 1024 * 1024; // 8 M
+			unsigned int memory_size_count = 0;
 			const int BUF_SIZE = 32;
 			char buf[BUF_SIZE];
 			INT_RESULT_SET_MAP_ITER iter = result_set_map.begin();

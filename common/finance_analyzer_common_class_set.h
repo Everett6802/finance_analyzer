@@ -265,8 +265,9 @@ private:
 	unsigned short set_finance_mode(FinanceAnalysisMode cur_finance_analysis_mode);
 
 public:
-	SearchRuleSet();
 	SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode);
+	SearchRuleSet();
+
 	~SearchRuleSet();
 
 	const std::string& to_string();

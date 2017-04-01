@@ -12,7 +12,7 @@ using namespace std;
 
 //DECLARE_MSG_DUMPER_PARAM()
 
-char* TEST_TYPE_DESCRIPTION[TestTypeSize] = 
+const char* TEST_TYPE_DESCRIPTION[TestTypeSize] = 
 {
 	"Check Array",
 	"Check Array Statistics",

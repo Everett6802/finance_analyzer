@@ -819,23 +819,23 @@ FinanceDataArrayTemplate<T>::~FinanceDataArrayTemplate()
 template <typename T>
 void FinanceDataArrayTemplate<T>::alloc_new(int new_array_size)
 {
-	T* array_data_old = array_data;
 	do{
 		array_size <<= 1;
 	}while(array_size >= new_array_size);
-// Restrict the memory size.
-	if (new_array_size * sizeof(T) > MAX_MEMORY_SIZE)
-	{
-		array_size = (int)(MAX_MEMORY_SIZE / sizeof(T));
-		over_max_memroy_size = true;
-	}
+// // Restrict the memory size.
+// 	if (new_array_size * sizeof(T) > MAX_MEMORY_SIZE)
+// 	{
+// 		array_size = (int)(MAX_MEMORY_SIZE / sizeof(T));
+// 		over_max_memroy_size = true;
+// 	}
+	T* array_data_old = array_data;
 	array_data = (T*)realloc(array_data_old, sizeof(T) * array_size);
 	if (array_data == NULL)
 		throw bad_alloc();
 }
 
-template <typename T>
-bool FinanceDataArrayTemplate<T>::is_over_max_memroy_size()const{return over_max_memroy_size;}
+// template <typename T>
+// bool FinanceDataArrayTemplate<T>::is_over_max_memroy_size()const{return over_max_memroy_size;}
 
 template <typename T>
 void FinanceDataArrayTemplate<T>::set_data_array(const T* array, int size)

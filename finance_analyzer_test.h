@@ -16,7 +16,7 @@ enum FinanceAnalyzerTestType
 	TestTypeSize
 };
 
-extern char* TEST_TYPE_DESCRIPTION[TestTypeSize];
+extern const char* TEST_TYPE_DESCRIPTION[TestTypeSize];
 
 class FinanceAnalyzerTest
 {
