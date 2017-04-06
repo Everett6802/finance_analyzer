@@ -614,6 +614,10 @@ unsigned short TimeRangeCfg::add_time_done()
 		delete time_range_description;
 		time_range_description = NULL;
 	}
+	if (time_start_cfg == NULL)
+		add_start_time(START_DATE_STR);
+	if (time_end_cfg == NULL)
+		add_end_time(END_DATE_STR);
 	add_done = true;
 	return RET_SUCCESS;
 }

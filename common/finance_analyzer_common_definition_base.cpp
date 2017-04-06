@@ -213,3 +213,8 @@ bool SHOW_CONSOLE = true;
 const int INTERACTIVE_SERVER_PORT = 6802;
 const int INTERACTIVE_SERVER_BACKLOG = 5;
 const char* INTERACTIVE_PROMPT = "FA> ";
+
+const int START_YEAR = 2000;
+const int END_YEAR = 2100;
+const char* START_DATE_STR = "2000-01-01";
+const char* END_DATE_STR = "2100-01-01";

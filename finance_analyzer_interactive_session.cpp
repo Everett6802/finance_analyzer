@@ -624,7 +624,6 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_search_command(int argc
 		result_set_map = new ResultSetMap();
 		if (result_set_map == NULL)
 			throw bad_alloc();
-		search_rule_need_reset = true;
 		unsigned short ret = RET_SUCCESS;
 		SearchRuleSet search_rule_set;
 // Set search rule
@@ -635,9 +634,13 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_search_command(int argc
 		ret = FinanceAnalyzerSqlReader::query(&search_rule_set, sql_reader, result_set_map);
 		if (CHECK_FAILURE(ret))
 			return ret;
+		search_rule_need_reset = false;
 	}
-	assert(result_set_map != NULL && "result_set_map should NOT be NULL");
-	print_to_console(result_set_map->to_string());
+	// assert(result_set_map != NULL && "result_set_map should NOT be NULL");
+	if (result_set_map != NULL)
+		print_to_console(result_set_map->to_string());
+	else
+		print_to_console("Empty");
 	return RET_SUCCESS;
 }
 

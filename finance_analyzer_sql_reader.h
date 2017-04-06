@@ -35,17 +35,17 @@ private:
 		const PTIME_RANGE_CFG restricted_time_range_cfg, 
 		const PQUERY_SET query_set,
 		const std::string& company_code_number,  // For stock mode only, ignored in market mode
-		FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+		FinanceAnalyzerSqlReader* sql_reader, 
 		FinanceAnalysisMode finance_analysis_mode,
 		PRESULT_SET result_set
 	);
-	static unsigned short query_market(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
+	static unsigned short query_market(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, FinanceAnalyzerSqlReader* sql_reader, PRESULT_SET_MAP result_set_map);
 	// static unsigned short query_market(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, PRESULT_SET_MAP result_set_map);
-	static unsigned short query_stock(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, const PCOMPANY_GROUP_SET company_group_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
+	static unsigned short query_stock(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, const PCOMPANY_GROUP_SET company_group_set, FinanceAnalyzerSqlReader* sql_reader, PRESULT_SET_MAP result_set_map);
 	// static unsigned short query_stock(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, const PCOMPANY_GROUP_SET company_group_set, PRESULT_SET_MAP result_set_map);
 
 public:
-	static unsigned short query(const PSEARCH_RULE_SET search_rule_set, FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, PRESULT_SET_MAP result_set_map);
+	static unsigned short query(const PSEARCH_RULE_SET search_rule_set, FinanceAnalyzerSqlReader* sql_reader, PRESULT_SET_MAP result_set_map);
 	static unsigned short query(const PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map);
 
 private:

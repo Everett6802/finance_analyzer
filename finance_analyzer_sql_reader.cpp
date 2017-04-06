@@ -61,7 +61,7 @@ unsigned short FinanceAnalyzerSqlReader::query_from_tables(
 	const PTIME_RANGE_CFG restricted_time_range_cfg, 
 	const PQUERY_SET query_set,
 	const std::string& company_code_number,  // For stock mode only, ignored in market mode
-	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader,
+	FinanceAnalyzerSqlReader* sql_reader,
 	FinanceAnalysisMode finance_analysis_mode,
 	PRESULT_SET result_set
 	)
@@ -98,7 +98,7 @@ unsigned short FinanceAnalyzerSqlReader::query_from_tables(
 		table_name = string(FINANCE_TABLE_NAME_LIST[source_type_index]);
 		if (finance_analysis_mode == FinanceAnalysis_Stock)
 			table_name = company_code_number + table_name;
-		ret = finance_analyzer_sql_reader->select_data(
+		ret = sql_reader->select_data(
 			source_type_index, 
 			table_name, 
 			field_cmd, 
@@ -115,7 +115,7 @@ unsigned short FinanceAnalyzerSqlReader::query_from_tables(
 unsigned short FinanceAnalyzerSqlReader::query_market(
 	const PQUERY_SET query_set, 
 	const PTIME_RANGE_CFG time_range_cfg, 
-	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+	FinanceAnalyzerSqlReader* sql_reader, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
@@ -123,7 +123,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 	DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 	static string company_code_number_dummy("xxxx");
 
-	assert(finance_analyzer_sql_reader != NULL && query_set != NULL && time_range_cfg != NULL && result_set_map != NULL);
+	assert(sql_reader != NULL && query_set != NULL && time_range_cfg != NULL && result_set_map != NULL);
 	if (!query_set->is_add_query_done())
 	{
 		WRITE_ERROR("The setting of query data is NOT complete");
@@ -136,7 +136,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 	}
 	unsigned short ret = RET_SUCCESS;
 // Connect to the database
-	ret = finance_analyzer_sql_reader->try_connect_mysql(FINANCE_DATABASE_MARKET_NAME);
+	ret = sql_reader->try_connect_mysql(FINANCE_DATABASE_MARKET_NAME);
 	if (CHECK_FAILURE(ret))
 		return ret;
 // Check the boundary of each database
@@ -165,7 +165,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 				sp_restricted_time_range_cfg.get_instance(), 
 				query_set,
 				company_code_number_dummy,  // For stock mode only, ignored in market mode
-				finance_analyzer_sql_reader, 
+				sql_reader, 
 				FinanceAnalysis_Market,
 				result_set
 			);
@@ -209,7 +209,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 					sp_restricted_time_range_cfg.get_instance(), 
 					sp_query_sub_set.get_instance(),
 					company_code_number_dummy,  // For stock mode only, ignored in market mode
-					finance_analyzer_sql_reader,
+					sql_reader,
 					FinanceAnalysis_Market, 
 					result_set
 				);
@@ -252,7 +252,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 // 		int start_year = sp_restricted_time_range_cfg->get_start_time()->get_year();
 // 		int end_year = sp_restricted_time_range_cfg->get_end_time()->get_year();
 // // Search for each table
-// 		ret = finance_analyzer_sql_reader->select_data(source_index, string(table_name), field_cmd, (const PINT_DEQUE)&query_field, time_range_cfg_in_year, result_set);
+// 		ret = sql_reader->select_data(source_index, string(table_name), field_cmd, (const PINT_DEQUE)&query_field, time_range_cfg_in_year, result_set);
 // 		if (CHECK_FAILURE(ret))
 // 			return ret;
 // 	}
@@ -262,7 +262,7 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 	// RELEASE_MSG_DUMPER()
 // Disconnect from the database
 OUT:
-	finance_analyzer_sql_reader->disconnect_mysql();
+	sql_reader->disconnect_mysql();
 
 	return ret;
 }
@@ -273,22 +273,22 @@ OUT:
 // 	PRESULT_SET_MAP result_set_map
 // 	)
 // {
-// 	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
-// 	return query_market(query_set, time_range_cfg, &finance_analyzer_sql_reader, result_set_map);
+// 	FinanceAnalyzerSqlReader sql_reader;
+// 	return query_market(query_set, time_range_cfg, &sql_reader, result_set_map);
 // }
 
 unsigned short FinanceAnalyzerSqlReader::query_stock(
 	const PQUERY_SET query_set, 
 	const PTIME_RANGE_CFG time_range_cfg, 
 	const PCOMPANY_GROUP_SET company_group_set,
-	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+	FinanceAnalyzerSqlReader* sql_reader, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 
-	assert(finance_analyzer_sql_reader != NULL && query_set != NULL && time_range_cfg != NULL && company_group_set != NULL && result_set_map != NULL);
+	assert(sql_reader != NULL && query_set != NULL && time_range_cfg != NULL && company_group_set != NULL && result_set_map != NULL);
 	if (!query_set->is_add_query_done())
 	{
 		WRITE_ERROR("The setting of query data is NOT complete");
@@ -321,7 +321,7 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 		int company_group_number = iter.get_first();
 // Connect to the database
 		snprintf(database_stock_name, 32, FINANCE_DATABASE_STOCK_NAME_FORMAT, company_group_number);
-		ret = finance_analyzer_sql_reader->try_connect_mysql(string(database_stock_name));
+		ret = sql_reader->try_connect_mysql(string(database_stock_name));
 		if (CHECK_FAILURE(ret))
 			return ret;
 		const STRING_DEQUE& company_code_number_deque = *iter;
@@ -351,7 +351,7 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 						sp_restricted_time_range_cfg.get_instance(), 
 						query_set,
 						company_code_number,  // For stock mode only, ignored in market mode
-						finance_analyzer_sql_reader, 
+						sql_reader, 
 						FinanceAnalysis_Stock,
 						result_set
 					);
@@ -407,7 +407,7 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 							sp_restricted_time_range_cfg.get_instance(), 
 							sp_query_sub_set_array[source_type_revised_index].get_instance(),
 							company_code_number,  // For stock mode only, ignored in market mode
-							finance_analyzer_sql_reader, 
+							sql_reader, 
 							FinanceAnalysis_Stock,
 							result_set
 						);
@@ -431,7 +431,7 @@ unsigned short FinanceAnalyzerSqlReader::query_stock(
 			}
 // Disconnect from the database
 OUT:
-			finance_analyzer_sql_reader->disconnect_mysql();
+			sql_reader->disconnect_mysql();
 			if (CHECK_FAILURE(ret))
 				return ret;
 		}
@@ -447,22 +447,22 @@ OUT:
 // 	PRESULT_SET_MAP result_set_map
 // 	)
 // {
-// 	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
-// 	return query_stock(query_set, time_range_cfg, company_group_set, &finance_analyzer_sql_reader, result_set_map);	
+// 	FinanceAnalyzerSqlReader sql_reader;
+// 	return query_stock(query_set, time_range_cfg, company_group_set, &sql_reader, result_set_map);	
 // }
 
 unsigned short FinanceAnalyzerSqlReader::query(
 	const PSEARCH_RULE_SET search_rule_set,
-	FinanceAnalyzerSqlReader* finance_analyzer_sql_reader, 
+	FinanceAnalyzerSqlReader* sql_reader, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	assert(finance_analyzer_sql_reader != NULL && search_rule_set != NULL && result_set_map != NULL);
+	assert(sql_reader != NULL && search_rule_set != NULL && result_set_map != NULL);
 	unsigned short ret = RET_SUCCESS;
 	if (search_rule_set->get_finance_mode() == FinanceAnalysis_Market)
-		ret = query_market(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), finance_analyzer_sql_reader, result_set_map);
+		ret = query_market(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), sql_reader, result_set_map);
 	else if (search_rule_set->get_finance_mode() == FinanceAnalysis_Stock)
-		ret = query_stock(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), search_rule_set->get_company_rule(), finance_analyzer_sql_reader, result_set_map);
+		ret = query_stock(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), search_rule_set->get_company_rule(), sql_reader, result_set_map);
 	else
 	{
 		ret = RET_FAILURE_INVALID_ARGUMENT;
@@ -476,8 +476,8 @@ unsigned short FinanceAnalyzerSqlReader::query(
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	FinanceAnalyzerSqlReader finance_analyzer_sql_reader;
-	return query(search_rule_set, &finance_analyzer_sql_reader, result_set_map);	
+	FinanceAnalyzerSqlReader sql_reader;
+	return query(search_rule_set, &sql_reader, result_set_map);	
 }
 
 FinanceAnalyzerSqlReader::FinanceAnalyzerSqlReader() :

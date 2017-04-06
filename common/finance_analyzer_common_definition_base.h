@@ -148,8 +148,13 @@ enum FinanceSourceType
 	FinanceSource_MarketEnd = 8, // Keep in mind to update the value at the right time
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Stock data source
-	FinanceSource_StockStart = 8 , // Keep in mind to update the value at the right time
-	FinanceSource_StockEnd = 8 // Keep in mind to update the value at the right time
+	FinanceSource_StockStart = 8, // Keep in mind to update the value at the right time
+	FinanceSource_DepositoryShareholderDistributionTable = 8,
+	FinanceSource_BalanceSheet = 9,
+	FinanceSource_IncomeStatement = 10,
+	FinanceSource_CashFlowStatement = 11,
+	FinanceSource_StatementOfChangesInEquity = 12,
+	FinanceSource_StockEnd = 13 // Keep in mind to update the value at the right time
 };
 
 enum FinanceFieldType
@@ -342,5 +347,10 @@ extern bool SHOW_CONSOLE;
 extern const int INTERACTIVE_SERVER_PORT;
 extern const int INTERACTIVE_SERVER_BACKLOG;
 extern const char* INTERACTIVE_PROMPT;
+
+extern const int START_YEAR;
+extern const int END_YEAR;
+extern const char* START_DATE_STR;
+extern const char* END_DATE_STR;
 
 #endif
