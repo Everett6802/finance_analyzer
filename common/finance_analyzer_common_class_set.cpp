@@ -1216,10 +1216,10 @@ unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cu
 				return ret;			
 		}
 	}
-	ret = search_rule_set.add_rule_done();
-	if (CHECK_FAILURE(ret))
-		return ret;
-	return RET_SUCCESS;
+// CAUTION: The add_rule_done() function probably returns the WARN code
+	// if (CHECK_FAILURE(ret))
+	// 	return ret;
+	return search_rule_set.add_rule_done();
 }
 
 unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set)
@@ -1431,28 +1431,37 @@ unsigned short SearchRuleSet::add_rule_done()
 		WRITE_ERROR("The finance_analysis_mode variable is FinanceAnalysis_None");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
+	bool search_rule_added = false;
+	unsigned short ret = RET_SUCCESS;
+	if (query_set != NULL)
+	{
+		assert(query_set->is_add_query_done() && "query_set::is_add_query_done() should be TRUE");
 // No need, is implemented in each class
-	// unsigned short ret = RET_SUCCESS;
-	// if (query_set != NULL)
-	// {
-	// 	ret = query_set->add_query_done();
-	// 	if (CHECK_FAILURE(ret))
-	// 		return ret;
-	// }
-	// if (time_range_cfg != NULL)
-	// {
-	// 	ret = time_range_cfg->add_time_done();
-	// 	if (CHECK_FAILURE(ret))
-	// 		return ret;
-	// }
-	// if (company_group_set != NULL)
-	// {
-	// 	ret = company_group_set->add_company_done();
-	// 	if (CHECK_FAILURE(ret))
-	// 		return ret;
-	// }
-	add_done = true;
-	return RET_SUCCESS;
+		// ret = query_set->add_query_done();
+		// if (CHECK_FAILURE(ret))
+		// 	return ret;
+		search_rule_added = true;
+	}
+	if (time_range_cfg != NULL)
+	{
+		assert(time_range_cfg->is_add_time_done() && "time_range_cfg::is_add_time_done() should be TRUE");
+// No need, is implemented in each class
+		// ret = time_range_cfg->add_time_done();
+		// if (CHECK_FAILURE(ret))
+		// 	return ret;
+		search_rule_added = true;
+	}
+	if (company_group_set != NULL)
+	{
+		assert(company_group_set->is_add_company_done() && "company_group_set::is_add_company_done() should be TRUE");
+// No need, is implemented in each class
+		// ret = company_group_set->add_company_done();
+		// if (CHECK_FAILURE(ret))
+		// 	return ret;
+		search_rule_added = true;
+	}
+	add_done = search_rule_added;
+	return (search_rule_added ? RET_SUCCESS : RET_WARN_SEARCH_RULE_EMPTY);
 }
 
 bool SearchRuleSet::is_add_rule_done()const{return add_done;}

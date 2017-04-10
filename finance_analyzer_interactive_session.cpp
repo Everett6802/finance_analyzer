@@ -314,15 +314,21 @@ unsigned short FinanceAnalyzerInteractiveSession::thread_handler_internal()
 				ret = handle_command(cur_argc_inner, argv_inner);
 				if (CHECK_FAILURE(ret))
 				{
-					if (!FAILURE_IS_INTERACTIVE_COMMAND(ret))
-					{
-						char rsp_buf[RSP_BUF_SIZE];
-						snprintf(rsp_buf, RSP_BUF_SIZE, "Error occurs while executing the %s command, due to: %s\n Close the session: %s", argv_inner[0], get_ret_description(ret), session_tag);
-// Show warning if error occurs while executing the command
-						WRITE_ERROR(rsp_buf);
-						print_to_console(string(rsp_buf));
-						return ret;
-					}						
+					char rsp_buf[RSP_BUF_SIZE];
+					snprintf(rsp_buf, RSP_BUF_SIZE, "Error occurs while executing the %s command, due to: %s\n Close the session: %s\n", argv_inner[0], get_ret_description(ret), session_tag);
+// Show warning if error occurs while executing the command and then exit
+					WRITE_ERROR(rsp_buf);
+					print_to_console(string(rsp_buf));
+					return ret;				
+				}
+				else if (CHECK_WARN(ret))
+				{
+					static char rsp_buf[RSP_BUF_SIZE];
+					snprintf(rsp_buf, RSP_BUF_SIZE, "Warning occurs while executing the %s command in the session: %s, due to: %s\n", argv_inner[0], session_tag, get_ret_description(ret));
+// Show warning if warn occurs while executing the command
+					WRITE_WARN(rsp_buf);
+					print_to_console(string(rsp_buf));
+					// return ret;	
 				}
 			}
 			if (command_line_outer != NULL)
@@ -419,7 +425,6 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_command(int argc, char 
 		&FinanceAnalyzerInteractiveSession::handle_help_command,
 		&FinanceAnalyzerInteractiveSession::handle_exit_command
 	};
-
 	// assert (iter != command_map.end() && "Unknown command");
 	COMMAND_MAP::iterator iter = command_map.find(string(argv[0]));
 	int command_type = (int)iter->second;
@@ -432,7 +437,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_finance_mode_comman
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 // Get the finance mode
 	static char rsp_buf[RSP_BUF_SHORT_SIZE];
@@ -448,7 +453,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_finance_mode_comman
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 // Set the finance mode
 	FinanceAnalysisMode new_finance_analysis_mode = FinanceAnalysis_None;
@@ -465,7 +470,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_finance_mode_comman
 		snprintf(rsp_buf, RSP_BUF_SIZE, INCORRECT_COMMAND_ARGUMENT_FORMAT, argv[0], argv[1]);
 		WRITE_ERROR(rsp_buf);
 		print_to_console(string(rsp_buf) + string("\n"));
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 
 	ret = init_finance_manager(new_finance_analysis_mode);
@@ -480,7 +485,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_source_command(int 
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 // Get the source type
 	static char rsp_buf[RSP_BUF_SHORT_SIZE];
@@ -499,7 +504,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_source_command(int 
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 // Set the source type
 	if (source_string_param != NULL)
@@ -523,7 +528,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_time_range_command(
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 // Get the time range
 	static char rsp_buf[RSP_BUF_SHORT_SIZE];
@@ -542,7 +547,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_time_range_command(
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 // Set the time range
 	if (time_range_string_param != NULL)
@@ -566,7 +571,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_get_company_command(int
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 // Get the company
 	static char rsp_buf[RSP_BUF_SIZE];
@@ -585,7 +590,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_company_command(int
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 // Set the company
 	if (company_string_param != NULL)
@@ -609,7 +614,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_search_command(int argc
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
-		return RET_FAILURE_INTERACTIVE_COMMAND;
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
 	if (search_rule_need_reset)
 	{
@@ -627,8 +632,9 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_search_command(int argc
 		unsigned short ret = RET_SUCCESS;
 		SearchRuleSet search_rule_set;
 // Set search rule
+// The create_instance_from_string() function probably returns the WARN code
 		ret = SearchRuleSet::create_instance_from_string(finance_analysis_mode, source_string_param, time_range_string_param, company_string_param, search_rule_set);
-		if (CHECK_FAILURE(ret))
+		if (!CHECK_SUCCESS(ret))
 			return ret;
 // Query the data
 		ret = FinanceAnalyzerSqlReader::query(&search_rule_set, sql_reader, result_set_map);

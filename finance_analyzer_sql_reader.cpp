@@ -124,6 +124,11 @@ unsigned short FinanceAnalyzerSqlReader::query_market(
 	static string company_code_number_dummy("xxxx");
 
 	assert(sql_reader != NULL && query_set != NULL && time_range_cfg != NULL && result_set_map != NULL);
+	// assert(sql_reader != NULL);
+	// assert(query_set != NULL);
+	// assert(time_range_cfg != NULL);
+	// assert(result_set_map != NULL);
+
 	if (!query_set->is_add_query_done())
 	{
 		WRITE_ERROR("The setting of query data is NOT complete");

@@ -32,9 +32,9 @@
 #define FAILURE_IS_OUT_OF_RANGE(X) ((X == RET_FAILURE_OUT_OF_RANGE) ? true : false)
 #endif
 
-#ifndef FAILURE_IS_INTERACTIVE_COMMAND
-#define FAILURE_IS_INTERACTIVE_COMMAND(X) ((X == RET_FAILURE_INTERACTIVE_COMMAND) ? true : false)
-#endif
+// #ifndef FAILURE_IS_INTERACTIVE_COMMAND
+// #define FAILURE_IS_INTERACTIVE_COMMAND(X) ((X == RET_FAILURE_INTERACTIVE_COMMAND) ? true : false)
+// #endif
 
 #ifndef CHECK_SUCCESS_IGNORE_WARN
 #define CHECK_SUCCESS_IGNORE_WARN(X) !CHECK_FAILURE(X)
@@ -321,6 +321,8 @@ extern const unsigned short RET_SUCCESS;
 extern const unsigned short RET_WARN_BASE;
 extern const unsigned short RET_WARN_INDEX_DUPLICATE;
 extern const unsigned short RET_WARN_INDEX_IGNORE;
+extern const unsigned short RET_WARN_INTERACTIVE_COMMAND;
+extern const unsigned short RET_WARN_SEARCH_RULE_EMPTY;
 
 extern const unsigned short RET_FAILURE_BASE;
 extern const unsigned short RET_FAILURE_UNKNOWN;
@@ -338,7 +340,7 @@ extern const unsigned short RET_FAILURE_IO_OPERATION;
 extern const unsigned short RET_FAILURE_HANDLE_THREAD;
 extern const unsigned short RET_FAILURE_SYSTEM_API;
 extern const unsigned short RET_FAILURE_MYSQL;
-extern const unsigned short RET_FAILURE_INTERACTIVE_COMMAND;
+// extern const unsigned short RET_FAILURE_INTERACTIVE_COMMAND;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Variables

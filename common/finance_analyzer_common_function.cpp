@@ -127,7 +127,9 @@ const char* get_ret_description(unsigned short ret)
 	{
 		"Warn_Base",
 		"Warn_IndexDuplicate",
-		"Warn_IndexIgnore"
+		"Warn_IndexIgnore",
+		"Warn_InteractiveCommand",
+		"Warn_SearchRuleEmpty"
 	};
 	static const char* failure_ret_descriptions[] =
 	{
@@ -147,7 +149,7 @@ const char* get_ret_description(unsigned short ret)
 		"Failure_HandleThread",
 		"Failure_SystemAPI",
 		"Failure_MySQL",
-		"Failure_InteractiveCommand",
+		// "Failure_InteractiveCommand",
 	};
 	if (CHECK_FAILURE(ret))
 		return failure_ret_descriptions[ret - RET_FAILURE_BASE];
