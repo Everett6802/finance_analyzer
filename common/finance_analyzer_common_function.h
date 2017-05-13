@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string>
+#include <list>
 #include "finance_analyzer_common_definition.h"
 
 FinanceAnalysisMode get_finance_analysis_mode_from_file();
@@ -21,7 +22,15 @@ int get_source_type_size(FinanceAnalysisMode finance_analysis_mode/*=FinanceAnal
 bool check_field_index_in_range(int source_type_index, int field_index);
 bool check_calculation_type_in_range(int calculation_type);
 bool check_file_exist(const char* filepath);
-bool check_config_file_exist(const char* filepath);
+bool check_config_file_exist(const char* config_filename);
+unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char* filepath, const char* file_read_attribute);
+unsigned short read_config_file_lines_ex(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_file_read_attribute, const char* config_folderpath=NULL);
+unsigned short read_config_file_lines(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_folderpath=NULL);
+unsigned short write_file_lines_ex(const std::list<std::string>& line_list, const char* filepath, const char* file_write_attribute);
+unsigned short write_config_file_lines_ex(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_file_write_attribute, const char* config_folderpath=NULL);
+unsigned short write_config_file_lines(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_folderpath=NULL);
+unsigned short get_config_file_timestamp(std::string& timestamp_string, const char* config_filename, const char* config_folderpath=NULL);
+bool check_config_file_timestamp_equal(const char* config_filename1, const char* config_filename2, const char* config_folderpath1=NULL, const char* config_folderpath2=NULL);
 unsigned short create_folder_if_not_exist(const char* path, int mode=0755);
 unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_project, int mode=0755);
 unsigned short direct_string_to_output_stream(const char* data, const char* filepath=NULL);
@@ -36,5 +45,7 @@ unsigned short read_text_file(std::string& text_result_string, const char* text_
 void daemonize();
 void get_int_deque_from_range_string(const char* int_range_string, INT_DEQUE& int_deque);
 void get_int_deque_from_partial_string(char* int_range_string, int int_range_string_len, INT_DEQUE& int_deque);
+unsigned short copy_file(const char* src_filepath, const char* dst_filepath);
+unsigned short copy_config_file(const char* config_filename, const char* src_config_folderpath);
 
 #endif

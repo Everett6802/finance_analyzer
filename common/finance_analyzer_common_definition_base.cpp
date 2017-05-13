@@ -32,6 +32,16 @@ const char* COMPANY_GROUP_CONF_FILENAME = ".company_group.conf";
 const char* MARKET_STOCK_SWITCH_CONF_FILENAME = "market_stock_switch.conf";
 const char* DEFAULT_OUTPUT_FILENAME_FOR_PLOT = "result_data.txt";
 const char* DEFAULT_MULTIPLE_2D_GRAPH_CONFIG_FILENAME = ".multiple_2d_graph.conf";
+const char* DEFAULT_FINANCE_ROOT_FOLDERPATH = "/opt/finance";
+const char* SCRAPY_PROJECT_NAME = "finance_scrapy_python";
+const char* RECORDER_PROJECT_NAME = "finance_recorder_java";
+const char* ANALYZER_PROJECT_NAME = "finance_analyzer";
+const char* FINANCE_SCRAPY_ROOT_FOLDERPATH = "/opt/finance/finance_scrapy_python";
+const char* FINANCE_RECORDER_ROOT_FOLDERPATH = "/opt/finance/finance_recorder_java";
+const char* FINANCE_ANALYZER_ROOT_FOLDERPATH = "/opt/finance/finance_analyzer";
+const char* DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH = "/opt/finance/finance_scrapy_python/conf"; 
+// const char* DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH = "/home/super/Projects/finance_scrapy_python/conf"; 
+const char* CONFIG_TIMESTAMP_STRING_PREFIX = "#time@";
 
 // const char* MYSQL_TABLE_NAME_BASE = "year";
 const char* MYSQL_MARKET_DATABASE_NAME = "finance_market";

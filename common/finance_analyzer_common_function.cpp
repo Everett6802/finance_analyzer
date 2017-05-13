@@ -284,6 +284,162 @@ bool check_config_file_exist(const char* config_filename)
 	return check_file_exist(file_path);
 }
 
+unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char* filepath, const char* file_read_attribute)
+{
+	if (!check_file_exist(filepath))
+	{
+		STATIC_WRITE_FORMAT_ERROR("The file[%s] does NOT exist", filepath);
+		return RET_FAILURE_NOT_FOUND;		
+	}
+	FILE* fp = fopen(filepath, file_read_attribute);
+	if (fp == NULL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("Fail to open the file[%s], due to: %s", filepath, strerror(errno));
+		return RET_FAILURE_SYSTEM_API;
+	}
+	static const int BUF_SIZE = 512;
+	static char line_buf[BUF_SIZE];
+	int last_character_in_string_index = 0;
+	while (fgets(line_buf, BUF_SIZE, fp) != NULL) 
+	{
+		if (line_buf[0] == '\n' && line_buf[0] == '#')
+			continue;
+		last_character_in_string_index = strlen(line_buf) - 1;
+		if (line_buf[last_character_in_string_index] == '\n')
+			line_buf[last_character_in_string_index] = '\0';
+		string line_str(line_buf);
+		line_list.push_back(line_str);
+	}
+	if (fp != NULL)
+	{
+		fclose(fp);
+		fp = NULL;
+	}
+	return RET_SUCCESS;
+}
+
+unsigned short read_config_file_lines_ex(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_file_read_attribute, const char* config_folderpath)
+{
+	CREATE_PROJECT_FILEPATH(filepath, CONFIG_FOLDER_NAME, config_filename);
+	return read_file_lines_ex(conf_line_list, filepath, config_file_read_attribute);
+}
+
+unsigned short read_config_file_lines(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_folderpath)
+{
+	return read_config_file_lines_ex(conf_line_list, config_filename, "r", config_folderpath);
+}
+
+unsigned short write_file_lines_ex(const std::list<std::string>& line_list, const char* filepath, const char* file_write_attribute)
+{
+	static string new_line("\n");
+	FILE* fp = fopen(filepath, file_write_attribute);
+	if (fp == NULL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("Fail to open the file[%s], due to: %s", filepath, strerror(errno));
+		return RET_FAILURE_SYSTEM_API;
+	}
+	list<string>::const_iterator iter = line_list.begin();
+	while (iter != line_list.end())
+	{
+		string line = (string)*iter + new_line;
+		fputs(line.c_str(), fp);
+		iter++;
+	}
+	if (fp != NULL)
+	{
+		fclose(fp);
+		fp = NULL;
+	}
+	return RET_SUCCESS;
+}
+
+unsigned short write_config_file_lines_ex(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_file_write_attribute, const char* config_folderpath)
+{
+	CREATE_PROJECT_FILEPATH(filepath, CONFIG_FOLDER_NAME, config_filename);
+	return write_file_lines_ex(conf_line_list, filepath, config_file_write_attribute);
+}
+
+unsigned short write_config_file_lines(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_folderpath)
+{
+	return write_config_file_lines_ex(conf_line_list, config_filename, "w", config_folderpath);
+}
+
+unsigned short get_config_file_timestamp(std::string& timestamp_string, const char* config_filename, const char* config_folderpath)
+{
+	FILE* fp = NULL;
+	if (config_folderpath != NULL)
+	{
+// Open the config file which is NOT located in the default config folder path
+		static const int FILEPATH_SIZE = 256;
+		static char filepath[FILEPATH_SIZE];
+		snprintf(filepath, FILEPATH_SIZE, "%s/%s", config_folderpath, config_filename);
+		if (!check_file_exist(filepath))
+		{
+			STATIC_WRITE_FORMAT_ERROR("The file[%s] does NOT exist", filepath);
+			return RET_FAILURE_NOT_FOUND;		
+		}
+		fp = fopen(filepath, "r");
+	}
+	else
+	{
+// Open the config file which is located in the default config folder path
+		if (!check_config_file_exist(config_filename))
+		{
+			STATIC_WRITE_FORMAT_ERROR("The config file[%s] does NOT exist", config_filename);
+			return RET_FAILURE_NOT_FOUND;		
+		}
+		CREATE_PROJECT_FILEPATH(filepath, CONFIG_FOLDER_NAME, config_filename);
+		fp = fopen(filepath, "r");
+	}
+	if (fp == NULL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("Fail to open the config file[%s], due to: %s", config_filename, strerror(errno));
+		return RET_FAILURE_SYSTEM_API;				
+	}
+	static const int TIMESTAMP_BUF_SIZE = 64;
+	static char line_buf[TIMESTAMP_BUF_SIZE];
+	if (fgets(line_buf, TIMESTAMP_BUF_SIZE, fp) == NULL) 
+	{
+		STATIC_WRITE_FORMAT_ERROR("Fail to read the config file[%s]", config_filename);
+		return RET_FAILURE_SYSTEM_API;				
+	}
+	int last_character_in_string_index = strlen(line_buf) - 1;
+	if (line_buf[last_character_in_string_index] == '\n')
+		line_buf[last_character_in_string_index] = '\0';
+	static char timestamp_prefix_buf[TIMESTAMP_BUF_SIZE];
+	static char date_buf[TIMESTAMP_BUF_SIZE];
+	static char time_buf[TIMESTAMP_BUF_SIZE];
+	sscanf(line_buf, "%s %s %s", timestamp_prefix_buf, date_buf, time_buf);
+	if (strstr(timestamp_prefix_buf, CONFIG_TIMESTAMP_STRING_PREFIX) == NULL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("Fail to timestamp in the config file[%s], due to: %s", config_filename, strerror(errno));
+		return RET_FAILURE_INCORRECT_CONFIG;				
+	}
+	if (fp != NULL)
+	{
+		fclose(fp);
+		fp = NULL;
+	}
+	static char timestamp_buf[TIMESTAMP_BUF_SIZE];
+	snprintf(timestamp_buf, TIMESTAMP_BUF_SIZE, "%s %s", date_buf, time_buf);
+	timestamp_string.assign(timestamp_buf);
+	return RET_SUCCESS;
+}
+
+bool check_config_file_timestamp_equal(const char* config_filename1, const char* config_filename2, const char* config_folderpath1, const char* config_folderpath2)
+{
+	unsigned short ret;
+	string timestamp1;
+	string timestamp2;
+	ret = get_config_file_timestamp(timestamp1, config_filename1, config_folderpath1);
+	if (CHECK_FAILURE(ret))
+		return false;
+	ret = get_config_file_timestamp(timestamp2, config_filename2, config_folderpath2);
+	if (CHECK_FAILURE(ret))
+		return false;
+	return (timestamp1 == timestamp2 ? true : false);
+}
+
 unsigned short create_folder_if_not_exist(const char* path, int mode)
 {
 	if (!check_file_exist(path))
@@ -552,4 +708,40 @@ void get_int_deque_from_partial_string(char* int_range_string, int int_range_str
 	}
 	if (!full_string)
 		delete [] int_range_string_tmp; 
+}
+
+unsigned short copy_file(const char* src_absolute_filepath, const char* dst_absolute_filepath)
+{
+	assert(src_absolute_filepath != NULL && dst_absolute_filepath != NULL && "src_absolute_filepath != NULL and dst_absolute_filepath != NULL");
+	if (!check_file_exist(src_absolute_filepath))
+	{
+		STATIC_WRITE_FORMAT_ERROR("The source file[%s] does NOT exist", src_absolute_filepath);
+		return RET_FAILURE_NOT_FOUND;
+	}
+	static const int CMD_SIZE = 512;
+	static char cmd[CMD_SIZE];
+	snprintf(cmd, CMD_SIZE, "cp %s %s", src_absolute_filepath, dst_absolute_filepath);
+	FILE *fp = popen(cmd, "r");
+	if (fp == NULL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("Fail to copy the file[%s], due to: %s", cmd, strerror(errno));
+		return RET_FAILURE_SYSTEM_API;
+	}
+// Caution: Nothing to read
+	// char buf[256];
+	// while(fgets(buf, sizeof(buf), fp)!=NULL) 
+	// {
+ //        printf("%s\n", buf);
+ //    }
+	pclose(fp);
+	return RET_SUCCESS;
+}
+
+unsigned short copy_config_file(const char* config_filename, const char* src_config_folderpath)
+{
+	static const int SRC_FILEPATH_SIZE = 256;
+	static char src_filepath[SRC_FILEPATH_SIZE];
+	snprintf(src_filepath, SRC_FILEPATH_SIZE, "%s/%s", src_config_folderpath, config_filename);
+	CREATE_PROJECT_FILEPATH(dst_filepath, CONFIG_FOLDER_NAME, config_filename);
+	return copy_file(src_filepath, dst_filepath);
 }

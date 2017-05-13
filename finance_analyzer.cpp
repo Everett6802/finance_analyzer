@@ -35,6 +35,8 @@ static char* param_source = NULL;
 static char* param_time_range = NULL;
 static char* param_company = NULL;
 static bool param_search = false;
+static bool param_renew_company = false;
+static const char* param_renew_company_profile_filepath = NULL;
 
 static const int ERRMSG_SIZE = 256;
 static char errmsg[ERRMSG_SIZE];
@@ -45,12 +47,13 @@ static PSEARCH_RULE_SET search_rule_set = NULL;
 DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
 DECLARE_MSG_DUMPER_PARAM();
 
-static void show_usage_and_exit();
 static void print_errmsg(const char* errmsg);
 static void print_errmsg_and_exit(const char* errmsg);
 static unsigned short parse_param(int argc, char** argv);
 static unsigned short check_param();
 static unsigned short setup_param();
+static void show_usage_and_exit();
+static void renew_company_and_exit();
 static void run_test_cases_and_exit();
 static void show_search_result_and_exit();
 static int parse_show_res_type(const char* show_res_type_string);
@@ -103,6 +106,8 @@ void show_usage_and_exit()
 		PRINT("  Format 3: Company group number (ex. [Gg]12)\n");
 		PRINT("  Format 4: Company group number range (ex. [Gg]12-15)\n");
 		PRINT("  Format 5: Company code number/number range/group/group range hybrid (ex. 2347,g3-5,G12,2362,g2,1500-1510)\n");
+		PRINT("--renew_company\nDescription: Renew the table of the company profile\nCaution: Exit after renewing the company profile\n");
+		PRINT("--renew_company_profile_filepath\nDescription: The company profile filepath for renewing the table of the company profile\nDefault: %s\n", DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH);
 	}
 // Search
 	if (g_finance_analysis_mode == FinanceAnalysis_Market)
@@ -159,6 +164,16 @@ unsigned short parse_param(int argc, char** argv)
 		else if ((strcmp(argv[index], "--help") == 0) || (strcmp(argv[index], "-h") == 0))
 		{
 			param_help = true;
+			offset = 1;
+		}
+		else if (strcmp(argv[index], "--renew_company_profile_filepath") == 0)
+		{
+			param_renew_company_profile_filepath = argv[index + 1];
+			offset = 2;
+		}
+		else if (strcmp(argv[index], "--renew_company") == 0)
+		{
+			param_renew_company = true;
 			offset = 1;
 		}
 		else if (strcmp(argv[index], "--silent") == 0)
@@ -229,6 +244,7 @@ unsigned short parse_param(int argc, char** argv)
 			param_search = true;
 			offset = 1;
 		}
+
 		// else if (strcmp(argv[index], "--calculate_statistics") == 0)
 		// {
 		// 	if (statistics_method == StatisticsMethod_None)
@@ -366,14 +382,41 @@ unsigned short check_param()
 			print_errmsg_and_exit(error_msg);
 		}
 	}
-	if (param_company != NULL)
+	if (param_mode != FinanceAnalysis_Stock)
 	{
-		if (param_mode != FinanceAnalysis_Stock)
+		if (param_company != NULL)
 		{
 			param_company = NULL;
 			PRINT("WARNING: the Company argument is ignored in the Finance Stock mode\n");
 		}
+		if (param_renew_company)
+		{
+			param_renew_company = false;
+			PRINT("WARNING: the Company argument is ignored in the Finance Stock mode\n");
+		}
+		if (param_renew_company_profile_filepath != NULL)
+		{
+			param_renew_company_profile_filepath = NULL;
+			PRINT("WARNING: the Renew Company Profile Filepath argument is ignored in the Finance Stock mode\n");
+		}
 	}
+	else
+	{
+		if (param_renew_company)
+		{
+			if (param_renew_company_profile_filepath == NULL)
+				param_renew_company_profile_filepath = DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH;
+		}
+		else
+		{
+			if (param_renew_company_profile_filepath != NULL)
+			{
+				param_renew_company_profile_filepath = NULL;
+				PRINT("WARNING: the Renew Company Profile Filepath argument is ignored when the Renew Company argument is False\n");
+			}
+		}
+	}
+
 	return RET_SUCCESS;
 }
 
@@ -504,6 +547,48 @@ void show_search_result_and_exit()
 	exit(CHECK_SUCCESS(ret) ? EXIT_SUCCESS : EXIT_FAILURE);	
 }
 
+void renew_company_and_exit(const char* source_company_profile_conf_folderpath)
+{
+	static const int BUF_SIZE = 256;
+	static char buf[BUF_SIZE];
+	unsigned short ret = RET_SUCCESS;
+	assert(source_company_profile_conf_folderpath != NULL && "source_company_profile_conf_folderpath should NOT be NULL");
+	string timestamp_src;
+	string timestamp_dst;
+	ret = get_config_file_timestamp(timestamp_src, COMPANY_PROFILE_CONF_FILENAME, source_company_profile_conf_folderpath);
+	if (CHECK_FAILURE(ret))
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Fails to get time stamp from srouce file[%s], due to: %s", COMPANY_PROFILE_CONF_FILENAME, get_ret_description(ret));
+		print_errmsg_and_exit(errmsg);
+	}
+	ret = get_config_file_timestamp(timestamp_dst, COMPANY_PROFILE_CONF_FILENAME);
+	if (CHECK_FAILURE(ret))
+	{
+		if (ret != RET_FAILURE_NOT_FOUND)
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "Fails to get time stamp from destination file[%s], due to: %s", COMPANY_PROFILE_CONF_FILENAME, get_ret_description(ret));
+			print_errmsg_and_exit(errmsg);
+		}
+	}
+	bool check_equal = (timestamp_src == timestamp_dst ? true : false);
+	if (check_equal)
+	{
+		PRINT("The time stamp is equal, NO NEED to renew......\n");
+	}
+	else
+	{
+		PRINT("Renew company profile: %s -> %s\n", timestamp_dst.c_str(), timestamp_src.c_str());
+// Copy the company profile from the finance_scrapy_python project
+		ret = copy_config_file(COMPANY_PROFILE_CONF_FILENAME, source_company_profile_conf_folderpath);
+		if (CHECK_FAILURE(ret))
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "Fails to copy the config file[%s] from: %s, due to: %s", COMPANY_PROFILE_CONF_FILENAME, source_company_profile_conf_folderpath, get_ret_description(ret));
+			print_errmsg_and_exit(errmsg);
+		}
+	}
+	exit(EXIT_SUCCESS);
+}
+
 const char* get_statistics_method_description(StatisticsMethod statistics_method)
 {
 	if (IS_FORMULA_STATISTICS_METHOD(statistics_method))
@@ -601,9 +686,51 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
+// #include <list>
+// #include <string>
 
 int main(int argc, char** argv)
 {
+	// unsigned short ret_test;
+	// std::list<std::string> line_list;
+	// line_list.push_back(std::string("Fuck"));
+	// line_list.push_back(std::string("Damn it"));
+	// line_list.push_back(std::string("Go to Hell"));
+	// ret_test = write_config_file_lines(line_list, "test.conf");
+	// if (CHECK_FAILURE(ret_test))
+	// 	fprintf(stderr, "Error occur\n");
+	// line_list.clear();
+	// ret_test = read_config_file_lines(line_list, "test.conf");
+	// if (CHECK_FAILURE(ret_test))
+	// 	fprintf(stderr, "Error occur\n");
+	// std::list<std::string>::iterator iter = line_list.begin();
+	// while (iter != line_list.end())
+	// {
+	// 	std::string line = (std::string)*iter;
+	// 	printf("%s\n", line.c_str());
+	// 	iter++;
+	// }
+
+	// ret_test = copy_file("/home/super/Projects/finance_scrapy_python/conf/.company_profile.conf", "/home/super/Projects/finance_analyzer/conf/.company_profile.conf");
+	// if (CHECK_FAILURE(ret_test))
+	// 	fprintf(stderr, "Error occur\n");
+	// static const int FILE_PATH_SIZE = 256;
+	// char current_working_directory[FILE_PATH_SIZE];
+	// getcwd(current_working_directory, FILE_PATH_SIZE);
+	// printf("Path: %s\n", current_working_directory);
+	// std::string timestamp;
+	// ret_test = get_config_file_timestamp(timestamp, COMPANY_PROFILE_CONF_FILENAME, "/home/super/Projects/finance_scrapy_python/conf");
+	// if (CHECK_FAILURE(ret_test))
+	// 	fprintf(stderr, "Error occur\n");
+	// printf("TimeStamp: %s\n", timestamp.c_str());
+	// ret_test = get_config_file_timestamp(timestamp, COMPANY_PROFILE_CONF_FILENAME);
+	// if (CHECK_FAILURE(ret_test))
+	// 	fprintf(stderr, "Error occur\n");
+	// printf("TimeStamp: %s\n", timestamp.c_str());
+	// bool check_equal = check_config_file_timestamp_equal(COMPANY_PROFILE_CONF_FILENAME, COMPANY_PROFILE_CONF_FILENAME, "/home/super/Projects/finance_scrapy_python/conf");
+	// printf("%s\n", (check_equal ? "True" : "False"));
+	// exit(0);
+
 	// STATIC_SET_LOG_SEVERITY_CONFIG(3);
 	// STATIC_SET_SYSLOG_SEVERITY_CONFIG(3);
 	// STATIC_WRITE_DEBUG("Fuck DEBUG");
@@ -699,10 +826,11 @@ int main(int argc, char** argv)
 	    }
 	    else
 	        throw runtime_error(string("Unknown mode !!!"));
-	    // IS_FINANCE_MARKET_MODE = (g_finance_analysis_mode == FinanceAnalysis_Market ? true : false);
-	    // IS_FINANCE_STOCK_MODE = (g_finance_analysis_mode == FinanceAnalysis_Stock ? true : false);
+
 	    if (param_help)
 	    	show_usage_and_exit();
+	    if (param_renew_company)
+	    	renew_company_and_exit(param_renew_company_profile_filepath);
 // Run the test cases
 	    if (param_test_case != NULL)
 	    {
