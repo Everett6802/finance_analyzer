@@ -413,7 +413,7 @@ unsigned short get_config_file_timestamp(std::string& timestamp_string, const ch
 	if (strstr(timestamp_prefix_buf, CONFIG_TIMESTAMP_STRING_PREFIX) == NULL)
 	{
 		STATIC_WRITE_FORMAT_ERROR("Fail to timestamp in the config file[%s], due to: %s", config_filename, strerror(errno));
-		return RET_FAILURE_INCORRECT_CONFIG;				
+		return RET_FAILURE_INCORRECT_CONFIG;
 	}
 	if (fp != NULL)
 	{

@@ -296,8 +296,8 @@ extern const int SHOW_RES_ALL;
 extern const char* SHOW_RES_TYPE_DESCRIPTION[];
 extern const int SHOW_RES_TYPE_SIZE;
 
-extern const char* SEVERITY_NAME[];
-extern const int SEVERITY_NAME_SIZE;
+// extern const char* SEVERITY_NAME[];
+// extern const int SEVERITY_NAME_SIZE;
 
 // extern const int SOURCE_KEY_FIELD_MASK;
 extern const int SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET;

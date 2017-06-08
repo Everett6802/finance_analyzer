@@ -25,8 +25,10 @@ using namespace std;
 static FinanceAnalysisMode param_mode = FinanceAnalysis_None;
 static bool param_help = false;
 static bool param_silent = false;
-static char* param_log_level = NULL;
-static char* param_syslog_level = NULL;
+static const char* param_renew_company_profile_filepath = NULL;
+static bool param_renew_company = false;
+static char* param_log_severity_name = NULL;
+static char* param_syslog_severity_name = NULL;
 static char* param_test_case = NULL;
 static bool param_show_test_verbose = false;
 static bool param_interactive_mode = false;
@@ -35,8 +37,6 @@ static char* param_source = NULL;
 static char* param_time_range = NULL;
 static char* param_company = NULL;
 static bool param_search = false;
-static bool param_renew_company = false;
-static const char* param_renew_company_profile_filepath = NULL;
 
 static const int ERRMSG_SIZE = 256;
 static char errmsg[ERRMSG_SIZE];
@@ -69,11 +69,14 @@ void show_usage_and_exit()
 	PRINT("-h|--help\n Description: The usage\n Caution: Other flags are ignored\n");
 	PRINT("--silent\n Description: Disable print log on console\n");
 // Log/Syslog Severity
-	PRINT("--log_level\n Set Log Severity Level\n");
-	PRINT("--syslog_level\n Set Sysog Severity Level\n");
-	PRINT(" Severity level list:\n");
-	for (int i = 0 ; i < SEVERITY_NAME_SIZE ; i++)
-		PRINT("  %s: %d\n", SEVERITY_NAME[i], i);
+	PRINT("--log_severity\n Description: Set Log Severity\n");
+	PRINT("--syslog_severity\n Description: Set Syslog Severity\n");
+	int severity_size;
+	const char** severity_name_list = MsgDumperWrapper::get_severity_name_list(severity_size);
+	PRINT(" Severity List: ");
+	for (int i = 0 ; i < severity_size ; i++)
+		PRINT("%s ", severity_name_list[i]);
+	PRINT("\n");
 // Test cases
 	PRINT("--test_case\nDescription: Run test case\nCaution: Exit when tests are done\n");
 	PRINT("--show_test_verbose\nDescription: Show detailed steps while running test case\nCaution: Exit when tests are done\n");
@@ -182,18 +185,18 @@ unsigned short parse_param(int argc, char** argv)
 			param_silent = true;
 			offset = 1;
 		}
-		else if (strcmp(argv[index], "--log_level") == 0)
+		else if (strcmp(argv[index], "--log_severity") == 0)
 		{
 			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'log_level' parameter");
-			param_log_level = argv[index + 1];
+				print_errmsg_and_exit("No argument found in 'log_severity' parameter");
+			param_log_severity_name = argv[index + 1];
 			offset = 2;
 		}
-		else if (strcmp(argv[index], "--syslog_level") == 0)
+		else if (strcmp(argv[index], "--syslog_severity") == 0)
 		{
 			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'syslog_level' parameter");
-			param_syslog_level = argv[index + 1];
+				print_errmsg_and_exit("No argument found in 'syslog_severity' parameter");
+			param_syslog_severity_name = argv[index + 1];
 			offset = 2;
 		}
 		else if (strcmp(argv[index], "--test_case") == 0)
@@ -364,21 +367,27 @@ unsigned short check_param()
 			PRINT("WARNING: Daemonization must run in the interactive mode\n");
 		}
 	}
-	if (param_log_level != NULL)
+	if (param_log_severity_name != NULL)
 	{
-		unsigned short log_level = atoi(param_log_level);
-		if (log_level < 0 || log_level >= SEVERITY_NAME_SIZE)
+		try
 		{
-			snprintf(error_msg, ERROR_MSG_SIZE, "Unknown log level: %s", param_log_level);
+			MsgDumperWrapper::check_severity_name(param_log_severity_name);
+		}
+		catch (exception& e)
+		{
+			snprintf(error_msg, ERROR_MSG_SIZE, "Unknown log severity: %s", param_log_severity_name);
 			print_errmsg_and_exit(error_msg);
 		}
 	}
-	if (param_syslog_level != NULL)
+	if (param_syslog_severity_name != NULL)
 	{
-		unsigned short syslog_level = atoi(param_syslog_level);
-		if (syslog_level < 0 || syslog_level >= SEVERITY_NAME_SIZE)
+		try
 		{
-			snprintf(error_msg, ERROR_MSG_SIZE, "Unknown syslog level: %s", param_syslog_level);
+			MsgDumperWrapper::check_severity_name(param_syslog_severity_name);
+		}
+		catch (exception& e)
+		{
+			snprintf(error_msg, ERROR_MSG_SIZE, "Unknown syslog severity: %s", param_syslog_severity_name);
 			print_errmsg_and_exit(error_msg);
 		}
 	}
@@ -392,7 +401,7 @@ unsigned short check_param()
 		if (param_renew_company)
 		{
 			param_renew_company = false;
-			PRINT("WARNING: the Company argument is ignored in the Finance Stock mode\n");
+			PRINT("WARNING: the Renew Company argument is ignored in the Finance Stock mode\n");
 		}
 		if (param_renew_company_profile_filepath != NULL)
 		{
@@ -422,10 +431,10 @@ unsigned short check_param()
 
 unsigned short setup_param()
 {
-	if (param_log_level != NULL)
-		STATIC_SET_LOG_SEVERITY(atoi(param_log_level));
-	if (param_syslog_level != NULL)
-		STATIC_SET_SYSLOG_SEVERITY(atoi(param_syslog_level));
+	if (param_log_severity_name != NULL)
+		STATIC_SET_LOG_SEVERITY_BY_NAME(param_log_severity_name);
+	if (param_syslog_severity_name != NULL)
+		STATIC_SET_SYSLOG_SEVERITY_BY_NAME(param_syslog_severity_name);
 	unsigned short ret = RET_SUCCESS;
 	bool need_set_search_rule = false;
 	if (param_source != NULL || param_time_range != NULL || param_company != NULL)
@@ -549,8 +558,8 @@ void show_search_result_and_exit()
 
 void renew_company_and_exit(const char* source_company_profile_conf_folderpath)
 {
-	static const int BUF_SIZE = 256;
-	static char buf[BUF_SIZE];
+	// static const int BUF_SIZE = 256;
+	// static char buf[BUF_SIZE];
 	unsigned short ret = RET_SUCCESS;
 	assert(source_company_profile_conf_folderpath != NULL && "source_company_profile_conf_folderpath should NOT be NULL");
 	string timestamp_src;
@@ -686,97 +695,10 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
-// #include <list>
-// #include <string>
+#define PREFIX "%d %d"
 
 int main(int argc, char** argv)
 {
-	// unsigned short ret_test;
-	// std::list<std::string> line_list;
-	// line_list.push_back(std::string("Fuck"));
-	// line_list.push_back(std::string("Damn it"));
-	// line_list.push_back(std::string("Go to Hell"));
-	// ret_test = write_config_file_lines(line_list, "test.conf");
-	// if (CHECK_FAILURE(ret_test))
-	// 	fprintf(stderr, "Error occur\n");
-	// line_list.clear();
-	// ret_test = read_config_file_lines(line_list, "test.conf");
-	// if (CHECK_FAILURE(ret_test))
-	// 	fprintf(stderr, "Error occur\n");
-	// std::list<std::string>::iterator iter = line_list.begin();
-	// while (iter != line_list.end())
-	// {
-	// 	std::string line = (std::string)*iter;
-	// 	printf("%s\n", line.c_str());
-	// 	iter++;
-	// }
-
-	// ret_test = copy_file("/home/super/Projects/finance_scrapy_python/conf/.company_profile.conf", "/home/super/Projects/finance_analyzer/conf/.company_profile.conf");
-	// if (CHECK_FAILURE(ret_test))
-	// 	fprintf(stderr, "Error occur\n");
-	// static const int FILE_PATH_SIZE = 256;
-	// char current_working_directory[FILE_PATH_SIZE];
-	// getcwd(current_working_directory, FILE_PATH_SIZE);
-	// printf("Path: %s\n", current_working_directory);
-	// std::string timestamp;
-	// ret_test = get_config_file_timestamp(timestamp, COMPANY_PROFILE_CONF_FILENAME, "/home/super/Projects/finance_scrapy_python/conf");
-	// if (CHECK_FAILURE(ret_test))
-	// 	fprintf(stderr, "Error occur\n");
-	// printf("TimeStamp: %s\n", timestamp.c_str());
-	// ret_test = get_config_file_timestamp(timestamp, COMPANY_PROFILE_CONF_FILENAME);
-	// if (CHECK_FAILURE(ret_test))
-	// 	fprintf(stderr, "Error occur\n");
-	// printf("TimeStamp: %s\n", timestamp.c_str());
-	// bool check_equal = check_config_file_timestamp_equal(COMPANY_PROFILE_CONF_FILENAME, COMPANY_PROFILE_CONF_FILENAME, "/home/super/Projects/finance_scrapy_python/conf");
-	// printf("%s\n", (check_equal ? "True" : "False"));
-	// exit(0);
-
-	// STATIC_SET_LOG_SEVERITY_CONFIG(3);
-	// STATIC_SET_SYSLOG_SEVERITY_CONFIG(3);
-	// STATIC_WRITE_DEBUG("Fuck DEBUG");
-	// STATIC_WRITE_INFO("Fuck INFO");
-	// STATIC_WRITE_WARN("Fuck WARN");
-	// STATIC_WRITE_ERROR("Fuck ERROR");
-
-	// static const int FILE_PATH_SIZE = 256;
-	// char current_working_directory[FILE_PATH_SIZE];
-	// getcwd(current_working_directory, FILE_PATH_SIZE);
-	// char conf_filepath[FILE_PATH_SIZE];
-	// snprintf(conf_filepath, FILE_PATH_SIZE, "%s/%s", current_working_directory, "conf/dumper_param.conf");
-	// FILE* fp_set = popen("sed -i 's/^Log=[A-Z].*/Log=DEBUG/g' ./conf/dumper_param.conf", "w");
-	// pclose(fp_set);
-
-	// FILE* fp_get = popen("cat conf/dumper_param.conf | grep 'Log='", "r");
-	// static const int LINE_SIZE = 64;
-	// char line[LINE_SIZE], level[LINE_SIZE];
-	// fgets(line, LINE_SIZE, fp_get);
-	// printf("Line: %s\n", line);
-	// sscanf(line, "Log=%s", level);
-	// printf("Level: %s\n", level);
-	// pclose(fp_get);
-
-	// printf("Fuck1\n");
- //    daemonize();
- //    init_interactive_server();
- //    printf("Fuck\n");
- //    exit(EXIT_SUCCESS);
-
-	// OutputMailStreamCfg output_mail_stream_cfg;
-	// output_mail_stream_cfg.address_list.push_back(string("Everett6802@hotmail.com"));
-	// output_mail_stream_cfg.title = string("Decorator Test");
-	// POUTPUT_STREAM oms = new OutputMailStream(&output_mail_stream_cfg);
-
-	// OutputFileStreamCfg output_file_stream_cfg;
-	// output_file_stream_cfg.file_path = string("/home/super/test.log");
-	// output_file_stream_cfg.file_attribute = string("a+");
-	// POUTPUT_STREAM ofs = new OutputFileStream(&output_file_stream_cfg, oms);
-
-	// POUTPUT_STREAM omos = new OutputMonitorStream(ofs);
-
-	// omos->output("Fuck You !\nGo to Hell !!!\n");
-	// delete omos;
-	// exit(EXIT_SUCCESS);
-
 // Register the manager class to manager factory
 	FinanceAnalyzerMgrFactory g_mgr_factory;
 	REGISTER_CLASS(FinanceAnalyzerMarketMgr, FinanceAnalysis_Market);
@@ -859,11 +781,6 @@ int main(int argc, char** argv)
 		}
 		if (param_search)
 			show_search_result_and_exit();
-// Let's do something
-		// STATIC_WRITE_DEBUG("Fuck DEBUG");
-		// STATIC_WRITE_INFO("Fuck INFO");
-		// STATIC_WRITE_WARN("Fuck WARN");
-		// STATIC_WRITE_ERROR("Fuck ERROR");
     }
     sleep(2);
 

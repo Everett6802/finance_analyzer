@@ -171,8 +171,8 @@ const char* SHOW_RES_TYPE_DESCRIPTION[] =
 };
 const int SHOW_RES_TYPE_SIZE = sizeof(SHOW_RES_TYPE_DESCRIPTION) / sizeof(SHOW_RES_TYPE_DESCRIPTION[0]);
 
-const char* SEVERITY_NAME[] = {"ERROR", "WARN", "INFO", "DEBUG"};
-const int SEVERITY_NAME_SIZE = sizeof(SEVERITY_NAME) / sizeof(SEVERITY_NAME[0]);
+// const char* SEVERITY_NAME[] = {"ERROR", "WARN", "INFO", "DEBUG"};
+// const int SEVERITY_NAME_SIZE = sizeof(SEVERITY_NAME) / sizeof(SEVERITY_NAME[0]);
 
 // const int SOURCE_KEY_FIELD_MASK = 0xFF << 8;
 const int SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET = 0;

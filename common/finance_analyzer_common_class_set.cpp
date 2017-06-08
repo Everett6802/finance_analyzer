@@ -1432,7 +1432,7 @@ unsigned short SearchRuleSet::add_rule_done()
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 	bool search_rule_added = false;
-	unsigned short ret = RET_SUCCESS;
+	// unsigned short ret = RET_SUCCESS;
 	if (query_set != NULL)
 	{
 		assert(query_set->is_add_query_done() && "query_set::is_add_query_done() should be TRUE");
