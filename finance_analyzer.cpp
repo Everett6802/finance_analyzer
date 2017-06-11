@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <iostream>
 #include <stdexcept>
 #include "finance_analyzer_common.h"
@@ -47,6 +48,8 @@ static PSEARCH_RULE_SET search_rule_set = NULL;
 DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
 DECLARE_MSG_DUMPER_PARAM();
 
+static void signal_handler(int signo);
+
 static void print_errmsg(const char* errmsg);
 static void print_errmsg_and_exit(const char* errmsg);
 static unsigned short parse_param(int argc, char** argv);
@@ -60,6 +63,31 @@ static int parse_show_res_type(const char* show_res_type_string);
 static const char* get_statistics_method_description(StatisticsMethod statistics_method);
 // static void daemonize();
 static unsigned short init_interactive_server();
+
+static void signal_handler(int signo)
+{
+	switch(signo)
+	{
+		case SIGTERM:
+		{
+			PRINT("SIGTERM Caught, the Finance Analyzer process[%d] is going to die......\n", getpid());
+		}
+		break;
+		case SIGINT:
+		{
+			PRINT("SIGINT Caught, the Finance Analyzer process[%d] is going to die......\n", getpid());
+		}
+		break;
+		default:
+		{
+			snprintf(errmsg, ERRMSG_SIZE,"UnExpected Signal[%d] Caught !!!", signo);
+			print_errmsg_and_exit(errmsg);
+		}
+		break;
+	}
+	sleep(1);
+	exit(EXIT_SUCCESS);
+}
 
 void show_usage_and_exit()
 {
@@ -359,14 +387,15 @@ unsigned short check_param()
 {
 	static const int ERROR_MSG_SIZE = 256;
 	static char error_msg[ERROR_MSG_SIZE];
-	if (param_daemonize)
-	{
-		if (!param_interactive_mode)
-		{
-			param_daemonize = false;
-			PRINT("WARNING: Daemonization must run in the interactive mode\n");
-		}
-	}
+
+	// if (param_daemonize)
+	// {
+	// 	if (!param_interactive_mode)
+	// 	{
+	// 		param_daemonize = false;
+	// 		PRINT("WARNING: Daemonization must run in the interactive mode\n");
+	// 	}
+	// }
 	if (param_log_severity_name != NULL)
 	{
 		try
@@ -391,6 +420,22 @@ unsigned short check_param()
 			print_errmsg_and_exit(error_msg);
 		}
 	}
+	if (param_source != NULL)
+	{
+		if (!param_interactive_mode)
+		{
+			param_source = NULL;
+			PRINT("WARNING: the Source argument is ignored in the Interactive mode\n");
+		}
+	}
+	if (param_time_range != NULL)
+	{
+		if (!param_interactive_mode)
+		{
+			param_time_range = NULL;
+			PRINT("WARNING: the Time Range argument is ignored in the Interactive mode\n");
+		}
+	}
 	if (param_mode != FinanceAnalysis_Stock)
 	{
 		if (param_company != NULL)
@@ -411,6 +456,14 @@ unsigned short check_param()
 	}
 	else
 	{
+		if (param_company != NULL)
+		{
+			if (!param_interactive_mode)
+			{
+				param_company = NULL;
+				PRINT("WARNING: the Company argument is ignored in the Interactive mode\n");
+			}
+		}
 		if (param_renew_company)
 		{
 			if (param_renew_company_profile_filepath == NULL)
@@ -436,60 +489,63 @@ unsigned short setup_param()
 	if (param_syslog_severity_name != NULL)
 		STATIC_SET_SYSLOG_SEVERITY_BY_NAME(param_syslog_severity_name);
 	unsigned short ret = RET_SUCCESS;
-	bool need_set_search_rule = false;
-	if (param_source != NULL || param_time_range != NULL || param_company != NULL)
-		need_set_search_rule = true;
+	if (!param_interactive_mode)
+	{
+		bool need_set_search_rule = false;
+		if (param_source != NULL || param_time_range != NULL || param_company != NULL)
+			need_set_search_rule = true;
 // Initialize the search rule	
-	if (need_set_search_rule)
-	{
-		search_rule_set = new SearchRuleSet(g_finance_analysis_mode);
-		if (search_rule_set == NULL)
+		if (need_set_search_rule)
 		{
-			print_errmsg("Fail to allocate memory: search_rule_set");
-			return RET_FAILURE_INSUFFICIENT_MEMORY;
-		}		
-	}
+			search_rule_set = new SearchRuleSet(g_finance_analysis_mode);
+			if (search_rule_set == NULL)
+			{
+				print_errmsg("Fail to allocate memory: search_rule_set");
+				return RET_FAILURE_INSUFFICIENT_MEMORY;
+			}		
+		}
 // Add the source type into the search rule
-	if (param_source != NULL)
-	{
-		ret = search_rule_set->add_query_rule(param_source);
-		if (CHECK_FAILURE(ret))
+		if (param_source != NULL)
 		{
-			snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_query_rule() fails, due to: %s", get_ret_description(ret));
-			print_errmsg(errmsg);
-			return ret;
+			ret = search_rule_set->add_query_rule(param_source);
+			if (CHECK_FAILURE(ret))
+			{
+				snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_query_rule() fails, due to: %s", get_ret_description(ret));
+				print_errmsg(errmsg);
+				return ret;
+			}
 		}
-	}
 // Add the time range into the search rule
-	if (param_time_range != NULL)
-	{
-		ret = search_rule_set->add_time_rule(param_time_range);
-		if (CHECK_FAILURE(ret))
+		if (param_time_range != NULL)
 		{
-			snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_time_rule() fails, due to: %s", get_ret_description(ret));
-			print_errmsg(errmsg);
-			return ret;
+			ret = search_rule_set->add_time_rule(param_time_range);
+			if (CHECK_FAILURE(ret))
+			{
+				snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_time_rule() fails, due to: %s", get_ret_description(ret));
+				print_errmsg(errmsg);
+				return ret;
+			}
 		}
-	}
 // Add the company into the search rule
-	if (param_company != NULL)
-	{
-		ret = search_rule_set->add_company_rule(param_company);
-		if (CHECK_FAILURE(ret))
+		if (param_company != NULL)
 		{
-			snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_company_rule() fails, due to: %s", get_ret_description(ret));
-			print_errmsg(errmsg);
-			return ret;
+			ret = search_rule_set->add_company_rule(param_company);
+			if (CHECK_FAILURE(ret))
+			{
+				snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_company_rule() fails, due to: %s", get_ret_description(ret));
+				print_errmsg(errmsg);
+				return ret;
+			}
 		}
-	}
-	if (need_set_search_rule)
-	{
-		ret = search_rule_set->add_rule_done();
-		if (CHECK_FAILURE(ret))
+		if (need_set_search_rule)
 		{
-			snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_rule_done() fails, due to: %s", get_ret_description(ret));
-			print_errmsg(errmsg);
-			return ret;
+			ret = search_rule_set->add_rule_done();
+			if (CHECK_FAILURE(ret))
+			{
+				snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_rule_done() fails, due to: %s", get_ret_description(ret));
+				print_errmsg(errmsg);
+				return ret;
+			}
 		}
 	}
 	return RET_SUCCESS;
@@ -695,10 +751,19 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
-#define PREFIX "%d %d"
 
 int main(int argc, char** argv)
 {
+// Register the signals so that the process can exit gracefully
+	struct sigaction sa;
+	memset(&sa, 0x0, sizeof(sa));
+	sa.sa_flags = 0;
+	sa.sa_handler = &signal_handler;
+	if (sigaction(SIGTERM, &sa, NULL) == -1)
+		print_errmsg_and_exit("Fail to register the signal: SIGTERM");
+	if (sigaction(SIGINT, &sa, NULL) == -1)
+		print_errmsg_and_exit("Fail to register the signal: SIGINT");
+
 // Register the manager class to manager factory
 	FinanceAnalyzerMgrFactory g_mgr_factory;
 	REGISTER_CLASS(FinanceAnalyzerMarketMgr, FinanceAnalysis_Market);
@@ -729,6 +794,13 @@ int main(int argc, char** argv)
     {
     	// daemonize();
     	// ret = init_interactive_server();
+// Setup the parameters
+		ret = setup_param();
+		if (CHECK_FAILURE(ret))
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "Fail to setup parameters, due to: %s", get_ret_description(ret));
+			goto FAIL;
+		}
     	DECLARE_AND_IMPLEMENT_STATIC_INTERACTIVE_SERVER()
     }
     else
@@ -782,7 +854,6 @@ int main(int argc, char** argv)
 		if (param_search)
 			show_search_result_and_exit();
     }
-    sleep(2);
 
 	RELEASE_MSG_DUMPER();
 	exit(EXIT_SUCCESS);
