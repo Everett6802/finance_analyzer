@@ -779,7 +779,7 @@ void find_stock_support_resistance_and_exit(const char* company_number_close_pri
 		memcpy(stock_close_price_buf, &stock_support_resistance_entry[comma_pos_index + 1], sizeof(char) * (strlen(stock_support_resistance_entry) - (comma_pos_index + 1)));
 		float stock_close_price = atof(stock_close_price_buf);
 // Analyze data from each stock
-		price_support_and_resistance_result += (string("==================") + string(company_number_buf) + string("==================\n"));
+		price_support_and_resistance_result += (string("==================") + string(company_number_buf) + string("==================\nClose Price: ") + string(stock_close_price_buf) + string("\n"));
 		string price_support_resistance_string;
 		ret = manager->get_stock_price_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath, show_stock_support_resistance_detail);
 		if (CHECK_FAILURE(ret))

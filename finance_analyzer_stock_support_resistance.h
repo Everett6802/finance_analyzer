@@ -57,7 +57,7 @@ private:
 	StockPriceRef(float* stock_price, PSTOCK_CANDLE_STICK stock_candle_stick);
 	~StockPriceRef();
 public:
-	const float* get_price()const;
+	float get_price()const;
 };
 typedef StockPriceRef* PSTOCK_PRICE_REF;
 bool candle_stick_support_compare (const PSTOCK_PRICE_REF a, const PSTOCK_PRICE_REF b);
@@ -74,6 +74,7 @@ class FinanceAnalyzerStockSupportResistance
 	
 	static const char* CONFIG_CANDLE_STICK_START[];
 	static const int CONFIG_CANDLE_STICK_ENTRY_ELEMENT_COUNT;
+	static const int DEF_PRICE_LIMIT_PERCENTAGE;
 	DECLARE_MSG_DUMPER()
 
 private:
@@ -83,6 +84,9 @@ private:
 
 	bool init;
 	float close_price;
+	float lowest_price_limit;
+	float highest_price_limit;
+	int limit_percentage;
 
 	unsigned short update_data_from_config(const char* stock_critical_candle_stick_filepath);
 	unsigned short find_support_and_resistance(CandleStickTimeUnit candle_stick_time_unit);
@@ -94,6 +98,9 @@ public:
 	~FinanceAnalyzerStockSupportResistance();
 
 	unsigned short initialize(const char* stock_critical_candle_stick_filepath, float stock_close_price);
+// Disable the price limit when price_limit_percentage = 0
+	unsigned short set_price_limit_percentage(int price_limit_percentage);
+	unsigned short get_price_limit_percentage(int& price_limit_percentage)const;
 	unsigned short get_support_price_list(CandleStickTimeUnit candle_stick_time_unit, std::list<float>& stock_support_price_list)const;
 	unsigned short get_resistance_price_list(CandleStickTimeUnit candle_stick_time_unit, std::list<float>& stock_resistance_price_list)const;
 	unsigned short get_support_price_string(CandleStickTimeUnit candle_stick_time_unit, std::string& stock_support_price_string, bool show_detail=false)const;

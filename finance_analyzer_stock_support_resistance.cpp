@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <stdexcept>
 #include <string>
 #include "finance_analyzer_stock_support_resistance.h"
@@ -70,30 +71,34 @@ StockPriceRef::~StockPriceRef()
 	price = NULL;
 }
 
-const float* StockPriceRef::get_price()const
+float StockPriceRef::get_price()const
 {
 	assert(price != NULL && "price should NOT be NULL");
-	return price;
+	return *price;
 }
 
 bool candle_stick_support_compare (const PSTOCK_PRICE_REF a, const PSTOCK_PRICE_REF b)
 {
-	return *(a->get_price()) > *(b->get_price());
+	return a->get_price() > b->get_price();
 }
 
 bool candle_stick_resistance_compare (const PSTOCK_PRICE_REF a, const PSTOCK_PRICE_REF b)
 {
-	return *(a->get_price()) < *(b->get_price());
+	return a->get_price() < b->get_price();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
 const char* FinanceAnalyzerStockSupportResistance::CONFIG_CANDLE_STICK_START[] = {CONFIG_WEEK_START, CONFIG_DAY_START, CONFIG_30MIN_START};
 const int FinanceAnalyzerStockSupportResistance::CONFIG_CANDLE_STICK_ENTRY_ELEMENT_COUNT = 4;
+const int FinanceAnalyzerStockSupportResistance::DEF_PRICE_LIMIT_PERCENTAGE = 10;
 
 FinanceAnalyzerStockSupportResistance::FinanceAnalyzerStockSupportResistance() :
 	init(false),
-	close_price(0.0)
+	close_price(0.0),
+	lowest_price_limit(0.0),
+	highest_price_limit(0.0),
+	limit_percentage(DEF_PRICE_LIMIT_PERCENTAGE)
 {
 	IMPLEMENT_MSG_DUMPER()
 }
@@ -235,10 +240,18 @@ unsigned short FinanceAnalyzerStockSupportResistance::find_support_and_resistanc
 			WRITE_ERROR("Fail to allocate memory: stock_price_ref_highest");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-		if (close_price >= *(stock_price_ref_highest->price))
-			support_price_ref_list.push_back(stock_price_ref_highest);
+		if (close_price >= stock_price_ref_highest->get_price())
+		{
+			bool can_add = ((limit_percentage != 0 && stock_price_ref_highest->get_price() <= lowest_price_limit) ? false : true);
+			if (can_add)
+				support_price_ref_list.push_back(stock_price_ref_highest);
+		}
 		else
-			resistance_price_ref_list.push_back(stock_price_ref_highest);
+		{
+			bool can_add = ((limit_percentage != 0 && stock_price_ref_highest->get_price() >= highest_price_limit) ? false : true);
+			if (can_add)
+				resistance_price_ref_list.push_back(stock_price_ref_highest);
+		}
 // Check the lowest price is the support or resistance 
 		PSTOCK_PRICE_REF stock_price_ref_lowest = new StockPriceRef(&stock_candle_stick->lowest_price, stock_candle_stick);
 		if (stock_price_ref_lowest == NULL)
@@ -246,10 +259,18 @@ unsigned short FinanceAnalyzerStockSupportResistance::find_support_and_resistanc
 			WRITE_ERROR("Fail to allocate memory: stock_price_ref_lowest");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-		if (close_price >= *(stock_price_ref_lowest->price))
-			support_price_ref_list.push_back(stock_price_ref_lowest);
+		if (close_price >= stock_price_ref_lowest->get_price())
+		{
+			bool can_add = ((limit_percentage != 0 && stock_price_ref_lowest->get_price() <= lowest_price_limit) ? false : true);
+			if (can_add)
+				support_price_ref_list.push_back(stock_price_ref_lowest);
+		}
 		else
-			resistance_price_ref_list.push_back(stock_price_ref_lowest);
+		{
+			bool can_add = ((limit_percentage != 0 && stock_price_ref_lowest->get_price() >= highest_price_limit) ? false : true);
+			if (can_add)
+				resistance_price_ref_list.push_back(stock_price_ref_lowest);
+		}
 		++iter;
 	}
 	support_price_ref_list.sort(candle_stick_support_compare);
@@ -286,6 +307,16 @@ unsigned short FinanceAnalyzerStockSupportResistance::initialize(const char* sto
 	if (CHECK_FAILURE(ret))
 		goto OUT;
 	close_price = stock_close_price;
+// Calcuate the price limit if necessary
+	if (limit_percentage != 0)
+	{
+		float price_limit_ratio = limit_percentage / 100.0;
+		float lowest_price_limit_tmp = close_price * (1 - price_limit_ratio); 
+		float highest_price_limit_tmp = close_price * (1 + price_limit_ratio);
+		lowest_price_limit = ceil(lowest_price_limit_tmp * 10) / 10.0;
+		highest_price_limit = floor(highest_price_limit_tmp * 10) / 10.0;
+		WRITE_FORMAT_DEBUG("Calucate the price[%.2f] limit, LOW: %.2f, HIGH: %.2f\n", close_price, lowest_price_limit, highest_price_limit);
+	}
 // Initialize the data structure
 	for (int i = 0 ; i < CandleStickSize ; i++)
 	{
@@ -300,8 +331,37 @@ OUT:
 		absolute_filepath = NULL;
 	}
 	if (CHECK_SUCCESS(ret))
+	{
 		init = true;
+	}
 	return ret;
+}
+
+unsigned short FinanceAnalyzerStockSupportResistance::set_price_limit_percentage(int price_limit_percentage)
+{
+	if (init)
+	{
+		WRITE_ERROR("The FinanceAnalyzerStockSupportResistance object is Initialized !!!");
+		return RET_FAILURE_INCORRECT_OPERATION;	
+	}
+	if (price_limit_percentage < 0 || price_limit_percentage > 100)
+	{
+		WRITE_ERROR("Price Limit Percentage should be in the range [0, 100]");
+		return RET_FAILURE_INVALID_ARGUMENT;		
+	}
+	limit_percentage = price_limit_percentage;
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerStockSupportResistance::get_price_limit_percentage(int& price_limit_percentage)const
+{
+	if (!init)
+	{
+		WRITE_ERROR("The FinanceAnalyzerStockSupportResistance object is Not initialized !!!");
+		return RET_FAILURE_INCORRECT_OPERATION;	
+	}
+	price_limit_percentage = limit_percentage;
+	return RET_SUCCESS;
 }
 
 unsigned short FinanceAnalyzerStockSupportResistance::get_price_list(const StockPriceRefList& price_ref_list, std::list<float>& stock_price_list)const
@@ -347,9 +407,9 @@ unsigned short FinanceAnalyzerStockSupportResistance::get_price_string(const Sto
 		assert(stock_price_ref->price != NULL && "stock_price_ref.price should NOT be NULL");
 		assert(stock_price_ref->candle_stick != NULL && "stock_price_ref.candle_stick should NOT be NULL");
 		if (show_detail)
-			snprintf(buf, BUF_SIZE, "%.2f[%s]->", *(stock_price_ref->price), stock_price_ref->candle_stick->to_string());
+			snprintf(buf, BUF_SIZE, "%.2f[%s]->", stock_price_ref->get_price(), stock_price_ref->candle_stick->to_string());
 		else
-			snprintf(buf, BUF_SIZE, "%.2f->", *(stock_price_ref->price));
+			snprintf(buf, BUF_SIZE, "%.2f->", stock_price_ref->get_price());
 		stock_price_string += buf;
 		++iter;
 	}
