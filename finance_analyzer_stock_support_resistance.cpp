@@ -58,7 +58,7 @@ const char* StockCandleStick::to_string()
 ///////////////////////////////////////////////////////////////////////////////////
 
 
-StockPriceRef::StockPriceRef(float* stock_price, PSTOCK_CANDLE_STICK stock_candle_stick) :
+StockPriceRef::StockPriceRef(float stock_price, PSTOCK_CANDLE_STICK stock_candle_stick) :
 	price(stock_price),
 	candle_stick(stock_candle_stick)
 {
@@ -68,13 +68,13 @@ StockPriceRef::StockPriceRef(float* stock_price, PSTOCK_CANDLE_STICK stock_candl
 StockPriceRef::~StockPriceRef()
 {
 	candle_stick = NULL;
-	price = NULL;
+	// price = NULL;
 }
 
 float StockPriceRef::get_price()const
 {
-	assert(price != NULL && "price should NOT be NULL");
-	return *price;
+	// assert(price != NULL && "price should NOT be NULL");
+	return price;
 }
 
 bool candle_stick_support_compare (const PSTOCK_PRICE_REF a, const PSTOCK_PRICE_REF b)
@@ -234,7 +234,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::find_support_and_resistanc
 		PSTOCK_CANDLE_STICK stock_candle_stick = (PSTOCK_CANDLE_STICK)*iter;
 		assert(stock_candle_stick != NULL && "stock_candle_stick should NOT be NULL");
 // Check the highest price is the support or resistance 
-		PSTOCK_PRICE_REF stock_price_ref_highest = new StockPriceRef(&stock_candle_stick->highest_price, stock_candle_stick);
+		PSTOCK_PRICE_REF stock_price_ref_highest = new StockPriceRef(stock_candle_stick->highest_price, stock_candle_stick);
 		if (stock_price_ref_highest == NULL)
 		{
 			WRITE_ERROR("Fail to allocate memory: stock_price_ref_highest");
@@ -253,7 +253,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::find_support_and_resistanc
 				resistance_price_ref_list.push_back(stock_price_ref_highest);
 		}
 // Check the lowest price is the support or resistance 
-		PSTOCK_PRICE_REF stock_price_ref_lowest = new StockPriceRef(&stock_candle_stick->lowest_price, stock_candle_stick);
+		PSTOCK_PRICE_REF stock_price_ref_lowest = new StockPriceRef(stock_candle_stick->lowest_price, stock_candle_stick);
 		if (stock_price_ref_lowest == NULL)
 		{
 			WRITE_ERROR("Fail to allocate memory: stock_price_ref_lowest");

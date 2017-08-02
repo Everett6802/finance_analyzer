@@ -51,10 +51,10 @@ class StockPriceRef
 {
 	friend class FinanceAnalyzerStockSupportResistance;
 private:
-	float* price;
+	float price;
 	PSTOCK_CANDLE_STICK candle_stick;
 
-	StockPriceRef(float* stock_price, PSTOCK_CANDLE_STICK stock_candle_stick);
+	StockPriceRef(float stock_price, PSTOCK_CANDLE_STICK stock_candle_stick);
 	~StockPriceRef();
 public:
 	float get_price()const;
