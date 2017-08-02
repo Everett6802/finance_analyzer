@@ -27,8 +27,8 @@ class StockCandleStick
 private:
 	char time_string[TIME_STRING_SIZE];
 	// float open_price;
-	float highest_price;
 	float lowest_price;
+	float highest_price;
 	// float close_price;
 	long volume;
 	char* candle_stick_description;
@@ -36,8 +36,8 @@ private:
 	StockCandleStick(
 		const char* stock_time_string,
 		// float stock_open_price, 
-		float stock_highest_price, 
 		float stock_lowest_price, 
+		float stock_highest_price, 
 		// float stock_close_price, 
 		long stock_volume
 	);

@@ -17,14 +17,14 @@ const int StockCandleStick::CANDLE_STICK_DESCRIPTION_SIZE = 64;
 StockCandleStick::StockCandleStick(
 	const char* stock_time_string, 
 	// float stock_open_price, 
-	float stock_highest_price, 
 	float stock_lowest_price, 
+	float stock_highest_price, 
 	// float stock_close_price, 
 	long stock_volume
 	) :
 	// open_price(stock_open_price), 
-	highest_price(stock_highest_price), 
 	lowest_price(stock_lowest_price), 
+	highest_price(stock_highest_price), 
 	// close_price(stock_close_price), 
 	volume(stock_volume),
 	candle_stick_description(NULL)
