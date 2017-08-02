@@ -56,6 +56,7 @@ private:
 	// unsigned short thread_ret;
 
 	unsigned short thread_handler_internal();
+	unsigned short find_stock_support_resistance(const char* stock_support_resistance_entry);
 	unsigned short handle_command(int argc, char **argv);
 	unsigned short handle_get_finance_mode_command(int argc, char **argv);
 	unsigned short handle_set_finance_mode_command(int argc, char **argv);
@@ -66,6 +67,9 @@ private:
 	unsigned short handle_get_company_command(int argc, char **argv);
 	unsigned short handle_set_company_command(int argc, char **argv);
 	unsigned short handle_search_command(int argc, char **argv);
+	unsigned short handle_set_stock_support_resistance_filepath_command(int argc, char **argv);
+	unsigned short handle_find_stock_support_resistance_command(int argc, char **argv);
+	unsigned short handle_find_stock_support_resistance_verbose_command(int argc, char **argv);
 	unsigned short handle_help_command(int argc, char **argv);
 	unsigned short handle_exit_command(int argc, char **argv);
 	unsigned short print_to_console(std::string response)const;

@@ -25,6 +25,9 @@ enum InteractiveSessionCommandType
 	InteractiveSessionCommand_GetCompany,
 	InteractiveSessionCommand_SetCompany,
 	InteractiveSessionCommand_Search,
+	InteractiveSessionCommand_SetStockSupportResistanceFilepath,
+	InteractiveSessionCommand_FindStockSupportResistance,
+	InteractiveSessionCommand_FindStockSupportResistanceVerbose,
 	InteractiveSessionCommand_Help,
 	InteractiveSessionCommand_Exit,
 	InteractiveSessionCommandSize
@@ -41,6 +44,9 @@ static const char *interactive_session_command[InteractiveSessionCommandSize] =
 	"get_company",
 	"set_company",
 	"search",
+	"set_stock_support_resistance_filepath",
+	"find_stock_support_resistance",
+	"find_stock_support_resistance_verbose",
 	"help",
 	"exit"
 };
@@ -213,6 +219,45 @@ void FinanceAnalyzerInteractiveSession::notify_exit()
 // 	}
 	WRITE_DEBUG("The session is closed......");
 	pid = 0;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::find_stock_support_resistance(const char* stock_support_resistance_entry)
+{
+// Parse the data 
+	char* comma_pos = strchr(stock_support_resistance_entry, ':');
+	if (comma_pos == NULL)
+	{
+		snprintf(errmsg, ERRMSG_SIZE, "Incorrect argument for finding stock support and resistance: %s", stock_support_resistance_entry);
+		print_errmsg_and_exit(errmsg);
+	}
+	int comma_pos_index = comma_pos - stock_support_resistance_entry;
+	const int BUF_SIZE = 8;
+	char company_number_buf[BUF_SIZE];
+	char stock_close_price_buf[BUF_SIZE];
+	memset(company_number_buf, 0x0, sizeof(char) * BUF_SIZE);
+	memset(stock_close_price_buf, 0x0, sizeof(char) * BUF_SIZE);
+	memcpy(company_number_buf, stock_support_resistance_entry, sizeof(char) * comma_pos_index);
+	memcpy(stock_close_price_buf, &stock_support_resistance_entry[comma_pos_index + 1], sizeof(char) * (strlen(stock_support_resistance_entry) - (comma_pos_index + 1)));
+	float stock_close_price = atof(stock_close_price_buf);
+// Analyze data from each stock
+	price_support_and_resistance_result += (string("==================") + string(company_number_buf) + string("==================\nClose Price: ") + string(stock_close_price_buf) + string("\n"));
+	string price_support_resistance_string;
+	ret = manager->get_stock_price_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath, show_stock_support_resistance_detail);
+	if (CHECK_FAILURE(ret))
+	{
+		if (FAILURE_IS_NOT_FOUND(ret))
+		{
+			price_support_and_resistance_result += "No Data\n\n";
+			PRINT("WARNING: The %s support resistance file does NOT exist in %s\n", company_number_buf, price_support_and_resistance_root_folderpath);
+		}
+		else
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "Fail to find the support and resistance of the company: %s, due to: %s", company_number_buf, get_ret_description(ret));
+			print_errmsg_and_exit(errmsg);
+		}
+	}
+	else
+		price_support_and_resistance_result += (price_support_resistance_string + string("\n")) ;
 }
 
 void* FinanceAnalyzerInteractiveSession::thread_handler(void* void_ptr)
@@ -421,6 +466,9 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_command(int argc, char 
 		&FinanceAnalyzerInteractiveSession::handle_get_company_command,
 		&FinanceAnalyzerInteractiveSession::handle_set_company_command,
 		&FinanceAnalyzerInteractiveSession::handle_search_command,
+		&FinanceAnalyzerInteractiveSession::handle_set_stock_support_resistance_filepath_command,
+		&FinanceAnalyzerInteractiveSession::handle_find_stock_support_resistance_command,
+		&FinanceAnalyzerInteractiveSession::handle_find_stock_support_resistance_verbose_command,
 		&FinanceAnalyzerInteractiveSession::handle_help_command,
 		&FinanceAnalyzerInteractiveSession::handle_exit_command
 	};
@@ -649,6 +697,21 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_search_command(int argc
 	return RET_SUCCESS;
 }
 
+unsigned short FinanceAnalyzerInteractiveSession::handle_set_stock_support_resistance_filepath_command(int argc, char **argv)
+{
+
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_find_stock_support_resistance_command(int argc, char **argv)
+{
+
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_find_stock_support_resistance_verbose_command(int argc, char **argv)
+{
+
+}
+
 unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, char **argv)
 {
 	static const int BUF_SIZE = 256;
@@ -694,7 +757,11 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, 
 		usage_string += string("  Format 2: Company code number range (ex. 2100-2200)\n");
 		usage_string += string("  Format 3: Company group number (ex. [Gg]12)\n");
 		usage_string += string("  Format 4: Company group number range (ex. [Gg]12-15)\n");
-		usage_string += string("  Format 4: Company code number/number range/group/group range hybrid (ex. 2347,2100-2200,G12,2362,g2,1500-1510)\n");
+		usage_string += string("  Format 5: Company code number/number range/group/group range hybrid (ex. 2347,2100-2200,G12,2362,g2,1500-1510)\n");
+		usage_string += string("* find_stock_support_resistance\nDescription: Find the stock support and resistance of a specific company\n");
+		usage_string += string("* find_stock_support_resistance_verbose\nDescription: Find the stock support and resistance of a specific company in detail\n");
+		usage_string += string("  Format: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
+		// usage_string += string("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\nCaution: Max up to %d stock entry once", MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT);
 	}
 // Search
 	if (finance_analysis_mode == FinanceAnalysis_Market)
