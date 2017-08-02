@@ -28,6 +28,8 @@ static bool param_help = false;
 static bool param_silent = false;
 static const char* param_renew_company_profile_filepath = NULL;
 static bool param_renew_company = false;
+static const char* param_stock_support_resistance_filepath = NULL;
+static const char* param_find_stock_support_resistance = NULL;
 static char* param_log_severity_name = NULL;
 static char* param_syslog_severity_name = NULL;
 static char* param_test_case = NULL;
@@ -56,8 +58,9 @@ static unsigned short parse_param(int argc, char** argv);
 static unsigned short check_param();
 static unsigned short setup_param();
 static void show_usage_and_exit();
-static void renew_company_and_exit();
+static void renew_company_and_exit(const char* source_company_profile_conf_folderpath);
 static void run_test_cases_and_exit();
+static void find_stock_support_resistance_and_exit(const char* company_number_close_price_pair_list, const char* price_support_and_resistance_root_folderpath);
 static void show_search_result_and_exit();
 static int parse_show_res_type(const char* show_res_type_string);
 static const char* get_statistics_method_description(StatisticsMethod statistics_method);
@@ -139,6 +142,10 @@ void show_usage_and_exit()
 		PRINT("  Format 5: Company code number/number range/group/group range hybrid (ex. 2347,g3-5,G12,2362,g2,1500-1510)\n");
 		PRINT("--renew_company\nDescription: Renew the table of the company profile\nCaution: Exit after renewing the company profile\n");
 		PRINT("--renew_company_profile_filepath\nDescription: The company profile filepath for renewing the table of the company profile\nDefault: %s\n", DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH);
+		PRINT("--stock_support_resistance_filepath\nDescription: Set the file path for finding the stock support and resistance of a specific company\nDefault: %s\n", DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH);
+		PRINT("--find_stock_support_resistance\nDescription: Find the stock support and resistance of a specific company\n");
+		PRINT("  Format 1: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
+		PRINT("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\n");
 	}
 // Search
 	if (g_finance_analysis_mode == FinanceAnalysis_Market)
@@ -199,6 +206,8 @@ unsigned short parse_param(int argc, char** argv)
 		}
 		else if (strcmp(argv[index], "--renew_company_profile_filepath") == 0)
 		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'renew_company_profile_filepath' parameter");
 			param_renew_company_profile_filepath = argv[index + 1];
 			offset = 2;
 		}
@@ -206,6 +215,20 @@ unsigned short parse_param(int argc, char** argv)
 		{
 			param_renew_company = true;
 			offset = 1;
+		}
+		else if (strcmp(argv[index], "--stock_support_resistance_filepath") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'stock_support_resistance_filepath' parameter");
+			param_stock_support_resistance_filepath = argv[index + 1];
+			offset = 2;
+		}
+		else if (strcmp(argv[index], "--find_stock_support_resistance") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'find_stock_support_resistance' parameter");
+			param_find_stock_support_resistance = argv[index + 1];
+			offset = 2;
 		}
 		else if (strcmp(argv[index], "--silent") == 0)
 		{
@@ -446,12 +469,22 @@ unsigned short check_param()
 		if (param_renew_company)
 		{
 			param_renew_company = false;
-			PRINT("WARNING: the Renew Company argument is ignored in the Finance Stock mode\n");
+			PRINT("WARNING: the Renew Company argument is ignored in the Finance Market mode\n");
 		}
 		if (param_renew_company_profile_filepath != NULL)
 		{
 			param_renew_company_profile_filepath = NULL;
-			PRINT("WARNING: the Renew Company Profile Filepath argument is ignored in the Finance Stock mode\n");
+			PRINT("WARNING: the Renew Company Profile Filepath argument is ignored in the Finance Market mode\n");
+		}
+		if (param_stock_support_resistance_filepath != NULL)
+		{
+			param_stock_support_resistance_filepath = NULL;
+			PRINT("WARNING: the Stock Support Resistance Filepath argument is ignored in the Finance Market mode\n");
+		}
+		if (param_find_stock_support_resistance != NULL)
+		{
+			param_find_stock_support_resistance = NULL;
+			PRINT("WARNING: the Find Stock Support Resistance argument is ignored in the Finance Market mode\n");
 		}
 	}
 	else
@@ -475,6 +508,19 @@ unsigned short check_param()
 			{
 				param_renew_company_profile_filepath = NULL;
 				PRINT("WARNING: the Renew Company Profile Filepath argument is ignored when the Renew Company argument is False\n");
+			}
+		}
+		if (param_find_stock_support_resistance != NULL)
+		{
+			if (param_stock_support_resistance_filepath == NULL)
+				param_stock_support_resistance_filepath = DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH;
+		}
+		else
+		{
+			if (param_stock_support_resistance_filepath != NULL)
+			{
+				param_stock_support_resistance_filepath = NULL;
+				PRINT("WARNING: the Stock Support Resistance Filepath argument is ignored when the Find Stock Support Resistance argument is False\n");
 			}
 		}
 	}
@@ -629,7 +675,7 @@ void renew_company_and_exit(const char* source_company_profile_conf_folderpath)
 	ret = get_config_file_timestamp(timestamp_dst, COMPANY_PROFILE_CONF_FILENAME);
 	if (CHECK_FAILURE(ret))
 	{
-		if (ret != RET_FAILURE_NOT_FOUND)
+		if (!FAILURE_IS_NOT_FOUND(ret))
 		{
 			snprintf(errmsg, ERRMSG_SIZE, "Fails to get time stamp from destination file[%s], due to: %s", COMPANY_PROFILE_CONF_FILENAME, get_ret_description(ret));
 			print_errmsg_and_exit(errmsg);
@@ -651,6 +697,68 @@ void renew_company_and_exit(const char* source_company_profile_conf_folderpath)
 			print_errmsg_and_exit(errmsg);
 		}
 	}
+	exit(EXIT_SUCCESS);
+}
+
+void find_stock_support_resistance_and_exit(const char* company_number_close_price_pair_list, const char* price_support_and_resistance_root_folderpath)
+{
+	unsigned short ret = RET_SUCCESS;
+	assert(company_number_close_price_pair_list != NULL && "company_number_close_price_pair_list should NOT be NULL");
+	assert(price_support_and_resistance_root_folderpath != NULL && "price_support_and_resistance_root_folderpath should NOT be NULL");
+	int data_buf_size = strlen(company_number_close_price_pair_list) + 1;
+	char* data_buf = new char[data_buf_size];
+	if (data_buf == NULL)
+		throw bad_alloc();
+	memcpy(data_buf, company_number_close_price_pair_list, sizeof(char) * (data_buf_size + 1));
+
+	char *data_buf_tmp = data_buf;
+	char *data_buf_tmp_inner = NULL;
+	string price_support_and_resistance_result;
+	while ((data_buf_tmp_inner = strtok(data_buf_tmp, ",")) != NULL)
+	{
+		printf ("item: %s\n", data_buf_tmp_inner);
+// Parse the data 
+		char* comma_pos = strchr(data_buf_tmp_inner, ':');
+		if (comma_pos == NULL)
+		{
+			snprintf(errmsg, ERRMSG_SIZE, "Incorrect argument for finding stock support and resistance: %s", data_buf_tmp_inner);
+			print_errmsg_and_exit(errmsg);
+		}
+		int comma_pos_index = comma_pos - data_buf_tmp_inner;
+		const int BUF_SIZE = 8;
+		char company_number_buf[BUF_SIZE];
+		char stock_close_price_buf[BUF_SIZE];
+		memset(company_number_buf, 0x0, sizeof(char) * BUF_SIZE);
+		memset(stock_close_price_buf, 0x0, sizeof(char) * BUF_SIZE);
+		memcpy(company_number_buf, data_buf_tmp_inner, sizeof(char) * comma_pos_index);
+		memcpy(stock_close_price_buf, &data_buf_tmp_inner[comma_pos_index + 1], sizeof(char) * (strlen(data_buf_tmp_inner) - (comma_pos_index + 1)));
+		float stock_close_price = atof(stock_close_price_buf);
+// Analyze data from each stock
+		price_support_and_resistance_result += (string("==================") + string(company_number_buf) + string("==================\n"));
+		string price_support_resistance_string;
+		ret = manager->get_stock_price_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath);
+		if (CHECK_FAILURE(ret))
+		{
+			if (FAILURE_IS_NOT_FOUND(ret))
+			{
+				PRINT("The %s support resistance file does NOT exist in %s\n", company_number_buf, price_support_and_resistance_root_folderpath);
+			}
+			else
+			{
+				snprintf(errmsg, ERRMSG_SIZE, "Fail to find the support and resistance of the company: %s", company_number_buf);
+				print_errmsg_and_exit(errmsg);
+			}
+		}
+		price_support_and_resistance_result += (price_support_resistance_string + string("\n")) ;
+		if (data_buf_tmp != NULL)
+			data_buf_tmp = NULL;
+	}
+	if (data_buf != NULL)
+	{
+		delete[] data_buf;
+		data_buf = NULL;
+	}
+	PRINT("%s", price_support_and_resistance_result.c_str());
 	exit(EXIT_SUCCESS);
 }
 
@@ -751,7 +859,6 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
-
 int main(int argc, char** argv)
 {
 // Register the signals so that the process can exit gracefully
@@ -851,6 +958,8 @@ int main(int argc, char** argv)
 			snprintf(errmsg, ERRMSG_SIZE, "Fail to setup parameters, due to: %s", get_ret_description(ret));
 			goto FAIL;
 		}
+		if (param_find_stock_support_resistance != NULL)
+			find_stock_support_resistance_and_exit(param_find_stock_support_resistance, param_stock_support_resistance_filepath);
 		if (param_search)
 			show_search_result_and_exit();
     }

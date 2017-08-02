@@ -1,15 +1,16 @@
 #ifndef FINANCE_ANALYZER_MGR_H
 #define FINANCE_ANALYZER_MGR_H
 
+#include <string>
 #include "finance_analyzer_common.h"
 
 
 class FinanceAnalyzerDataCollectorBase;
-class FinanceAnalyzerDataStatisticsBase;
+class FinanceAnalyzerDataCalculatorBase;
 class FinanceAnalyzerMarketDataCollector;
-class FinanceAnalyzerMarketDataStatistics;
+class FinanceAnalyzerMarketDataCalculator;
 class FinanceAnalyzerStockDataCollector;
-class FinanceAnalyzerStockDataStatistics;
+class FinanceAnalyzerStockDataCalculator;
 
 ///////////////////////////////////////////////////////////////////////////////////
 // The Manager Interface
@@ -22,6 +23,9 @@ public:
 	virtual ~IFinanceAnalyzerMgr(){}
 	virtual unsigned short initialize()=0;
 	virtual unsigned short search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)=0;
+// Only exploited in the Market mode
+// Only exploited in the Stock mode
+	virtual unsigned short get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath=NULL, bool show_detail=false)=0;
 };
 typedef IFinanceAnalyzerMgr* PIFINANCE_ANALYZER_MGR;
 ///////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +40,7 @@ protected:
 
 	STRING_LIST email_address_list;
 	FinanceAnalyzerDataCollectorBase* data_collector;
-	// FinanceAnalyzerDataStatisticsBase* data_statistics;
+	FinanceAnalyzerDataCalculatorBase* data_calculator;
 
 	unsigned short parse_config();
 
@@ -58,7 +62,7 @@ class FinanceAnalyzerMarketMgr : public FinanceAnalyzerMgrBase
 {
 private:
 	FinanceAnalyzerMarketDataCollector* market_data_collector;
-	// FinanceAnalyzerMarketDataStatistics* market_data_statistics;
+	FinanceAnalyzerMarketDataCalculator* market_data_calculator;
 
 public:
 	static IFinanceAnalyzerMgr* create_instance();
@@ -69,6 +73,7 @@ public:
 	virtual unsigned short initialize();
 	virtual unsigned short search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map);
 
+	virtual unsigned short get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath=NULL, bool show_detail=false);
 };
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +83,9 @@ class FinanceAnalyzerStockMgr : public FinanceAnalyzerMgrBase
 {
 private:
 	FinanceAnalyzerStockDataCollector* stock_data_collector;
-	// FinanceAnalyzerStockDataStatistics* stock_data_statistics;
+	FinanceAnalyzerStockDataCalculator* stock_data_calculator;
+
+	std::string stock_price_support_resistance_root_folderpath;
 
 public:
 	static IFinanceAnalyzerMgr* create_instance();
@@ -88,6 +95,8 @@ public:
 
 	virtual unsigned short initialize();
 	virtual unsigned short search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map);
+
+	virtual unsigned short get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath=NULL, bool show_detail=false);
 };
 ///////////////////////////////////////////////////////////////////////////////////
 

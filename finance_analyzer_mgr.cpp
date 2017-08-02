@@ -5,7 +5,7 @@
 #include "finance_analyzer_mgr.h"
 // #include "finance_analyzer_sql_reader.h"
 #include "finance_analyzer_data_collector.h"
-#include "finance_analyzer_data_statistics.h"
+#include "finance_analyzer_data_calculator.h"
 // #include "finance_analyzer_workday_canlendar.h"
 // #include "finance_analyzer_database_time_range.h"
 #include "finance_analyzer_output.h"
@@ -18,24 +18,22 @@ DECLARE_MSG_DUMPER_PARAM()
 ///////////////////////////////////////////////////////////////////////////////////
 // The Manager Base Class
 FinanceAnalyzerMgrBase::FinanceAnalyzerMgrBase() :
-	data_collector(NULL)
-	// data_statistics(NULL)
+	data_collector(NULL),
+	data_calculator(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
-	// data_statistics = new FinanceAnalyzerDataStatistics();
-	// if (data_statistics == NULL)
-	// 	throw bad_alloc();
+// Caution: Data Collector/ Data Calculator is allocated in the derived class
 	// IMPLEMENT_WORKDAY_CANLENDAR()
 	// IMPLEMENT_DATABASE_TIME_RANGE()
 }
 
 FinanceAnalyzerMgrBase::~FinanceAnalyzerMgrBase()
 {
-	// if (data_statistics != NULL)
-	// {
-	// 	delete data_statistics;
-	// 	data_statistics = NULL;
-	// }
+	if (data_calculator != NULL)
+	{
+		delete data_calculator;
+		data_calculator = NULL;
+	}
 	if (data_collector != NULL)
 	{
 		delete data_collector;
@@ -171,10 +169,16 @@ FinanceAnalyzerMarketMgr::FinanceAnalyzerMarketMgr() :
 	if (market_data_collector == NULL)
 		throw bad_alloc();
 	data_collector = market_data_collector;
+	market_data_calculator = new FinanceAnalyzerMarketDataCalculator();
+	if (market_data_calculator == NULL)
+		throw bad_alloc();
+	data_calculator = market_data_calculator;
 }
 
 FinanceAnalyzerMarketMgr::~FinanceAnalyzerMarketMgr()
 {
+// Caution: Data Collector/ Data Calculator is released in the base class
+	market_data_calculator = NULL;
 	market_data_collector = NULL;
 }
 
@@ -191,6 +195,12 @@ unsigned short FinanceAnalyzerMarketMgr::search(PSEARCH_RULE_SET search_rule_set
 	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
 	return RET_SUCCESS;
 }
+
+unsigned short FinanceAnalyzerMarketMgr::get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath, bool show_detail)
+{
+	throw logic_error(string("Only supported in the Stock mode"));
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -208,11 +218,17 @@ FinanceAnalyzerStockMgr::FinanceAnalyzerStockMgr() :
 	if (stock_data_collector == NULL)
 		throw bad_alloc();
 	data_collector = stock_data_collector;
+	stock_data_calculator = new FinanceAnalyzerStockDataCalculator();
+	if (stock_data_calculator == NULL)
+		throw bad_alloc();
+	data_calculator = stock_data_calculator;
 }
 
 
 FinanceAnalyzerStockMgr::~FinanceAnalyzerStockMgr()
 {
+// Caution: Data Collector/ Data Calculator is released in the base class
+	stock_data_calculator = NULL;
 	stock_data_collector = NULL;
 }
 
@@ -229,4 +245,22 @@ unsigned short FinanceAnalyzerStockMgr::search(PSEARCH_RULE_SET search_rule_set,
 	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
 	return RET_SUCCESS;
 }
+
+unsigned short FinanceAnalyzerStockMgr::get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath, bool show_detail)
+{
+	unsigned short ret = RET_SUCCESS;
+// Setup the filepath 
+	if (stock_price_support_resistance_folderpath != NULL)
+	{
+		ret = stock_data_calculator->set_price_support_resistance_folderpath(string(stock_price_support_resistance_folderpath));	
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+// Get the stock support and resistance string 
+	ret = stock_data_calculator->get_price_support_resistance_string(company_code_number, stock_close_price, price_support_resistance_string, show_detail);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	return ret;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////

@@ -39,6 +39,7 @@ const char* ANALYZER_PROJECT_NAME = "finance_analyzer";
 const char* FINANCE_SCRAPY_ROOT_FOLDERPATH = "/opt/finance/finance_scrapy_python";
 const char* FINANCE_RECORDER_ROOT_FOLDERPATH = "/opt/finance/finance_recorder_java";
 const char* FINANCE_ANALYZER_ROOT_FOLDERPATH = "/opt/finance/finance_analyzer";
+const char* DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH = "~/price_stock_resistance";
 const char* DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH = "/opt/finance/finance_scrapy_python/conf"; 
 // const char* DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH = "/home/super/Projects/finance_scrapy_python/conf"; 
 const char* CONFIG_TIMESTAMP_STRING_PREFIX = "#time@";

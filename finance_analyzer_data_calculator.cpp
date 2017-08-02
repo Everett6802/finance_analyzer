@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stdexcept>
-#include "finance_analyzer_data_statistics.h"
+#include "finance_analyzer_data_calculator.h"
 // #include "finance_analyzer_mgr.h"
 #include "finance_analyzer_algorithm.h"
 // #include "finance_analyzer_sql_reader.h"
@@ -14,8 +14,8 @@ static const int RES_INFO_LENGTH = 1024;
 // static char res_info[RES_INFO_LENGTH];
 
 ///////////////////////////////////////////////////////////////////////////////////
-// The Data Statistics Base Class
-unsigned short FinanceAnalyzerDataStatisticsBase::generate_general_query_set(QuerySet& query_set)
+// The Data Calculator Base Class
+unsigned short FinanceAnalyzerDataCalculatorBase::generate_general_query_set(QuerySet& query_set)
 {
 /*
 * 臺股指數及成交量
@@ -62,12 +62,12 @@ unsigned short FinanceAnalyzerDataStatisticsBase::generate_general_query_set(Que
 	return ret;
 }
 
-const PQUERY_SET FinanceAnalyzerDataStatisticsBase::get_general_query_set()
+const PQUERY_SET FinanceAnalyzerDataCalculatorBase::get_general_query_set()
 {
 	static QuerySet query_set;
 	// if (!query_set.is_add_query_done())
 	// {
-	// 	unsigned short ret = FinanceAnalyzerDataStatisticsBase::generate_general_query_set(query_set);
+	// 	unsigned short ret = FinanceAnalyzerDataCalculatorBase::generate_general_query_set(query_set);
 	// 	if (CHECK_FAILURE(ret))
 	// 	{
 	// 		const int BUF_SIZE = 256;
@@ -81,21 +81,21 @@ const PQUERY_SET FinanceAnalyzerDataStatisticsBase::get_general_query_set()
 	return &query_set;
 }
 
-FinanceAnalyzerDataStatisticsBase::FinanceAnalyzerDataStatisticsBase()
+FinanceAnalyzerDataCalculatorBase::FinanceAnalyzerDataCalculatorBase()
 {
 	IMPLEMENT_MSG_DUMPER()
 	IMPLEMENT_WORKDAY_CANLENDAR()
 	IMPLEMENT_DATABASE_TIME_RANGE()
 }
 
-FinanceAnalyzerDataStatisticsBase::~FinanceAnalyzerDataStatisticsBase()
+FinanceAnalyzerDataCalculatorBase::~FinanceAnalyzerDataCalculatorBase()
 {
 	RELEASE_DATABASE_TIME_RANGE()
 	RELEASE_WORKDAY_CANLENDAR()
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short FinanceAnalyzerDataStatisticsBase::initialize(STRING_LIST& src_email_address_list)
+unsigned short FinanceAnalyzerDataCalculatorBase::initialize(STRING_LIST& src_email_address_list)
 {
 	unsigned short ret = RET_SUCCESS;
 	ret = copy_email_adress_list(email_address_list);
@@ -104,7 +104,7 @@ unsigned short FinanceAnalyzerDataStatisticsBase::initialize(STRING_LIST& src_em
 	return ret;
 }
 
-unsigned short FinanceAnalyzerDataStatisticsBase::copy_email_adress_list(STRING_LIST& src_email_address_list)
+unsigned short FinanceAnalyzerDataCalculatorBase::copy_email_adress_list(STRING_LIST& src_email_address_list)
 {
 	for (STRING_LIST::const_iterator iter = src_email_address_list.begin() ; iter != src_email_address_list.end() ; iter++)
 	{
@@ -114,7 +114,7 @@ unsigned short FinanceAnalyzerDataStatisticsBase::copy_email_adress_list(STRING_
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerDataStatisticsBase::show_result(string& result_str, int show_result_type, const char* data_description)const
+unsigned short FinanceAnalyzerDataCalculatorBase::show_result(string& result_str, int show_result_type, const char* data_description)const
 {
 	// assert(time_cfg != NULL && "time_cfg should NOT be NULL");
 	unsigned short ret = RET_SUCCESS;
@@ -146,7 +146,7 @@ unsigned short FinanceAnalyzerDataStatisticsBase::show_result(string& result_str
 	{
 		if (data_description == NULL)
 		{
-			static const char* DEF_EMAIL_TITLE = "Finance Statistics";
+			static const char* DEF_EMAIL_TITLE = "Finance Calculator";
 			data_description = DEF_EMAIL_TITLE;
 		}
 		for (STRING_LIST::const_iterator iter = email_address_list.begin() ; iter != email_address_list.end() ; iter++)
@@ -198,17 +198,17 @@ unsigned short FinanceAnalyzerDataStatisticsBase::show_result(string& result_str
 	return RET_SUCCESS;
 }
 
-// void FinanceAnalyzerDataStatisticsBase::enable_res_info(bool enable)
+// void FinanceAnalyzerDataCalculatorBase::enable_res_info(bool enable)
 // {
 // 	need_res_info = enable;
 // }
 
-// const char* FinanceAnalyzerDataStatisticsBase::get_last_res_info()const
+// const char* FinanceAnalyzerDataCalculatorBase::get_last_res_info()const
 // {
 // 	return res_info;
 // }
 
-const char* FinanceAnalyzerDataStatisticsBase::get_description_head(const PRESULT_SET result_set, const PRESULT_SET_ACCESS_PARAM result_set_access_param, const PTIME_RANGE_CFG time_range_cfg)const
+const char* FinanceAnalyzerDataCalculatorBase::get_description_head(const PRESULT_SET result_set, const PRESULT_SET_ACCESS_PARAM result_set_access_param, const PTIME_RANGE_CFG time_range_cfg)const
 {
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	assert(result_set_access_param != NULL && "result_set_access_param should NOT be NULL");
@@ -250,7 +250,7 @@ const char* FinanceAnalyzerDataStatisticsBase::get_description_head(const PRESUL
 	return buf;
 }
 
-const char* FinanceAnalyzerDataStatisticsBase::get_no_data_description(int source_type_index, int field_index, const PTIME_RANGE_CFG time_range_cfg)const
+const char* FinanceAnalyzerDataCalculatorBase::get_no_data_description(int source_type_index, int field_index, const PTIME_RANGE_CFG time_range_cfg)const
 {
 	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
 	assert(time_range_cfg->get_start_time() != NULL && "time_range_cfg::start_time should NOT be NULL");
@@ -267,7 +267,7 @@ const char* FinanceAnalyzerDataStatisticsBase::get_no_data_description(int sourc
 	return buf;
 }
 
-unsigned short FinanceAnalyzerDataStatisticsBase::get_restricted_time_range(int source_type_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const
+unsigned short FinanceAnalyzerDataCalculatorBase::get_restricted_time_range(int source_type_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const
 {
 	set<int> source_type_index_set;
 	// int source_type_index, field_index;
@@ -310,7 +310,7 @@ unsigned short FinanceAnalyzerDataStatisticsBase::get_restricted_time_range(int 
 	return ret;
 }
 
-// unsigned short FinanceAnalyzerDataStatisticsBase::query_from_database(int source_type_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSetMap>& sp_result_set_map)const
+// unsigned short FinanceAnalyzerDataCalculatorBase::query_from_database(int source_type_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSetMap>& sp_result_set_map)const
 // {
 // 	unsigned short ret = RET_SUCCESS;
 // 	SmartPointer<QuerySet> sp_query_set(new QuerySet());
@@ -333,21 +333,21 @@ unsigned short FinanceAnalyzerDataStatisticsBase::get_restricted_time_range(int 
 // 	return ret;
 // }
 
-unsigned short FinanceAnalyzerDataStatisticsBase::get_statistics_result(StatisticsMethod statistics_method, int source_type_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, string& result_str)const
+unsigned short FinanceAnalyzerDataCalculatorBase::get_statistics_result(StatisticsMethod statistics_method, int source_type_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, string& result_str)const
 {
-	typedef unsigned short (FinanceAnalyzerDataStatisticsBase::*get_result_str_func_ptr)(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
-	static get_result_str_func_ptr get_result_str_func_array[] =
-	{
-		&FinanceAnalyzerDataStatisticsBase::get_range_value_result_str,
-		&FinanceAnalyzerDataStatisticsBase::get_average_result_str,
-		&FinanceAnalyzerDataStatisticsBase::get_standard_deviation_result_str
-	};
+	// typedef unsigned short (FinanceAnalyzerDataCalculatorBase::*get_result_str_func_ptr)(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
+	// static get_result_str_func_ptr get_result_str_func_array[] =
+	// {
+	// 	&FinanceAnalyzerDataCalculatorBase::get_range_value_result_str,
+	// 	&FinanceAnalyzerDataCalculatorBase::get_average_result_str,
+	// 	&FinanceAnalyzerDataCalculatorBase::get_standard_deviation_result_str
+	// };
 
-	static const int BUF_SIZE = 1024;
-	static char buf[BUF_SIZE];
+	// static const int BUF_SIZE = 1024;
+	// static char buf[BUF_SIZE];
 
-	unsigned short ret = RET_SUCCESS;
-	int method_index = statistics_method - StatisticsFormula_Start;
+	// unsigned short ret = RET_SUCCESS;
+	// int method_index = statistics_method - StatisticsFormula_Start;
 // // Find the time range of this database
 // 	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
 // 	ret = get_restricted_time_range(source_type_index, field_index, time_range_cfg, sp_restricted_time_range_cfg);
@@ -394,7 +394,7 @@ unsigned short FinanceAnalyzerDataStatisticsBase::get_statistics_result(Statisti
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerDataStatisticsBase::get_range_value_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const
+unsigned short FinanceAnalyzerDataCalculatorBase::get_range_value_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const
 {
 	assert(data_array != NULL && "data_array should NOT be NULL");
 
@@ -448,7 +448,7 @@ unsigned short FinanceAnalyzerDataStatisticsBase::get_range_value_result_str(con
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerDataStatisticsBase::get_average_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const
+unsigned short FinanceAnalyzerDataCalculatorBase::get_average_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const
 {
 	assert(data_array != NULL && "data_array should NOT be NULL");
 	static const int STATISTICS_RESULT_DESCRIPTION_SIZE = 512;
@@ -469,7 +469,7 @@ unsigned short FinanceAnalyzerDataStatisticsBase::get_average_result_str(const P
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerDataStatisticsBase::get_standard_deviation_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const
+unsigned short FinanceAnalyzerDataCalculatorBase::get_standard_deviation_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const
 {
 	assert(data_array != NULL && "data_array should NOT be NULL");
 	static const int STATISTICS_RESULT_DESCRIPTION_SIZE = 512;
@@ -490,15 +490,15 @@ unsigned short FinanceAnalyzerDataStatisticsBase::get_standard_deviation_result_
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerDataStatisticsBase::calculate_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)const
+unsigned short FinanceAnalyzerDataCalculatorBase::calculate_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)const
 {
-	static const char* DEF_DESCRIPTION_FORMAT = "***** %s Analysis Result *****";
-	static const int DESCRIPTION_SIZE = 256;
-	static char description[DESCRIPTION_SIZE];
+	// static const char* DEF_DESCRIPTION_FORMAT = "***** %s Analysis Result *****";
+	// static const int DESCRIPTION_SIZE = 256;
+	// static char description[DESCRIPTION_SIZE];
 
-	int index = statistics_method - StatisticsFormula_Start;
+	// int index = statistics_method - StatisticsFormula_Start;
 	unsigned short ret = RET_SUCCESS;
-	// const PQUERY_SET query_set = FinanceAnalyzerDataStatisticsBase::get_general_query_set();
+	// const PQUERY_SET query_set = FinanceAnalyzerDataCalculatorBase::get_general_query_set();
 	// string result_str = "";
 	// PINT_SET source_type_index_set = query_set->get_source_type_index_set();
 	// INT_SET_ITER iter = source_type_index_set->begin();
@@ -535,23 +535,47 @@ unsigned short FinanceAnalyzerDataStatisticsBase::calculate_statistics(Statistic
 ///////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////
-// The Market Data Statistics Class
-FinanceAnalyzerMarketDataStatistics::FinanceAnalyzerMarketDataStatistics()
+// The Market Data Calculator Class
+FinanceAnalyzerMarketDataCalculator::FinanceAnalyzerMarketDataCalculator()
 {
 }
 
-FinanceAnalyzerMarketDataStatistics::~FinanceAnalyzerMarketDataStatistics()
+FinanceAnalyzerMarketDataCalculator::~FinanceAnalyzerMarketDataCalculator()
 {
 }
 ///////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////
-// The Stock Data Statistics Class
-FinanceAnalyzerStockDataStatistics::FinanceAnalyzerStockDataStatistics()
+// The Stock Data Calculator Class
+FinanceAnalyzerStockDataCalculator::FinanceAnalyzerStockDataCalculator() :
+	price_support_resistance_folderpath(DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH)
 {
 }
 
-FinanceAnalyzerStockDataStatistics::~FinanceAnalyzerStockDataStatistics()
+FinanceAnalyzerStockDataCalculator::~FinanceAnalyzerStockDataCalculator()
 {
+}
+
+unsigned short FinanceAnalyzerStockDataCalculator::set_price_support_resistance_folderpath(const std::string& stock_price_support_resistance_folderpath)
+{
+	price_support_resistance_folderpath = stock_price_support_resistance_folderpath;
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerStockDataCalculator::get_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, string& price_support_resistance_string, bool show_detail)
+{
+	static const int FILEPATH_BUF_SIZE = 256;
+	static char filepath_buf[FILEPATH_BUF_SIZE];
+	unsigned short ret = RET_SUCCESS;
+	snprintf(filepath_buf, FILEPATH_BUF_SIZE, "%s/%s", price_support_resistance_folderpath.c_str(), company_code_number.c_str());
+	WRITE_FORMAT_DEBUG("Find support and resistance from: %s", filepath_buf);
+	FinanceAnalyzerStockSupportResistance stock_support_resistance;
+	ret = stock_support_resistance.initialize(filepath_buf, stock_close_price);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	ret = stock_support_resistance.get_support_resistance_price_full_string(price_support_resistance_string, show_detail);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	return ret;
 }
 ///////////////////////////////////////////////////////////////////////////////////

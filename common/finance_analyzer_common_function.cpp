@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pwd.h>
 #include <string.h>
 #include <stdexcept>
 #include <new>
@@ -744,4 +745,33 @@ unsigned short copy_config_file(const char* config_filename, const char* src_con
 	snprintf(src_filepath, SRC_FILEPATH_SIZE, "%s/%s", src_config_folderpath, config_filename);
 	CREATE_PROJECT_FILEPATH(dst_filepath, CONFIG_FOLDER_NAME, config_filename);
 	return copy_file(src_filepath, dst_filepath);
+}
+
+unsigned short get_absolute_filepath_from_username(const char* relative_filepath, char** absolute_filepath)
+{
+	assert(relative_filepath != NULL && "relative_filepath should NOT be NULL");
+	assert(absolute_filepath != NULL && "absolute_filepath should NOT be NULL");
+	uid_t uid = geteuid();
+	struct passwd *pw = getpwuid(uid);
+	// printf("%s\n", pw->pw_name);
+	// if (relative_filepath[0] != '~')
+	// {
+	// 	STATIC_WRITE_FORMAT_ERROR("The filepath[%s] does NOT start from ~", relative_filepath);
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
+	// if (relative_filepath[1] != '/')
+	// {
+	// 	STATIC_WRITE_FORMAT_ERROR("The filepath[%s] is NOT correct format", relative_filepath);
+	// 	return RET_FAILURE_INVALID_ARGUMENT;
+	// }
+	static const int ABSOLUTE_FILEPATH_BUF_SIZE = 256;
+	char* absolute_filepath_tmp = new char[ABSOLUTE_FILEPATH_BUF_SIZE];
+	if (absolute_filepath_tmp == NULL)
+		throw bad_alloc();
+	if (strcmp("root", pw->pw_name) == 0)
+		snprintf(absolute_filepath_tmp, ABSOLUTE_FILEPATH_BUF_SIZE, "/%s", relative_filepath);
+	else
+		snprintf(absolute_filepath_tmp, ABSOLUTE_FILEPATH_BUF_SIZE, "/home/%s/%s", pw->pw_name, relative_filepath);	
+	*absolute_filepath = absolute_filepath_tmp;
+	return RET_SUCCESS;
 }

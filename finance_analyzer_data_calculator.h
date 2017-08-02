@@ -1,14 +1,16 @@
-#ifndef FINANCE_ANALYZER_DATA_STATISTICS_H
-#define FINANCE_ANALYZER_DATA_STATISTICS_H
+#ifndef FINANCE_ANALYZER_DATA_CALCULATOR_H
+#define FINANCE_ANALYZER_DATA_CALCULATOR_H
 
+#include <string>
 #include "finance_analyzer_common.h"
 #include "finance_analyzer_workday_canlendar.h"
 #include "finance_analyzer_database_time_range.h"
+#include "finance_analyzer_stock_support_resistance.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////
-// The Data Statistics Base Class
-class FinanceAnalyzerDataStatisticsBase
+// The Data Calculator Base Class
+class FinanceAnalyzerDataCalculatorBase
 {
 protected:
 	static unsigned short generate_general_query_set(QuerySet& query_set);
@@ -35,8 +37,8 @@ private:
 	unsigned short get_standard_deviation_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
 	
 public:
-	FinanceAnalyzerDataStatisticsBase();
-	~FinanceAnalyzerDataStatisticsBase();
+	FinanceAnalyzerDataCalculatorBase();
+	~FinanceAnalyzerDataCalculatorBase();
 
 	unsigned short initialize(STRING_LIST& src_email_address_list);
 
@@ -47,28 +49,32 @@ public:
 ///////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////
-// The Market Data Statistics Class
-class FinanceAnalyzerMarketDataStatistics : public FinanceAnalyzerDataStatisticsBase
+// The Market Data Calculator Class
+class FinanceAnalyzerMarketDataCalculator : public FinanceAnalyzerDataCalculatorBase
 {
 private:
 
 public:
-	FinanceAnalyzerMarketDataStatistics();
-	~FinanceAnalyzerMarketDataStatistics();
+	FinanceAnalyzerMarketDataCalculator();
+	~FinanceAnalyzerMarketDataCalculator();
 };
-typedef FinanceAnalyzerMarketDataStatistics* PFINANCE_ANALYZER_MARKET_DATA_STATISTICS;
+typedef FinanceAnalyzerMarketDataCalculator* PFINANCE_ANALYZER_MARKET_DATA_STATISTICS;
 ///////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////
-// The Stock Data Statistics Class
-class FinanceAnalyzerStockDataStatistics : public FinanceAnalyzerDataStatisticsBase
+// The Stock Data Calculator Class
+class FinanceAnalyzerStockDataCalculator : public FinanceAnalyzerDataCalculatorBase
 {
 private:
+	std::string price_support_resistance_folderpath;
 
 public:
-	FinanceAnalyzerStockDataStatistics();
-	~FinanceAnalyzerStockDataStatistics();
+	FinanceAnalyzerStockDataCalculator();
+	~FinanceAnalyzerStockDataCalculator();
+
+	unsigned short set_price_support_resistance_folderpath(const std::string& stock_price_support_resistance_folderpath);
+	unsigned short get_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, bool show_detail=false);
 };
-typedef FinanceAnalyzerStockDataStatistics* PFINANCE_ANALYZER_STOCK_DATA_STATISTICS;
+typedef FinanceAnalyzerStockDataCalculator* PFINANCE_ANALYZER_STOCK_DATA_STATISTICS;
 ///////////////////////////////////////////////////////////////////////////////////
 #endif
