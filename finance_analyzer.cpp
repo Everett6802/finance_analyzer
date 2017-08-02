@@ -43,6 +43,7 @@ static bool param_search = false;
 
 static const int ERRMSG_SIZE = 256;
 static char errmsg[ERRMSG_SIZE];
+static const int MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT = 32;
 static FinanceAnalysisMode g_finance_analysis_mode = FinanceAnalysis_None;
 static PIFINANCE_ANALYZER_MGR manager = NULL;
 static PSEARCH_RULE_SET search_rule_set = NULL;
@@ -145,7 +146,7 @@ void show_usage_and_exit()
 		PRINT("--stock_support_resistance_filepath\nDescription: Set the file path for finding the stock support and resistance of a specific company\nDefault: %s\n", DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH);
 		PRINT("--find_stock_support_resistance\nDescription: Find the stock support and resistance of a specific company\n");
 		PRINT("  Format 1: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
-		PRINT("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\n");
+		PRINT("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\nCaution: Max up to %d stock entry once", MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT);
 	}
 // Search
 	if (g_finance_analysis_mode == FinanceAnalysis_Market)
@@ -712,26 +713,44 @@ void find_stock_support_resistance_and_exit(const char* company_number_close_pri
 	memcpy(data_buf, company_number_close_price_pair_list, sizeof(char) * (data_buf_size + 1));
 
 	char *data_buf_tmp = data_buf;
-	char *data_buf_tmp_inner = NULL;
-	string price_support_and_resistance_result;
-	while ((data_buf_tmp_inner = strtok(data_buf_tmp, ",")) != NULL)
+	int stock_support_resistance_count = 0;
+	char* stock_support_resistance_entry_array[MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT];
+// Parse the stock entry
+	char *data_buf_entry = NULL;
+	while ((data_buf_entry = strtok(data_buf_tmp, ",")) != NULL)
 	{
-		printf ("item: %s\n", data_buf_tmp_inner);
+		if (stock_support_resistance_count == MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT)
+		{
+			PRINT("The stock entry[%s] is IGNORED......\n", data_buf_entry);
+		}
+		else
+		{
+			stock_support_resistance_entry_array[stock_support_resistance_count++] = data_buf_entry;
+		}
+		if (data_buf_tmp != NULL)
+			data_buf_tmp = NULL;
+	}
+// Calculate the support and resistance for each entry
+	string price_support_and_resistance_result;
+	for (int i = 0 ; i < stock_support_resistance_count ; i++)
+	{
+		char* stock_support_resistance_entry = stock_support_resistance_entry_array[i];
+		// printf ("item: %s\n", stock_support_resistance_entry);
 // Parse the data 
-		char* comma_pos = strchr(data_buf_tmp_inner, ':');
+		char* comma_pos = strchr(stock_support_resistance_entry, ':');
 		if (comma_pos == NULL)
 		{
-			snprintf(errmsg, ERRMSG_SIZE, "Incorrect argument for finding stock support and resistance: %s", data_buf_tmp_inner);
+			snprintf(errmsg, ERRMSG_SIZE, "Incorrect argument for finding stock support and resistance: %s", stock_support_resistance_entry);
 			print_errmsg_and_exit(errmsg);
 		}
-		int comma_pos_index = comma_pos - data_buf_tmp_inner;
+		int comma_pos_index = comma_pos - stock_support_resistance_entry;
 		const int BUF_SIZE = 8;
 		char company_number_buf[BUF_SIZE];
 		char stock_close_price_buf[BUF_SIZE];
 		memset(company_number_buf, 0x0, sizeof(char) * BUF_SIZE);
 		memset(stock_close_price_buf, 0x0, sizeof(char) * BUF_SIZE);
-		memcpy(company_number_buf, data_buf_tmp_inner, sizeof(char) * comma_pos_index);
-		memcpy(stock_close_price_buf, &data_buf_tmp_inner[comma_pos_index + 1], sizeof(char) * (strlen(data_buf_tmp_inner) - (comma_pos_index + 1)));
+		memcpy(company_number_buf, stock_support_resistance_entry, sizeof(char) * comma_pos_index);
+		memcpy(stock_close_price_buf, &stock_support_resistance_entry[comma_pos_index + 1], sizeof(char) * (strlen(stock_support_resistance_entry) - (comma_pos_index + 1)));
 		float stock_close_price = atof(stock_close_price_buf);
 // Analyze data from each stock
 		price_support_and_resistance_result += (string("==================") + string(company_number_buf) + string("==================\n"));
@@ -741,17 +760,17 @@ void find_stock_support_resistance_and_exit(const char* company_number_close_pri
 		{
 			if (FAILURE_IS_NOT_FOUND(ret))
 			{
-				PRINT("The %s support resistance file does NOT exist in %s\n", company_number_buf, price_support_and_resistance_root_folderpath);
+				price_support_and_resistance_result += "No Data\n\n";
+				PRINT("WARNING: The %s support resistance file does NOT exist in %s\n", company_number_buf, price_support_and_resistance_root_folderpath);
 			}
 			else
 			{
-				snprintf(errmsg, ERRMSG_SIZE, "Fail to find the support and resistance of the company: %s", company_number_buf);
+				snprintf(errmsg, ERRMSG_SIZE, "Fail to find the support and resistance of the company: %s, due to: %s", company_number_buf, get_ret_description(ret));
 				print_errmsg_and_exit(errmsg);
 			}
 		}
-		price_support_and_resistance_result += (price_support_resistance_string + string("\n")) ;
-		if (data_buf_tmp != NULL)
-			data_buf_tmp = NULL;
+		else
+			price_support_and_resistance_result += (price_support_resistance_string + string("\n")) ;
 	}
 	if (data_buf != NULL)
 	{

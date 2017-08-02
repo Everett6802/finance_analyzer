@@ -197,7 +197,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 		}
 		if (entry_element_count != CONFIG_CANDLE_STICK_ENTRY_ELEMENT_COUNT)
 		{
-			WRITE_FORMAT_ERROR("Incorrect Candle Stick Entry Element Count, expected: %d, actual: %d", CONFIG_CANDLE_STICK_ENTRY_ELEMENT_COUNT, entry_element_count);
+			WRITE_FORMAT_ERROR("Incorrect Candle Stick Entry[%s] Element Count, expected: %d, actual: %d", line_string, CONFIG_CANDLE_STICK_ENTRY_ELEMENT_COUNT, entry_element_count);
 			return RET_FAILURE_INCORRECT_CONFIG;
 		}
 // Allocate the memory to keep track of the entry

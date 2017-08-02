@@ -303,7 +303,7 @@ unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char*
 	int last_character_in_string_index = 0;
 	while (fgets(line_buf, BUF_SIZE, fp) != NULL) 
 	{
-		if (line_buf[0] == '\n' && line_buf[0] == '#')
+		if (line_buf[0] == '\n' || line_buf[0] == '#')
 			continue;
 		last_character_in_string_index = strlen(line_buf) - 1;
 		if (line_buf[last_character_in_string_index] == '\n')
