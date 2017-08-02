@@ -41,7 +41,7 @@ StockCandleStick::~StockCandleStick()
 	}
 }
 
-const char* StockCandleStick::get_candle_stick_description()
+const char* StockCandleStick::to_string()
 {
 	if (candle_stick_description == NULL)
 	{
@@ -338,7 +338,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::get_price_string(const Sto
 		WRITE_ERROR("The FinanceAnalyzerStockSupportResistance object is Not initialized !!!");
 		return RET_FAILURE_INCORRECT_OPERATION;	
 	}
-	static const int BUF_SIZE = 16;
+	static const int BUF_SIZE = 128;
 	static char buf[BUF_SIZE];
 	StockPriceRefList::const_iterator iter = price_ref_list.begin();
 	while (iter != price_ref_list.end())
@@ -347,7 +347,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::get_price_string(const Sto
 		assert(stock_price_ref->price != NULL && "stock_price_ref.price should NOT be NULL");
 		assert(stock_price_ref->candle_stick != NULL && "stock_price_ref.candle_stick should NOT be NULL");
 		if (show_detail)
-			snprintf(buf, BUF_SIZE, "%.2f[%s]->", *(stock_price_ref->price), stock_price_ref->candle_stick->get_candle_stick_description());
+			snprintf(buf, BUF_SIZE, "%.2f[%s]->", *(stock_price_ref->price), stock_price_ref->candle_stick->to_string());
 		else
 			snprintf(buf, BUF_SIZE, "%.2f->", *(stock_price_ref->price));
 		stock_price_string += buf;

@@ -30,6 +30,7 @@ static const char* param_renew_company_profile_filepath = NULL;
 static bool param_renew_company = false;
 static const char* param_stock_support_resistance_filepath = NULL;
 static const char* param_find_stock_support_resistance = NULL;
+static const char* param_find_stock_support_resistance_verbose = NULL;
 static char* param_log_severity_name = NULL;
 static char* param_syslog_severity_name = NULL;
 static char* param_test_case = NULL;
@@ -47,6 +48,7 @@ static const int MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT = 32;
 static FinanceAnalysisMode g_finance_analysis_mode = FinanceAnalysis_None;
 static PIFINANCE_ANALYZER_MGR manager = NULL;
 static PSEARCH_RULE_SET search_rule_set = NULL;
+static bool show_stock_support_resistance_detail = false;
 // static ResultSetMap result_set_map;
 DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
 DECLARE_MSG_DUMPER_PARAM();
@@ -145,6 +147,7 @@ void show_usage_and_exit()
 		PRINT("--renew_company_profile_filepath\nDescription: The company profile filepath for renewing the table of the company profile\nDefault: %s\n", DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH);
 		PRINT("--stock_support_resistance_filepath\nDescription: Set the file path for finding the stock support and resistance of a specific company\nDefault: %s\n", DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH);
 		PRINT("--find_stock_support_resistance\nDescription: Find the stock support and resistance of a specific company\n");
+		PRINT("--find_stock_support_resistance_verbose\nDescription: Find the stock support and resistance of a specific company in detail\n");
 		PRINT("  Format 1: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
 		PRINT("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\nCaution: Max up to %d stock entry once", MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT);
 	}
@@ -222,6 +225,13 @@ unsigned short parse_param(int argc, char** argv)
 			if (index + 1 >= argc)
 				print_errmsg_and_exit("No argument found in 'stock_support_resistance_filepath' parameter");
 			param_stock_support_resistance_filepath = argv[index + 1];
+			offset = 2;
+		}
+		else if (strcmp(argv[index], "--find_stock_support_resistance_verbose") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'find_stock_support_resistance_verbose' parameter");
+			param_find_stock_support_resistance_verbose = argv[index + 1];
 			offset = 2;
 		}
 		else if (strcmp(argv[index], "--find_stock_support_resistance") == 0)
@@ -487,6 +497,11 @@ unsigned short check_param()
 			param_find_stock_support_resistance = NULL;
 			PRINT("WARNING: the Find Stock Support Resistance argument is ignored in the Finance Market mode\n");
 		}
+		if (param_find_stock_support_resistance_verbose != NULL)
+		{
+			param_find_stock_support_resistance_verbose = NULL;
+			PRINT("WARNING: the Find Stock Support Resistance Verbose argument is ignored in the Finance Market mode\n");
+		}
 	}
 	else
 	{
@@ -510,6 +525,17 @@ unsigned short check_param()
 				param_renew_company_profile_filepath = NULL;
 				PRINT("WARNING: the Renew Company Profile Filepath argument is ignored when the Renew Company argument is False\n");
 			}
+		}
+		if (param_find_stock_support_resistance_verbose != NULL)
+		{
+			show_stock_support_resistance_detail = true;
+			if (param_find_stock_support_resistance != NULL)
+			{
+				// param_find_stock_support_resistance = NULL;
+				PRINT("WARNING: the Find Stock Support Resistance argument is ignored when the Find Stock Support Resistance Verbose argument is False\n");
+			}
+			param_find_stock_support_resistance = param_find_stock_support_resistance_verbose;
+			param_find_stock_support_resistance_verbose = NULL;
 		}
 		if (param_find_stock_support_resistance != NULL)
 		{
@@ -755,7 +781,7 @@ void find_stock_support_resistance_and_exit(const char* company_number_close_pri
 // Analyze data from each stock
 		price_support_and_resistance_result += (string("==================") + string(company_number_buf) + string("==================\n"));
 		string price_support_resistance_string;
-		ret = manager->get_stock_price_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath);
+		ret = manager->get_stock_price_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath, show_stock_support_resistance_detail);
 		if (CHECK_FAILURE(ret))
 		{
 			if (FAILURE_IS_NOT_FOUND(ret))

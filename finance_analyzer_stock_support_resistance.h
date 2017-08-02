@@ -42,7 +42,7 @@ private:
 		long stock_volume
 	);
 	~StockCandleStick();
-	const char* get_candle_stick_description();	
+	const char* to_string();	
 };
 typedef StockCandleStick* PSTOCK_CANDLE_STICK;
 
