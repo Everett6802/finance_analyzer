@@ -47,6 +47,8 @@ void get_int_deque_from_range_string(const char* int_range_string, INT_DEQUE& in
 void get_int_deque_from_partial_string(char* int_range_string, int int_range_string_len, INT_DEQUE& int_deque);
 unsigned short copy_file(const char* src_filepath, const char* dst_filepath);
 unsigned short copy_config_file(const char* config_filename, const char* src_config_folderpath);
+unsigned short get_process_count(const char* process_name, int& proccss_count);
+unsigned short get_process_username(const char* process_name, std::string& process_username);
 unsigned short get_absolute_filepath_from_username(const char* relative_filepath, char** absolute_filepath);
 
 #endif

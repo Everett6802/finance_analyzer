@@ -568,7 +568,7 @@ unsigned short FinanceAnalyzerStockDataCalculator::get_price_support_resistance_
 	static char filepath_buf[FILEPATH_BUF_SIZE];
 	unsigned short ret = RET_SUCCESS;
 	snprintf(filepath_buf, FILEPATH_BUF_SIZE, "%s/%s", price_support_resistance_folderpath.c_str(), company_code_number.c_str());
-	WRITE_FORMAT_DEBUG("Find support and resistance from: %s", filepath_buf);
+	WRITE_FORMAT_DEBUG("Find company[%s] support and resistance", company_code_number.c_str());
 	FinanceAnalyzerStockSupportResistance stock_support_resistance;
 	ret = stock_support_resistance.initialize(filepath_buf, stock_close_price);
 	if (CHECK_FAILURE(ret))

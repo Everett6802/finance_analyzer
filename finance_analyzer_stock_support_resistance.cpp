@@ -299,7 +299,11 @@ unsigned short FinanceAnalyzerStockSupportResistance::initialize(const char* sto
 		}
 		ret = get_absolute_filepath_from_username(&stock_critical_candle_stick_filepath[2], &absolute_filepath);
 		if (CHECK_FAILURE(ret))
+		{
+			WRITE_FORMAT_ERROR("Fail to find the absolute filepath from %s, due to: %s", stock_critical_candle_stick_filepath, get_ret_description(ret));
 			goto OUT;
+		}
+		WRITE_FORMAT_DEBUG("Find the absolute filepath: %s", absolute_filepath);
 		stock_critical_candle_stick_filepath = absolute_filepath;
 	}
 // Read config
@@ -404,7 +408,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::get_price_string(const Sto
 	while (iter != price_ref_list.end())
 	{
 		PSTOCK_PRICE_REF stock_price_ref = (PSTOCK_PRICE_REF)*iter;
-		assert(stock_price_ref->price != NULL && "stock_price_ref.price should NOT be NULL");
+		// assert(stock_price_ref->price != NULL && "stock_price_ref.price should NOT be NULL");
 		assert(stock_price_ref->candle_stick != NULL && "stock_price_ref.candle_stick should NOT be NULL");
 		if (show_detail)
 			snprintf(buf, BUF_SIZE, "%.2f[%s]->", stock_price_ref->get_price(), stock_price_ref->candle_stick->to_string());
@@ -439,6 +443,13 @@ unsigned short FinanceAnalyzerStockSupportResistance::get_resistance_price_strin
 unsigned short FinanceAnalyzerStockSupportResistance::get_support_resistance_price_full_string(std::string& stock_support_resistance_price_string, bool show_detail)const
 {
 	unsigned short ret = RET_SUCCESS;
+	if (limit_percentage != 0)
+	{
+		static const int LIMIT_PERCENTAGE_BUF_SIZE = 64;
+		static char limit_percentage_buf[LIMIT_PERCENTAGE_BUF_SIZE];
+		snprintf(limit_percentage_buf, LIMIT_PERCENTAGE_BUF_SIZE, "Price Limit, L: %.2f, H: %.2f\n", lowest_price_limit, highest_price_limit);
+		stock_support_resistance_price_string += limit_percentage_buf;
+	}
 	// string stock_support_resistance_price_string;
 	for (int i = 0 ; i < CandleStickSize ; i++)
 	{

@@ -238,6 +238,8 @@ enum TestType{
 // extern bool IS_FINANCE_MARKET_MODE; // Caution: This variable is NOT used in interactive mode
 // extern bool IS_FINANCE_STOCK_MODE; // Caution: This variable is NOT used in interactive mode
 
+extern const char* FINANCE_ANALYZER_PROCESS_NAME;
+
 extern const char* FINANCE_MODE_DESCRIPTION[];
 
 extern const char* FINANCE_DATABASE_MARKET_NAME;

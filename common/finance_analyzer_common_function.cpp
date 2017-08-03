@@ -747,31 +747,113 @@ unsigned short copy_config_file(const char* config_filename, const char* src_con
 	return copy_file(src_filepath, dst_filepath);
 }
 
+unsigned short get_process_count(const char* process_name, int& proccss_count)
+{
+	static const int CMD_SIZE = 256;
+	static char cmd[CMD_SIZE];
+	unsigned short ret = RET_SUCCESS;
+	snprintf(cmd, CMD_SIZE, "ps aux | grep %s | grep -v grep | wc -l", process_name);
+	FILE* fp = popen(cmd, "r");
+	if (fp == NULL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("popen() fails by command[%s], due to: %s", cmd, strerror(errno));
+		return RET_FAILURE_SYSTEM_API;
+	}
+	static const int BUF_SIZE = 16;
+	static char buf[BUF_SIZE];
+	if (fgets(buf, BUF_SIZE, fp) == NULL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("fgets() fails, due to: %s", strerror(errno));
+		ret = RET_FAILURE_SYSTEM_API;
+		goto OUT;
+	}
+	proccss_count = atoi(buf);
+OUT:
+	if (fp != NULL)
+	{
+		pclose(fp);
+		fp = NULL;
+	}
+	return ret;
+}
+
+unsigned short get_process_username(const char* process_name, string& process_username)
+{
+	static const int CMD_SIZE = 256;
+	static char cmd[CMD_SIZE];
+	unsigned short ret = RET_SUCCESS;
+// Check process exist
+	int process_count;
+	ret = get_process_count(process_name, process_count);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	if (process_count == 0)
+	{
+		STATIC_WRITE_FORMAT_ERROR("The process[%s] does NOT exist", process_name);
+		return RET_FAILURE_SYSTEM_API;
+	}
+	snprintf(cmd, CMD_SIZE, "ps aux | grep %s | grep -v grep | awk '{print $1}'", process_name);
+	FILE* fp = popen(cmd, "r");
+	if (fp == NULL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("popen() fails by command[%s], due to: %s", cmd, strerror(errno));
+		return RET_FAILURE_SYSTEM_API;
+	}
+	static const int BUF_SIZE = 16;
+	static char buf[BUF_SIZE];
+	int buf_len;
+	if (fgets(buf, BUF_SIZE, fp) == NULL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("fgets() fails, due to: %s", strerror(errno));
+		ret = RET_FAILURE_SYSTEM_API;
+		goto OUT;
+	}
+	buf_len = strlen(buf);
+	if (buf[buf_len - 1] == '\n')
+		buf[buf_len - 1] = '\0';
+	process_username = string(buf);
+OUT:
+	if (fp != NULL)
+	{
+		pclose(fp);
+		fp = NULL;
+	}
+	return ret;
+}
+
 unsigned short get_absolute_filepath_from_username(const char* relative_filepath, char** absolute_filepath)
 {
 	assert(relative_filepath != NULL && "relative_filepath should NOT be NULL");
 	assert(absolute_filepath != NULL && "absolute_filepath should NOT be NULL");
-	uid_t uid = geteuid();
-	struct passwd *pw = getpwuid(uid);
-	// printf("%s\n", pw->pw_name);
-	// if (relative_filepath[0] != '~')
-	// {
-	// 	STATIC_WRITE_FORMAT_ERROR("The filepath[%s] does NOT start from ~", relative_filepath);
-	// 	return RET_FAILURE_INVALID_ARGUMENT;
-	// }
-	// if (relative_filepath[1] != '/')
-	// {
-	// 	STATIC_WRITE_FORMAT_ERROR("The filepath[%s] is NOT correct format", relative_filepath);
-	// 	return RET_FAILURE_INVALID_ARGUMENT;
-	// }
+	// uid_t uid = geteuid();
+	// struct passwd *pw = getpwuid(uid);
+	// // printf("%s\n", pw->pw_name);
+	// // if (relative_filepath[0] != '~')
+	// // {
+	// // 	STATIC_WRITE_FORMAT_ERROR("The filepath[%s] does NOT start from ~", relative_filepath);
+	// // 	return RET_FAILURE_INVALID_ARGUMENT;
+	// // }
+	// // if (relative_filepath[1] != '/')
+	// // {
+	// // 	STATIC_WRITE_FORMAT_ERROR("The filepath[%s] is NOT correct format", relative_filepath);
+	// // 	return RET_FAILURE_INVALID_ARGUMENT;
+	// // }
+	string process_username;
+	unsigned short ret = get_process_username(FINANCE_ANALYZER_PROCESS_NAME, process_username);
+	if (CHECK_FAILURE(ret))
+		return ret;
 	static const int ABSOLUTE_FILEPATH_BUF_SIZE = 256;
 	char* absolute_filepath_tmp = new char[ABSOLUTE_FILEPATH_BUF_SIZE];
 	if (absolute_filepath_tmp == NULL)
 		throw bad_alloc();
-	if (strcmp("root", pw->pw_name) == 0)
+	// if (strcmp("root", pw->pw_name) == 0)
+	// 	snprintf(absolute_filepath_tmp, ABSOLUTE_FILEPATH_BUF_SIZE, "/%s", relative_filepath);
+	// else
+	// 	snprintf(absolute_filepath_tmp, ABSOLUTE_FILEPATH_BUF_SIZE, "/home/%s/%s", pw->pw_name, relative_filepath);	
+	if (strcmp("root", process_username.c_str()) == 0)
 		snprintf(absolute_filepath_tmp, ABSOLUTE_FILEPATH_BUF_SIZE, "/%s", relative_filepath);
 	else
-		snprintf(absolute_filepath_tmp, ABSOLUTE_FILEPATH_BUF_SIZE, "/home/%s/%s", pw->pw_name, relative_filepath);	
+		snprintf(absolute_filepath_tmp, ABSOLUTE_FILEPATH_BUF_SIZE, "/home/%s/%s", process_username.c_str(), relative_filepath);	
 	*absolute_filepath = absolute_filepath_tmp;
 	return RET_SUCCESS;
 }

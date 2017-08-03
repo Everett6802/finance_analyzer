@@ -12,6 +12,8 @@ using namespace std;
 // bool IS_FINANCE_MARKET_MODE = (g_finance_analysis_mode == FinanceAnalysis_Market ? true : false);
 // bool IS_FINANCE_STOCK_MODE = (g_finance_analysis_mode == FinanceAnalysis_Stock ? true : false);
 
+const char* FINANCE_ANALYZER_PROCESS_NAME = "finance_analyzer";
+
 const char* FINANCE_MODE_DESCRIPTION[] = {"Market", "Stock"};
 
 const char* FINANCE_DATABASE_MARKET_NAME = "Market";
@@ -39,7 +41,7 @@ const char* ANALYZER_PROJECT_NAME = "finance_analyzer";
 const char* FINANCE_SCRAPY_ROOT_FOLDERPATH = "/opt/finance/finance_scrapy_python";
 const char* FINANCE_RECORDER_ROOT_FOLDERPATH = "/opt/finance/finance_recorder_java";
 const char* FINANCE_ANALYZER_ROOT_FOLDERPATH = "/opt/finance/finance_analyzer";
-const char* DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH = "~/price_stock_resistance";
+const char* DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH = "~/stock_price_support_resistance";
 const char* DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH = "/opt/finance/finance_scrapy_python/conf"; 
 // const char* DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH = "/home/super/Projects/finance_scrapy_python/conf"; 
 const char* CONFIG_TIMESTAMP_STRING_PREFIX = "#time@";
