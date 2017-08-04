@@ -268,7 +268,7 @@ unsigned short parse_param(int argc, char** argv)
 			param_test_case = argv[index + 1];
 			offset = 2;
 		}
-		else if (strcmp(argv[index], "--test_show_test_verbose") == 0)
+		else if (strcmp(argv[index], "--show_test_verbose") == 0)
 		{
 			param_show_test_verbose = true;
 			offset = 1;
