@@ -27,7 +27,7 @@ enum InteractiveSessionCommandType
 	InteractiveSessionCommand_Search,
 	InteractiveSessionCommand_SetStockSupportResistanceFilepath,
 	InteractiveSessionCommand_FindStockSupportResistance,
-	InteractiveSessionCommand_FindStockSupportResistanceVerbose,
+	// InteractiveSessionCommand_FindStockSupportResistanceVerbose,
 	InteractiveSessionCommand_Help,
 	InteractiveSessionCommand_Exit,
 	InteractiveSessionCommandSize
@@ -766,7 +766,7 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, 
 	}
 	usage_string += string("  Format 1: All source types/fields (ex. all)\n");	
 	usage_string += string("  Format 2: Source type index/index range (ex. 1,2-4,6)\n");
-	usage_string += string("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7))\n");
+	usage_string += string("  Format 3: Source type index/index range with field index/index range (ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7))\n");
 // Time range
 	usage_string += string("* get_time_range\nDescription: Get time range\n");
 	usage_string += string("* set_time_range\nDescription: Set time range\n");
