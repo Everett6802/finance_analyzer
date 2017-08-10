@@ -93,6 +93,49 @@ const char* FinanceAnalyzerStockSupportResistance::CONFIG_CANDLE_STICK_START[] =
 const int FinanceAnalyzerStockSupportResistance::CONFIG_CANDLE_STICK_ENTRY_ELEMENT_COUNT = 4;
 const int FinanceAnalyzerStockSupportResistance::DEF_PRICE_LIMIT_PERCENTAGE = 10;
 
+float FinanceAnalyzerStockSupportResistance::get_price_tick_reciprocal(float stock_close_price)
+{
+/*
+price     unit
+0.01~10   0.01 
+10~50     0.05 
+50~100    0.1 
+100~500   0.5 
+500~1000  1 
+1000+     5
+*/
+	if (stock_close_price < 10.0)
+		return 100.0;
+	else if (stock_close_price >= 10.0 && stock_close_price < 50.0)
+		return 20.0;
+	else if (stock_close_price >= 50.0 && stock_close_price < 100.0)
+		return 10.0;
+	else if (stock_close_price >= 100.0 && stock_close_price < 500.0)
+		return 2.0;
+	else if (stock_close_price >= 100.0 && stock_close_price < 500.0)
+		return 1.0;
+	else if (stock_close_price >= 1000.0)
+		return 0.5;
+	static const int ERRMSG_BUF_SIZE = 32;
+	static char errmsg[ERRMSG_BUF_SIZE];
+	snprintf(errmsg, ERRMSG_BUF_SIZE, "The tick of the price [%.2f] is NOT defined", stock_close_price);
+	invalid_argument(string(errmsg));
+}
+
+float FinanceAnalyzerStockSupportResistance::calculate_highest_price_limit(float stock_close_price, float price_limit_ratio)
+{
+	float highest_price_limit_tmp = stock_close_price * (1 + price_limit_ratio);
+	float price_tick_reciprocal = get_price_tick_reciprocal(stock_close_price);
+	return floor(highest_price_limit_tmp * price_tick_reciprocal) / price_tick_reciprocal;
+}
+
+float FinanceAnalyzerStockSupportResistance::calculate_lowest_price_limit(float stock_close_price, float price_limit_ratio)
+{
+	float lowest_price_limit_tmp = stock_close_price * (1 - price_limit_ratio); 
+	float price_tick_reciprocal = get_price_tick_reciprocal(stock_close_price);
+	return ceil(lowest_price_limit_tmp * price_tick_reciprocal) / price_tick_reciprocal;
+}
+
 FinanceAnalyzerStockSupportResistance::FinanceAnalyzerStockSupportResistance() :
 	init(false),
 	close_price(0.0),
@@ -315,10 +358,8 @@ unsigned short FinanceAnalyzerStockSupportResistance::initialize(const char* sto
 	if (limit_percentage != 0)
 	{
 		float price_limit_ratio = limit_percentage / 100.0;
-		float lowest_price_limit_tmp = close_price * (1 - price_limit_ratio); 
-		float highest_price_limit_tmp = close_price * (1 + price_limit_ratio);
-		lowest_price_limit = ceil(lowest_price_limit_tmp * 10) / 10.0;
-		highest_price_limit = floor(highest_price_limit_tmp * 10) / 10.0;
+		lowest_price_limit = calculate_lowest_price_limit(close_price, price_limit_ratio);
+		highest_price_limit = calculate_highest_price_limit(close_price, price_limit_ratio);
 		WRITE_FORMAT_DEBUG("Calucate the price[%.2f] limit, LOW: %.2f, HIGH: %.2f\n", close_price, lowest_price_limit, highest_price_limit);
 	}
 // Initialize the data structure

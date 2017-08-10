@@ -77,6 +77,10 @@ class FinanceAnalyzerStockSupportResistance
 	static const int DEF_PRICE_LIMIT_PERCENTAGE;
 	DECLARE_MSG_DUMPER()
 
+	static float get_price_tick_reciprocal(float stock_close_price);
+	static float calculate_highest_price_limit(float stock_close_price, float price_limit_ratio);
+	static float calculate_lowest_price_limit(float stock_close_price, float price_limit_ratio);
+
 private:
 	StockCandleStickList candle_stick_list_array[CandleStickSize];
 	StockPriceRefList support_price_ref_list_array[CandleStickSize];
