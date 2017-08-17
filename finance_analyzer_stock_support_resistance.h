@@ -6,11 +6,7 @@
 #include "finance_analyzer_common.h"
 
 enum CandleStickTimeUnit{CandleStick_Week, CandleStick_Day, CandleStick_30Min, CandleStickSize, CandleStick_None};
-static const char* CONFIG_TIMEUNIT_STRING_PREFIX = "TimeUnit:";
-static const int CONFIG_TIMEUNIT_STRING_PREFIX_LEN = strlen(CONFIG_TIMEUNIT_STRING_PREFIX);
-static const char* CONFIG_WEEK_START = "TimeUnit:Week";
-static const char* CONFIG_DAY_START = "TimeUnit:Day";
-static const char* CONFIG_30MIN_START = "TimeUnit:30Min";
+enum CandleStickTimeFilterOperator{CandleStickTimeFilter_LessThan, CandleStickTimeFilter_GreaterThan, CandleStickTimeFilterSize, CandleStickTimeFilter_None};
 
 class FinanceAnalyzerStockSupportResistance;
 class StockPriceRef;
@@ -71,7 +67,11 @@ typedef std::list<PSTOCK_PRICE_REF> StockPriceRefList;
 class FinanceAnalyzerStockSupportResistance
 {
 // Define candle stick time unit related member variables
-	
+	static const char* CONFIG_TIMEUNIT_STRING_PREFIX;
+	static const int CONFIG_TIMEUNIT_STRING_PREFIX_LEN;
+	static const char* CONFIG_WEEK_START;
+	static const char* CONFIG_DAY_START;
+	static const char* CONFIG_30MIN_START;
 	static const char* CONFIG_CANDLE_STICK_START[];
 	static const int CONFIG_CANDLE_STICK_ENTRY_ELEMENT_COUNT;
 	static const int DEF_PRICE_LIMIT_PERCENTAGE;
@@ -80,6 +80,8 @@ class FinanceAnalyzerStockSupportResistance
 	static float get_price_tick_reciprocal(float stock_close_price);
 	static float calculate_highest_price_limit(float stock_close_price, float price_limit_ratio);
 	static float calculate_lowest_price_limit(float stock_close_price, float price_limit_ratio);
+	static unsigned short check_time_string_format(CandleStickTimeUnit time_unit, const char* time_string);
+	static unsigned short convert_time_string2timeval(CandleStickTimeUnit time_unit, const char* time_string, timeval& time_val);
 
 private:
 	StockCandleStickList candle_stick_list_array[CandleStickSize];
@@ -92,7 +94,7 @@ private:
 	float highest_price_limit;
 	int limit_percentage;
 
-	unsigned short update_data_from_config(const char* stock_critical_candle_stick_filepath);
+	unsigned short update_data_from_config(const char* stock_critical_candle_stick_filepath, const char* time_filter_rule=NULL);
 	unsigned short find_support_and_resistance(CandleStickTimeUnit candle_stick_time_unit);
 	unsigned short get_price_list(const StockPriceRefList& price_ref_list, std::list<float>& stock_price_list)const;
 	unsigned short get_price_string(const StockPriceRefList& price_ref_list, std::string& stock_price_string, bool show_detail=false)const;
@@ -101,7 +103,7 @@ public:
 	FinanceAnalyzerStockSupportResistance();
 	~FinanceAnalyzerStockSupportResistance();
 
-	unsigned short initialize(const char* stock_critical_candle_stick_filepath, float stock_close_price);
+	unsigned short initialize(const char* stock_critical_candle_stick_filepath, float stock_close_price, const char* time_filter_rule=NULL);
 // Disable the price limit when price_limit_percentage = 0
 	unsigned short set_price_limit_percentage(int price_limit_percentage);
 	unsigned short get_price_limit_percentage(int& price_limit_percentage)const;

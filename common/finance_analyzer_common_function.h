@@ -50,5 +50,6 @@ unsigned short copy_config_file(const char* config_filename, const char* src_con
 unsigned short get_process_count(const char* process_name, int& proccss_count);
 unsigned short get_process_username(const char* process_name, std::string& process_username);
 unsigned short get_absolute_filepath_from_username(const char* relative_filepath, char** absolute_filepath);
+unsigned short check_string_is_digit(const char* time_string, int time_string_len=-1);
 
 #endif

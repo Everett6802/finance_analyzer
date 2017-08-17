@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <math.h>
+#include <sys/time.h>
 #include <stdexcept>
 #include <string>
 #include "finance_analyzer_stock_support_resistance.h"
@@ -89,6 +90,11 @@ bool candle_stick_resistance_compare (const PSTOCK_PRICE_REF a, const PSTOCK_PRI
 
 ///////////////////////////////////////////////////////////////////////////////////
 
+const char* FinanceAnalyzerStockSupportResistance::CONFIG_TIMEUNIT_STRING_PREFIX = "TimeUnit:";
+const int FinanceAnalyzerStockSupportResistance::CONFIG_TIMEUNIT_STRING_PREFIX_LEN = strlen(CONFIG_TIMEUNIT_STRING_PREFIX);
+const char* FinanceAnalyzerStockSupportResistance::CONFIG_WEEK_START = "TimeUnit:Week";
+const char* FinanceAnalyzerStockSupportResistance::CONFIG_DAY_START = "TimeUnit:Day";
+const char* FinanceAnalyzerStockSupportResistance::CONFIG_30MIN_START = "TimeUnit:30Min";
 const char* FinanceAnalyzerStockSupportResistance::CONFIG_CANDLE_STICK_START[] = {CONFIG_WEEK_START, CONFIG_DAY_START, CONFIG_30MIN_START};
 const int FinanceAnalyzerStockSupportResistance::CONFIG_CANDLE_STICK_ENTRY_ELEMENT_COUNT = 4;
 const int FinanceAnalyzerStockSupportResistance::DEF_PRICE_LIMIT_PERCENTAGE = 10;
@@ -134,6 +140,85 @@ float FinanceAnalyzerStockSupportResistance::calculate_lowest_price_limit(float 
 	float lowest_price_limit_tmp = stock_close_price * (1 - price_limit_ratio); 
 	float price_tick_reciprocal = get_price_tick_reciprocal(stock_close_price);
 	return ceil(lowest_price_limit_tmp * price_tick_reciprocal) / price_tick_reciprocal;
+}
+
+unsigned short FinanceAnalyzerStockSupportResistance::check_time_string_format(CandleStickTimeUnit time_unit, const char* time_string)
+{
+	assert(time_string != NULL && "time_string should NOT be NULL");
+	static unsigned int TIME_STRING_FORMAT_LEN_WEEK = 7;
+	static unsigned int TIME_STRING_FORMAT_LEN_DAY = 6;
+	static unsigned int TIME_STRING_FORMAT_LEN_30MIN = 10;
+	unsigned short ret = RET_SUCCESS;
+	switch (time_unit)
+	{
+		case CandleStick_Week:
+		{
+			if (strlen(time_string) != TIME_STRING_FORMAT_LEN_WEEK || time_string[0] != 'w')
+				return RET_FAILURE_INVALID_ARGUMENT;
+			ret = check_string_is_digit(&time_string[1], TIME_STRING_FORMAT_LEN_WEEK - 1);
+			if (CHECK_FAILURE(ret))
+				return ret;
+		}
+		break;
+		case CandleStick_Day:
+		{
+			if (strlen(time_string) != TIME_STRING_FORMAT_LEN_DAY)
+				return RET_FAILURE_INVALID_ARGUMENT;
+			ret = check_string_is_digit(time_string, TIME_STRING_FORMAT_LEN_DAY);
+			if (CHECK_FAILURE(ret))
+				return ret;
+		}
+		break;
+		case CandleStick_30Min:
+		{
+			if (strlen(time_string) != TIME_STRING_FORMAT_LEN_30MIN)
+				return RET_FAILURE_INVALID_ARGUMENT;
+			ret = check_string_is_digit(time_string, TIME_STRING_FORMAT_LEN_30MIN);
+			if (CHECK_FAILURE(ret))
+				return ret;
+		}
+		break;
+		default:
+			throw invalid_argument(string("Unknown Candle Stick time unit"));
+			break;
+	}
+	return RET_SUCCESS;	
+}
+
+unsigned short FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStickTimeUnit time_unit, const char* time_string, timeval& time_val)
+{
+	assert(time_string != NULL && "time_string should NOT be NULL");
+	static const char* TIME_STRING_FORMAT_WEEK = "w%y%m%d";
+	static const char* TIME_STRING_FORMAT_DAY = "%y%m%d";
+	static const char* TIME_STRING_FORMAT_30MIN = "%y%m%d%H%M";
+	static const char* const TIME_STRING_FORMAT_ARRAY[] = {TIME_STRING_FORMAT_WEEK, TIME_STRING_FORMAT_DAY, TIME_STRING_FORMAT_30MIN};
+	unsigned short ret = check_time_string_format(time_unit, time_string);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	const char* time_string_format = TIME_STRING_FORMAT_ARRAY[time_unit];	
+	struct tm tm_tmp;
+	strptime(time_string, time_string_format, &tm_tmp);
+	// printf("time unit: %d, time string: %s\n", time_unit, time_string);
+	// switch (time_unit)
+	// {
+	// 	case CandleStick_Week:
+	// 		printf("w%04d/%02d/%02d\n", tm_tmp.tm_year + 1900, tm_tmp.tm_mon + 1, tm_tmp.tm_mday);
+	// 		break;
+	// 	case CandleStick_Day:
+	// 		printf("%04d/%02d/%02d\n", tm_tmp.tm_year + 1900, tm_tmp.tm_mon + 1, tm_tmp.tm_mday);
+	// 		break;
+	// 	case CandleStick_30Min:
+	// 		printf("%04d/%02d/%02d %02d:%02d\n", tm_tmp.tm_year + 1900, tm_tmp.tm_mon + 1, tm_tmp.tm_mday, tm_tmp.tm_hour, tm_tmp.tm_min);
+	// 		break;
+	// 	default:
+	// 		throw invalid_argument(string("Unknown Candle Stick time unit"));
+	// 		break;
+	// }
+	time_t t_tmp = mktime(&tm_tmp); 
+	// printf("time_t: %d\n", t_tmp);
+	time_val.tv_sec = t_tmp;
+	time_val.tv_usec = 0;
+	return RET_SUCCESS;
 }
 
 FinanceAnalyzerStockSupportResistance::FinanceAnalyzerStockSupportResistance() :
@@ -187,7 +272,7 @@ FinanceAnalyzerStockSupportResistance::~FinanceAnalyzerStockSupportResistance()
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(const char* stock_critical_candle_stick_filepath)
+unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(const char* stock_critical_candle_stick_filepath, const char* time_filter_rule)
 {
 	unsigned short ret = RET_SUCCESS;
 	WRITE_FORMAT_DEBUG("Read Candle Sticks from config: %s", stock_critical_candle_stick_filepath);
@@ -196,10 +281,42 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 	ret = read_file_lines_ex(line_list, stock_critical_candle_stick_filepath, "r");
 	if (CHECK_FAILURE(ret))
 		return ret;
-	
+	CandleStickTimeFilterOperator time_filter_operator = CandleStickTimeFilter_None;
+// Setup the time filter if necessary
+	if (time_filter_rule != NULL)
+	{
+		// switch(time_filter_rule[0])
+		// {
+		// 	case '<':
+		// 	{
+		// 		time_filter_operator = CandleStickTimeFilter_LessThan;
+		// 	}
+		// 	break;
+		// 	case '>':
+		// 	{
+		// 		time_filter_operator = CandleStickTimeFilter_GreaterThan;
+		// 	}
+		// 	break;
+		// 	default:
+		// 	{
+		// 		WRITE_FORMAT_ERROR("Incorrect time filter rules: %s", time_filter_rule);
+		// 		return RET_FAILURE_INVALID_ARGUMENT;
+		// 	}
+		// 	break;
+		// }
+		time_filter_operator = CandleStickTimeFilter_LessThan;
+// CAUTION: time_filter_timeval can't read correct value in this place. I DON'T know why
+		// ret = convert_time_string2timeval(CandleStick_Day, time_filter_rule, time_filter_timeval);
+		// if (CHECK_FAILURE(ret))
+		// 	return ret;
+		// time_filter_exist = true;
+	}
+// Start to parse each line......
 	CandleStickTimeUnit candle_stick_time_unit = CandleStick_None;
 	static const int LINE_BUF_SIZE = 64;
 	static char line_buf[LINE_BUF_SIZE];
+	bool time_filter_exist = false;
+	timeval time_filter_timeval;
 	for(list<string>::iterator iter = line_list.begin() ; iter != line_list.end() ; ++iter)
 	{
 		string line = *iter;
@@ -247,6 +364,31 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 		{
 			WRITE_FORMAT_ERROR("Incorrect Candle Stick Entry[%s] Element Count, expected: %d, actual: %d", line_string, CONFIG_CANDLE_STICK_ENTRY_ELEMENT_COUNT, entry_element_count);
 			return RET_FAILURE_INCORRECT_CONFIG;
+		}
+// Filter the data if necessary
+		if (time_filter_operator != CandleStickTimeFilter_None)
+		{
+			if (!time_filter_exist)
+			{
+				ret = convert_time_string2timeval(CandleStick_Day, time_filter_rule, time_filter_timeval);
+				if (CHECK_FAILURE(ret))
+					return ret;
+				time_filter_exist = true;
+			}
+			timeval candle_stick_timeval;
+			ret = convert_time_string2timeval(candle_stick_time_unit, candle_stick_entry_element[0], candle_stick_timeval);
+			if (CHECK_FAILURE(ret))
+				return ret;
+			if (time_filter_operator == CandleStickTimeFilter_LessThan) 
+			{
+				if (timercmp(&candle_stick_timeval, &time_filter_timeval, <))
+					continue;
+			}
+			else if (time_filter_operator == CandleStickTimeFilter_GreaterThan)
+			{
+				if (timercmp(&candle_stick_timeval, &time_filter_timeval, >))
+					continue;
+			}
 		}
 // Allocate the memory to keep track of the entry
 		PSTOCK_CANDLE_STICK stock_candle_stick = new StockCandleStick(
@@ -321,7 +463,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::find_support_and_resistanc
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerStockSupportResistance::initialize(const char* stock_critical_candle_stick_filepath, float stock_close_price)
+unsigned short FinanceAnalyzerStockSupportResistance::initialize(const char* stock_critical_candle_stick_filepath, float stock_close_price, const char* time_filter_rule)
 {
 	if (init)
 	{
@@ -350,7 +492,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::initialize(const char* sto
 		stock_critical_candle_stick_filepath = absolute_filepath;
 	}
 // Read config
-	ret = update_data_from_config(stock_critical_candle_stick_filepath);
+	ret = update_data_from_config(stock_critical_candle_stick_filepath, time_filter_rule);
 	if (CHECK_FAILURE(ret))
 		goto OUT;
 	close_price = stock_close_price;
@@ -452,7 +594,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::get_price_string(const Sto
 		// assert(stock_price_ref->price != NULL && "stock_price_ref.price should NOT be NULL");
 		assert(stock_price_ref->candle_stick != NULL && "stock_price_ref.candle_stick should NOT be NULL");
 		if (show_detail)
-			snprintf(buf, BUF_SIZE, "%.2f[%s]->", stock_price_ref->get_price(), stock_price_ref->candle_stick->to_string());
+			snprintf(buf, BUF_SIZE, "\n%.2f[%s]->", stock_price_ref->get_price(), stock_price_ref->candle_stick->to_string());
 		else
 			snprintf(buf, BUF_SIZE, "%.2f->", stock_price_ref->get_price());
 		stock_price_string += buf;

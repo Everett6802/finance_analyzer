@@ -857,3 +857,20 @@ unsigned short get_absolute_filepath_from_username(const char* relative_filepath
 	*absolute_filepath = absolute_filepath_tmp;
 	return RET_SUCCESS;
 }
+
+
+unsigned short check_string_is_digit(const char* time_string, int time_string_len)
+{
+	assert(time_string != NULL && "time_string should NOT be NULL");
+	if (time_string_len == -1)
+		time_string_len = strlen(time_string);
+	for (int i = 0 ; i < time_string_len ; i++)
+	{
+		if (time_string[i] < '0' || time_string[i] > '9')
+		{
+			STATIC_WRITE_FORMAT_ERROR("Not all characters in the string[%s] are digits", time_string);
+			return RET_FAILURE_INVALID_ARGUMENT;
+		}
+	}
+	return RET_SUCCESS;
+}

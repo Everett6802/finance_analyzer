@@ -25,7 +25,7 @@ public:
 	virtual unsigned short search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)=0;
 // Only exploited in the Market mode
 // Only exploited in the Stock mode
-	virtual unsigned short get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath=NULL, bool show_detail=false)=0;
+	virtual unsigned short get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath=NULL, bool show_detail=false, const char* stock_price_support_resistance_time_filter=NULL)=0;
 };
 typedef IFinanceAnalyzerMgr* PIFINANCE_ANALYZER_MGR;
 ///////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ public:
 	virtual unsigned short initialize();
 	virtual unsigned short search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map);
 
-	virtual unsigned short get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath=NULL, bool show_detail=false);
+	virtual unsigned short get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath=NULL, bool show_detail=false, const char* stock_price_support_resistance_time_filter=NULL);
 };
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -96,7 +96,7 @@ public:
 	virtual unsigned short initialize();
 	virtual unsigned short search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map);
 
-	virtual unsigned short get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath=NULL, bool show_detail=false);
+	virtual unsigned short get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath=NULL, bool show_detail=false, const char* stock_price_support_resistance_time_filter=NULL);
 };
 ///////////////////////////////////////////////////////////////////////////////////
 
