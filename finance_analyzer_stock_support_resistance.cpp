@@ -282,6 +282,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 	if (CHECK_FAILURE(ret))
 		return ret;
 	CandleStickFilterOperator time_filter_operator = CandleStickFilter_None;
+	CandleStickFilterOperator volume_filter_operator = CandleStickFilter_None;
 // Setup the time filter if necessary
 	if (time_filter_rule != NULL)
 	{
@@ -406,7 +407,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 				volume_filter_threshold = atol(volume_filter_rule);
 				volume_filter_exist = true;
 			}
-			long volume = atol(candle_stick_entry_element[CandleStickElement_Volume])
+			long volume = atol(candle_stick_entry_element[CandleStickElement_Volume]);
 			if (volume_filter_operator == CandleStickFilter_LessThan) 
 			{
 				if (volume < volume_filter_threshold)
