@@ -32,6 +32,7 @@ static const char* param_stock_support_resistance_filepath = NULL;
 static const char* param_find_stock_support_resistance = NULL;
 static const char* param_find_stock_support_resistance_verbose = NULL;
 static const char* param_filter_stock_support_resistance_date = NULL;
+static const char* param_filter_stock_support_resistance_volume = NULL;
 static char* param_log_severity_name = NULL;
 static char* param_syslog_severity_name = NULL;
 static char* param_test_case = NULL;
@@ -64,7 +65,7 @@ static unsigned short setup_param();
 static void show_usage_and_exit();
 static void renew_company_and_exit(const char* source_company_profile_conf_folderpath);
 static void run_test_cases_and_exit();
-static void find_stock_support_resistance_and_exit(const char* company_number_close_price_pair_list, const char* price_support_and_resistance_root_folderpath, const char* price_support_resistance_time_filter);
+static void find_stock_support_resistance_and_exit(const char* company_number_close_price_pair_list, const char* price_support_and_resistance_root_folderpath, const char* price_support_resistance_time_filter, const char* price_support_resistance_volume_filter);
 static void show_search_result_and_exit();
 static int parse_show_res_type(const char* show_res_type_string);
 static const char* get_statistics_method_description(StatisticsMethod statistics_method);
@@ -152,7 +153,9 @@ void show_usage_and_exit()
 		PRINT("  Format 1: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
 		PRINT("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\nCaution: Max up to %d stock entry once", MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT);
 		PRINT("--filter_stock_support_resistance_date\nDescription: Filter the data which is eariler than a specific date\n");
-		PRINT("  Format 1: Filter the data earlier than a specific date(ex. 170801)");
+		PRINT("  Format 1: Date(ex. 170801)");
+		PRINT("--filter_stock_support_resistance_volume\nDescription: Filter the data whose volume is smaller than a specific value\n");
+		PRINT("  Format 1: Value(ex. 5000)");
 	}
 // Search
 	if (g_finance_analysis_mode == FinanceAnalysis_Market)
@@ -249,6 +252,13 @@ unsigned short parse_param(int argc, char** argv)
 			if (index + 1 >= argc)
 				print_errmsg_and_exit("No argument found in 'filter_stock_support_resistance_date' parameter");
 			param_filter_stock_support_resistance_date = argv[index + 1];
+			offset = 2;
+		}
+		else if (strcmp(argv[index], "--filter_stock_support_resistance_volume") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'filter_stock_support_resistance_volume' parameter");
+			param_filter_stock_support_resistance_volume = argv[index + 1];
 			offset = 2;
 		}
 		else if (strcmp(argv[index], "--silent") == 0)
@@ -515,8 +525,13 @@ unsigned short check_param()
 		if (param_filter_stock_support_resistance_date != NULL)
 		{
 			param_filter_stock_support_resistance_date = NULL;
-			PRINT("WARNING: the Filter Stock Support Resistance Time argument is ignored in the Finance Market mode\n");
-		}		
+			PRINT("WARNING: the Filter Stock Support Resistance Date argument is ignored in the Finance Market mode\n");
+		}
+		if (param_filter_stock_support_resistance_volume != NULL)
+		{
+			param_filter_stock_support_resistance_volume = NULL;
+			PRINT("WARNING: the Filter Stock Support Resistance Volume argument is ignored in the Finance Market mode\n");
+		}	
 	}
 	else
 	{
@@ -568,6 +583,11 @@ unsigned short check_param()
 			{
 				param_filter_stock_support_resistance_date = NULL;
 				PRINT("WARNING: the Filter Stock Support Resistance Time argument is ignored when the Find Stock Support Resistance argument is False\n");
+			}
+			if (param_filter_stock_support_resistance_volume != NULL)
+			{
+				param_filter_stock_support_resistance_volume = NULL;
+				PRINT("WARNING: the Filter Stock Support Resistance Volume argument is ignored when the Find Stock Support Resistance argument is False\n");
 			}
 		}
 	}
@@ -747,7 +767,7 @@ void renew_company_and_exit(const char* source_company_profile_conf_folderpath)
 	exit(EXIT_SUCCESS);
 }
 
-void find_stock_support_resistance_and_exit(const char* company_number_close_price_pair_list, const char* price_support_and_resistance_root_folderpath, const char* price_support_resistance_time_filter)
+void find_stock_support_resistance_and_exit(const char* company_number_close_price_pair_list, const char* price_support_and_resistance_root_folderpath, const char* price_support_resistance_time_filter, const char* price_support_resistance_volume_filter)
 {
 	unsigned short ret = RET_SUCCESS;
 	assert(company_number_close_price_pair_list != NULL && "company_number_close_price_pair_list should NOT be NULL");
@@ -801,7 +821,7 @@ void find_stock_support_resistance_and_exit(const char* company_number_close_pri
 // Analyze data from each stock
 		price_support_and_resistance_result += (string("==================") + string(company_number_buf) + string("==================\nClose Price: ") + string(stock_close_price_buf) + string("\n"));
 		string price_support_resistance_string;
-		ret = manager->get_stock_price_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath, show_stock_support_resistance_detail, price_support_resistance_time_filter);
+		ret = manager->get_stock_price_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath, show_stock_support_resistance_detail, price_support_resistance_time_filter, price_support_resistance_volume_filter);
 		if (CHECK_FAILURE(ret))
 		{
 			if (FAILURE_IS_NOT_FOUND(ret))
@@ -924,48 +944,9 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
-#include <sys/time.h>
-#include "finance_analyzer_stock_support_resistance.h"
 
 int main(int argc, char** argv)
 {
-	// const char *time_details1 = "1709041331";
-	// const char *time_details2 = "1709041332";
-	// struct tm tm1, tm2;
-
-	// // strptime(time_details2, "%y%m%d%H%M", &tm2);
-	// // time_t t1 = mktime(&tm2); 
-	// // printf("%02d/%02d/%02d %02d:%02d:%02d; %ld\n", tm1.tm_year, tm1.tm_mon, tm1.tm_mday, tm1.tm_hour, tm1.tm_min, tm1.tm_sec, t1);
-	// // printf("time in sec: %ld\n", t1);
-
-	// // strptime(time_details2, "%y%m%d%H%M", &tm2);
-	// // time_t t2 = mktime(&tm2); 
-	// // printf("%02d/%02d/%02d %02d:%02d:%02d; %ld\n", tm2.tm_year, tm2.tm_mon, tm2.tm_mday, tm2.tm_hour, tm2.tm_min, tm2.tm_sec, t2);
-	// // printf("time in sec: %ld\n", t2);
-
-	// timeval timeval1, timeval2, timeval3, timeval4;
-	// // timeval1.tv_sec = t2;
-	// // timeval1.tv_usec = 0;
-	// // timeval2.tv_sec = t2;
-	// // timeval2.tv_usec = 0;
-	// // timercmp(&timeval1, &timeval2, >) ? printf (">\n") : printf("<=\n");
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_Day, "170801", timeval1);
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_Day, "170410", timeval2);
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_Day, "170905", timeval3);
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_Day, "160930", timeval4);
-	// timercmp(&timeval1, &timeval2, >) ? printf (">\n") : printf("<=\n");
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_Week, "w170904", timeval1);
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_Week, "w171004", timeval2);
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_Week, "w170905", timeval3);
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_Week, "w160930", timeval4);
-	// timercmp(&timeval1, &timeval2, >) ? printf (">\n") : printf("<=\n");
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_30Min, "1709041330", timeval1);
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_30Min, "1710041159", timeval2);
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_30Min, "1709051920", timeval3);
-	// FinanceAnalyzerStockSupportResistance::convert_time_string2timeval(CandleStick_30Min, "1609301000", timeval4);
-	// timercmp(&timeval1, &timeval2, >) ? printf (">\n") : printf("<=\n");
-	// exit(0);
-
 // Register the signals so that the process can exit gracefully
 	struct sigaction sa;
 	memset(&sa, 0x0, sizeof(sa));
@@ -1064,7 +1045,7 @@ int main(int argc, char** argv)
 			goto FAIL;
 		}
 		if (param_find_stock_support_resistance != NULL)
-			find_stock_support_resistance_and_exit(param_find_stock_support_resistance, param_stock_support_resistance_filepath, param_filter_stock_support_resistance_date);
+			find_stock_support_resistance_and_exit(param_find_stock_support_resistance, param_stock_support_resistance_filepath, param_filter_stock_support_resistance_date, param_filter_stock_support_resistance_volume);
 		if (param_search)
 			show_search_result_and_exit();
     }

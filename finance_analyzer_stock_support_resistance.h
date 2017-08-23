@@ -6,7 +6,9 @@
 #include "finance_analyzer_common.h"
 
 enum CandleStickTimeUnit{CandleStick_Week, CandleStick_Day, CandleStick_30Min, CandleStickSize, CandleStick_None};
-enum CandleStickTimeFilterOperator{CandleStickTimeFilter_LessThan, CandleStickTimeFilter_GreaterThan, CandleStickTimeFilterSize, CandleStickTimeFilter_None};
+enum CandleStickFilterOperator{CandleStickFilter_LessThan, CandleStickFilter_GreaterThan, CandleStickFilterSize, CandleStickFilter_None};
+enum CandleStickElement{CandleStickElement_Time, CandleStickElement_Low, CandleStickElement_High, CandleStickElement_Volume, CandleStickElementSize, CandleStickElement_None};
+
 
 class FinanceAnalyzerStockSupportResistance;
 class StockPriceRef;
@@ -94,7 +96,7 @@ private:
 	float highest_price_limit;
 	int limit_percentage;
 
-	unsigned short update_data_from_config(const char* stock_critical_candle_stick_filepath, const char* time_filter_rule=NULL);
+	unsigned short update_data_from_config(const char* stock_critical_candle_stick_filepath, const char* time_filter_rule=NULL, const char* volume_filter_rule=NULL);
 	unsigned short find_support_and_resistance(CandleStickTimeUnit candle_stick_time_unit);
 	unsigned short get_price_list(const StockPriceRefList& price_ref_list, std::list<float>& stock_price_list)const;
 	unsigned short get_price_string(const StockPriceRefList& price_ref_list, std::string& stock_price_string, bool show_detail=false)const;
@@ -103,7 +105,7 @@ public:
 	FinanceAnalyzerStockSupportResistance();
 	~FinanceAnalyzerStockSupportResistance();
 
-	unsigned short initialize(const char* stock_critical_candle_stick_filepath, float stock_close_price, const char* time_filter_rule=NULL);
+	unsigned short initialize(const char* stock_critical_candle_stick_filepath, float stock_close_price, const char* time_filter_rule=NULL, const char* volume_filter_rule=NULL);
 // Disable the price limit when price_limit_percentage = 0
 	unsigned short set_price_limit_percentage(int price_limit_percentage);
 	unsigned short get_price_limit_percentage(int& price_limit_percentage)const;

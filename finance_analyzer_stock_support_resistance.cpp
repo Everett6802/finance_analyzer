@@ -272,7 +272,7 @@ FinanceAnalyzerStockSupportResistance::~FinanceAnalyzerStockSupportResistance()
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(const char* stock_critical_candle_stick_filepath, const char* time_filter_rule)
+unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(const char* stock_critical_candle_stick_filepath, const char* time_filter_rule, const char* volume_filter_rule)
 {
 	unsigned short ret = RET_SUCCESS;
 	WRITE_FORMAT_DEBUG("Read Candle Sticks from config: %s", stock_critical_candle_stick_filepath);
@@ -281,7 +281,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 	ret = read_file_lines_ex(line_list, stock_critical_candle_stick_filepath, "r");
 	if (CHECK_FAILURE(ret))
 		return ret;
-	CandleStickTimeFilterOperator time_filter_operator = CandleStickTimeFilter_None;
+	CandleStickFilterOperator time_filter_operator = CandleStickFilter_None;
 // Setup the time filter if necessary
 	if (time_filter_rule != NULL)
 	{
@@ -289,12 +289,12 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 		// {
 		// 	case '<':
 		// 	{
-		// 		time_filter_operator = CandleStickTimeFilter_LessThan;
+		// 		time_filter_operator = CandleStickFilter_LessThan;
 		// 	}
 		// 	break;
 		// 	case '>':
 		// 	{
-		// 		time_filter_operator = CandleStickTimeFilter_GreaterThan;
+		// 		time_filter_operator = CandleStickFilter_GreaterThan;
 		// 	}
 		// 	break;
 		// 	default:
@@ -304,19 +304,26 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 		// 	}
 		// 	break;
 		// }
-		time_filter_operator = CandleStickTimeFilter_LessThan;
+		time_filter_operator = CandleStickFilter_LessThan;
 // CAUTION: time_filter_timeval can't read correct value in this place. I DON'T know why
 		// ret = convert_time_string2timeval(CandleStick_Day, time_filter_rule, time_filter_timeval);
 		// if (CHECK_FAILURE(ret))
 		// 	return ret;
 		// time_filter_exist = true;
 	}
+// Setup the volume filter if necessary
+	if (volume_filter_rule != NULL)
+	{
+		volume_filter_operator = CandleStickFilter_LessThan;
+	}
 // Start to parse each line......
 	CandleStickTimeUnit candle_stick_time_unit = CandleStick_None;
 	static const int LINE_BUF_SIZE = 64;
 	static char line_buf[LINE_BUF_SIZE];
 	bool time_filter_exist = false;
+	bool volume_filter_exist = false;
 	timeval time_filter_timeval;
+	long volume_filter_threshold;
 	for(list<string>::iterator iter = line_list.begin() ; iter != line_list.end() ; ++iter)
 	{
 		string line = *iter;
@@ -366,7 +373,8 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 			return RET_FAILURE_INCORRECT_CONFIG;
 		}
 // Filter the data if necessary
-		if (time_filter_operator != CandleStickTimeFilter_None)
+// Filter the data from date
+		if (time_filter_operator != CandleStickFilter_None)
 		{
 			if (!time_filter_exist)
 			{
@@ -376,23 +384,43 @@ unsigned short FinanceAnalyzerStockSupportResistance::update_data_from_config(co
 				time_filter_exist = true;
 			}
 			timeval candle_stick_timeval;
-			ret = convert_time_string2timeval(candle_stick_time_unit, candle_stick_entry_element[0], candle_stick_timeval);
+			ret = convert_time_string2timeval(candle_stick_time_unit, candle_stick_entry_element[CandleStickElement_Time], candle_stick_timeval);
 			if (CHECK_FAILURE(ret))
 				return ret;
-			if (time_filter_operator == CandleStickTimeFilter_LessThan) 
+			if (time_filter_operator == CandleStickFilter_LessThan) 
 			{
 				if (timercmp(&candle_stick_timeval, &time_filter_timeval, <))
 					continue;
 			}
-			else if (time_filter_operator == CandleStickTimeFilter_GreaterThan)
+			else if (time_filter_operator == CandleStickFilter_GreaterThan)
 			{
 				if (timercmp(&candle_stick_timeval, &time_filter_timeval, >))
 					continue;
 			}
 		}
+// Filter the data from volume
+		if (volume_filter_operator != CandleStickFilter_None)
+		{
+			if (!volume_filter_exist)
+			{
+				volume_filter_threshold = atol(volume_filter_rule);
+				volume_filter_exist = true;
+			}
+			long volume = atol(candle_stick_entry_element[CandleStickElement_Volume])
+			if (volume_filter_operator == CandleStickFilter_LessThan) 
+			{
+				if (volume < volume_filter_threshold)
+					continue;
+			}
+			else if (volume_filter_operator == CandleStickFilter_GreaterThan)
+			{
+				if (volume > volume_filter_threshold)
+					continue;
+			}
+		}
 // Allocate the memory to keep track of the entry
 		PSTOCK_CANDLE_STICK stock_candle_stick = new StockCandleStick(
-			candle_stick_entry_element[0],
+			candle_stick_entry_element[CandleStickElement_Time],
 			atof(candle_stick_entry_element[1]),
 			atof(candle_stick_entry_element[2]),
 			atol(candle_stick_entry_element[3])
@@ -463,7 +491,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::find_support_and_resistanc
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerStockSupportResistance::initialize(const char* stock_critical_candle_stick_filepath, float stock_close_price, const char* time_filter_rule)
+unsigned short FinanceAnalyzerStockSupportResistance::initialize(const char* stock_critical_candle_stick_filepath, float stock_close_price, const char* time_filter_rule, const char* volume_filter_rule)
 {
 	if (init)
 	{
@@ -492,7 +520,7 @@ unsigned short FinanceAnalyzerStockSupportResistance::initialize(const char* sto
 		stock_critical_candle_stick_filepath = absolute_filepath;
 	}
 // Read config
-	ret = update_data_from_config(stock_critical_candle_stick_filepath, time_filter_rule);
+	ret = update_data_from_config(stock_critical_candle_stick_filepath, time_filter_rule, volume_filter_rule);
 	if (CHECK_FAILURE(ret))
 		goto OUT;
 	close_price = stock_close_price;
