@@ -10,7 +10,6 @@
 
 using namespace std;
 
-DECLARE_MSG_DUMPER_PARAM()
 static const int RES_INFO_LENGTH = 1024;
 static char res_info[RES_INFO_LENGTH];
 

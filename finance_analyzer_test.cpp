@@ -10,8 +10,6 @@
 
 using namespace std;
 
-//DECLARE_MSG_DUMPER_PARAM()
-
 const char* TEST_TYPE_DESCRIPTION[TestTypeSize] = 
 {
 	"Check Array",

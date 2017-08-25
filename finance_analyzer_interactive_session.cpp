@@ -11,7 +11,6 @@
 
 using namespace std;
 
-DECLARE_MSG_DUMPER_PARAM()
 #define REGISTER_CLASS(n, m) mgr_factory.register_class<n>(m)
 
 // Command type definition

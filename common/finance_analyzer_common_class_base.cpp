@@ -9,8 +9,6 @@
 
 using namespace std;
 
-DECLARE_MSG_DUMPER_PARAM()
-
 // template <typename T>
 // SmartPointer<T>::SmartPointer() :
 // 	need_release(true)

@@ -14,7 +14,6 @@
 using namespace std;
 
 static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
-DECLARE_MSG_DUMPER_PARAM()
 
 FinanceAnalyzerInteractiveServer::const_iterator::const_iterator(INTERACTIVE_SESSION_ITER iterator) : iter(iterator){}
 

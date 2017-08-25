@@ -8,10 +8,7 @@
 
 using namespace std;
 
-DECLARE_MSG_DUMPER_PARAM()
-
 ///////////////////////////////////////////////////////////////////////////////////
-
 
 const int StockCandleStick::CANDLE_STICK_DESCRIPTION_SIZE = 64;
 

@@ -9,8 +9,6 @@
 
 using namespace std;
 
-DECLARE_MSG_DUMPER_PARAM()
-
 QuerySet::const_iterator::const_iterator(INT_INT_DEQUE_MAP_ITER iterator) : iter(iterator){}
 
 QuerySet::const_iterator QuerySet::const_iterator::operator++()

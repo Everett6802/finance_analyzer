@@ -12,8 +12,6 @@
 
 using namespace std;
 
-DECLARE_MSG_DUMPER_PARAM()
-
 ///////////////////////////////////////////////////////////////////////////////////
 // The Manager Base Class
 FinanceAnalyzerMgrBase::FinanceAnalyzerMgrBase() :

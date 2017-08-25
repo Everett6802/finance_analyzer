@@ -6,9 +6,6 @@
 
 using namespace std;
 
-DECLARE_MSG_DUMPER_PARAM()
-
-
 ///////////////////////////////////////////////////////////////////////////////////
 // The Data Collector Base Class
 FinanceAnalyzerDataCollectorBase::FinanceAnalyzerDataCollectorBase() :

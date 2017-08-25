@@ -29,7 +29,6 @@ const char* FinanceAnalyzerSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT 
 
 //const char* FinanceAnalyzerSqlReader::format_cmd_create_table = "CREATE TABLE sql%s (date VARCHAR(16), time VARCHAR(16), severity INT, data VARCHAR(512))";
 //const char* FinanceAnalyzerSqlReader::format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
-DECLARE_MSG_DUMPER_PARAM()
 
 unsigned short FinanceAnalyzerSqlReader::get_sql_field_command(int source_type_index, const INT_DEQUE& query_field, string& field_cmd)
 {

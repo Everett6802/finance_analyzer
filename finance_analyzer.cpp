@@ -53,7 +53,6 @@ static PSEARCH_RULE_SET search_rule_set = NULL;
 static bool show_stock_support_resistance_detail = false;
 // static ResultSetMap result_set_map;
 DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
-DECLARE_MSG_DUMPER_PARAM();
 
 static void signal_handler(int signo);
 
