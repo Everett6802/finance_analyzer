@@ -119,10 +119,13 @@ price     unit
 		return 1.0;
 	else if (stock_close_price >= 1000.0)
 		return 0.5;
-	static const int ERRMSG_BUF_SIZE = 32;
-	static char errmsg[ERRMSG_BUF_SIZE];
-	snprintf(errmsg, ERRMSG_BUF_SIZE, "The tick of the price [%.2f] is NOT defined", stock_close_price);
-	invalid_argument(string(errmsg));
+	else
+	{
+		static const int ERRMSG_BUF_SIZE = 32;
+		static char errmsg[ERRMSG_BUF_SIZE];
+		snprintf(errmsg, ERRMSG_BUF_SIZE, "The tick of the price [%.2f] is NOT defined", stock_close_price);
+		throw invalid_argument(string(errmsg));		
+	}
 }
 
 float FinanceAnalyzerStockSupportResistance::calculate_highest_price_limit(float stock_close_price, float price_limit_ratio)

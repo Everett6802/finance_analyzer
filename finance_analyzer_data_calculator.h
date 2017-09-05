@@ -38,7 +38,7 @@ private:
 	
 public:
 	FinanceAnalyzerDataCalculatorBase();
-	~FinanceAnalyzerDataCalculatorBase();
+	virtual ~FinanceAnalyzerDataCalculatorBase();
 
 	unsigned short initialize(STRING_LIST& src_email_address_list);
 

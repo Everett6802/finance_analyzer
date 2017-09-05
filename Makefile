@@ -15,8 +15,10 @@ LIB_MSG_DUMPER_WRAPPER_HEADER := msg_dumper_wrapper.h
 LIB_MSG_DUMPER_WRAPPER_SOURCE := msg_dumper_wrapper.cpp
 
 OUTPUT := finance_analyzer
-	
-build: $(LIB_MSG_DUMPER_HEADER) $(LIB_MSG_DUMPER_WRAPPER_HEADER) $(LIB_MSG_DUMPER_WRAPPER_SOURCE) $(LIB_MSG_DUMPER) $(OUTPUT)
+
+build: $(OUTPUT)
+
+deep_build: $(LIB_MSG_DUMPER_HEADER) $(LIB_MSG_DUMPER_WRAPPER_HEADER) $(LIB_MSG_DUMPER_WRAPPER_SOURCE) $(LIB_MSG_DUMPER) $(OUTPUT)
 
 $(OUTPUT): $(OBJS)
 	$(CC) $(CXXFLAGS) $^ -o $@ -Wl,--start-group $(LIB_MSG_DUMPER) -Wl,--end-group -lrt -ldl -lpthread -lmysqlclient
@@ -39,6 +41,11 @@ $(LIB_MSG_DUMPER):
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
 clean:
+	rm -f $(OBJS) 2> /dev/null
+	rm -f $(LIB_MSG_DUMPER) 2> /dev/null
+	rm -f $(OUTPUT) 2> /dev/null
+
+deep_clean: $(clean)
 	rm -f $(OBJS) 2> /dev/null
 	rm -f $(LIB_MSG_DUMPER) 2> /dev/null
 	rm -f $(OUTPUT) 2> /dev/null

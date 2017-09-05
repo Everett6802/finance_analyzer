@@ -47,13 +47,7 @@ FinanceAnalyzerWorkdayCanlendar::FinanceAnalyzerWorkdayCanlendar() :
 
 FinanceAnalyzerWorkdayCanlendar::~FinanceAnalyzerWorkdayCanlendar()
 {
-	for(YEAR_MAP::iterator iter = workday_map.begin() ; iter != workday_map.end() ; iter++)
-	{
-		PDAY_DEQUE day_deque_ptr = (PDAY_DEQUE)iter->second;
-		delete[] day_deque_ptr;
-	}
-	workday_map.clear();
-
+	deinitialize();
 	RELEASE_MSG_DUMPER()
 }
 
@@ -191,6 +185,19 @@ OUT:
 	sort(workday_year_sort_queue.begin(), workday_year_sort_queue.end());
 	workday_year_sort_queue_size = workday_year_sort_queue.size();
 	return ret;
+}
+
+void FinanceAnalyzerWorkdayCanlendar::deinitialize()
+{
+	for(YEAR_MAP::iterator iter = workday_map.begin() ; iter != workday_map.end() ; iter++)
+	{
+		PDAY_DEQUE day_deque_ptr = (PDAY_DEQUE)iter->second;
+		delete[] day_deque_ptr;
+	}
+	workday_map.clear();
+// Set the instance to NULL
+	if (instance != NULL)
+		instance = NULL;
 }
 
 int FinanceAnalyzerWorkdayCanlendar::add_ref()

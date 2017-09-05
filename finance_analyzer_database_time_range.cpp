@@ -44,11 +44,7 @@ FinanceAnalyzerDatabaseTimeRange::FinanceAnalyzerDatabaseTimeRange() :
 
 FinanceAnalyzerDatabaseTimeRange::~FinanceAnalyzerDatabaseTimeRange()
 {
-	int database_time_range_deque_size = database_time_range_deque.size();
-	for (int i = 0 ; i < database_time_range_deque_size ; i++)
-		delete database_time_range_deque[i];
-	database_time_range_deque.clear();
-
+	deinitialize();
 	RELEASE_MSG_DUMPER()
 }
 
@@ -160,6 +156,17 @@ unsigned short FinanceAnalyzerDatabaseTimeRange::initialize()
 	}
 
 	return ret;
+}
+
+void FinanceAnalyzerDatabaseTimeRange::deinitialize()
+{
+	int database_time_range_deque_size = database_time_range_deque.size();
+	for (int i = 0 ; i < database_time_range_deque_size ; i++)
+		delete database_time_range_deque[i];
+	database_time_range_deque.clear();
+// Set the instance to NULL
+	if (instance != NULL)
+		instance = NULL;
 }
 
 unsigned short FinanceAnalyzerDatabaseTimeRange::get_max_database_time_range(SmartPointer<TimeRangeCfg>& sp_max_database_time_range_cfg)

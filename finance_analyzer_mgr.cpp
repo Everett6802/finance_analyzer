@@ -121,7 +121,6 @@ unsigned short FinanceAnalyzerMgrBase::initialize()
 	ret = parse_config();
 	if (CHECK_FAILURE(ret))
 		return ret;
-
 	return RET_SUCCESS;
 }
 
@@ -161,7 +160,8 @@ IFinanceAnalyzerMgr* FinanceAnalyzerMarketMgr::create_instance()
 }
 
 FinanceAnalyzerMarketMgr::FinanceAnalyzerMarketMgr() :
-	market_data_collector(NULL)
+	market_data_collector(NULL),
+	market_data_calculator(NULL)
 {
 	market_data_collector = new FinanceAnalyzerMarketDataCollector();
 	if (market_data_collector == NULL)
@@ -183,8 +183,9 @@ FinanceAnalyzerMarketMgr::~FinanceAnalyzerMarketMgr()
 unsigned short FinanceAnalyzerMarketMgr::initialize()
 {
 	WRITE_DEBUG("Initialize FinanceAnalyzerMarketMgr.....");
-	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
-	return RET_SUCCESS;
+	unsigned short ret = FinanceAnalyzerMgrBase::initialize();
+	// fprintf(stderr, "Initialize FinanceAnalyzerStockinitialize().....\n");
+	return ret;
 }
 
 unsigned short FinanceAnalyzerMarketMgr::search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)
@@ -210,7 +211,8 @@ IFinanceAnalyzerMgr* FinanceAnalyzerStockMgr::create_instance()
 }
 
 FinanceAnalyzerStockMgr::FinanceAnalyzerStockMgr() :
-	stock_data_collector(NULL)
+	stock_data_collector(NULL),
+	stock_data_calculator(NULL)
 {
 	stock_data_collector = new FinanceAnalyzerStockDataCollector();
 	if (stock_data_collector == NULL)
@@ -233,8 +235,9 @@ FinanceAnalyzerStockMgr::~FinanceAnalyzerStockMgr()
 unsigned short FinanceAnalyzerStockMgr::initialize()
 {
 	WRITE_DEBUG("Initialize FinanceAnalyzerStockMgr.....");
-	// fprintf(stderr, "Initialize FinanceAnalyzerStockMgr.....\n");
-	return RET_SUCCESS;
+	unsigned short ret = FinanceAnalyzerMgrBase::initialize();
+	// fprintf(stderr, "Initialize FinanceAnalyzerStockinitialize().....\n");
+	return ret;
 }
 
 unsigned short FinanceAnalyzerStockMgr::search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)

@@ -37,6 +37,7 @@ private:
 	~FinanceAnalyzerWorkdayCanlendar();
 
 	unsigned short initialize();
+	void deinitialize();
 	bool check_in_range(int year, int month, int day)const;
 	bool check_in_range(const PTIME_CFG time_cfg)const;
 	bool check_greater_than_start(int year, int month, int day)const;

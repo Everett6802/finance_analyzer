@@ -32,9 +32,10 @@ private:
 	FinanceAnalyzerDatabaseTimeRange();
 	FinanceAnalyzerDatabaseTimeRange(const FinanceAnalyzerDatabaseTimeRange&);
 	const FinanceAnalyzerDatabaseTimeRange& operator=(const FinanceAnalyzerDatabaseTimeRange&);
-	~FinanceAnalyzerDatabaseTimeRange();
+	virtual ~FinanceAnalyzerDatabaseTimeRange();
 
 	unsigned short initialize();
+	void deinitialize();
 
 public:
 	static FinanceAnalyzerDatabaseTimeRange* get_instance();
