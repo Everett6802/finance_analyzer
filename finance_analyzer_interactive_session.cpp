@@ -26,8 +26,12 @@ enum InteractiveSessionCommandType
 	InteractiveSessionCommand_SetCompany,
 	InteractiveSessionCommand_Search,
 	InteractiveSessionCommand_SetStockSupportResistanceFilepath,
+	InteractiveSessionCommand_SetStockSupportResistanceVerbose,
+	InteractiveSessionCommand_SeteStockSupportResistanceDateFilter,
+	InteractiveSessionCommand_SetStockSupportResistanceVolumeFilter,
+	InteractiveSessionCommand_GetStockSupportResistanceParameters,
+	InteractiveSessionCommand_CleanupStockSupportResistanceParameters,
 	InteractiveSessionCommand_FindStockSupportResistance,
-	// InteractiveSessionCommand_FindStockSupportResistanceVerbose,
 	InteractiveSessionCommand_Help,
 	InteractiveSessionCommand_Exit,
 	InteractiveSessionCommandSize
@@ -45,6 +49,11 @@ static const char *interactive_session_command[InteractiveSessionCommandSize] =
 	"set_company",
 	"search",
 	"set_stock_support_resistance_filepath",
+	"set_stock_support_resistance_verbose",
+	"set_stock_support_resistance_date_filter",
+	"set_stock_support_resistance_volume_filter",
+	"get_stock_support_resistance_parameters",
+	"cleanup_stock_support_resistance_parameters",
 	"find_stock_support_resistance",
 	"help",
 	"exit"
@@ -113,9 +122,12 @@ FinanceAnalyzerInteractiveSession::FinanceAnalyzerInteractiveSession(int client_
 	time_range_string_param(NULL),
 	company_string_param(NULL),
 	search_rule_need_reset(true),
+	show_stock_support_resistance_verbose(false),
+	stock_support_resistance_date_filter(NULL),
+	stock_support_resistance_volume_filter(NULL),
 	// search_rule_set(NULL),
 	result_set_map(NULL),
-	price_support_and_resistance_root_folderpath(NULL)
+	stock_support_and_resistance_root_folderpath(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 	init_command_map();
@@ -126,10 +138,20 @@ FinanceAnalyzerInteractiveSession::FinanceAnalyzerInteractiveSession(int client_
 	
 FinanceAnalyzerInteractiveSession::~FinanceAnalyzerInteractiveSession()
 {
-	if (price_support_and_resistance_root_folderpath != NULL)
+	if (stock_support_and_resistance_root_folderpath != NULL)
 	{
-		delete[] price_support_and_resistance_root_folderpath;
-		price_support_and_resistance_root_folderpath = NULL;
+		delete[] stock_support_and_resistance_root_folderpath;
+		stock_support_and_resistance_root_folderpath = NULL;
+	}
+	if (stock_support_resistance_volume_filter)
+	{
+		delete[] stock_support_resistance_volume_filter;
+		stock_support_resistance_volume_filter = NULL;
+	}
+	if (stock_support_resistance_date_filter)
+	{
+		delete[] stock_support_resistance_date_filter;
+		stock_support_resistance_date_filter = NULL;
 	}
 	if (sql_reader != NULL)
 	{
@@ -433,6 +455,11 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_command(int argc, char 
 		&FinanceAnalyzerInteractiveSession::handle_set_company_command,
 		&FinanceAnalyzerInteractiveSession::handle_search_command,
 		&FinanceAnalyzerInteractiveSession::handle_set_stock_support_resistance_filepath_command,
+		&FinanceAnalyzerInteractiveSession::handle_set_stock_support_resistance_verbose_command,
+		&FinanceAnalyzerInteractiveSession::handle_set_stock_support_resistance_date_filter_command,
+		&FinanceAnalyzerInteractiveSession::handle_set_stock_support_resistance_volume_filter_command,
+		&FinanceAnalyzerInteractiveSession::handle_get_stock_support_resistance_parameters_command,
+		&FinanceAnalyzerInteractiveSession::handle_cleanup_stock_support_resistance_parameters_command,
 		&FinanceAnalyzerInteractiveSession::handle_find_stock_support_resistance_command,
 		&FinanceAnalyzerInteractiveSession::handle_help_command,
 		&FinanceAnalyzerInteractiveSession::handle_exit_command
@@ -670,19 +697,139 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_set_stock_support_resis
 		print_to_console(incorrect_command_phrases);
 		return RET_WARN_INTERACTIVE_COMMAND;
 	}
-	if (price_support_and_resistance_root_folderpath != NULL)
+	if (stock_support_and_resistance_root_folderpath != NULL)
 	{
-		delete[] price_support_and_resistance_root_folderpath;
-		price_support_and_resistance_root_folderpath = NULL;
+		delete[] stock_support_and_resistance_root_folderpath;
+		stock_support_and_resistance_root_folderpath = NULL;
 	}
-	int price_support_and_resistance_root_folderpath_len = strlen(argv[1]);
-	price_support_and_resistance_root_folderpath = new char[price_support_and_resistance_root_folderpath_len + 1];
-	if (price_support_and_resistance_root_folderpath == NULL)
+	int stock_support_and_resistance_root_folderpath_len = strlen(argv[1]);
+	stock_support_and_resistance_root_folderpath = new char[stock_support_and_resistance_root_folderpath_len + 1];
+	if (stock_support_and_resistance_root_folderpath == NULL)
 		throw bad_alloc();
-	memcpy(price_support_and_resistance_root_folderpath, argv[1], sizeof(char) * (price_support_and_resistance_root_folderpath_len + 1));
+	memcpy(stock_support_and_resistance_root_folderpath, argv[1], sizeof(char) * (stock_support_and_resistance_root_folderpath_len + 1));
 	return RET_SUCCESS;
 }
 
+unsigned short FinanceAnalyzerInteractiveSession::handle_set_stock_support_resistance_verbose_command(int argc, char **argv)
+{
+	if (argc != 2)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	if (strcasecmp("True", argv[1]) == 0)
+		show_stock_support_resistance_verbose = true;
+	else if (strcasecmp("False", argv[1]) == 0)
+		show_stock_support_resistance_verbose = false;
+	else
+	{
+		static char rsp_buf[RSP_BUF_SIZE];
+		snprintf(rsp_buf, RSP_BUF_SIZE, "Unknown parameter for enabling stock support resistance verbose: %s", argv[1]);
+		WRITE_WARN(rsp_buf);
+		print_to_console(rsp_buf);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_set_stock_support_resistance_date_filter_command(int argc, char **argv)
+{
+	if (argc != 2)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	if (stock_support_resistance_date_filter != NULL)
+	{
+		delete[] stock_support_resistance_date_filter;
+		stock_support_resistance_date_filter = NULL;
+	}
+	int stock_support_resistance_date_filter_len = strlen(argv[1]);
+	stock_support_resistance_date_filter = new char[stock_support_resistance_date_filter_len + 1];
+	if (stock_support_resistance_date_filter == NULL)
+		throw bad_alloc();
+	memcpy(stock_support_resistance_date_filter, argv[1], sizeof(char) * (stock_support_resistance_date_filter_len + 1));
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_set_stock_support_resistance_volume_filter_command(int argc, char **argv)
+{
+	if (argc != 2)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	if (stock_support_resistance_volume_filter != NULL)
+	{
+		delete[] stock_support_resistance_volume_filter;
+		stock_support_resistance_volume_filter = NULL;
+	}
+	int stock_support_resistance_volume_filter_len = strlen(argv[1]);
+	stock_support_resistance_volume_filter = new char[stock_support_resistance_volume_filter_len + 1];
+	if (stock_support_resistance_volume_filter == NULL)
+		throw bad_alloc();
+	memcpy(stock_support_resistance_volume_filter, argv[1], sizeof(char) * (stock_support_resistance_volume_filter_len + 1));
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_get_stock_support_resistance_parameters_command(int argc, char **argv)
+{
+	if (argc != 1)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	static const int BUF_SIZE = 256;
+	static char buf[BUF_SIZE];
+	string parameters_string = "";
+	parameters_string += string("*** Stock Support and Resistance Parameters ***\n");
+	const char* stock_support_and_resistance_root_folderpath_param = ((stock_support_and_resistance_root_folderpath == NULL) ? DEFAULT_STOCK_SUPPORT_RESISTANCE_ROOT_FOLDERPATH : stock_support_and_resistance_root_folderpath);
+	snprintf(buf, BUF_SIZE, " Company data root folder path: %s\n", stock_support_and_resistance_root_folderpath_param);
+	parameters_string += string(buf);
+	snprintf(buf, BUF_SIZE, " Show verbose: %s\n", (show_stock_support_resistance_verbose ? "True" : "False"));
+	parameters_string += string(buf);
+	const char* stock_support_resistance_date_filter_param = ((stock_support_resistance_date_filter == NULL) ? "Not set" : stock_support_resistance_date_filter);
+	snprintf(buf, BUF_SIZE, " Date filter: %s\n", stock_support_resistance_date_filter_param);
+	parameters_string += string(buf);
+	const char* stock_support_resistance_volume_filter_param = ((stock_support_resistance_volume_filter == NULL) ? "Not set" : stock_support_resistance_volume_filter);
+	snprintf(buf, BUF_SIZE, " Volume filter: %s\n", stock_support_resistance_volume_filter_param);
+	parameters_string += string(buf);
+	print_to_console(parameters_string.c_str());
+	
+	return RET_SUCCESS;
+}
+
+unsigned short FinanceAnalyzerInteractiveSession::handle_cleanup_stock_support_resistance_parameters_command(int argc, char **argv)
+{
+	if (argc != 1)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	if (stock_support_and_resistance_root_folderpath != NULL)
+	{
+		delete[] stock_support_and_resistance_root_folderpath;
+		stock_support_and_resistance_root_folderpath = NULL;
+	}
+	if (stock_support_resistance_volume_filter)
+	{
+		delete[] stock_support_resistance_volume_filter;
+		stock_support_resistance_volume_filter = NULL;
+	}
+	if (stock_support_resistance_date_filter)
+	{
+		delete[] stock_support_resistance_date_filter;
+		stock_support_resistance_date_filter = NULL;
+	}
+	show_stock_support_resistance_verbose = false;
+	
+	return RET_SUCCESS;
+}
 unsigned short FinanceAnalyzerInteractiveSession::handle_find_stock_support_resistance_command(int argc, char **argv)
 {
 	if (argc != 2)
@@ -691,8 +838,8 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_find_stock_support_resi
 		print_to_console(incorrect_command_phrases);
 		return RET_WARN_INTERACTIVE_COMMAND;
 	}
-	char *stock_support_resistance_entry = argv[0];
-	string price_support_and_resistance_result;
+	char *stock_support_resistance_entry = argv[1];
+	string stock_support_resistance_result;
 // Parse the data 
 	char* comma_pos = strchr(stock_support_resistance_entry, ':');
 	if (comma_pos == NULL)
@@ -715,15 +862,15 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_find_stock_support_resi
 	float stock_close_price = atof(stock_close_price_buf);
 	unsigned short ret = RET_SUCCESS;
 // Analyze data from each stock
-	price_support_and_resistance_result += (string("==================") + string(company_number_buf) + string("==================\nClose Price: ") + string(stock_close_price_buf) + string("\n"));
-	string price_support_resistance_string;
-	ret = manager->get_stock_price_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath);
+	stock_support_resistance_result += (string("==================") + string(company_number_buf) + string("==================\nClose Price: ") + string(stock_close_price_buf) + string("\n"));
+	string stock_support_resistance_string;
+	ret = manager->get_stock_support_resistance_string(string(company_number_buf), stock_close_price, stock_support_resistance_string, stock_support_and_resistance_root_folderpath, show_stock_support_resistance_verbose, stock_support_resistance_date_filter, stock_support_resistance_volume_filter);
 	if (CHECK_FAILURE(ret))
 	{
 		if (FAILURE_IS_NOT_FOUND(ret))
 		{
-			price_support_and_resistance_result += "No Data\n\n";
-			WRITE_FORMAT_WARN("WARNING: The %s support resistance file does NOT exist in %s", company_number_buf, price_support_and_resistance_root_folderpath);
+			stock_support_resistance_result += "No Data\n\n";
+			WRITE_FORMAT_WARN("WARNING: The %s support resistance file does NOT exist in %s", company_number_buf, stock_support_and_resistance_root_folderpath);
 		}
 		else
 		{
@@ -732,8 +879,8 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_find_stock_support_resi
 		}
 	}
 	else
-		price_support_and_resistance_result += (price_support_resistance_string + string("\n")) ;
-	ret = print_to_console(price_support_and_resistance_result);
+		stock_support_resistance_result += (stock_support_resistance_string + string("\n")) ;
+	ret = print_to_console(stock_support_resistance_result);
 	return ret;
 }
 
@@ -783,6 +930,15 @@ unsigned short FinanceAnalyzerInteractiveSession::handle_help_command(int argc, 
 		usage_string += string("  Format 3: Company group number (ex. [Gg]12)\n");
 		usage_string += string("  Format 4: Company group number range (ex. [Gg]12-15)\n");
 		usage_string += string("  Format 5: Company code number/number range/group/group range hybrid (ex. 2347,2100-2200,G12,2362,g2,1500-1510)\n");
+		snprintf(buf, BUF_SIZE, "* set_stock_support_resistance_filepath\nDescription: Set the file path for finding the stock support and resistance of a specific company\nDefault: %s\n", DEFAULT_STOCK_SUPPORT_RESISTANCE_ROOT_FOLDERPATH);
+		usage_string += string(buf);
+		usage_string += string("* set_stock_support_resistance_verbose\nDescription: Enable/Disable to show the stock support and resistance of a specific company in detail\nDefault: False\n");
+		usage_string += string("* set_stock_support_resistance_date_filter\nDescription: Set the filter to ignore the data which is eariler than a specific date\n");
+		usage_string += string("  Format: Date(ex. 170801)");
+		usage_string += string("* set_stock_support_resistance_volume_filter\nDescription: Set the filter to ignore the data whose volume is smaller than a specific value\n");
+		usage_string += string("  Format: Value(ex. 5000)");
+		usage_string += string("* get_stock_support_resistance_parameters\nDescription: Get the parametres for finding the stock support and resistance of a specific company\n");
+		usage_string += string("* cleanup_stock_support_resistance_parameters\nDescription: Clean up the parametres for finding the stock support and resistance of a specific company\n");
 		usage_string += string("* find_stock_support_resistance\nDescription: Find the stock support and resistance of a specific company\n");
 		usage_string += string("  Format: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
 		// usage_string += string("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\nCaution: Max up to %d stock entry once", MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT);

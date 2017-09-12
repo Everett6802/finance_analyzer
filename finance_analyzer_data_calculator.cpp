@@ -547,7 +547,7 @@ FinanceAnalyzerMarketDataCalculator::~FinanceAnalyzerMarketDataCalculator()
 ///////////////////////////////////////////////////////////////////////////////////
 // The Stock Data Calculator Class
 FinanceAnalyzerStockDataCalculator::FinanceAnalyzerStockDataCalculator() :
-	price_support_resistance_folderpath(DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH)
+	stock_support_resistance_folderpath(DEFAULT_STOCK_SUPPORT_RESISTANCE_ROOT_FOLDERPATH)
 {
 }
 
@@ -555,24 +555,24 @@ FinanceAnalyzerStockDataCalculator::~FinanceAnalyzerStockDataCalculator()
 {
 }
 
-unsigned short FinanceAnalyzerStockDataCalculator::set_price_support_resistance_folderpath(const std::string& stock_price_support_resistance_folderpath)
+unsigned short FinanceAnalyzerStockDataCalculator::set_stock_support_resistance_folderpath(const std::string& new_stock_support_resistance_folderpath)
 {
-	price_support_resistance_folderpath = stock_price_support_resistance_folderpath;
+	stock_support_resistance_folderpath = new_stock_support_resistance_folderpath;
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerStockDataCalculator::get_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, string& price_support_resistance_string, bool show_detail, const char* time_filter_rule, const char* volume_filter_rule)
+unsigned short FinanceAnalyzerStockDataCalculator::get_stock_support_resistance_string(const std::string& company_code_number, float stock_close_price, string& stock_support_resistance_string, bool show_detail, const char* time_filter_rule, const char* volume_filter_rule)
 {
 	static const int FILEPATH_BUF_SIZE = 256;
 	static char filepath_buf[FILEPATH_BUF_SIZE];
 	unsigned short ret = RET_SUCCESS;
-	snprintf(filepath_buf, FILEPATH_BUF_SIZE, "%s/%s", price_support_resistance_folderpath.c_str(), company_code_number.c_str());
+	snprintf(filepath_buf, FILEPATH_BUF_SIZE, "%s/%s", stock_support_resistance_folderpath.c_str(), company_code_number.c_str());
 	WRITE_FORMAT_DEBUG("Find company[%s] support and resistance", company_code_number.c_str());
 	FinanceAnalyzerStockSupportResistance stock_support_resistance;
 	ret = stock_support_resistance.initialize(filepath_buf, stock_close_price, time_filter_rule, volume_filter_rule);
 	if (CHECK_FAILURE(ret))
 		return ret;
-	ret = stock_support_resistance.get_support_resistance_price_full_string(price_support_resistance_string, show_detail);
+	ret = stock_support_resistance.get_support_resistance_price_full_string(stock_support_resistance_string, show_detail);
 	if (CHECK_FAILURE(ret))
 		return ret;
 	return ret;

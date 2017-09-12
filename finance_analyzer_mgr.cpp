@@ -195,7 +195,7 @@ unsigned short FinanceAnalyzerMarketMgr::search(PSEARCH_RULE_SET search_rule_set
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerMarketMgr::get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath, bool show_detail, const char* stock_price_support_resistance_time_filter, const char* price_support_resistance_volume_filter)
+unsigned short FinanceAnalyzerMarketMgr::get_stock_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& stock_support_resistance_string, const char* stock_stock_support_resistance_folderpath, bool show_detail, const char* stock_stock_support_resistance_time_filter, const char* stock_support_resistance_volume_filter)
 {
 	throw logic_error(string("Only supported in the Stock mode"));
 }
@@ -247,18 +247,18 @@ unsigned short FinanceAnalyzerStockMgr::search(PSEARCH_RULE_SET search_rule_set,
 	return RET_SUCCESS;
 }
 
-unsigned short FinanceAnalyzerStockMgr::get_stock_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, const char* stock_price_support_resistance_folderpath, bool show_detail, const char* stock_price_support_resistance_time_filter, const char* price_support_resistance_volume_filter)
+unsigned short FinanceAnalyzerStockMgr::get_stock_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& stock_support_resistance_string, const char* stock_stock_support_resistance_folderpath, bool show_detail, const char* stock_stock_support_resistance_time_filter, const char* stock_support_resistance_volume_filter)
 {
 	unsigned short ret = RET_SUCCESS;
 // Setup the filepath 
-	if (stock_price_support_resistance_folderpath != NULL)
+	if (stock_stock_support_resistance_folderpath != NULL)
 	{
-		ret = stock_data_calculator->set_price_support_resistance_folderpath(string(stock_price_support_resistance_folderpath));	
+		ret = stock_data_calculator->set_stock_support_resistance_folderpath(string(stock_stock_support_resistance_folderpath));	
 		if (CHECK_FAILURE(ret))
 			return ret;
 	}
 // Get the stock support and resistance string 
-	ret = stock_data_calculator->get_price_support_resistance_string(company_code_number, stock_close_price, price_support_resistance_string, show_detail, stock_price_support_resistance_time_filter, price_support_resistance_volume_filter);
+	ret = stock_data_calculator->get_stock_support_resistance_string(company_code_number, stock_close_price, stock_support_resistance_string, show_detail, stock_stock_support_resistance_time_filter, stock_support_resistance_volume_filter);
 	if (CHECK_FAILURE(ret))
 		return ret;
 	return ret;

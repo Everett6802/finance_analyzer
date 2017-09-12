@@ -66,14 +66,14 @@ typedef FinanceAnalyzerMarketDataCalculator* PFINANCE_ANALYZER_MARKET_DATA_STATI
 class FinanceAnalyzerStockDataCalculator : public FinanceAnalyzerDataCalculatorBase
 {
 private:
-	std::string price_support_resistance_folderpath;
+	std::string stock_support_resistance_folderpath;
 
 public:
 	FinanceAnalyzerStockDataCalculator();
 	~FinanceAnalyzerStockDataCalculator();
 
-	unsigned short set_price_support_resistance_folderpath(const std::string& stock_price_support_resistance_folderpath);
-	unsigned short get_price_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& price_support_resistance_string, bool show_detail=false, const char* time_filter_rule=NULL, const char* volume_filter_rule=NULL);
+	unsigned short set_stock_support_resistance_folderpath(const std::string& new_stock_support_resistance_folderpath);
+	unsigned short get_stock_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& stock_support_resistance_string, bool show_detail=false, const char* time_filter_rule=NULL, const char* volume_filter_rule=NULL);
 };
 typedef FinanceAnalyzerStockDataCalculator* PFINANCE_ANALYZER_STOCK_DATA_STATISTICS;
 ///////////////////////////////////////////////////////////////////////////////////

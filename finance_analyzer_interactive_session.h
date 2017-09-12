@@ -51,10 +51,13 @@ private:
 	char* time_range_string_param;
 	char* company_string_param;
 	bool search_rule_need_reset;
+	bool show_stock_support_resistance_verbose;
+	char* stock_support_resistance_date_filter;
+	char* stock_support_resistance_volume_filter;
 	// PSEARCH_RULE_SET search_rule_set;
 	PRESULT_SET_MAP result_set_map;
 	// unsigned short thread_ret;
-	char* price_support_and_resistance_root_folderpath;
+	char* stock_support_and_resistance_root_folderpath;
 
 	unsigned short thread_handler_internal();
 	unsigned short find_stock_support_resistance(const char* stock_support_resistance_entry);
@@ -69,6 +72,11 @@ private:
 	unsigned short handle_set_company_command(int argc, char **argv);
 	unsigned short handle_search_command(int argc, char **argv);
 	unsigned short handle_set_stock_support_resistance_filepath_command(int argc, char **argv);
+	unsigned short handle_set_stock_support_resistance_verbose_command(int argc, char **argv);
+	unsigned short handle_set_stock_support_resistance_date_filter_command(int argc, char **argv);
+	unsigned short handle_set_stock_support_resistance_volume_filter_command(int argc, char **argv);
+	unsigned short handle_get_stock_support_resistance_parameters_command(int argc, char **argv);
+	unsigned short handle_cleanup_stock_support_resistance_parameters_command(int argc, char **argv);
 	unsigned short handle_find_stock_support_resistance_command(int argc, char **argv);
 	unsigned short handle_help_command(int argc, char **argv);
 	unsigned short handle_exit_command(int argc, char **argv);

@@ -29,10 +29,10 @@ static bool param_silent = false;
 static const char* param_renew_company_profile_filepath = NULL;
 static bool param_renew_company = false;
 static const char* param_stock_support_resistance_filepath = NULL;
-static const char* param_find_stock_support_resistance = NULL;
-static const char* param_find_stock_support_resistance_verbose = NULL;
 static const char* param_filter_stock_support_resistance_date = NULL;
 static const char* param_filter_stock_support_resistance_volume = NULL;
+static const char* param_find_stock_support_resistance = NULL;
+static const char* param_find_stock_support_resistance_verbose = NULL;
 static char* param_log_severity_name = NULL;
 static char* param_syslog_severity_name = NULL;
 static char* param_test_case = NULL;
@@ -66,8 +66,8 @@ static void renew_company_and_exit(const char* source_company_profile_conf_folde
 static void run_test_cases_and_exit();
 static void find_stock_support_resistance_and_exit(const char* company_number_close_price_pair_list, const char* price_support_and_resistance_root_folderpath, const char* price_support_resistance_time_filter, const char* price_support_resistance_volume_filter);
 static void show_search_result_and_exit();
-static int parse_show_res_type(const char* show_res_type_string);
-static const char* get_statistics_method_description(StatisticsMethod statistics_method);
+// static int parse_show_res_type(const char* show_res_type_string);
+// static const char* get_statistics_method_description(StatisticsMethod statistics_method);
 // static void daemonize();
 static unsigned short init_interactive_server();
 
@@ -146,15 +146,15 @@ void show_usage_and_exit()
 		PRINT("  Format 5: Company code number/number range/group/group range hybrid (ex. 2347,g3-5,G12,2362,g2,1500-1510)\n");
 		PRINT("--renew_company\nDescription: Renew the table of the company profile\nCaution: Exit after renewing the company profile\n");
 		PRINT("--renew_company_profile_filepath\nDescription: The company profile filepath for renewing the table of the company profile\nDefault: %s\n", DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH);
-		PRINT("--stock_support_resistance_filepath\nDescription: Set the file path for finding the stock support and resistance of a specific company\nDefault: %s\n", DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH);
-		PRINT("--find_stock_support_resistance\nDescription: Find the stock support and resistance of a specific company\n");
-		PRINT("--find_stock_support_resistance_verbose\nDescription: Find the stock support and resistance of a specific company in detail\n");
+		PRINT("--stock_support_resistance_filepath\nDescription: Set the file path for finding the stock support and resistance of a specific company\nDefault: %s\n", DEFAULT_STOCK_SUPPORT_RESISTANCE_ROOT_FOLDERPATH);
+		PRINT("--enable_stock_support_resistance_verbose\nDescription: Find the stock support and resistance of a specific company in detail\n");
 		PRINT("  Format 1: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
 		PRINT("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\nCaution: Max up to %d stock entry once", MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT);
 		PRINT("--filter_stock_support_resistance_date\nDescription: Filter the data which is eariler than a specific date\n");
 		PRINT("  Format 1: Date(ex. 170801)");
 		PRINT("--filter_stock_support_resistance_volume\nDescription: Filter the data whose volume is smaller than a specific value\n");
 		PRINT("  Format 1: Value(ex. 5000)");
+		PRINT("--find_stock_support_resistance\nDescription: Find the stock support and resistance of a specific company\n");
 	}
 // Search
 	if (g_finance_analysis_mode == FinanceAnalysis_Market)
@@ -232,20 +232,6 @@ unsigned short parse_param(int argc, char** argv)
 			param_stock_support_resistance_filepath = argv[index + 1];
 			offset = 2;
 		}
-		else if (strcmp(argv[index], "--find_stock_support_resistance_verbose") == 0)
-		{
-			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'find_stock_support_resistance_verbose' parameter");
-			param_find_stock_support_resistance_verbose = argv[index + 1];
-			offset = 2;
-		}
-		else if (strcmp(argv[index], "--find_stock_support_resistance") == 0)
-		{
-			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'find_stock_support_resistance' parameter");
-			param_find_stock_support_resistance = argv[index + 1];
-			offset = 2;
-		}
 		else if (strcmp(argv[index], "--filter_stock_support_resistance_date") == 0)
 		{
 			if (index + 1 >= argc)
@@ -258,6 +244,20 @@ unsigned short parse_param(int argc, char** argv)
 			if (index + 1 >= argc)
 				print_errmsg_and_exit("No argument found in 'filter_stock_support_resistance_volume' parameter");
 			param_filter_stock_support_resistance_volume = argv[index + 1];
+			offset = 2;
+		}
+		else if (strcmp(argv[index], "--find_stock_support_resistance") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'find_stock_support_resistance' parameter");
+			param_find_stock_support_resistance = argv[index + 1];
+			offset = 2;
+		}
+		else if (strcmp(argv[index], "--find_stock_support_resistance_verbose") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'enable_stock_support_resistance_verbose' parameter");
+			param_find_stock_support_resistance_verbose = argv[index + 1];
 			offset = 2;
 		}
 		else if (strcmp(argv[index], "--silent") == 0)
@@ -511,16 +511,6 @@ unsigned short check_param()
 			param_stock_support_resistance_filepath = NULL;
 			PRINT("WARNING: the Stock Support Resistance Filepath argument is ignored in the Finance Market mode\n");
 		}
-		if (param_find_stock_support_resistance != NULL)
-		{
-			param_find_stock_support_resistance = NULL;
-			PRINT("WARNING: the Find Stock Support Resistance argument is ignored in the Finance Market mode\n");
-		}
-		if (param_find_stock_support_resistance_verbose != NULL)
-		{
-			param_find_stock_support_resistance_verbose = NULL;
-			PRINT("WARNING: the Find Stock Support Resistance Verbose argument is ignored in the Finance Market mode\n");
-		}
 		if (param_filter_stock_support_resistance_date != NULL)
 		{
 			param_filter_stock_support_resistance_date = NULL;
@@ -531,6 +521,16 @@ unsigned short check_param()
 			param_filter_stock_support_resistance_volume = NULL;
 			PRINT("WARNING: the Filter Stock Support Resistance Volume argument is ignored in the Finance Market mode\n");
 		}	
+		if (param_find_stock_support_resistance != NULL)
+		{
+			param_find_stock_support_resistance = NULL;
+			PRINT("WARNING: the Find Stock Support Resistance argument is ignored in the Finance Market mode\n");
+		}
+		if (param_find_stock_support_resistance_verbose != NULL)
+		{
+			param_find_stock_support_resistance_verbose = NULL;
+			PRINT("WARNING: the Find Stock Support Resistance Verbose argument is ignored in the Finance Market mode\n");
+		}
 	}
 	else
 	{
@@ -569,7 +569,7 @@ unsigned short check_param()
 		if (param_find_stock_support_resistance != NULL)
 		{
 			if (param_stock_support_resistance_filepath == NULL)
-				param_stock_support_resistance_filepath = DEFAULT_PRICE_SUPPORT_RESISTANCE_ROOT_FOLDERPATH;
+				param_stock_support_resistance_filepath = DEFAULT_STOCK_SUPPORT_RESISTANCE_ROOT_FOLDERPATH;
 		}
 		else
 		{
@@ -820,7 +820,7 @@ void find_stock_support_resistance_and_exit(const char* company_number_close_pri
 // Analyze data from each stock
 		price_support_and_resistance_result += (string("==================") + string(company_number_buf) + string("==================\nClose Price: ") + string(stock_close_price_buf) + string("\n"));
 		string price_support_resistance_string;
-		ret = manager->get_stock_price_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath, show_stock_support_resistance_detail, price_support_resistance_time_filter, price_support_resistance_volume_filter);
+		ret = manager->get_stock_support_resistance_string(string(company_number_buf), stock_close_price, price_support_resistance_string, price_support_and_resistance_root_folderpath, show_stock_support_resistance_detail, price_support_resistance_time_filter, price_support_resistance_volume_filter);
 		if (CHECK_FAILURE(ret))
 		{
 			if (FAILURE_IS_NOT_FOUND(ret))
@@ -846,33 +846,33 @@ void find_stock_support_resistance_and_exit(const char* company_number_close_pri
 	exit(EXIT_SUCCESS);
 }
 
-const char* get_statistics_method_description(StatisticsMethod statistics_method)
-{
-	if (IS_FORMULA_STATISTICS_METHOD(statistics_method))
-		return "Statistics by Formula";
-	else if (IS_TABLE_STATISTICS_METHOD(statistics_method))
-		return "Statistics by Table";
-	else if (IS_GRAPH_STATISTICS_METHOD(statistics_method))
-		return "Statistics by Graph";
-	assert ("Unknown Statistics Method");
-	return NULL;
-}
+// const char* get_statistics_method_description(StatisticsMethod statistics_method)
+// {
+// 	if (IS_FORMULA_STATISTICS_METHOD(statistics_method))
+// 		return "Statistics by Formula";
+// 	else if (IS_TABLE_STATISTICS_METHOD(statistics_method))
+// 		return "Statistics by Table";
+// 	else if (IS_GRAPH_STATISTICS_METHOD(statistics_method))
+// 		return "Statistics by Graph";
+// 	assert ("Unknown Statistics Method");
+// 	return NULL;
+// }
 
-int parse_show_res_type(const char* show_res_type_string)
-{
-	static const int SHOW_RES_TYPE[] = {SHOW_RES_STDOUT, SHOW_RES_EMAIL, SHOW_RES_FILE, SHOW_RES_SYSLOG, SHOW_RES_DEFAULT, SHOW_RES_ALL};
-	assert(show_res_type_string != NULL && "show_res_type_string should NOT be NULL");
-	int show_res_type_string_len = strlen(show_res_type_string);
-	for (int i = 0 ; i < SHOW_RES_TYPE_SIZE ; i++)
-	{
-		if (strncmp(show_res_type_string, SHOW_RES_TYPE_DESCRIPTION[i], show_res_type_string_len) == 0)
-			return SHOW_RES_TYPE[i];
-	}
-	char errmsg[256];
-	snprintf(errmsg, 256, "Unknown show result type: %s", show_res_type_string);
-	print_errmsg_and_exit(errmsg);
-	return 0;
-}
+// int parse_show_res_type(const char* show_res_type_string)
+// {
+// 	static const int SHOW_RES_TYPE[] = {SHOW_RES_STDOUT, SHOW_RES_EMAIL, SHOW_RES_FILE, SHOW_RES_SYSLOG, SHOW_RES_DEFAULT, SHOW_RES_ALL};
+// 	assert(show_res_type_string != NULL && "show_res_type_string should NOT be NULL");
+// 	int show_res_type_string_len = strlen(show_res_type_string);
+// 	for (int i = 0 ; i < SHOW_RES_TYPE_SIZE ; i++)
+// 	{
+// 		if (strncmp(show_res_type_string, SHOW_RES_TYPE_DESCRIPTION[i], show_res_type_string_len) == 0)
+// 			return SHOW_RES_TYPE[i];
+// 	}
+// 	char errmsg[256];
+// 	snprintf(errmsg, 256, "Unknown show result type: %s", show_res_type_string);
+// 	print_errmsg_and_exit(errmsg);
+// 	return 0;
+// }
 
 // void daemonize() 
 // { 
