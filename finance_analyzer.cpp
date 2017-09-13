@@ -943,7 +943,6 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
-
 int main(int argc, char** argv)
 {
 // Register the signals so that the process can exit gracefully

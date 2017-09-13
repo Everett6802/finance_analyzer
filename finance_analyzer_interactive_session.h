@@ -60,7 +60,7 @@ private:
 	char* stock_support_and_resistance_root_folderpath;
 
 	unsigned short thread_handler_internal();
-	unsigned short find_stock_support_resistance(const char* stock_support_resistance_entry);
+	unsigned short print_single_stock_support_resistance_string(const char* stock_support_resistance_entry, int stock_support_resistance_entry_len);
 	unsigned short handle_command(int argc, char **argv);
 	unsigned short handle_get_finance_mode_command(int argc, char **argv);
 	unsigned short handle_set_finance_mode_command(int argc, char **argv);
