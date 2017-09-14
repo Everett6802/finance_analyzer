@@ -149,7 +149,7 @@ void show_usage_and_exit()
 		PRINT("--stock_support_resistance_filepath\nDescription: Set the file path for finding the stock support and resistance of a specific company\nDefault: %s\n", DEFAULT_STOCK_SUPPORT_RESISTANCE_ROOT_FOLDERPATH);
 		PRINT("--enable_stock_support_resistance_verbose\nDescription: Find the stock support and resistance of a specific company in detail\n");
 		PRINT("  Format 1: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
-		PRINT("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\nCaution: Max up to %d stock entry once", MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT);
+		PRINT("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\nCaution: Max up to %d stock entry once\n", MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT);
 		PRINT("--filter_stock_support_resistance_date\nDescription: Filter the data which is eariler than a specific date\n");
 		PRINT("  Format 1: Date(ex. 170801)");
 		PRINT("--filter_stock_support_resistance_volume\nDescription: Filter the data whose volume is smaller than a specific value\n");
