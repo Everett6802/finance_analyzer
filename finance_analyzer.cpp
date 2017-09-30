@@ -6,11 +6,11 @@
 #include <signal.h>
 #include <iostream>
 #include <stdexcept>
-#include "finance_analyzer_common.h"
-#include "finance_analyzer_test.h"
+#include "common.h"
+#include "testcase_mgr.h"
 #include "finance_analyzer_mgr.h"
-#include "finance_analyzer_mgr_factory.h"
-#include "finance_analyzer_interactive_server.h"
+#include "mgr_factory.h"
+#include "interactive_server.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -666,16 +666,16 @@ unsigned short setup_param()
 void run_test_cases_and_exit()
 {
 	assert(param_test_case != NULL && "param_test_case should NOT be NULL");
-	FinanceAnalyzerTest finance_analyzer_test;
-	finance_analyzer_test.set_show_detail(param_show_test_verbose);
+	TestCaseMgr testcase_mgr;
+	testcase_mgr.set_show_detail(param_show_test_verbose);
 	int cnt = 0;
 	int pass_cnt = 0;
 	if (strcmp(param_test_case, "all") == 0)
 	{
-		for (int i = 0 ; i < TestSize ; i++)
+		for (int i = 0 ; i < TestTypeSize ; i++)
 		{
 			cnt++;
-			if (finance_analyzer_test.test((TestType)i))
+			if (testcase_mgr.test((TestType)i))
 				pass_cnt++;
 		}
 	}
@@ -689,14 +689,14 @@ void run_test_cases_and_exit()
 		while (test_case_no_str != NULL)
 		{
 			int test_case_no = atoi(test_case_no_str);
-			if (test_case_no < 0 || test_case_no >= TestSize)
+			if (test_case_no < 0 || test_case_no >= TestTypeSize)
 			{
 				char errmsg[64];
 				snprintf(errmsg, 64, "Unknown test case no: %d", test_case_no);
 				throw invalid_argument(errmsg);
 			}
 			cnt++;
-			if (finance_analyzer_test.test((TestType)test_case_no))
+			if (testcase_mgr.test((TestType)test_case_no))
 				pass_cnt++;
 			test_case_no_str =  strtok(NULL, ",");
 		}
@@ -945,6 +945,10 @@ unsigned short init_interactive_server()
 
 int main(int argc, char** argv)
 {
+	unsigned int line_count = 0;
+	unsigned short ret_test = get_file_line_count("/var/tmp/finance/market/future_top10_dealers_and_legal_persons.csv", line_count);
+	printf("Line Count: %d\n", line_count);
+	exit(0);
 // Register the signals so that the process can exit gracefully
 	struct sigaction sa;
 	memset(&sa, 0x0, sizeof(sa));
@@ -956,7 +960,7 @@ int main(int argc, char** argv)
 		print_errmsg_and_exit("Fail to register the signal: SIGINT");
 
 // Register the manager class to manager factory
-	FinanceAnalyzerMgrFactory g_mgr_factory;
+	MgrFactory g_mgr_factory;
 	REGISTER_CLASS(FinanceAnalyzerMarketMgr, FinanceAnalysis_Market);
 	REGISTER_CLASS(FinanceAnalyzerStockMgr, FinanceAnalysis_Stock);
 

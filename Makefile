@@ -4,8 +4,8 @@ MAKE := make
 CXXFLAGS := -g -Wall -std=c++0x
 
 CMN_FOLDER := common
-CMN_SOURCES := $(CMN_FOLDER)/msg_dumper_wrapper.cpp $(CMN_FOLDER)/finance_analyzer_common_definition_base.cpp $(CMN_FOLDER)/finance_analyzer_common_definition_market_sql.cpp $(CMN_FOLDER)/finance_analyzer_common_definition_stock_sql.cpp $(CMN_FOLDER)/finance_analyzer_common_function.cpp $(CMN_FOLDER)/finance_analyzer_common_class_base.cpp $(CMN_FOLDER)/finance_analyzer_common_class_company_profile.cpp $(CMN_FOLDER)/finance_analyzer_common_class_set.cpp $(CMN_FOLDER)/finance_analyzer_common_class_smart_pointer.cpp $(CMN_FOLDER)/finance_analyzer_common_class_output.cpp
-SOURCES := $(CMN_SOURCES) finance_analyzer.cpp finance_analyzer_mgr.cpp finance_analyzer_mgr_factory.cpp finance_analyzer_sql_reader.cpp finance_analyzer_workday_canlendar.cpp finance_analyzer_database_time_range.cpp finance_analyzer_algorithm.cpp finance_analyzer_filter.cpp finance_analyzer_data_collector.cpp finance_analyzer_data_calculator.cpp finance_analyzer_test.cpp finance_analyzer_output.cpp finance_analyzer_interactive_server.cpp finance_analyzer_interactive_session.cpp finance_analyzer_stock_support_resistance.cpp
+CMN_SOURCES := $(CMN_FOLDER)/msg_dumper_wrapper.cpp $(CMN_FOLDER)/common_definition_base.cpp $(CMN_FOLDER)/common_definition_market_sql.cpp $(CMN_FOLDER)/common_definition_stock_sql.cpp $(CMN_FOLDER)/common_function.cpp $(CMN_FOLDER)/common_class_base.cpp $(CMN_FOLDER)/common_class_company_profile.cpp $(CMN_FOLDER)/common_class_time.cpp $(CMN_FOLDER)/common_class_set.cpp $(CMN_FOLDER)/common_class_smart_pointer.cpp $(CMN_FOLDER)/common_class_output.cpp
+SOURCES := $(CMN_SOURCES) finance_analyzer.cpp finance_analyzer_mgr.cpp mgr_factory.cpp data_sql_reader.cpp data_csv_reader.cpp data_reader.cpp workday_canlendar.cpp database_time_range.cpp data_algorithm.cpp data_filter.cpp data_collector.cpp data_calculator.cpp testcase_mgr.cpp data_output.cpp interactive_server.cpp interactive_session.cpp stock_support_resistance.cpp
 OBJS := $(SOURCES:.cpp=.o)
 LIB_MSG_DUMPER := libmsg_dumper.so
 LIB_MSG_DUMPER_HEADER := msg_dumper.h
@@ -42,7 +42,6 @@ $(LIB_MSG_DUMPER):
 
 clean:
 	rm -f $(OBJS) 2> /dev/null
-	rm -f $(LIB_MSG_DUMPER) 2> /dev/null
 	rm -f $(OUTPUT) 2> /dev/null
 
 deep_clean: $(clean)

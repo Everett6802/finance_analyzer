@@ -2,15 +2,15 @@
 #define FINANCE_ANALYZER_MGR_H
 
 #include <string>
-#include "finance_analyzer_common.h"
+#include "common.h"
 
 
-class FinanceAnalyzerDataCollectorBase;
-class FinanceAnalyzerDataCalculatorBase;
-class FinanceAnalyzerMarketDataCollector;
-class FinanceAnalyzerMarketDataCalculator;
-class FinanceAnalyzerStockDataCollector;
-class FinanceAnalyzerStockDataCalculator;
+class DataCollectorBase;
+class DataCalculatorBase;
+class MarketDataCollector;
+class MarketDataCalculator;
+class StockDataCollector;
+class StockDataCalculator;
 
 ///////////////////////////////////////////////////////////////////////////////////
 // The Manager Interface
@@ -39,8 +39,8 @@ protected:
 	DECLARE_MSG_DUMPER()
 
 	STRING_LIST email_address_list;
-	FinanceAnalyzerDataCollectorBase* data_collector;
-	FinanceAnalyzerDataCalculatorBase* data_calculator;
+	DataCollectorBase* data_collector;
+	DataCalculatorBase* data_calculator;
 
 	unsigned short parse_config();
 
@@ -61,8 +61,8 @@ public:
 class FinanceAnalyzerMarketMgr : public FinanceAnalyzerMgrBase
 {
 private:
-	FinanceAnalyzerMarketDataCollector* market_data_collector;
-	FinanceAnalyzerMarketDataCalculator* market_data_calculator;
+	MarketDataCollector* market_data_collector;
+	MarketDataCalculator* market_data_calculator;
 
 public:
 	static IFinanceAnalyzerMgr* create_instance();
@@ -82,8 +82,8 @@ public:
 class FinanceAnalyzerStockMgr : public FinanceAnalyzerMgrBase
 {
 private:
-	FinanceAnalyzerStockDataCollector* stock_data_collector;
-	FinanceAnalyzerStockDataCalculator* stock_data_calculator;
+	StockDataCollector* stock_data_collector;
+	StockDataCalculator* stock_data_calculator;
 
 	std::string stock_price_support_resistance_root_folderpath;
 

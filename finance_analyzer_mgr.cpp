@@ -3,12 +3,9 @@
 #include <string>
 #include <set>
 #include "finance_analyzer_mgr.h"
-// #include "finance_analyzer_sql_reader.h"
-#include "finance_analyzer_data_collector.h"
-#include "finance_analyzer_data_calculator.h"
-// #include "finance_analyzer_workday_canlendar.h"
-// #include "finance_analyzer_database_time_range.h"
-#include "finance_analyzer_output.h"
+#include "data_collector.h"
+#include "data_calculator.h"
+#include "data_output.h"
 
 
 using namespace std;
@@ -163,11 +160,11 @@ FinanceAnalyzerMarketMgr::FinanceAnalyzerMarketMgr() :
 	market_data_collector(NULL),
 	market_data_calculator(NULL)
 {
-	market_data_collector = new FinanceAnalyzerMarketDataCollector();
+	market_data_collector = new MarketDataCollector();
 	if (market_data_collector == NULL)
 		throw bad_alloc();
 	data_collector = market_data_collector;
-	market_data_calculator = new FinanceAnalyzerMarketDataCalculator();
+	market_data_calculator = new MarketDataCalculator();
 	if (market_data_calculator == NULL)
 		throw bad_alloc();
 	data_calculator = market_data_calculator;
@@ -214,11 +211,11 @@ FinanceAnalyzerStockMgr::FinanceAnalyzerStockMgr() :
 	stock_data_collector(NULL),
 	stock_data_calculator(NULL)
 {
-	stock_data_collector = new FinanceAnalyzerStockDataCollector();
+	stock_data_collector = new StockDataCollector();
 	if (stock_data_collector == NULL)
 		throw bad_alloc();
 	data_collector = stock_data_collector;
-	stock_data_calculator = new FinanceAnalyzerStockDataCalculator();
+	stock_data_calculator = new StockDataCalculator();
 	if (stock_data_calculator == NULL)
 		throw bad_alloc();
 	data_calculator = stock_data_calculator;
