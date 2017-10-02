@@ -5,6 +5,8 @@
 #include <string>
 #include <list>
 #include "common_definition.h"
+#include "common_class_time.h"
+
 
 FinanceAnalysisMode get_finance_analysis_mode_from_file();
 // bool is_market_mode();
@@ -23,8 +25,8 @@ bool check_field_index_in_range(int source_type_index, int field_index);
 bool check_calculation_type_in_range(int calculation_type);
 bool check_file_exist(const char* filepath);
 bool check_config_file_exist(const char* config_filename);
-unsigned short get_file_line_count(const char* filepath, unsigned int &line_count);
-unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char* filepath, const char* file_read_attribute);
+unsigned short get_file_line_count(unsigned int &line_count, const char* filepath);
+unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char* filepath, const char* file_read_attribute, PTIME_RANGE_PARAM time_range_param=NULL, char data_seperate_character=',');
 unsigned short read_config_file_lines_ex(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_file_read_attribute, const char* config_folderpath=NULL);
 unsigned short read_config_file_lines(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_folderpath=NULL);
 unsigned short write_file_lines_ex(const std::list<std::string>& line_list, const char* filepath, const char* file_write_attribute);

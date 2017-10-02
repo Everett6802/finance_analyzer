@@ -41,7 +41,7 @@ unsigned short TimeParam::parse_time_string(const char* time_str, TimeParam& tim
 			time_param.param.value[count++] = atoi(pch);
 	//		printf ("%s, %d\n", pch, atoi(pch));
 			pch = strtok(NULL, DELIM);
-			count++;
+			// count++;
 		}
 		if (count == 2)
 			time_param.time_unit = TIME_UNIT_MONTH;
@@ -96,6 +96,7 @@ int TimeParam::get_quarter_int_value()const
 {
 	return ((param.value[0] & 0xFF) << 4) | (param.value[1] & 0xF);
 }
+
 int TimeParam::get_int_value()const
 {
 	typedef int (TimeParam::*GET_INT_VALUE_FUNC_PTR)()const;
@@ -317,13 +318,28 @@ bool TimeParam::operator!=(const char* another_time_str)const {return !(*this ==
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool TimeRangeParam::time_in_range(const TimeRangeParam* time_range_param, const TimeParam* time_param)
+TimeInRangeType TimeRangeParam::time_in_range_type(const TimeRangeParam* time_range_param, const TimeParam* time_param)
 {
 	assert(time_range_param != NULL && "time_range_param should NOT be NULL");
-	assert(time_range_param->get_start_time() != NULL && "start time in time_range_param should NOT be NULL");
-	assert(time_range_param->get_end_time() != NULL && "end time in time_range_param should NOT be NULL");
-	assert(time_param != NULL && "time_param should NOT be NULL");
-	return (*time_param >= *(time_range_param->get_start_time()) && *time_param <= *(time_range_param->get_end_time()));
+	assert(time_range_param->is_add_time_done() && "time_range_param is NOT add-time-done");
+	if (*time_param < *(time_range_param->get_start_time()))
+		return TIME_BEFORE_RANGE;
+	else if (*time_param > *(time_range_param->get_end_time()))
+		return TIME_AFTER_RANGE;
+	else
+		return TIME_IN_RANGE;
+}
+
+TimeInRangeType TimeRangeParam::time_in_range_type(const TimeRangeParam* time_range_param, const char* time_str)
+{
+	assert(time_str != NULL && "time_str should NOT be NULL");
+	TimeParam time_param(time_str);
+	return time_in_range_type(time_range_param, &time_param);
+}
+
+bool TimeRangeParam::time_in_range(const TimeRangeParam* time_range_param, const TimeParam* time_param)
+{
+	return (time_in_range_type(time_range_param, time_param) == TIME_IN_RANGE);
 }
 
 unsigned short TimeRangeParam::create_instance_from_string(const char* time_str, TimeRangeParam& time_range_param)

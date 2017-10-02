@@ -4,9 +4,9 @@
 #include "msg_dumper_wrapper.h"
 #include "common_definition.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Class
-
 struct DateCfg
 {
 	int year;
@@ -93,12 +93,16 @@ typedef TimeParam* PTIME_PARAM;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+enum TimeInRangeType{TIME_BEFORE_RANGE, TIME_IN_RANGE, TIME_AFTER_RANGE};
+
 class TimeRangeParam
 {
 private:
 	DECLARE_MSG_DUMPER()
 
 public:
+	static TimeInRangeType time_in_range_type(const TimeRangeParam* time_range_param, const TimeParam* time_cfg);
+	static TimeInRangeType time_in_range_type(const TimeRangeParam* time_range_param, const char* time_str);
 	static bool time_in_range(const TimeRangeParam* time_range_param, const TimeParam* time_cfg);
 	static unsigned short create_instance_from_string(const char* time_str, TimeRangeParam& time_range_param);
 	static unsigned short create_instance_from_string(const char* time_str, TimeRangeParam** time_range_param);

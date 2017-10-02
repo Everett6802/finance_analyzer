@@ -146,6 +146,7 @@ const char* get_ret_description(unsigned short ret)
 		"Failure_OutOfRange",
 		"Failure_IncorrectConfig",
 		"Failure_IncorrectPath",
+		"Failure_IncorrectFormat",
 		"Failure_IOOperation",
 		"Failure_HandleThread",
 		"Failure_SystemAPI",
@@ -285,7 +286,7 @@ bool check_config_file_exist(const char* config_filename)
 	return check_file_exist(file_path);
 }
 
-unsigned short get_file_line_count(const char* filepath, unsigned int &line_count)
+unsigned short get_file_line_count(unsigned int &line_count, const char* filepath)
 {
 	if (!check_file_exist(filepath))
 	{
@@ -310,7 +311,7 @@ unsigned short get_file_line_count(const char* filepath, unsigned int &line_coun
 	return RET_SUCCESS;	
 }
 
-unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char* filepath, const char* file_read_attribute)
+unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char* filepath, const char* file_read_attribute, PTIME_RANGE_PARAM time_range_param, char data_seperate_character)
 {
 	if (!check_file_exist(filepath))
 	{
@@ -333,9 +334,35 @@ unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char*
 		last_character_in_string_index = strlen(line_buf) - 1;
 		if (line_buf[last_character_in_string_index] == '\n')
 			line_buf[last_character_in_string_index] = '\0';
+// CAUTION: To check the time range, I assume the time field index is 0 
+		if (time_range_param != NULL)
+		{
+			static const int TIME_BUF_SIZE = 16;
+			static char time_buf[TIME_BUF_SIZE];
+			char* pos = strchr(line_buf, data_seperate_character);
+			if (pos == NULL)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect data format in file[%s]: %s", filepath, line_buf);
+				return RET_FAILURE_INCORRECT_FORMAT;
+			}
+			int pos_index = pos - line_buf;
+			if (pos_index >= TIME_BUF_SIZE)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect time format in file[%s], time string length: %d", filepath, pos_index);
+				return RET_FAILURE_INCORRECT_FORMAT;
+			}
+			memset(time_buf, 0x0, sizeof(char) * TIME_BUF_SIZE);
+			memcpy(time_buf, line_buf, sizeof(char) * pos_index);
+			TimeInRangeType time_in_range_type = TimeRangeParam::time_in_range_type(time_range_param, time_buf);
+			if (time_in_range_type == TIME_BEFORE_RANGE)
+				continue;
+			else if (time_in_range_type == TIME_AFTER_RANGE)
+				goto OUT;
+		}
 		string line_str(line_buf);
 		line_list.push_back(line_str);
 	}
+OUT:
 	if (fp != NULL)
 	{
 		fclose(fp);

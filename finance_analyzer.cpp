@@ -943,11 +943,25 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
+#include <list>
+#include <string>
+using namespace std;
+
 int main(int argc, char** argv)
 {
 	unsigned int line_count = 0;
-	unsigned short ret_test = get_file_line_count("/var/tmp/finance/market/future_top10_dealers_and_legal_persons.csv", line_count);
+	unsigned short ret_test = get_file_line_count(line_count, "/var/tmp/finance_sample/market/option_top3_legal_persons_buy_and_sell_option_open_interest.csv");
 	printf("Line Count: %d\n", line_count);
+	PTIME_RANGE_PARAM time_range_param = new TimeRangeParam("2016-01-07", "2016-01-11");
+	list<string> line_list;
+	read_file_lines_ex(line_list, "/var/tmp/finance_sample/market/option_top3_legal_persons_buy_and_sell_option_open_interest.csv", "r", time_range_param);
+	list<string>::iterator iter = line_list.begin();
+	while (iter != line_list.end())
+	{
+		string line = (string)*iter;
+		printf("%s\n", line.c_str());
+		iter++;
+	}
 	exit(0);
 // Register the signals so that the process can exit gracefully
 	struct sigaction sa;

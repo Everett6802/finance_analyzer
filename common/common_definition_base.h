@@ -353,6 +353,7 @@ extern const unsigned short RET_FAILURE_NOT_EQUAL;
 extern const unsigned short RET_FAILURE_OUT_OF_RANGE;
 extern const unsigned short RET_FAILURE_INCORRECT_CONFIG;
 extern const unsigned short RET_FAILURE_INCORRECT_PATH;
+extern const unsigned short RET_FAILURE_INCORRECT_FORMAT;
 extern const unsigned short RET_FAILURE_IO_OPERATION;
 extern const unsigned short RET_FAILURE_HANDLE_THREAD;
 extern const unsigned short RET_FAILURE_SYSTEM_API;

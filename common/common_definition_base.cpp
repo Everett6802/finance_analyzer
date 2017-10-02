@@ -236,10 +236,11 @@ const unsigned short RET_FAILURE_NOT_EQUAL = RET_FAILURE_BASE + 8;
 const unsigned short RET_FAILURE_OUT_OF_RANGE = RET_FAILURE_BASE + 9;
 const unsigned short RET_FAILURE_INCORRECT_CONFIG = RET_FAILURE_BASE + 10;
 const unsigned short RET_FAILURE_INCORRECT_PATH = RET_FAILURE_BASE + 11;
-const unsigned short RET_FAILURE_IO_OPERATION = RET_FAILURE_BASE + 12;
+const unsigned short RET_FAILURE_INCORRECT_FORMAT = RET_FAILURE_BASE + 12;
+const unsigned short RET_FAILURE_IO_OPERATION = RET_FAILURE_BASE + 13;
 const unsigned short RET_FAILURE_HANDLE_THREAD = RET_FAILURE_BASE + 14;
-const unsigned short RET_FAILURE_SYSTEM_API = RET_FAILURE_BASE + 14;
-const unsigned short RET_FAILURE_MYSQL = RET_FAILURE_BASE + 15;
+const unsigned short RET_FAILURE_SYSTEM_API = RET_FAILURE_BASE + 15;
+const unsigned short RET_FAILURE_MYSQL = RET_FAILURE_BASE + 16;
 // const unsigned short RET_FAILURE_INTERACTIVE_COMMAND = RET_FAILURE_BASE + 16;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
