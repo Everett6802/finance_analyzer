@@ -238,7 +238,7 @@ const char* DataCalculatorBase::get_description_head(const PRESULT_SET result_se
 	}
 	// int data_amount = end_index - start_index;
 	// snprintf(buf, BUF_SIZE, "%s:%s %s:%s %d", 
-	// 	FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+	// 	FINANCE_DATA_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
 	// 	get_database_field_description(result_set_access_param->get_finance_source_type(), result_set_access_param->get_finance_field_no()),
 	// 	result_set->get_date_array_element(start_index),
 	// 	result_set->get_date_array_element(end_index),
@@ -256,7 +256,7 @@ const char* DataCalculatorBase::get_no_data_description(int source_type_index, i
 	static char buf[BUF_SIZE];
 
 	// snprintf(buf, BUF_SIZE, "%s:%s %s:%s *** No Data in MySQL ***", 
-	// 	FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index],
+	// 	FINANCE_DATA_DESCRIPTION_LIST[source_type_index],
 	// 	get_database_field_description(source_type_index, field_index),
 	// 	time_range_cfg->get_start_time()->to_string(),
 	// 	time_range_cfg->get_end_time()->to_string()
@@ -364,7 +364,7 @@ unsigned short DataCalculatorBase::get_statistics_result(StatisticsMethod statis
 // 			return ret;
 
 // 		string new_str;
-// 		// int finance_field_type_index = FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index];
+// 		// int finance_field_type_index = FINANCE_DATA_FIELD_TYPE_LIST[source_type_index][field_index];
 // 		ret = (this->*(get_result_str_func_array[method_index]))(sp_result_set->get_array(source_type_index, field_index), new_str);
 // 		if (CHECK_FAILURE(ret))
 // 		{
@@ -372,7 +372,7 @@ unsigned short DataCalculatorBase::get_statistics_result(StatisticsMethod statis
 // 				FORMULA_STATSTICS_METHOD_DESCRIPTION[method_index], 
 // 				source_type_index, 
 // 				field_index, 
-// 				FINANCE_FIELD_TYPE_DESCRIPTION[FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index]]
+// 				FINANCE_FIELD_TYPE_DESCRIPTION[FINANCE_DATA_FIELD_TYPE_LIST[source_type_index][field_index]]
 // 				);
 // 			return ret;
 // 		}

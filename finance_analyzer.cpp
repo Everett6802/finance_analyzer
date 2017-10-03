@@ -126,7 +126,7 @@ void show_usage_and_exit()
 	int source_type_start_index, source_type_end_index;
 	get_source_type_index_range(source_type_start_index, source_type_end_index, g_finance_analysis_mode);
 	for (int i = source_type_start_index ; i < source_type_end_index ; i++)
-		PRINT("  %s: %d\n", FINANCE_DATABASE_DESCRIPTION_LIST[i], i);
+		PRINT("  %s: %d\n", FINANCE_DATA_DESCRIPTION_LIST[i], i);
 	PRINT("  Format 1: All source types/fields (ex. all)\n");	
 	PRINT("  Format 2: Source type index/index range (ex. 1,2-4,6)\n");
 	PRINT("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7))\n");
@@ -1133,6 +1133,6 @@ void test()
     // wprintf(L"嗨、你好\n");
     // wprintf(L"嗨好\n");
     // printf("1111\n");
-    // printf("%s\n", FINANCE_DATABASE_DESCRIPTION_LIST[0]);
+    // printf("%s\n", FINANCE_DATA_DESCRIPTION_LIST[0]);
     // return 0; 
 }

@@ -218,7 +218,7 @@ unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DA
 		{
 			int finance_source_type = (int)(*access_param_deque)[j]->get_finance_source_type();
 			int finance_field_no = (*access_param_deque)[j]->get_finance_field_no();
-			switch(FINANCE_DATABASE_FIELD_TYPE_LIST[finance_source_type][finance_field_no])
+			switch(FINANCE_DATA_FIELD_TYPE_LIST[finance_source_type][finance_field_no])
 			{
 			case FinanceField_INT:
 			case FinanceField_LONG:
@@ -252,7 +252,7 @@ unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DA
 		{
 			int finance_source_type = (int)(*access_param_deque)[j]->get_finance_source_type();
 			int finance_field_no = (*access_param_deque)[j]->get_finance_field_no();
-			switch(FINANCE_DATABASE_FIELD_TYPE_LIST[finance_source_type][finance_field_no])
+			switch(FINANCE_DATA_FIELD_TYPE_LIST[finance_source_type][finance_field_no])
 			{
 			case FinanceField_INT:
 			{

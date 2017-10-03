@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <new>
 #include "common_definition_base.h"
-#include "common_definition_market_sql.h"
-#include "common_definition_stock_sql.h"
+#include "common_definition_data_market_field.h"
+#include "common_definition_data_stock_field.h"
 
 
 using namespace std;
@@ -15,9 +15,10 @@ using namespace std;
 const char* FINANCE_ANALYZER_PROCESS_NAME = "finance_analyzer";
 
 const char* FINANCE_MODE_DESCRIPTION[] = {"Market", "Stock"};
+const char* FINANCE_DATA_DESCRIPTION[] = {"SQL", "CSV"};
 
-const char* FINANCE_DATABASE_MARKET_NAME = "Market";
-const char* FINANCE_DATABASE_STOCK_NAME_FORMAT = "Stock%02d";
+const char* FINANCE_DATA_MARKET_NAME = "Market";
+const char* FINANCE_DATA_STOCK_NAME_FORMAT = "Stock%02d";
 
 const int MARKET_SOURCE_TYPE_INDEX_LENGTH = FinanceSource_MarketEnd - FinanceSource_MarketStart;
 const int STOCK_SOURCE_TYPE_INDEX_LENGTH = FinanceSource_StockEnd - FinanceSource_StockStart;
@@ -95,7 +96,7 @@ const char* FINANCE_TABLE_NAME_LIST[] =
 	"statement_of_changes_in_equity"
 };
 const int FINANCE_TABLE_NAME_LIST_LEN = sizeof(FINANCE_TABLE_NAME_LIST) / sizeof(FINANCE_TABLE_NAME_LIST[0]);
-const char* FINANCE_DATABASE_DESCRIPTION_LIST[] =
+const char* FINANCE_DATA_DESCRIPTION_LIST[] =
 {
 	"臺股指數及成交量",
 	"三大法人現貨買賣超",
@@ -111,7 +112,7 @@ const char* FINANCE_DATABASE_DESCRIPTION_LIST[] =
     "現金流量表",
     "股東權益變動表",
 };
-const int* FINANCE_DATABASE_FIELD_TYPE_LIST[] =
+const int* FINANCE_DATA_FIELD_TYPE_LIST[] =
 {
 	STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION,
 	STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION,
@@ -127,7 +128,7 @@ const int* FINANCE_DATABASE_FIELD_TYPE_LIST[] =
 	CASH_FLOW_STATEMENT_FIELD_TYPE_DEFINITION,
 	STATEMENT_OF_CHANGES_IN_EQUITY_FIELD_TYPE_DEFINITION
 };
-const int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] =
+const int FINANCE_DATA_FIELD_AMOUNT_LIST[] =
 {
 	STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION_SIZE,
 	STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION_SIZE,

@@ -1,5 +1,5 @@
 #include "common_definition_base.h"
-#include "common_definition_stock_sql.h"
+#include "common_definition_data_stock_field.h"
 
 
 const int COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_FIELD_TYPE_DEFINITION[] =

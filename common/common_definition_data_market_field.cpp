@@ -1,5 +1,5 @@
 #include "common_definition_base.h"
-#include "common_definition_market_sql.h"
+#include "common_definition_data_market_field.h"
 
 
 const int STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION[] =

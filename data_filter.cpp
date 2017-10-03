@@ -250,14 +250,14 @@ void show_filter_rule(
 		assert(filter_rule_threshold != NULL && "filter_rule_threshold should NOT be NULL");
 		FinanceSourceType source_type = result_set_access_param->get_finance_source_type();
 		int field_no = result_set_access_param->get_finance_field_no();
-		switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_type][field_no])
+		switch(FINANCE_DATA_FIELD_TYPE_LIST[source_type][field_no])
 		{
 		case FinanceField_INT:
 		{
 			assert(filter_rule_threshold->get_data_type() == FinanceField_INT && "The data type of filter_rule_threshold is NOT FinanceField_INT");
 			if (IS_RULE_RANGE_TYPE(filter_rule_threshold->get_rule_type()))
 				printf("%s:%d %s %d %d\n",
-					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					FINANCE_DATA_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
 					result_set_access_param->get_finance_field_no(),
 					FILTER_RULE_RANGE_DESCRIPTION[filter_rule_threshold->get_rule_type() - FILTER_RULT_IN_RANGE_START_INDEX],
 					((PFILTER_RULE_THRESHOLD_RANGE_INT)filter_rule_threshold)->get_left_threshold(),
@@ -265,7 +265,7 @@ void show_filter_rule(
 					);
 			else
 				printf("%s:%d %s %d\n",
-					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					FINANCE_DATA_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
 					result_set_access_param->get_finance_field_no(),
 					FILTER_RULE_DESCRIPTION[filter_rule_threshold->get_rule_type()],
 					((PFILTER_RULE_THRESHOLD_INT)filter_rule_threshold)->get_threshold()
@@ -277,7 +277,7 @@ void show_filter_rule(
 			assert(filter_rule_threshold->get_data_type() == FinanceField_LONG && "The data type of filter_rule_threshold is NOT FinanceField_LONG");
 			if (IS_RULE_RANGE_TYPE(filter_rule_threshold->get_rule_type()))
 				printf("%s:%d %s %ld %ld\n",
-					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					FINANCE_DATA_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
 					result_set_access_param->get_finance_field_no(),
 					FILTER_RULE_RANGE_DESCRIPTION[filter_rule_threshold->get_rule_type() - FILTER_RULT_IN_RANGE_START_INDEX],
 					((PFILTER_RULE_THRESHOLD_RANGE_LONG)filter_rule_threshold)->get_left_threshold(),
@@ -285,7 +285,7 @@ void show_filter_rule(
 					);
 			else
 				printf("%s:%d %s %ld\n",
-					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					FINANCE_DATA_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
 					result_set_access_param->get_finance_field_no(),
 					FILTER_RULE_DESCRIPTION[filter_rule_threshold->get_rule_type()],
 					((PFILTER_RULE_THRESHOLD_LONG)filter_rule_threshold)->get_threshold()
@@ -297,7 +297,7 @@ void show_filter_rule(
 			assert(filter_rule_threshold->get_data_type() == FinanceField_FLOAT && "The data type of filter_rule_threshold is NOT FinanceField_FLOAT");
 			if (IS_RULE_RANGE_TYPE(filter_rule_threshold->get_rule_type()))
 				printf("%s:%d %s %.2f %.2f\n",
-					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					FINANCE_DATA_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
 					result_set_access_param->get_finance_field_no(),
 					FILTER_RULE_RANGE_DESCRIPTION[filter_rule_threshold->get_rule_type() - FILTER_RULT_IN_RANGE_START_INDEX],
 					((PFILTER_RULE_THRESHOLD_RANGE_FLOAT)filter_rule_threshold)->get_left_threshold(),
@@ -305,7 +305,7 @@ void show_filter_rule(
 					);
 			else
 				printf("%s:%d %s %.2f\n",
-					FINANCE_DATABASE_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+					FINANCE_DATA_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
 					result_set_access_param->get_finance_field_no(),
 					FILTER_RULE_DESCRIPTION[filter_rule_threshold->get_rule_type()],
 					((PFILTER_RULE_THRESHOLD_FLOAT)filter_rule_threshold)->get_threshold()
@@ -396,7 +396,7 @@ unsigned short filter(
 			assert(filter_rule_threshold != NULL && "filter_rule_threshold should NOT be NULL");
 			FinanceSourceType source_type = result_set_access_param->get_finance_source_type();
 			int field_no = result_set_access_param->get_finance_field_no();
-			switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_type][field_no])
+			switch(FINANCE_DATA_FIELD_TYPE_LIST[source_type][field_no])
 			{
 			case FinanceField_INT:
 			{

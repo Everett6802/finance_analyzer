@@ -129,7 +129,7 @@ InteractiveSession::InteractiveSession(int client_fd, sockaddr_in& client_sockad
 	source_string_param(NULL),
 	time_range_string_param(NULL),
 	company_string_param(NULL),
-	data_reader_type(DataReader_SQL),
+	finance_data_type(FinanceData_SQL),
 	data_sql_reader_param(NULL),
 	data_csv_reader_param(NULL),
 	search_rule_need_reset(true),
@@ -146,8 +146,8 @@ InteractiveSession::InteractiveSession(int client_fd, sockaddr_in& client_sockad
 	memcpy(&client_sock, &client_sockaddress, sizeof(sockaddr_in));
 	memset(session_tag, 0x0, sizeof(char) * 64);
 	snprintf(session_tag, 64, "%s:%d", inet_ntoa(client_sock.sin_addr), htons(client_sock.sin_port));
-	data_reader_param_array[DataReader_SQL] = (void*)data_sql_reader_param;
-	data_reader_param_array[DataReader_CSV] = (void*)data_csv_reader_param;
+	data_reader_param_array[FinanceData_SQL] = (void*)data_sql_reader_param;
+	data_reader_param_array[FinanceData_CSV] = (void*)data_csv_reader_param;
 	// data_sql_reader_param = {.continue_when_non_exist = false};
 	// data_csv_reader_param = {.root_folderpath = NULL, .continue_when_non_exist = false};
 }
@@ -438,8 +438,8 @@ unsigned short InteractiveSession::print_single_stock_support_resistance_string(
 
 void InteractiveSession::reset_search_param()
 {
-	data_reader_param_array[DataReader_SQL] = NULL;
-	data_reader_param_array[DataReader_CSV] = NULL;
+	data_reader_param_array[FinanceData_SQL] = NULL;
+	data_reader_param_array[FinanceData_CSV] = NULL;
 	if (data_sql_reader_param != NULL)
 	{
 		delete data_sql_reader_param;
@@ -752,7 +752,7 @@ unsigned short InteractiveSession::handle_get_reader_type_command(int argc, char
 	}
 // Get the reader type
 	static char rsp_buf[RSP_BUF_SIZE];
-	snprintf(rsp_buf, RSP_BUF_SIZE, "\nReader Type: %d(%s)\n", data_reader_type, DataReaderDescription[data_reader_type]);
+	snprintf(rsp_buf, RSP_BUF_SIZE, "\nReader Type: %d(%s)\n", finance_data_type, FINANCE_DATA_DESCRIPTION[finance_data_type]);
 	print_to_console(string(rsp_buf));
 	return RET_SUCCESS;
 }
@@ -769,10 +769,10 @@ unsigned short InteractiveSession::handle_set_reader_type_command(int argc, char
 // Set the reader type
 	try
 	{		
-		int new_data_reader_type_value = atoi(argv[1]);
-		if (new_data_reader_type_value < 0 || new_data_reader_type_value >= DataReaderSize)
+		int new_finance_data_type_value = atoi(argv[1]);
+		if (new_finance_data_type_value < 0 || new_finance_data_type_value >= FinanceDataSize)
 			throw invalid_argument(string("Unsupported data reader type"));
-		data_reader_type = (DataReaderType)new_data_reader_type_value;
+		finance_data_type = (FinanceDataType)new_finance_data_type_value;
 	}
 	catch(exception &e)
 	{
@@ -782,7 +782,7 @@ unsigned short InteractiveSession::handle_set_reader_type_command(int argc, char
 		print_to_console(string(rsp_buf) + string("\n"));
 		return RET_WARN_INTERACTIVE_COMMAND;
 	}
-	data_reader_type = (DataReaderType)atoi(argv[0]);
+	finance_data_type = (FinanceDataType)atoi(argv[0]);
 	return RET_SUCCESS;
 }
 
@@ -801,7 +801,7 @@ unsigned short InteractiveSession::handle_set_csv_root_folderpath_command(int ar
 		data_csv_reader_param = new DataCsvReaderParam();
 		if (data_csv_reader_param == NULL)
 			throw bad_alloc();
-		data_reader_param_array[DataReader_CSV] = (void*)data_csv_reader_param;
+		data_reader_param_array[FinanceData_CSV] = (void*)data_csv_reader_param;
 	}
 // Set CSV reader root folerpath
 	int new_csv_root_folderpath_len = atoi(argv[1]);
@@ -849,13 +849,13 @@ unsigned short InteractiveSession::handle_search_command(int argc, char **argv)
 			return ret;
 // Query the data
 		// ret = SqlReader::query(&search_rule_set, sql_reader, result_set_map);
-		if (data_reader_param_array[data_reader_type] != NULL)
+		if (data_reader_param_array[finance_data_type] != NULL)
 		{
-			ret = DATA_READ_BY_PARAM(data_reader_type, &search_rule_set, data_reader_param_array[data_reader_type], result_set_map);
+			ret = DATA_READ_BY_PARAM(finance_data_type, &search_rule_set, data_reader_param_array[finance_data_type], result_set_map);
 		}
 		else
 		{
-			ret = DATA_READ_BY_DEFAULT(data_reader_type, &search_rule_set, result_set_map);
+			ret = DATA_READ_BY_DEFAULT(finance_data_type, &search_rule_set, result_set_map);
 		}
 		if (CHECK_FAILURE(ret))
 			return ret;
@@ -1074,7 +1074,7 @@ unsigned short InteractiveSession::handle_help_command(int argc, char **argv)
 	get_source_type_index_range(source_type_start_index, source_type_end_index, finance_analysis_mode);
 	for (int i = source_type_start_index ; i < source_type_end_index ; i++)
 	{
-		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_DATABASE_DESCRIPTION_LIST[i], i);
+		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_DATA_DESCRIPTION_LIST[i], i);
 		usage_string += string(buf);
 	}
 	usage_string += string("  Format 1: All source types/fields (ex. all)\n");	
@@ -1090,9 +1090,9 @@ unsigned short InteractiveSession::handle_help_command(int argc, char **argv)
 	usage_string += string("* get_reader_type\n Description: Get data reader type\n");
 	usage_string += string("* set_reader_type\n Description: Set data reader type\n");
 	usage_string += string(" Data reader type:\n");
-	for(int i = 0 ; i < DataReaderSize ; i++)
+	for(int i = 0 ; i < FinanceDataSize ; i++)
 	{
-		snprintf(buf, BUF_SIZE, "  %s: %d\n", DataReaderDescription[i], i);
+		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_DATA_DESCRIPTION[i], i);
 		usage_string += string(buf);
 	}
 	usage_string += string("* set_csv_root_folderpath\n Description: Set CSV root folerpath\nDefault: %s\n", DEFAULT_CSV_ROOT_FOLDERPATH);	

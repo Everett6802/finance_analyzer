@@ -53,10 +53,10 @@ private:
 	char* source_string_param;
 	char* time_range_string_param;
 	char* company_string_param;
-	DataReaderType data_reader_type;
+	FinanceDataType finance_data_type;
 	DataSqlReaderParam* data_sql_reader_param;
 	DataCsvReaderParam* data_csv_reader_param;
-	void* data_reader_param_array[DataReaderSize];
+	void* data_reader_param_array[FinanceDataSize];
 	bool search_rule_need_reset;
 	bool show_stock_support_resistance_verbose;
 	char* stock_support_resistance_date_filter;

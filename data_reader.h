@@ -15,17 +15,14 @@
 #define DECLARE_AND_IMPLEMENT_STATIC_DATA_READER()\
 static PDATA_READER data_reader = DataReader::get_instance();
 
-#define DATA_READ_BY_OBJECT(data_reader_type, search_rule_set, reader_obj, result_set_map)\
-data_reader->read_by_object(data_reader_type, search_rule_set, reader_obj, result_set_map);
+#define DATA_READ_BY_OBJECT(finance_data_type, search_rule_set, reader_obj, result_set_map)\
+data_reader->read_by_object(finance_data_type, search_rule_set, reader_obj, result_set_map);
 
-#define DATA_READ_BY_PARAM(data_reader_type, search_rule_set, reader_param, result_set_map)\
-data_reader->read_by_param(data_reader_type, search_rule_set, reader_param, result_set_map);
+#define DATA_READ_BY_PARAM(finance_data_type, search_rule_set, reader_param, result_set_map)\
+data_reader->read_by_param(finance_data_type, search_rule_set, reader_param, result_set_map);
 
-#define DATA_READ_BY_DEFAULT(data_reader_type, search_rule_set, result_set_map)\
-data_reader->read_by_default(data_reader_type, search_rule_set, result_set_map);
-
-enum DataReaderType{DataReader_SQL, DataReader_CSV, DataReaderSize, DataReader_None};
-extern char* DataReaderDescription[];
+#define DATA_READ_BY_DEFAULT(finance_data_type, search_rule_set, result_set_map)\
+data_reader->read_by_default(finance_data_type, search_rule_set, result_set_map);
 
 class DataReader
 {
@@ -60,9 +57,9 @@ public:
 	int add_ref();
 	int release();
 
-	unsigned short read_by_object(DataReaderType data_reader_type, const PSEARCH_RULE_SET search_rule_set, void* reader_obj, PRESULT_SET_MAP result_set_map);
-	unsigned short read_by_param(DataReaderType data_reader_type, const PSEARCH_RULE_SET search_rule_set, void* reader_param, PRESULT_SET_MAP result_set_map);
-	unsigned short read_by_default(DataReaderType data_reader_type, const PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map);
+	unsigned short read_by_object(FinanceDataType finance_data_type, const PSEARCH_RULE_SET search_rule_set, void* reader_obj, PRESULT_SET_MAP result_set_map);
+	unsigned short read_by_param(FinanceDataType finance_data_type, const PSEARCH_RULE_SET search_rule_set, void* reader_param, PRESULT_SET_MAP result_set_map);
+	unsigned short read_by_default(FinanceDataType finance_data_type, const PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map);
 };
 typedef DataReader* PDATA_READER;
 

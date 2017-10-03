@@ -215,7 +215,7 @@ void FinanceAnalyzerMgrBase::cleanup_result_set_map()
 // 		if (CHECK_FAILURE(ret))
 // 			return ret;
 // // Connect to the database
-// 		ret = sql_reader->try_connect_mysql(FINANCE_DATABASE_NAME_LIST[source_index]);
+// 		ret = sql_reader->try_connect_mysql(FINANCE_DATA_NAME_LIST[source_index]);
 // 		if (CHECK_FAILURE(ret))
 // 			return ret;
 // // Generate the field command

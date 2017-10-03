@@ -135,6 +135,13 @@ typedef INT_STRING_DEQUE_MAP_ITER* PINT_STRING_DEQUE_MAP_ITER;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Enumeration
+enum FinanceDataType
+{
+	FinanceData_SQL,
+	FinanceData_CSV,
+	FinanceDataSize,
+	FinanceData_None
+};
 
 enum FinanceSourceType
 {
@@ -241,9 +248,10 @@ enum TestType{
 extern const char* FINANCE_ANALYZER_PROCESS_NAME;
 
 extern const char* FINANCE_MODE_DESCRIPTION[];
+extern const char* FINANCE_DATA_DESCRIPTION[];
 
-extern const char* FINANCE_DATABASE_MARKET_NAME;
-extern const char* FINANCE_DATABASE_STOCK_NAME_FORMAT;
+extern const char* FINANCE_DATA_MARKET_NAME;
+extern const char* FINANCE_DATA_STOCK_NAME_FORMAT;
 
 extern const int MARKET_SOURCE_TYPE_INDEX_LENGTH;
 extern const int STOCK_SOURCE_TYPE_INDEX_LENGTH;
@@ -289,9 +297,9 @@ extern const int GRAPH_STATSTICS_METHOD_SIZE;
 
 extern const char* FINANCE_TABLE_NAME_LIST[];
 extern const int FINANCE_TABLE_NAME_LIST_LEN;
-extern const char* FINANCE_DATABASE_DESCRIPTION_LIST[];
-extern const int* FINANCE_DATABASE_FIELD_TYPE_LIST[];
-extern const int FINANCE_DATABASE_FIELD_AMOUNT_LIST[];
+extern const char* FINANCE_DATA_DESCRIPTION_LIST[];
+extern const int* FINANCE_DATA_FIELD_TYPE_LIST[];
+extern const int FINANCE_DATA_FIELD_AMOUNT_LIST[];
 extern const char* FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[];
 
 extern const int SHOW_RES_STDOUT;

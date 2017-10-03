@@ -333,13 +333,13 @@ unsigned short QuerySet::add_query(int source_type_index, int field_index)
 	INT_DEQUE::iterator it = find(source_field_query_map[source_type_index]->begin(), source_field_query_map[source_type_index]->end(), 10);
 	if (it != source_field_query_map[source_type_index]->end())
 	{
-		WRITE_FORMAT_WARN("Duplicate index: %d in %s", field_index, FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index]);
+		WRITE_FORMAT_WARN("Duplicate index: %d in %s", field_index, FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
 		return RET_WARN_INDEX_DUPLICATE;
 	}
 // If all fields are selected, it's no need to add extra index
 	if (!source_field_query_map[source_type_index]->empty() && (*source_field_query_map[source_type_index])[0] == -1)
 	{
-		WRITE_FORMAT_WARN("Ignore index: %d in %s, since all fields are selected", field_index, FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index]);
+		WRITE_FORMAT_WARN("Ignore index: %d in %s, since all fields are selected", field_index, FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
 		return RET_WARN_INDEX_IGNORE;
 	}
 
@@ -387,13 +387,13 @@ unsigned short QuerySet::add_query_list(int source_type_index, const PINT_DEQUE 
 		INT_DEQUE::iterator it = find(source_field_query_map[source_type_index]->begin(), source_field_query_map[source_type_index]->end(), 10);
 		if (it != source_field_query_map[source_type_index]->end())
 		{
-			WRITE_FORMAT_WARN("Duplicate index: %d in %s", field_index, FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index]);
+			WRITE_FORMAT_WARN("Duplicate index: %d in %s", field_index, FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
 			continue;
 		}
 // If all fields are selected, it's no need to add extra index
 		if (!source_field_query_map[source_type_index]->empty() && (*source_field_query_map[source_type_index])[0] == -1)
 		{
-			WRITE_FORMAT_WARN("Ignore index: %d in %s, since all fields are selected", field_index, FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index]);
+			WRITE_FORMAT_WARN("Ignore index: %d in %s, since all fields are selected", field_index, FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
 			break;
 		}
 // Add the index
@@ -427,7 +427,7 @@ unsigned short QuerySet::add_query_done(FinanceAnalysisMode cur_finance_analysis
 		// if (field_queue[0] == -1)
 		// {
 		// 	field_queue.clear();
-		// 	for (int field_index = 1 ; field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[i] ; field_index++) // Caution: Don't include the "date" field
+		// 	for (int field_index = 1 ; field_index < FINANCE_DATA_FIELD_AMOUNT_LIST[i] ; field_index++) // Caution: Don't include the "date" field
 		// 		field_queue.push_back(field_index);
 		// }
 		int source_type_index = iter.get_first();
@@ -442,7 +442,7 @@ unsigned short QuerySet::add_query_done(FinanceAnalysisMode cur_finance_analysis
 		if ((*field_deque)[0] == -1)
 		{
 			field_deque->clear();
-			for (int field_index = 1 ; field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] ; field_index++) // Caution: Don't include the "date" field
+			for (int field_index = 1 ; field_index < FINANCE_DATA_FIELD_AMOUNT_LIST[source_type_index] ; field_index++) // Caution: Don't include the "date" field
 				field_deque->push_back(field_index);
 		}
 		else
@@ -471,7 +471,7 @@ unsigned short QuerySet::add_query_done(FinanceAnalysisMode cur_finance_analysis
 // 		if ((*source_field_query_map[i])[0] == -1)
 // 		{
 // 			source_field_query_map[i]->clear();
-// 			for (int field_index = 1 ; field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[i] ; field_index++) // Caution: Don't include the "date" field
+// 			for (int field_index = 1 ; field_index < FINANCE_DATA_FIELD_AMOUNT_LIST[i] ; field_index++) // Caution: Don't include the "date" field
 // 				source_field_query_map[i]->push_back(field_index);
 // 		}
 // 	}
@@ -1792,7 +1792,7 @@ void ResultSet::get_metadata_string(const ResultSet& result_set, string &result_
 		unsigned short key = iter->first;
 		unsigned short source_type_index = get_upper_subindex(key);
 		unsigned short field_index = get_lower_subindex(key);
-		switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index])
+		switch(FINANCE_DATA_FIELD_TYPE_LIST[source_type_index][field_index])
 		{
 		case FinanceField_INT:
 		{
@@ -1855,7 +1855,7 @@ void ResultSet::get_string(const ResultSet& result_set, string &result_set_strin
 			unsigned short key = iter->first;
 			unsigned short source_type_index = get_upper_subindex(key);
 			unsigned short field_index = get_lower_subindex(key);
-			switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index])
+			switch(FINANCE_DATA_FIELD_TYPE_LIST[source_type_index][field_index])
 			{
 			case FinanceField_INT:
 			{
@@ -2005,7 +2005,7 @@ unsigned short ResultSet::add_set(int source_type_index, int field_index)
 		field_list.push_back(field_index);
 //	else
 //	{
-//		for(int i = 1 ; i < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] ; i++)
+//		for(int i = 1 ; i < FINANCE_DATA_FIELD_AMOUNT_LIST[source_type_index] ; i++)
 //			field_list.push_back(i);
 //	}
 	deque<int>::iterator iter = field_list.begin();
@@ -2020,7 +2020,7 @@ unsigned short ResultSet::add_set(int source_type_index, int field_index)
 		}
 		unsigned short value;
 //		int next_index = -1;
-		switch(FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index])
+		switch(FINANCE_DATA_FIELD_TYPE_LIST[source_type_index][field_index])
 		{
 		case FinanceField_INT:
 		{
@@ -2062,7 +2062,7 @@ unsigned short ResultSet::add_set(int source_type_index, int field_index)
 			WRITE_ERROR("The DATE field type is NOT supported");
 			return RET_FAILURE_INVALID_ARGUMENT;
 		default:
-			WRITE_FORMAT_ERROR("The unsupported field type: %d", FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index]);
+			WRITE_FORMAT_ERROR("The unsupported field type: %d", FINANCE_DATA_FIELD_TYPE_LIST[source_type_index][field_index]);
 			return RET_FAILURE_INVALID_ARGUMENT;
 		}
 		data_set_mapping[key] = value;
@@ -2554,7 +2554,7 @@ DEFINE_GET_ARRAY_FUNC(float, FLOAT)
 
 const PFINANCE_DATA_ARRAY_BASE ResultSet::get_array(int source_type_index, int field_index)const
 {
-	int field_type = FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index];
+	int field_type = FINANCE_DATA_FIELD_TYPE_LIST[source_type_index][field_index];
 	switch (field_type)
 	{
 	case FinanceField_INT:
@@ -2739,7 +2739,7 @@ unsigned short ResultSet::show_data_mapping()const
 		field_index = get_lower_subindex(key);
 		field_type_index = get_upper_subindex(value);
 		field_type_pos = get_lower_subindex(value);
-		printf("%s:%s%d => %s:%d\n", FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index], MYSQL_FILED_NAME_BASE, field_index, FINANCE_FIELD_TYPE_DESCRIPTION[field_type_index], field_type_pos);
+		printf("%s:%s%d => %s:%d\n", FINANCE_DATA_DESCRIPTION_LIST[source_type_index], MYSQL_FILED_NAME_BASE, field_index, FINANCE_FIELD_TYPE_DESCRIPTION[field_type_index], field_type_pos);
 		iter++;
 	}
 	return RET_SUCCESS;
@@ -2773,7 +2773,7 @@ unsigned short ResultSet::show_data()const
 		key = iter->first;
 		source_type_index = get_upper_subindex(key);
 		field_index = get_lower_subindex(key);
-		printf(" %s:%s%d |", FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index], MYSQL_FILED_NAME_BASE, field_index);
+		printf(" %s:%s%d |", FINANCE_DATA_DESCRIPTION_LIST[source_type_index], MYSQL_FILED_NAME_BASE, field_index);
 		iter++;
 	}
 	printf("\n");

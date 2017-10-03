@@ -164,7 +164,7 @@ const char* get_ret_description(unsigned short ret)
 const char* get_database_field_description(int source_type_index, int field_index, FinanceAnalysisMode finance_analysis_mode)
 {
 	// assert((source_type_index >= 0 && source_type_index < FinanceSourceSize) && "source_type_index is out of range");
-	// assert((field_index >= 0 && field_index < FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index]) && "field_index is out of range");
+	// assert((field_index >= 0 && field_index < FINANCE_DATA_FIELD_AMOUNT_LIST[source_type_index]) && "field_index is out of range");
 	// assert(check_source_type_index_in_range(source_type_index, finance_analysis_mode) && "source_type_index is out of range");
 	assert(check_field_index_in_range(source_type_index, field_index) && "field_index is out of range");
 	switch(source_type_index)
@@ -252,7 +252,7 @@ int get_source_type_size(FinanceAnalysisMode finance_analysis_mode)
 
 bool check_field_index_in_range(int source_type_index, int field_index)
 {
-	if(field_index < 0 && field_index >= FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index])
+	if(field_index < 0 && field_index >= FINANCE_DATA_FIELD_AMOUNT_LIST[source_type_index])
 	{
 // If field_index == -1, it means select all field in the table
 		if (field_index != -1)

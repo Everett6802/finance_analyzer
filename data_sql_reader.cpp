@@ -49,7 +49,7 @@ unsigned short DataSqlReader::get_sql_field_command(int source_type_index, const
 		throw invalid_argument("The query should NOT be empty");
 //	string field_cmd;
 // Select all the fields in the table
-	if ((int)query_field.size() == FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] - 1) // Caution: Don't include the "date" field
+	if ((int)query_field.size() == FINANCE_DATA_FIELD_AMOUNT_LIST[source_type_index] - 1) // Caution: Don't include the "date" field
 		field_cmd = string("*");
 	else
 	{
@@ -154,7 +154,7 @@ unsigned short DataSqlReader::read_market(
 	PDATA_SQL_READER sql_reader_obj = (PDATA_SQL_READER)reader_obj;
 	unsigned short ret = RET_SUCCESS;
 // Connect to the database
-	ret = sql_reader_obj->try_connect_mysql(FINANCE_DATABASE_MARKET_NAME);
+	ret = sql_reader_obj->try_connect_mysql(FINANCE_DATA_MARKET_NAME);
 	if (CHECK_FAILURE(ret))
 		return ret;
 // Check the boundary of each database
@@ -339,7 +339,7 @@ unsigned short DataSqlReader::read_stock(
 	{
 		int company_group_number = iter.get_first();
 // Connect to the database
-		snprintf(database_stock_name, 32, FINANCE_DATABASE_STOCK_NAME_FORMAT, company_group_number);
+		snprintf(database_stock_name, 32, FINANCE_DATA_STOCK_NAME_FORMAT, company_group_number);
 		ret = sql_reader_obj->try_connect_mysql(string(database_stock_name));
 		if (CHECK_FAILURE(ret))
 			return ret;
@@ -670,7 +670,7 @@ unsigned short DataSqlReader::select_data(
 // Count the amount of the field including the date field
 	int expected_data_dimension = (int)query_field->size() + 1;
 //	if ((*query_field)[0] == -1)
-//		expected_data_dimension = FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index];
+//		expected_data_dimension = FINANCE_DATA_FIELD_AMOUNT_LIST[source_index];
 //	else
 //		expected_data_dimension = (int)query_field->size() + 1;
 // Store the query result into a self-defined data structure
