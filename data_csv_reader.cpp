@@ -51,20 +51,20 @@ unsigned short DataCsvReader::read_from_filesystem(
 		// const INT_DEQUE& query_field = (*query_set)[source_index];
 		const INT_DEQUE& query_field = (*iter);
 		assert(!query_field.empty() && "query_field should NOT be empty");
-		int source_type_index = iter.get_first();
+		int method_index = iter.get_first();
 // Add to the result set
-		ret = result_set->add_set(source_type_index, query_field);
+		ret = result_set->add_set(method_index, query_field);
 		if (CHECK_FAILURE(ret))
 			return ret;
 // // Generate the field command
 // 		string field_cmd = string("");
-// 		FinanceAnalyzerSqlReader::get_sql_field_command(source_type_index, query_field, field_cmd);
+// 		FinanceAnalyzerSqlReader::get_sql_field_command(method_index, query_field, field_cmd);
 // // Search for each table
-// 		table_name = string(FINANCE_TABLE_NAME_LIST[source_type_index]);
+// 		table_name = string(FINANCE_TABLE_NAME_LIST[method_index]);
 // 		if (finance_analysis_mode == FinanceAnalysis_Stock)
 // 			table_name = company_code_number + table_name;
 // 		ret = csv_reader_obj->select_data(
-// 			source_type_index, 
+// 			method_index, 
 // 			table_name, 
 // 			field_cmd, 
 // 			(const PINT_DEQUE)&query_field, 

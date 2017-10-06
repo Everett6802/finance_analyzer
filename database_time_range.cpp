@@ -85,7 +85,7 @@ unsigned short DatabaseTimeRange::initialize()
 	}
 
 	unsigned short ret = RET_SUCCESS;
-	int source_type_index_count = 0;
+	int method_index_count = 0;
 	while (fgets(buf, BUF_SIZE, fp) != NULL)
 	{
 // Check if the buffer size is enough
@@ -102,13 +102,13 @@ unsigned short DatabaseTimeRange::initialize()
 		}
 // Check if the source type in the config file is in order
 		char* finance_database_description = strtok(buf, ": ");
-		if (strcmp(finance_database_description, FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count]) != 0)
+		if (strcmp(finance_database_description, FINANCE_DATA_DESCRIPTION_LIST[method_index_count]) != 0)
 		{
 			char errmsg[256];
-			snprintf(errmsg, 256, "The source type[%s] is NOT identical to %s in %s", finance_database_description, FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count], DATABASE_TIME_RANGE_CONF_FILENAME);
+			snprintf(errmsg, 256, "The source type[%s] is NOT identical to %s in %s", finance_database_description, FINANCE_DATA_DESCRIPTION_LIST[method_index_count], DATABASE_TIME_RANGE_CONF_FILENAME);
 			throw runtime_error(string(errmsg));
 		}
-		source_type_index_count++;
+		method_index_count++;
 		char* time_range_str =  strtok(NULL, " ");
 //		fprintf(stderr, "%s: %s\n", finance_database_description, time_range_str);
 // Find the start/end time string
@@ -198,69 +198,69 @@ int DatabaseTimeRange::release()
 	return ref_cnt;
 }
 
-unsigned short DatabaseTimeRange::restrict_time_range(const set<int>& source_type_index_set, PTIME_RANGE_CFG time_range_cfg)
+unsigned short DatabaseTimeRange::restrict_time_range(const set<int>& method_index_set, PTIME_RANGE_CFG time_range_cfg)
 {
-	assert (!source_type_index_set.empty() && "source_type_index_set should NOT be empty");
+	assert (!method_index_set.empty() && "method_index_set should NOT be empty");
 	if (time_range_cfg == NULL)
 	{
 		WRITE_ERROR("time_range_cfg should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 // Search for the max start time and min end time to make sure the MySQL data is NOT out of range
-	set<int>::iterator iter = source_type_index_set.begin();
-	int max_start_time_source_type_index = -1;
+	set<int>::iterator iter = method_index_set.begin();
+	int max_start_time_method_index = -1;
 	int max_start_time_int_value;
-	int min_end_time_source_type_index = -1;
+	int min_end_time_method_index = -1;
 	int min_end_time_int_value;
 // Find the max start time and min end time in the current selection
-	while (iter != source_type_index_set.end())
+	while (iter != method_index_set.end())
 	{
 		int time_int_value = TimeCfg::get_int_value(database_time_range_deque[*iter]->get_start_time());
-		if (max_start_time_source_type_index == -1 || time_int_value > max_start_time_int_value)
+		if (max_start_time_method_index == -1 || time_int_value > max_start_time_int_value)
 		{
-			max_start_time_source_type_index = *iter;
+			max_start_time_method_index = *iter;
 			max_start_time_int_value = time_int_value;
 		}
-		if (min_end_time_source_type_index == -1 || time_int_value < min_end_time_int_value)
+		if (min_end_time_method_index == -1 || time_int_value < min_end_time_int_value)
 		{
-			min_end_time_source_type_index = *iter;
+			min_end_time_method_index = *iter;
 			min_end_time_int_value = time_int_value;
 		}
 		iter++;
 	}
-	WRITE_FORMAT_DEBUG("The available search time range:%s %s", database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string(), database_time_range_deque[min_end_time_source_type_index]->get_end_time()->to_string());
+	WRITE_FORMAT_DEBUG("The available search time range:%s %s", database_time_range_deque[max_start_time_method_index]->get_start_time()->to_string(), database_time_range_deque[min_end_time_method_index]->get_end_time()->to_string());
 // Check if the start/end time is out of the Mysql time range
 	if (time_range_cfg->get_end_time() != NULL)
 	{
-		if (*time_range_cfg->get_end_time() < *database_time_range_deque[max_start_time_source_type_index]->get_start_time())
+		if (*time_range_cfg->get_end_time() < *database_time_range_deque[max_start_time_method_index]->get_start_time())
 		{
-			WRITE_FORMAT_ERROR("The end time[%s] is earlier than the MySQL start time[%s]", time_range_cfg->get_end_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string());
+			WRITE_FORMAT_ERROR("The end time[%s] is earlier than the MySQL start time[%s]", time_range_cfg->get_end_time()->to_string(), database_time_range_deque[max_start_time_method_index]->get_start_time()->to_string());
 			return RET_FAILURE_OUT_OF_RANGE;
 		}
 	}
 	if (time_range_cfg->get_start_time() != NULL)
 	{
-		if (*time_range_cfg->get_start_time() > *database_time_range_deque[max_start_time_source_type_index]->get_end_time())
+		if (*time_range_cfg->get_start_time() > *database_time_range_deque[max_start_time_method_index]->get_end_time())
 		{
-			WRITE_FORMAT_ERROR("The start time[%s] is later than the MySQL end time[%s]", time_range_cfg->get_start_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_end_time()->to_string());
+			WRITE_FORMAT_ERROR("The start time[%s] is later than the MySQL end time[%s]", time_range_cfg->get_start_time()->to_string(), database_time_range_deque[max_start_time_method_index]->get_end_time()->to_string());
 			return RET_FAILURE_OUT_OF_RANGE;
 		}
 	}
 // Check the start time boundary
-	if (*database_time_range_deque[max_start_time_source_type_index]->get_start_time() > *time_range_cfg->get_start_time())
+	if (*database_time_range_deque[max_start_time_method_index]->get_start_time() > *time_range_cfg->get_start_time())
 	{
-		WRITE_FORMAT_WARN("Start search time out of range, restrict from %s to %s", time_range_cfg->get_start_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string());
+		WRITE_FORMAT_WARN("Start search time out of range, restrict from %s to %s", time_range_cfg->get_start_time()->to_string(), database_time_range_deque[max_start_time_method_index]->get_start_time()->to_string());
 // Caution: Don't modify the start time in this way below:
-		 // *time_range_cfg->get_start_time() = *database_time_range_deque[max_start_time_source_type_index]->get_start_time();
-		time_range_cfg->reset_start_time(database_time_range_deque[max_start_time_source_type_index]->get_start_time()->to_string());
+		 // *time_range_cfg->get_start_time() = *database_time_range_deque[max_start_time_method_index]->get_start_time();
+		time_range_cfg->reset_start_time(database_time_range_deque[max_start_time_method_index]->get_start_time()->to_string());
 	}
 // Check the end time boundary
-	if (*database_time_range_deque[min_end_time_source_type_index]->get_end_time() < *time_range_cfg->get_end_time())
+	if (*database_time_range_deque[min_end_time_method_index]->get_end_time() < *time_range_cfg->get_end_time())
 	{
-		WRITE_FORMAT_WARN("End search time out of range, restrict from %s to %s", time_range_cfg->get_end_time()->to_string(), database_time_range_deque[max_start_time_source_type_index]->get_end_time()->to_string());
+		WRITE_FORMAT_WARN("End search time out of range, restrict from %s to %s", time_range_cfg->get_end_time()->to_string(), database_time_range_deque[max_start_time_method_index]->get_end_time()->to_string());
 // Caution: Don't modify the end time in this way below:
-		// *time_range_cfg->get_end_time() = *database_time_range_deque[min_end_time_source_type_index]->get_end_time();
-		time_range_cfg->reset_end_time(database_time_range_deque[min_end_time_source_type_index]->get_end_time()->to_string());
+		// *time_range_cfg->get_end_time() = *database_time_range_deque[min_end_time_method_index]->get_end_time();
+		time_range_cfg->reset_end_time(database_time_range_deque[min_end_time_method_index]->get_end_time()->to_string());
 	}
 
 	return RET_SUCCESS;
@@ -274,14 +274,14 @@ unsigned short DatabaseTimeRange::restrict_time_range(const PQUERY_SET query_set
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 // // Collect the information that what kind of the data source will be queried
-// 	set<int> source_type_index_set;
+// 	set<int> method_index_set;
 // 	// for (int i = 0 ; i < FinanceSourceSize ; i++)
 // 	QuerySet::const_iterator iter = query_set->begin();
 // 	while (iter != query_set->end())
 // 	{
-// 		int source_type_index = iter.get_first();
-// 		source_type_index_set.insert(source_type_index);
+// 		int method_index = iter.get_first();
+// 		method_index_set.insert(method_index);
 // 		++iter;
 // 	}
-	return restrict_time_range(*query_set->get_source_type_index_set(), time_range_cfg);
+	return restrict_time_range(*query_set->get_method_index_set(), time_range_cfg);
 }

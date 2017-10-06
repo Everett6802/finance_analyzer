@@ -121,15 +121,15 @@ void show_usage_and_exit()
 	PRINT("  Format: Test Case Index/Index Range *Ex: 1;2-4;6\n");
 // Interactive mode
 	PRINT("-i|--interactive\n Description: Run the program in the interactive mode\n Caution: All flags except --daemonize are ignored\n");
-// Source type
-	PRINT("-s|--source\nDescription: List of source type\nDefault: all source types\n");
-	int source_type_start_index, source_type_end_index;
-	get_source_type_index_range(source_type_start_index, source_type_end_index, g_finance_analysis_mode);
-	for (int i = source_type_start_index ; i < source_type_end_index ; i++)
+// Method
+	PRINT("-m|--method\nDescription: List of method\nDefault: all methods\n");
+	int method_index_start, method_index_end;
+	get_method_index_range(method_index_start, method_index_end, g_finance_analysis_mode);
+	for (int i = method_index_start ; i < method_index_end ; i++)
 		PRINT("  %s: %d\n", FINANCE_DATA_DESCRIPTION_LIST[i], i);
-	PRINT("  Format 1: All source types/fields (ex. all)\n");	
-	PRINT("  Format 2: Source type index/index range (ex. 1,2-4,6)\n");
-	PRINT("  Format 3: Source type index/index range with field index/index range  (ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7))\n");
+	PRINT("  Format 1: All methods/fields (ex. all)\n");	
+	PRINT("  Format 2: Method index/index range (ex. 1,2-4,6)\n");
+	PRINT("  Format 3: Method index/index range with field index/index range  (ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7))\n");
 // Time range
 	PRINT("-t|--time_range\nDescription: Time range\nDefault: full time range\n");
 	PRINT("  Format 1: Start time: (ex. 2015-01-01)\n");

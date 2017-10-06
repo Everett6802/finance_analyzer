@@ -188,18 +188,18 @@ void FinanceAnalyzerMgrBase::cleanup_result_set_map()
 // 	}
 
 // // Collect the information that what kind of the data source will be queried
-// 	set<int> source_type_index_set;
+// 	set<int> method_index_set;
 // 	for (int i = 0 ; i < FinanceSourceSize ; i++)
 // 	{
 // 		if (!(*query_set)[i].empty())
-// 			source_type_index_set.insert(i);
+// 			method_index_set.insert(i);
 // 	}
 
 // 	unsigned short ret = RET_SUCCESS;
 // // Check the boundary of each database
 // 	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
 // 	WRITE_FORMAT_DEBUG("The original search time range: %s", sp_restricted_time_range_cfg->to_string());
-// 	ret = database_time_range->restrict_time_range(source_type_index_set, sp_restricted_time_range_cfg.get_instance());
+// 	ret = database_time_range->restrict_time_range(method_index_set, sp_restricted_time_range_cfg.get_instance());
 // 	if (CHECK_FAILURE(ret))
 // 		return ret;
 // 	WRITE_FORMAT_DEBUG("The new search time range: %s", sp_restricted_time_range_cfg->to_string());
@@ -431,38 +431,38 @@ void FinanceAnalyzerMgrBase::cleanup_result_set_map()
 // 	SmartPointer<QuerySet> sp_query_set(new QuerySet());
 // 	SmartPointer<TimeRangeCfg> sp_time_range_cfg(new TimeRangeCfg(prev_year, prev_month, prev_day, year, month, day));
 // 	SmartPointer<ResultSet> sp_result_set(new ResultSet());
-// 	set<int> source_type_index_set;
+// 	set<int> method_index_set;
 
-// //	ADD_QUERY_EX((*query_set), FinanceSource_StockExchangeAndVolume, 2, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockExchangeAndVolume, 2, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockExchangeAndVolume, 4, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockExchangeAndVolume, 5, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockMarginTradingAndShortSelling, 14, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockMarginTradingAndShortSelling, 15, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionPutCallRatio, 6, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureTop10DealersAndLegalPersons, 3, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureTop10DealersAndLegalPersons, 7, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureTop10DealersAndLegalPersons, 12, source_type_index_set);
-// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureTop10DealersAndLegalPersons, 16, source_type_index_set);
+// //	ADD_QUERY_EX((*query_set), FinanceSource_StockExchangeAndVolume, 2, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockExchangeAndVolume, 2, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockExchangeAndVolume, 4, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockExchangeAndVolume, 5, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockMarginTradingAndShortSelling, 14, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_StockMarginTradingAndShortSelling, 15, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionPutCallRatio, 6, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureTop10DealersAndLegalPersons, 3, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureTop10DealersAndLegalPersons, 7, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureTop10DealersAndLegalPersons, 12, method_index_set);
+// 	ADD_QUERY_EX((*sp_query_set.get_instance()), FinanceSource_FutureTop10DealersAndLegalPersons, 16, method_index_set);
 // 	sp_query_set->add_query_done();
 
 // // Check the boundary of each database
-// 	ret = database_time_range->restrict_time_range(source_type_index_set, sp_time_range_cfg.get_instance());
+// 	ret = database_time_range->restrict_time_range(method_index_set, sp_time_range_cfg.get_instance());
 // 	if (CHECK_FAILURE(ret))
 // 		return ret;
 // //	printf("The new search time range: %s\n", time_range_cfg->to_string());

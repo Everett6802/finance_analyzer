@@ -50,7 +50,7 @@ SourceTypeIndexSet.insert(SourceIndex);\
 // 	QuerySet();
 // 	~QuerySet();
 
-// 	unsigned short add_query(int source_type_index, int field_index=-1);
+// 	unsigned short add_query(int method_index, int field_index=-1);
 // 	unsigned short add_query_done();
 // 	bool is_add_query_done()const;
 // 	int get_size()const;
@@ -119,17 +119,22 @@ public:
 	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* source_string, QuerySet** query_set);
 
 private:
+	FinanceDataType finance_data_type;
+	// const int** FINANCE_DATA_FIELD_TYPE_LIST;
+	// const int* FINANCE_DATA_FIELD_AMOUNT_LIST;
+	DECLARE_FINANCE_DATA_FIELD_TYPE_LIST()
+	DECLARE_FINANCE_DATA_FIELD_AMOUNT_LIST()
 	bool add_done;
 	FinanceAnalysisMode finance_analysis_mode;
 	mutable INT_INT_DEQUE_MAP source_field_query_map;
-	mutable PINT_SET source_type_index_set;
+	mutable PINT_SET method_index_set;
 	mutable std::string query_set_string;
 
-	unsigned short init_source_field_query_map_element(int source_type_index);
-	unsigned short init_source_type_index_set();
+	unsigned short init_source_field_query_map_element(int method_index);
+	unsigned short init_method_index_set();
 
 public:
-	QuerySet();
+	QuerySet(FinanceDataType cur_finance_data_type=FinanceData_SQL);
 	QuerySet(const QuerySet& another_query_set);
 	~QuerySet();
 
@@ -138,15 +143,16 @@ public:
 	const_iterator begin();
 	const_iterator end();
 
-	unsigned short add_query(int source_type_index, int field_index=-1);
-	unsigned short add_query_list(int source_type_index, const PINT_DEQUE field_index_deque);
+	FinanceDataType get_data_type()const;
+	unsigned short add_query(int method_index, int field_index=-1);
+	unsigned short add_query_list(int method_index, const PINT_DEQUE field_index_deque);
 	unsigned short add_query_done(FinanceAnalysisMode cur_finance_analysis_mode);
 	bool is_add_query_done()const;
 	int get_size()const;
-	unsigned short get_query_sub_set(int source_type_index, QuerySet** query_sub_set)const;
-	const PINT_SET get_source_type_index_set();
+	unsigned short get_query_sub_set(int method_index, QuerySet** query_sub_set)const;
+	const PINT_SET get_method_index_set();
 
-	const INT_DEQUE& operator[](int source_type_index);
+	const INT_DEQUE& operator[](int method_index);
 };
 typedef QuerySet* PQUERY_SET;
 // typedef QuerySet MarketQuerySet;
@@ -409,6 +415,11 @@ public:
 	static void generate_filtered_data_for_simulation(ResultSet& result_set, FinanceBoolDataArray& filter_data_array);
 
 private:
+	FinanceDataType finance_data_type;
+	// const int** FINANCE_DATA_FIELD_TYPE_LIST;
+	// const int* FINANCE_DATA_FIELD_AMOUNT_LIST;
+	DECLARE_FINANCE_DATA_FIELD_TYPE_LIST()
+	DECLARE_FINANCE_DATA_FIELD_AMOUNT_LIST()
 	mutable std::string result_set_metadata_string;
 	mutable std::string result_set_string;
 	std::map<unsigned short, unsigned short> data_set_mapping;
@@ -417,7 +428,7 @@ private:
 	mutable bool check_date_data_mode;
 	int data_set_mapping_size;
 
-	unsigned short find_data_pos(int source_type_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
+	unsigned short find_data_pos(int method_index, int field_index, unsigned short& field_type_index, unsigned short& field_type_pos)const;
 	unsigned short add_calculation_set_dummy(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_diff(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_rate(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
@@ -436,11 +447,12 @@ private:
 	unsigned short add_calculation_set_weighted_avg10(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_weighted_avg20(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
 	unsigned short add_calculation_set_weighted_avg60(const PFINANCE_DATA_ARRAY_BASE data_array_base, int key_ex);
-	unsigned short add_calculation_set(int source_type_index, int field_index, ArrayElementCalculationType calculation_type);
+	unsigned short add_calculation_set(int method_index, int field_index, ArrayElementCalculationType calculation_type);
 
 public:
-	ResultSet();
+	ResultSet(FinanceDataType cur_finance_data_type=FinanceData_SQL);
 	~ResultSet();
+	FinanceDataType get_data_type()const;
 	const std::string& to_metadata_string();
 	const std::string& to_string();
 
@@ -475,10 +487,10 @@ public:
 	iterator begin() {return iterator(data_set_mapping.begin());}
 	iterator end() {return iterator(data_set_mapping.end());}
 
-	unsigned short add_set(int source_type_index, int field_index);
-	unsigned short add_set(int source_type_index, const INT_DEQUE& field_set);
+	unsigned short add_set(int method_index, int field_index);
+	unsigned short add_set(int method_index, const INT_DEQUE& field_set);
 	unsigned short set_date(const char* element_value);
-	unsigned short set_data(int source_type_index, int field_index, const char* data_string);
+	unsigned short set_data(int method_index, int field_index, const char* data_string);
 
 	void switch_to_check_date_mode();
 	unsigned short check_data()const;
@@ -492,14 +504,14 @@ public:
 	DECLARE_GET_ARRAY_FUNC_BY_POS(int, INT)
 	DECLARE_GET_ARRAY_FUNC_BY_POS(long, LONG)
 	DECLARE_GET_ARRAY_FUNC_BY_POS(float, FLOAT)
-#define DECLARE_GET_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array(int source_type_index, int field_index)const;
+#define DECLARE_GET_ARRAY_FUNC(n, m) const PFINANCE_##m##_DATA_ARRAY get_##n##_array(int method_index, int field_index)const;
 	DECLARE_GET_ARRAY_FUNC(int, INT)
 	DECLARE_GET_ARRAY_FUNC(long, LONG)
 	DECLARE_GET_ARRAY_FUNC(float, FLOAT)
-	const PFINANCE_DATA_ARRAY_BASE get_array(int source_type_index, int field_index)const;
-	const PFINANCE_DATA_ARRAY_BASE get_array(int source_type_index, int field_index, ArrayElementCalculationType calculation_type);
+	const PFINANCE_DATA_ARRAY_BASE get_array(int method_index, int field_index)const;
+	const PFINANCE_DATA_ARRAY_BASE get_array(int method_index, int field_index, ArrayElementCalculationType calculation_type);
 	const PFINANCE_CHAR_DATA_PTR_ARRAY get_date_array()const;
-#define DECLARE_GET_ARRAY_ELEMENT_FUNC(n) n get_##n##_array_element(int source_type_index, int field_index, int index)const;
+#define DECLARE_GET_ARRAY_ELEMENT_FUNC(n) n get_##n##_array_element(int method_index, int field_index, int index)const;
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(int)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(long)
 	DECLARE_GET_ARRAY_ELEMENT_FUNC(float)
@@ -517,14 +529,16 @@ class ResultSetMap
 	typedef INT_RESULT_SET_MAP::iterator INT_RESULT_SET_MAP_ITER;
 
 private:
+	FinanceDataType finance_data_type;
 	mutable std::string result_set_map_metadata_string;
 	mutable std::string result_set_map_string;
 	INT_RESULT_SET_MAP result_set_map;
 	ResultSetDataUnit result_set_data_unit;
 
 public:
-	ResultSetMap(ResultSetDataUnit data_unit=ResultSetDataUnit_NoSourceType);
+	ResultSetMap(ResultSetDataUnit data_unit=ResultSetDataUnit_NoSourceType, FinanceDataType data_type=FinanceData_SQL);
 	~ResultSetMap();
+	FinanceDataType get_data_type()const;
 	const std::string& to_metadata_string();
 	const std::string& to_string();
 	ResultSetDataUnit get_data_unit()const;

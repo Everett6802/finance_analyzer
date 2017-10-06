@@ -42,7 +42,7 @@ private:
 	static const char* FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT;
 
-	static unsigned short get_sql_field_command(int source_type_index, const INT_DEQUE& query_field, std::string& field_cmd);
+	static unsigned short get_sql_field_command(int method_index, const INT_DEQUE& query_field, std::string& field_cmd);
 	static unsigned short read_from_tables(
 		const PTIME_RANGE_CFG restricted_time_range_cfg, 
 		const PQUERY_SET query_set,

@@ -45,8 +45,8 @@ static const char *interactive_session_command[InteractiveSessionCommandSize] =
 {
 	"get_finance_mode",
 	"set_finance_mode",
-	"get_source",
-	"set_source",
+	"get_method",
+	"set_method",
 	"get_time_range",
 	"set_time_range",
 	"get_company",
@@ -538,8 +538,8 @@ unsigned short InteractiveSession::handle_command(int argc, char **argv)
 	{
 		&InteractiveSession::handle_get_finance_mode_command,
 		&InteractiveSession::handle_set_finance_mode_command,
-		&InteractiveSession::handle_get_source_command,
-		&InteractiveSession::handle_set_source_command,
+		&InteractiveSession::handle_get_method_command,
+		&InteractiveSession::handle_set_method_command,
 		&InteractiveSession::handle_get_time_range_command,
 		&InteractiveSession::handle_set_time_range_command,
 		&InteractiveSession::handle_get_company_command,
@@ -613,7 +613,7 @@ unsigned short InteractiveSession::handle_set_finance_mode_command(int argc, cha
 	return ret;
 }
 
-unsigned short InteractiveSession::handle_get_source_command(int argc, char **argv)
+unsigned short InteractiveSession::handle_get_method_command(int argc, char **argv)
 {
 	if (argc != 1)
 	{
@@ -631,7 +631,7 @@ unsigned short InteractiveSession::handle_get_source_command(int argc, char **ar
 	return RET_SUCCESS;
 }
 
-unsigned short InteractiveSession::handle_set_source_command(int argc, char **argv)
+unsigned short InteractiveSession::handle_set_method_command(int argc, char **argv)
 {
 	// unsigned short ret = RET_SUCCESS;
 	if (argc != 2)
@@ -1068,11 +1068,11 @@ unsigned short InteractiveSession::handle_help_command(int argc, char **argv)
 	}
 	usage_string += string("* help\n Description: The usage\n");
 // Source type
-	usage_string += string("* get_source\nDescription: Get list of source type\n");
-	usage_string += string("* set_source\nDescription: Set list of source type\n");
-	int source_type_start_index, source_type_end_index;
-	get_source_type_index_range(source_type_start_index, source_type_end_index, finance_analysis_mode);
-	for (int i = source_type_start_index ; i < source_type_end_index ; i++)
+	usage_string += string("* get_method\nDescription: Get list of method\n");
+	usage_string += string("* set_method\nDescription: Set list of method\n");
+	int method_index_start, method_index_end;
+	get_method_index_range(method_index_start, method_index_end, finance_analysis_mode);
+	for (int i = method_index_start ; i < method_index_end ; i++)
 	{
 		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_DATA_DESCRIPTION_LIST[i], i);
 		usage_string += string(buf);

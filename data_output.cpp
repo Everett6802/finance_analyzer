@@ -177,7 +177,7 @@ unsigned short output_result(const DataSet* data_set, const PDATA_SET_ACCESS_PAR
 	return output_result(data_set, NULL, access_param_deque, output_result_param, output_filename);
 }
 
-unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
+unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename, FinanceDataType finance_data_type)
 {
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	assert(access_param_deque != NULL && "access_param_deque should NOT be NULL");
@@ -190,7 +190,7 @@ unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DA
 	static const int DATA_ELEMENT_SIZE = 64;
 	static char data_element[DATA_ELEMENT_SIZE];
 	// char output_filepath[FILE_PATH_SIZE];
-
+	DECLARE_AND_DEFINE_FINANCE_DATA_FIELD_TYPE_LIST(finance_data_type)
 	char split_symbol = (output_result_param != NULL) ? output_result_param->get_split_symbol() : DEFAULT_OUTPUT_DATA_SPLIT_SYMBOL;
 	bool show_title = (output_result_param != NULL) ? output_result_param->get_show_title() : DEFAULT_OUTPUT_DATA_SHOW_TITLE;
 	unsigned short ret = create_folder_in_project_if_not_exist(RESULT_FOLDER_NAME);
@@ -294,9 +294,9 @@ OUT:
 	return ret;
 }
 
-unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)
+unsigned short output_result(const ResultSet* result_set, const PRESULT_SET_ACCESS_PARAM_DEQUE access_param_deque, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename, FinanceDataType finance_data_type)
 {
-	return output_result(result_set, NULL, access_param_deque, output_result_param, output_filename);
+	return output_result(result_set, NULL, access_param_deque, output_result_param, output_filename, finance_data_type);
 }
 
 unsigned short output_2d_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM access_param1, const PRESULT_SET_ACCESS_PARAM access_param2, const POUTPUT_RESULT_PARAM output_result_param, const char* output_filename)

@@ -229,7 +229,8 @@ unsigned short add_filter_rule(
 
 void show_filter_rule(
 	ResultSetAccessParamDeque& result_set_access_param_deque,
-	FilterRuleThresholdDeque& filter_rule_threshold_deque
+	FilterRuleThresholdDeque& filter_rule_threshold_deque,
+	FinanceDataType finance_data_type=FinanceData_SQL
 	);
 
 void cleanup_filter_rule(
@@ -242,20 +243,23 @@ unsigned short filter(
 	const PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque,
 	const PFILTER_RULE_THRESHOLD_DEQUE filter_rule_threshold_deque,
 	FilterOperatorType filter_operator_type,
-	FinanceBoolDataArray& filter_array
+	FinanceBoolDataArray& filter_array,
+	FinanceDataType finance_data_type=FinanceData_SQL
 	);
 
 unsigned short filter_and(
 	const PRESULT_SET result_set,
 	const PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque,
 	const PFILTER_RULE_THRESHOLD_DEQUE filter_rule_threshold_deque,
-	FinanceBoolDataArray& filter_array
+	FinanceBoolDataArray& filter_array,
+	FinanceDataType finance_data_type=FinanceData_SQL
 );
 unsigned short filter_or(
 	const PRESULT_SET result_set,
 	const PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque,
 	const PFILTER_RULE_THRESHOLD_DEQUE filter_rule_threshold_deque,
-	FinanceBoolDataArray& filter_array
+	FinanceBoolDataArray& filter_array,
+	FinanceDataType finance_data_type=FinanceData_SQL
 );
 
 #endif

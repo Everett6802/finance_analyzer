@@ -247,7 +247,7 @@ const char* DataCalculatorBase::get_description_head(const PRESULT_SET result_se
 	return buf;
 }
 
-const char* DataCalculatorBase::get_no_data_description(int source_type_index, int field_index, const PTIME_RANGE_CFG time_range_cfg)const
+const char* DataCalculatorBase::get_no_data_description(int method_index, int field_index, const PTIME_RANGE_CFG time_range_cfg)const
 {
 	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
 	assert(time_range_cfg->get_start_time() != NULL && "time_range_cfg::start_time should NOT be NULL");
@@ -256,31 +256,31 @@ const char* DataCalculatorBase::get_no_data_description(int source_type_index, i
 	static char buf[BUF_SIZE];
 
 	// snprintf(buf, BUF_SIZE, "%s:%s %s:%s *** No Data in MySQL ***", 
-	// 	FINANCE_DATA_DESCRIPTION_LIST[source_type_index],
-	// 	get_database_field_description(source_type_index, field_index),
+	// 	FINANCE_DATA_DESCRIPTION_LIST[method_index],
+	// 	get_database_field_description(method_index, field_index),
 	// 	time_range_cfg->get_start_time()->to_string(),
 	// 	time_range_cfg->get_end_time()->to_string()
 	// );
 	return buf;
 }
 
-unsigned short DataCalculatorBase::get_restricted_time_range(int source_type_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const
+unsigned short DataCalculatorBase::get_restricted_time_range(int method_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const
 {
-	set<int> source_type_index_set;
-	// int source_type_index, field_index;
+	set<int> method_index_set;
+	// int method_index, field_index;
 	// for (int index = 0 ; index < FinanceSourceSize ; index++)
 	// {
 	// 	const INT_DEQUE& query_field = (*sp_query_set.get_instance())[index];
 	// 	if (!query_field.empty())
 	// 	{
-	// 		source_type_index_set.insert(index);
-	// 		source_type_index = index;
+	// 		method_index_set.insert(index);
+	// 		method_index = index;
 	// 		field_index = query_field[0];
 	// 		break;
 	// 	}
 	// }
-	// assert(source_type_index_set.size() == 1 && "The size of source_type_index_set should be 1");
-	source_type_index_set.insert(source_type_index);
+	// assert(method_index_set.size() == 1 && "The size of method_index_set should be 1");
+	method_index_set.insert(method_index);
 
 	unsigned short ret = RET_SUCCESS;
 // Check the time range of this database
@@ -298,7 +298,7 @@ unsigned short DataCalculatorBase::get_restricted_time_range(int source_type_ind
 	}
 	
 	ret = database_time_range->restrict_time_range(
-		source_type_index_set, 
+		method_index_set, 
 		sp_restricted_time_range_cfg.get_instance()
 		);
 	if (CHECK_FAILURE(ret))
@@ -307,11 +307,11 @@ unsigned short DataCalculatorBase::get_restricted_time_range(int source_type_ind
 	return ret;
 }
 
-// unsigned short DataCalculatorBase::query_from_database(int source_type_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSetMap>& sp_result_set_map)const
+// unsigned short DataCalculatorBase::query_from_database(int method_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSetMap>& sp_result_set_map)const
 // {
 // 	unsigned short ret = RET_SUCCESS;
 // 	SmartPointer<QuerySet> sp_query_set(new QuerySet());
-// 	sp_query_set->add_query(source_type_index, field_index);
+// 	sp_query_set->add_query(method_index, field_index);
 // 	sp_query_set->add_query_done();
 // 	// SmartPointer<ResultSet> sp_result_set(new ResultSet());	
 // // Query the data from MySQL
@@ -330,7 +330,7 @@ unsigned short DataCalculatorBase::get_restricted_time_range(int source_type_ind
 // 	return ret;
 // }
 
-unsigned short DataCalculatorBase::get_statistics_result(StatisticsMethod statistics_method, int source_type_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, string& result_str)const
+unsigned short DataCalculatorBase::get_statistics_result(StatisticsMethod statistics_method, int method_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, string& result_str)const
 {
 	// typedef unsigned short (DataCalculatorBase::*get_result_str_func_ptr)(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
 	// static get_result_str_func_ptr get_result_str_func_array[] =
@@ -347,37 +347,37 @@ unsigned short DataCalculatorBase::get_statistics_result(StatisticsMethod statis
 	// int method_index = statistics_method - StatisticsFormula_Start;
 // // Find the time range of this database
 // 	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
-// 	ret = get_restricted_time_range(source_type_index, field_index, time_range_cfg, sp_restricted_time_range_cfg);
+// 	ret = get_restricted_time_range(method_index, field_index, time_range_cfg, sp_restricted_time_range_cfg);
 // 	if (CHECK_FAILURE(ret))
 // 	{
 // 		if (!FAILURE_IS_OUT_OF_RANGE(ret))
 // 			return ret;
-// 		const char* description = get_no_data_description(source_type_index, field_index, (const PTIME_RANGE_CFG)sp_restricted_time_range_cfg.get_const_instance());
+// 		const char* description = get_no_data_description(method_index, field_index, (const PTIME_RANGE_CFG)sp_restricted_time_range_cfg.get_const_instance());
 // 		result_str = string(description);
 // 	}
 // 	else
 // 	{
 // // Query the data from MySQL
 // 		SmartPointer<ResultSetMap> sp_result_set_map(new ResultSetMap());	
-// 		ret = query_from_database(source_type_index, field_index, sp_restricted_time_range_cfg, sp_result_set_map);
+// 		ret = query_from_database(method_index, field_index, sp_restricted_time_range_cfg, sp_result_set_map);
 // 		if (CHECK_FAILURE(ret))
 // 			return ret;
 
 // 		string new_str;
-// 		// int finance_field_type_index = FINANCE_DATA_FIELD_TYPE_LIST[source_type_index][field_index];
-// 		ret = (this->*(get_result_str_func_array[method_index]))(sp_result_set->get_array(source_type_index, field_index), new_str);
+// 		// int finance_field_type_index = FINANCE_DATA_FIELD_TYPE_LIST[method_index][field_index];
+// 		ret = (this->*(get_result_str_func_array[method_index]))(sp_result_set->get_array(method_index, field_index), new_str);
 // 		if (CHECK_FAILURE(ret))
 // 		{
 // 			WRITE_FORMAT_ERROR("Fail to Calculate %s array[%d,%d] %s",
 // 				FORMULA_STATSTICS_METHOD_DESCRIPTION[method_index], 
-// 				source_type_index, 
+// 				method_index, 
 // 				field_index, 
-// 				FINANCE_FIELD_TYPE_DESCRIPTION[FINANCE_DATA_FIELD_TYPE_LIST[source_type_index][field_index]]
+// 				FINANCE_FIELD_TYPE_DESCRIPTION[FINANCE_DATA_FIELD_TYPE_LIST[method_index][field_index]]
 // 				);
 // 			return ret;
 // 		}
 
-// 		SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)source_type_index, field_index));
+// 		SmartPointer<ResultSetAccessParam> sp_result_set_access_param(new ResultSetAccessParam((FinanceSourceType)method_index, field_index));
 // 		const char* description_head = get_description_head(
 // 			sp_result_set.get_instance(), 
 // 			sp_result_set_access_param.get_instance(), 
@@ -497,24 +497,24 @@ unsigned short DataCalculatorBase::calculate_statistics(StatisticsMethod statist
 	unsigned short ret = RET_SUCCESS;
 	// const PQUERY_SET query_set = DataCalculatorBase::get_general_query_set();
 	// string result_str = "";
-	// PINT_SET source_type_index_set = query_set->get_source_type_index_set();
-	// INT_SET_ITER iter = source_type_index_set->begin();
-	// // for (int source_type_index = 0 ; source_type_index < FinanceSourceSize ; source_type_index++)
-	// while (iter != source_type_index_set->end())
+	// PINT_SET method_index_set = query_set->get_method_index_set();
+	// INT_SET_ITER iter = method_index_set->begin();
+	// // for (int method_index = 0 ; method_index < FinanceSourceSize ; method_index++)
+	// while (iter != method_index_set->end())
 	// {
-	// 	int source_type_index = *iter;
-	// 	const INT_DEQUE& query_field = (*query_set)[source_type_index];
+	// 	int method_index = *iter;
+	// 	const INT_DEQUE& query_field = (*query_set)[method_index];
 	// 	// if (query_field.empty())
 	// 	// 	continue;
 	// 	int query_field_size = query_field.size();
 	// 	for (int i = 0 ; i < query_field_size ; i++)
 	// 	{
 	// 		int field_index = query_field[i];
-	// 		WRITE_FORMAT_INFO("Calcuate the %s from data[%d, %d](%s)", FORMULA_STATSTICS_METHOD_DESCRIPTION[index], source_type_index, field_index, get_database_field_description(source_type_index, field_index));
+	// 		WRITE_FORMAT_INFO("Calcuate the %s from data[%d, %d](%s)", FORMULA_STATSTICS_METHOD_DESCRIPTION[index], method_index, field_index, get_database_field_description(method_index, field_index));
 	// 		string new_str;
 	// 		ret = get_statistics_result(
 	// 			statistics_method,
-	// 			source_type_index, 
+	// 			method_index, 
 	// 			field_index, 
 	// 			(const PTIME_RANGE_CFG)sp_time_range_cfg.get_const_instance(), 
 	// 			new_str

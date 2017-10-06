@@ -237,11 +237,13 @@ unsigned short add_filter_rule(
 
 void show_filter_rule(
 	ResultSetAccessParamDeque& result_set_access_param_deque,
-	FilterRuleThresholdDeque& filter_rule_threshold_deque
+	FilterRuleThresholdDeque& filter_rule_threshold_deque,
+	FinanceDataType finance_data_type	
 	)
 {
 	unsigned int filter_rule_size = result_set_access_param_deque.size();
 	assert(filter_rule_size == filter_rule_threshold_deque.size() && "The array sizes of filter rule are NOT equal");
+	DECLARE_AND_DEFINE_FINANCE_DATA_FIELD_TYPE_LIST(finance_data_type)
 	for (unsigned int rule_index = 0 ; rule_index < filter_rule_size ; rule_index++)
 	{
 		PRESULT_SET_ACCESS_PARAM result_set_access_param = result_set_access_param_deque[rule_index];
@@ -358,7 +360,8 @@ unsigned short filter(
 	const PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque,
 	const PFILTER_RULE_THRESHOLD_DEQUE filter_rule_threshold_deque,
 	FilterOperatorType filter_operator_type,
-	FinanceBoolDataArray& filter_array
+	FinanceBoolDataArray& filter_array,
+	FinanceDataType finance_data_type
 	)
 {
 	typedef bool (*PFUNC_FILTER_RULE_INT)(int data, int threshold);
@@ -381,6 +384,7 @@ unsigned short filter(
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	assert(result_set_access_param_deque != NULL && "result_set_access_param_deque should NOT be NULL");
 	assert(filter_rule_threshold_deque != NULL && "filter_rule_threshold_deque should NOT be NULL");
+	DECLARE_AND_DEFINE_FINANCE_DATA_FIELD_TYPE_LIST(finance_data_type)
 	size_t data_dimension = result_set_access_param_deque->size();
 	assert(data_dimension == filter_rule_threshold_deque->size() && "The size of filter_rule_threshold_array is NOT identical to the one of result_set_access_param_array");
 	int data_size = result_set->get_data_size();
@@ -451,17 +455,19 @@ unsigned short filter_and(
 	const PRESULT_SET result_set,
 	const PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque,
 	const PFILTER_RULE_THRESHOLD_DEQUE filter_rule_threshold_deque,
-	FinanceBoolDataArray& filter_array
+	FinanceBoolDataArray& filter_array,
+	FinanceDataType finance_data_type
 	)
 {
-	return filter(result_set, result_set_access_param_deque, filter_rule_threshold_deque, FilterOperator_AND, filter_array);
+	return filter(result_set, result_set_access_param_deque, filter_rule_threshold_deque, FilterOperator_AND, filter_array, finance_data_type);
 }
 unsigned short filter_or(
 	const PRESULT_SET result_set,
 	const PRESULT_SET_ACCESS_PARAM_DEQUE result_set_access_param_deque,
 	const PFILTER_RULE_THRESHOLD_DEQUE filter_rule_threshold_deque,
-	FinanceBoolDataArray& filter_array
+	FinanceBoolDataArray& filter_array,
+	FinanceDataType finance_data_type
 	)
 {
-	return filter(result_set, result_set_access_param_deque, filter_rule_threshold_deque, FilterOperator_OR, filter_array);
+	return filter(result_set, result_set_access_param_deque, filter_rule_threshold_deque, FilterOperator_OR, filter_array, finance_data_type);
 }

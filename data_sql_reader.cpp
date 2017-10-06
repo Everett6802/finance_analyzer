@@ -43,13 +43,13 @@ const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT = " WHERE m
 //const char* DataSqlReader::format_cmd_create_table = "CREATE TABLE sql%s (date VARCHAR(16), time VARCHAR(16), severity INT, data VARCHAR(512))";
 //const char* DataSqlReader::format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
 
-unsigned short DataSqlReader::get_sql_field_command(int source_type_index, const INT_DEQUE& query_field, string& field_cmd)
+unsigned short DataSqlReader::get_sql_field_command(int method_index, const INT_DEQUE& query_field, string& field_cmd)
 {
 	if (query_field.empty())
 		throw invalid_argument("The query should NOT be empty");
 //	string field_cmd;
 // Select all the fields in the table
-	if ((int)query_field.size() == FINANCE_DATA_FIELD_AMOUNT_LIST[source_type_index] - 1) // Caution: Don't include the "date" field
+	if ((int)query_field.size() == FINANCE_SQL_DATA_FIELD_AMOUNT_LIST[method_index] - 1) // Caution: Don't include the "date" field
 		field_cmd = string("*");
 	else
 	{
@@ -98,20 +98,20 @@ unsigned short DataSqlReader::read_from_tables(
 		// const INT_DEQUE& query_field = (*query_set)[source_index];
 		const INT_DEQUE& query_field = (*iter);
 		assert(!query_field.empty() && "query_field should NOT be empty");
-		int source_type_index = iter.get_first();
+		int method_index = iter.get_first();
 // Add to the result set
-		ret = result_set->add_set(source_type_index, query_field);
+		ret = result_set->add_set(method_index, query_field);
 		if (CHECK_FAILURE(ret))
 			return ret;
 // Generate the field command
 		string field_cmd = string("");
-		DataSqlReader::get_sql_field_command(source_type_index, query_field, field_cmd);
+		DataSqlReader::get_sql_field_command(method_index, query_field, field_cmd);
 // Search for each table
-		table_name = string(FINANCE_TABLE_NAME_LIST[source_type_index]);
+		table_name = string(FINANCE_TABLE_NAME_LIST[method_index]);
 		if (finance_analysis_mode == FinanceAnalysis_Stock)
 			table_name = company_code_number + table_name;
 		ret = sql_reader->select_data(
-			source_type_index, 
+			method_index, 
 			table_name, 
 			field_cmd, 
 			(const PINT_DEQUE)&query_field, 
@@ -204,11 +204,11 @@ unsigned short DataSqlReader::read_market(
 			QuerySet::const_iterator iter = query_set->begin();			
 			while (iter != query_set->end())
 			{
-				int source_type_index = iter.get_first();
+				int method_index = iter.get_first();
 				PQUERY_SET query_sub_set = NULL;
 				// const PINT_DEQUE field_index_deque = iter.get_second();
 // Initialize the sub query set
-				ret = query_set->get_query_sub_set(source_type_index, &query_sub_set);
+				ret = query_set->get_query_sub_set(method_index, &query_sub_set);
 				if (CHECK_FAILURE(ret))
 					goto OUT;
 				SmartPointer<QuerySet> sp_query_sub_set;
@@ -233,7 +233,7 @@ unsigned short DataSqlReader::read_market(
 				);
 				if (CHECK_FAILURE(ret))
 					return ret;
-				int source_key = get_source_key(source_type_index);
+				int source_key = get_source_key(method_index);
 				ret = result_set_map->register_result_set(source_key, result_set);
 				if (CHECK_FAILURE(ret))
 					goto OUT;
@@ -396,11 +396,11 @@ unsigned short DataSqlReader::read_stock(
 						QuerySet::const_iterator iter = query_set->begin();
 						while (iter != query_set->end())
 						{
-							int source_type_index = iter.get_first();
-							int source_type_revised_index = source_type_index - FinanceSource_StockStart;
+							int method_index = iter.get_first();
+							int source_type_revised_index = method_index - FinanceSource_StockStart;
 							// const PINT_DEQUE field_index_deque = iter.get_second();
 							PQUERY_SET query_sub_set = NULL;
-							ret = query_set->get_query_sub_set(source_type_index, &query_sub_set);
+							ret = query_set->get_query_sub_set(method_index, &query_sub_set);
 							if (CHECK_FAILURE(ret))
 								goto OUT;
 							sp_query_sub_set_array[source_type_revised_index].set_new(query_sub_set);
@@ -412,8 +412,8 @@ unsigned short DataSqlReader::read_stock(
 // Query data from MySQL
 					while (iter != query_set->end())
 					{
-						int source_type_index = iter.get_first();
-						int source_type_revised_index = source_type_index - FinanceSource_StockStart;
+						int method_index = iter.get_first();
+						int source_type_revised_index = method_index - FinanceSource_StockStart;
 						PRESULT_SET result_set = new ResultSet();
 						if (result_set == NULL)
 						{
@@ -432,7 +432,7 @@ unsigned short DataSqlReader::read_stock(
 						);
 						if (CHECK_FAILURE(ret))
 							goto OUT;
-						int source_key = get_source_key(source_type_index, company_code_number, company_group_number);
+						int source_key = get_source_key(method_index, company_code_number, company_group_number);
 						ret = result_set_map->register_result_set(source_key, result_set);
 						if (CHECK_FAILURE(ret))
 							goto OUT;
@@ -670,7 +670,7 @@ unsigned short DataSqlReader::select_data(
 // Count the amount of the field including the date field
 	int expected_data_dimension = (int)query_field->size() + 1;
 //	if ((*query_field)[0] == -1)
-//		expected_data_dimension = FINANCE_DATA_FIELD_AMOUNT_LIST[source_index];
+//		expected_data_dimension = FINANCE_SQL_DATA_FIELD_AMOUNT_LIST[source_index];
 //	else
 //		expected_data_dimension = (int)query_field->size() + 1;
 // Store the query result into a self-defined data structure

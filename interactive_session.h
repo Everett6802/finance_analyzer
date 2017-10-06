@@ -73,8 +73,8 @@ private:
 	unsigned short handle_command(int argc, char **argv);
 	unsigned short handle_get_finance_mode_command(int argc, char **argv);
 	unsigned short handle_set_finance_mode_command(int argc, char **argv);
-	unsigned short handle_get_source_command(int argc, char **argv);
-	unsigned short handle_set_source_command(int argc, char **argv);
+	unsigned short handle_get_method_command(int argc, char **argv);
+	unsigned short handle_set_method_command(int argc, char **argv);
 	unsigned short handle_get_time_range_command(int argc, char **argv);
 	unsigned short handle_set_time_range_command(int argc, char **argv);
 	unsigned short handle_get_company_command(int argc, char **argv);

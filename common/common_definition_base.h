@@ -107,6 +107,15 @@ do{\
 #define IS_GRAPH_STATISTICS_METHOD(X)\
 ((X >= StatisticsGraph_Start && X < StatisticsGraph_End) ? true : false)
 
+#define DECLARE_FINANCE_DATA_FIELD_TYPE_LIST() const int** FINANCE_DATA_FIELD_TYPE_LIST;
+#define DECLARE_FINANCE_DATA_FIELD_AMOUNT_LIST() const int* FINANCE_DATA_FIELD_AMOUNT_LIST;
+
+#define DEFINE_FINANCE_DATA_FIELD_TYPE_LIST(finance_data_type) FINANCE_DATA_FIELD_TYPE_LIST = get_finance_data_field_type_list(finance_data_type);
+#define DEFINE_FINANCE_DATA_FIELD_AMOUNT_LIST(finance_data_type) FINANCE_DATA_FIELD_AMOUNT_LIST = get_finance_data_field_amount_list(finance_data_type);
+
+#define DECLARE_AND_DEFINE_FINANCE_DATA_FIELD_TYPE_LIST(finance_data_type) const int** DEFINE_FINANCE_DATA_FIELD_TYPE_LIST(finance_data_type)
+#define DECLARE_AND_DEFINE_FINANCE_DATA_FIELD_AMOUNT_LIST(finance_data_type) const int* DEFINE_FINANCE_DATA_FIELD_AMOUNT_LIST(finance_data_type)
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Type Definition
 typedef std::deque<std::string> STRING_DEQUE;
@@ -298,8 +307,10 @@ extern const int GRAPH_STATSTICS_METHOD_SIZE;
 extern const char* FINANCE_TABLE_NAME_LIST[];
 extern const int FINANCE_TABLE_NAME_LIST_LEN;
 extern const char* FINANCE_DATA_DESCRIPTION_LIST[];
-extern const int* FINANCE_DATA_FIELD_TYPE_LIST[];
-extern const int FINANCE_DATA_FIELD_AMOUNT_LIST[];
+extern const int* FINANCE_SQL_DATA_FIELD_TYPE_LIST[];
+extern const int* FINANCE_CSV_DATA_FIELD_TYPE_LIST[];
+extern const int FINANCE_SQL_DATA_FIELD_AMOUNT_LIST[];
+extern const int FINANCE_CSV_DATA_FIELD_AMOUNT_LIST[];
 extern const char* FINANCE_ARRAY_ELEMENT_CALCULATION_DESCRIPTION_LIST[];
 
 extern const int SHOW_RES_STDOUT;

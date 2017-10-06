@@ -67,13 +67,13 @@ FinanceAnalysisMode get_finance_analysis_mode_from_file()
 // bool is_market_mode(){return get_finance_analysis_mode() == FinanceAnalysis_Market;}
 // bool is_stock_mode(){return get_finance_analysis_mode() == FinanceAnalysis_Stock;}
 
-int get_source_key(int source_type_index/*, FinanceAnalysisMode finance_analysis_mode*/)
+int get_source_key(int method_index/*, FinanceAnalysisMode finance_analysis_mode*/)
 {
 	// if (finance_analysis_mode == FinanceAnalysis_None)
 	// 	finance_analysis_mode = g_finance_analysis_mode;
 	// if (finance_analysis_mode != FinanceAnalysis_Market)
 	// 	throw logic_error(string("It's NOT Market mode"));
-	if (source_type_index == -1)
+	if (method_index == -1)
 	{
 // No source type mode
 		return NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE;
@@ -81,18 +81,18 @@ int get_source_key(int source_type_index/*, FinanceAnalysisMode finance_analysis
 	else
 	{
 // Source type mode
-		return source_type_index;
+		return method_index;
 	}
 }
 
-int get_source_key(int company_group_number, const string& company_code_number, int source_type_index/*, FinanceAnalysisMode finance_analysis_mode*/)
+int get_source_key(int company_group_number, const string& company_code_number, int method_index/*, FinanceAnalysisMode finance_analysis_mode*/)
 {
 	// if (finance_analysis_mode == FinanceAnalysis_None)
 	// 	finance_analysis_mode = g_finance_analysis_mode;
 	// if (finance_analysis_mode != FinanceAnalysis_Stock)
 	// 	throw logic_error(string("It's NOT Stock mode"));
 	int company_code_number_int = atoi(company_code_number.c_str());
-	if (source_type_index == -1)
+	if (method_index == -1)
 	{
 // No source type mode
 		return (company_group_number << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET | company_code_number_int << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET);
@@ -100,11 +100,11 @@ int get_source_key(int company_group_number, const string& company_code_number, 
 	else
 	{
 // Source type mode
-		return (company_group_number << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET | company_code_number_int << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET | source_type_index << SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
+		return (company_group_number << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET | company_code_number_int << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET | method_index << SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
 	}
 }
 
-int get_source_type(int source_key)
+int get_method(int source_key)
 {
 	return ((source_key & SOURCE_KEY_SOURCE_TYPE_INDEX_MASK) >> SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
 }
@@ -160,36 +160,67 @@ const char* get_ret_description(unsigned short ret)
 	else
 		return success_ret_description;
 }
-
-const char* get_database_field_description(int source_type_index, int field_index, FinanceAnalysisMode finance_analysis_mode)
+const int** get_finance_sql_data_field_type_list(){return FINANCE_SQL_DATA_FIELD_TYPE_LIST;}
+const int** get_finance_csv_data_field_type_list(){return FINANCE_CSV_DATA_FIELD_TYPE_LIST;}
+const int** get_finance_data_field_type_list(FinanceDataType finance_data_type)
 {
-	// assert((source_type_index >= 0 && source_type_index < FinanceSourceSize) && "source_type_index is out of range");
-	// assert((field_index >= 0 && field_index < FINANCE_DATA_FIELD_AMOUNT_LIST[source_type_index]) && "field_index is out of range");
-	// assert(check_source_type_index_in_range(source_type_index, finance_analysis_mode) && "source_type_index is out of range");
-	assert(check_field_index_in_range(source_type_index, field_index) && "field_index is out of range");
-	switch(source_type_index)
+	typedef const int** (*GET_FINANCE_DATA_FIELD_TYPE_LIST_FUNC_PTR)();
+	static GET_FINANCE_DATA_FIELD_TYPE_LIST_FUNC_PTR get_finance_data_field_type_list_func_ptr[] =
+	{
+		get_finance_sql_data_field_type_list,
+		get_finance_csv_data_field_type_list
+	};
+	return (*(get_finance_data_field_type_list_func_ptr[finance_data_type]))();
+}
+
+const int* get_finance_sql_data_field_amount_list(){return FINANCE_SQL_DATA_FIELD_AMOUNT_LIST;}
+const int* get_finance_csv_data_field_amount_list(){return FINANCE_CSV_DATA_FIELD_AMOUNT_LIST;}
+const int* get_finance_data_field_amount_list(FinanceDataType finance_data_type)
+{
+	typedef const int* (*GET_FINANCE_DATA_FIELD_AMOUNT_LIST_FUNC_PTR)();
+	static GET_FINANCE_DATA_FIELD_AMOUNT_LIST_FUNC_PTR get_finance_data_field_amount_list_func_ptr[] =
+	{
+		get_finance_sql_data_field_amount_list,
+		get_finance_csv_data_field_amount_list
+	};
+	return (*(get_finance_data_field_amount_list_func_ptr[finance_data_type]))();
+}
+
+const char* get_sql_field_description(int method_index, int field_index)
+{
+	switch(method_index)
 	{
 		case FinanceSource_StockExchangeAndVolume:
-			return STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[field_index];
+			return SQL_STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[field_index];
 		case FinanceSource_StockTop3LegalPersonsNetBuyOrSell:
-			return STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[field_index];
+			return SQL_STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[field_index];
 		case FinanceSource_StockMarginTradingAndShortSelling:
-			return STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[field_index];
+			return SQL_STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[field_index];
 		case FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest:
-			return FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+			return SQL_FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
 		case FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest:
-			return FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+			return SQL_FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
 		case FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest:
-			return OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+			return SQL_OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
 		case FinanceSource_OptionPutCallRatio:
-			return OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[field_index];
+			return SQL_OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[field_index];
 		case FinanceSource_FutureTop10DealersAndLegalPersons:
-			return FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[field_index];
+			return SQL_FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_DepositoryShareholderDistributionTable:
+			return SQL_COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_BalanceSheet:
+			return SQL_BALANCE_SHEET_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_IncomeStatement:
+			return SQL_INCOME_STATEMENT_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_CashFlowStatement:
+			return SQL_CASH_FLOW_STATEMENT_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_StatementOfChangesInEquity:
+			return SQL_STATEMENT_OF_CHANGES_IN_EQUITY_FIELD_DESCRIPTION[field_index];
 		default:
 		{
 			static const int BUF_SIZE = 256;
 			static char buf[BUF_SIZE];
-			snprintf(buf, BUF_SIZE, "Unknown source index: %d", source_type_index);
+			snprintf(buf, BUF_SIZE, "Unknown source index: %d", method_index);
 			throw invalid_argument(buf);
 		}
 		break;
@@ -197,16 +228,73 @@ const char* get_database_field_description(int source_type_index, int field_inde
 	return NULL;
 }
 
-bool check_source_type_index_in_range(int source_type_index, FinanceAnalysisMode finance_analysis_mode)
+const char* get_csv_field_description(int method_index, int field_index)
+{
+	switch(method_index)
+	{
+		case FinanceSource_StockExchangeAndVolume:
+			return CSV_STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_StockTop3LegalPersonsNetBuyOrSell:
+			return CSV_STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_StockMarginTradingAndShortSelling:
+			return CSV_STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest:
+			return CSV_FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest:
+			return CSV_FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest:
+			return CSV_OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_OptionPutCallRatio:
+			return CSV_OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_FutureTop10DealersAndLegalPersons:
+			return CSV_FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_DepositoryShareholderDistributionTable:
+			return CSV_COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_BalanceSheet:
+			return CSV_BALANCE_SHEET_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_IncomeStatement:
+			return CSV_INCOME_STATEMENT_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_CashFlowStatement:
+			return CSV_CASH_FLOW_STATEMENT_FIELD_DESCRIPTION[field_index];
+		case FinanceSource_StatementOfChangesInEquity:
+			return CSV_STATEMENT_OF_CHANGES_IN_EQUITY_FIELD_DESCRIPTION[field_index];
+		default:
+		{
+			static const int BUF_SIZE = 256;
+			static char buf[BUF_SIZE];
+			snprintf(buf, BUF_SIZE, "Unknown source index: %d", method_index);
+			throw invalid_argument(buf);
+		}
+		break;
+	}
+	return NULL;
+}
+
+const char* get_field_description(int method_index, int field_index/*, FinanceAnalysisMode finance_analysis_mode*/, FinanceDataType finance_data_type)
+{
+	// assert((method_index >= 0 && method_index < FinanceSourceSize) && "method_index is out of range");
+	// assert((field_index >= 0 && field_index < FINANCE_DATA_FIELD_AMOUNT_LIST[method_index]) && "field_index is out of range");
+	// assert(check_method_index_in_range(method_index, finance_analysis_mode) && "method_index is out of range");
+	assert(check_field_index_in_range(method_index, field_index, finance_data_type) && "field_index is out of range");
+	typedef const char* (*GET_FILED_DESCRIPTION_FUNC_PTR)(int method_index, int field_index);
+	static GET_FILED_DESCRIPTION_FUNC_PTR get_field_description_func_ptr[] = 
+	{
+		get_sql_field_description,
+		get_csv_field_description
+	};
+	return (*(get_field_description_func_ptr[finance_data_type]))(method_index, field_index);
+}
+
+bool check_method_index_in_range(int method_index, FinanceAnalysisMode finance_analysis_mode)
 {
     if (finance_analysis_mode == FinanceAnalysis_Market)
     {
-        if (source_type_index >= FinanceSource_MarketStart && source_type_index < FinanceSource_MarketEnd)
+        if (method_index >= FinanceSource_MarketStart && method_index < FinanceSource_MarketEnd)
             return true;
     }
     else if (finance_analysis_mode == FinanceAnalysis_Stock)
     {
-        if (source_type_index >= FinanceSource_StockStart && source_type_index < FinanceSource_StockEnd)
+        if (method_index >= FinanceSource_StockStart && method_index < FinanceSource_StockEnd)
             return true;
     }
     else
@@ -214,7 +302,7 @@ bool check_source_type_index_in_range(int source_type_index, FinanceAnalysisMode
     return false;
 }
 
-void get_source_type_index_range(int& source_type_index_start, int& source_type_index_end, FinanceAnalysisMode finance_analysis_mode)
+void get_method_index_range(int& method_index_start, int& method_index_end, FinanceAnalysisMode finance_analysis_mode)
 {
 	// if (finance_analysis_mode == FinanceAnalysis_None)
 	// 	finance_analysis_mode = g_finance_analysis_mode;
@@ -222,14 +310,14 @@ void get_source_type_index_range(int& source_type_index_start, int& source_type_
 	{
 	case FinanceAnalysis_Market:
 	{
-		source_type_index_start = FinanceSource_MarketStart;
-		source_type_index_end = FinanceSource_MarketEnd;
+		method_index_start = FinanceSource_MarketStart;
+		method_index_end = FinanceSource_MarketEnd;
 	}
 	break;
 	case FinanceAnalysis_Stock:
 	{
-		source_type_index_start = FinanceSource_StockStart;
-		source_type_index_end = FinanceSource_StockEnd;
+		method_index_start = FinanceSource_StockStart;
+		method_index_end = FinanceSource_StockEnd;
 	}
 	break;
 	default:
@@ -238,7 +326,7 @@ void get_source_type_index_range(int& source_type_index_start, int& source_type_
 	}
 }
 
-int get_source_type_size(FinanceAnalysisMode finance_analysis_mode)
+int get_method_size(FinanceAnalysisMode finance_analysis_mode)
 {
 	// if (finance_analysis_mode == FinanceAnalysis_None)
 	// 	finance_analysis_mode = g_finance_analysis_mode;
@@ -250,15 +338,37 @@ int get_source_type_size(FinanceAnalysisMode finance_analysis_mode)
 		throw runtime_error(string("Unknown finance mode"));
 }
 
-bool check_field_index_in_range(int source_type_index, int field_index)
+bool check_sql_field_index_in_range(int method_index, int field_index)
 {
-	if(field_index < 0 && field_index >= FINANCE_DATA_FIELD_AMOUNT_LIST[source_type_index])
+	if(field_index < 0 && field_index >= FINANCE_SQL_DATA_FIELD_AMOUNT_LIST[method_index])
 	{
 // If field_index == -1, it means select all field in the table
 		if (field_index != -1)
 			return false;
 	}
 	return true;
+}
+
+bool check_csv_field_index_in_range(int method_index, int field_index)
+{
+	if(field_index < 0 && field_index >= FINANCE_CSV_DATA_FIELD_AMOUNT_LIST[method_index])
+	{
+// If field_index == -1, it means select all field in the table
+		if (field_index != -1)
+			return false;
+	}
+	return true;
+}
+
+bool check_field_index_in_range(int method_index, int field_index, FinanceDataType finance_data_type)
+{
+	typedef bool (*CHECK_DATA_FIELD_INDEX_IN_RANGE_FUNC_PTR)(int method_index, int field_index);
+	static CHECK_DATA_FIELD_INDEX_IN_RANGE_FUNC_PTR check_data_field_index_in_range_func_ptr[] = 
+	{
+		check_sql_field_index_in_range,
+		check_csv_field_index_in_range
+	};
+	return (*(check_data_field_index_in_range_func_ptr[finance_data_type]))(method_index, field_index);
 }
 
 bool check_calculation_type_in_range(int calculation_type)
