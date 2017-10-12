@@ -102,10 +102,10 @@ unsigned short DatabaseTimeRange::initialize()
 		}
 // Check if the source type in the config file is in order
 		char* finance_database_description = strtok(buf, ": ");
-		if (strcmp(finance_database_description, FINANCE_DATA_DESCRIPTION_LIST[method_index_count]) != 0)
+		if (strcmp(finance_database_description, FINANCE_METHOD_DESCRIPTION_LIST[method_index_count]) != 0)
 		{
 			char errmsg[256];
-			snprintf(errmsg, 256, "The source type[%s] is NOT identical to %s in %s", finance_database_description, FINANCE_DATA_DESCRIPTION_LIST[method_index_count], DATABASE_TIME_RANGE_CONF_FILENAME);
+			snprintf(errmsg, 256, "The source type[%s] is NOT identical to %s in %s", finance_database_description, FINANCE_METHOD_DESCRIPTION_LIST[method_index_count], DATABASE_TIME_RANGE_CONF_FILENAME);
 			throw runtime_error(string(errmsg));
 		}
 		method_index_count++;

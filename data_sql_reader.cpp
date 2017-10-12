@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <set>
 #include "data_sql_reader.h"
-#include "database_time_range.h"
+// #include "database_time_range.h"
 /*
  * Go to the following links to see more detailed info:
  * http://www.cs.wichita.edu/~chang/lecture/cs742/program/how-mysql-c-api.html
@@ -35,10 +35,10 @@ const char* DataSqlReader::FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT = " WHERE 
 const char* DataSqlReader::FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE date >= '%s'";
 const char* DataSqlReader::FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE date <= '%s'";
 const char* DataSqlReader::FORMAT_CMD_SELECT_DATE_RULE_EQUAL_FORMAT = " WHERE date = '%s'";
-const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
-const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE month(date) >= '%d'";
-const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE month(date) <= '%d'";
-const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT = " WHERE month(date) = '%s'";
+// const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
+// const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE month(date) >= '%d'";
+// const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE month(date) <= '%d'";
+// const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT = " WHERE month(date) = '%s'";
 
 //const char* DataSqlReader::format_cmd_create_table = "CREATE TABLE sql%s (date VARCHAR(16), time VARCHAR(16), severity INT, data VARCHAR(512))";
 //const char* DataSqlReader::format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
@@ -70,10 +70,10 @@ unsigned short DataSqlReader::get_sql_field_command(int method_index, const INT_
 }
 
 unsigned short DataSqlReader::read_from_tables(
-	const PTIME_RANGE_CFG restricted_time_range_cfg, 
+	const PTIME_RANGE_PARAM time_range_param, 
 	const PQUERY_SET query_set,
 	const std::string& company_code_number,  // For stock mode only, ignored in market mode
-	DataSqlReader* sql_reader,
+	DataSqlReader* sql_reader_obj,
 	FinanceAnalysisMode finance_analysis_mode,
 	PRESULT_SET result_set
 	)
@@ -81,9 +81,9 @@ unsigned short DataSqlReader::read_from_tables(
 	assert(!(finance_analysis_mode == FinanceAnalysis_Market || finance_analysis_mode == FinanceAnalysis_Stock) && "finance_analysis_mode is NOT FinanceAnalysis_Market/FinanceAnalysis_Stock");
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
-	DECLARE_AND_IMPLEMENT_STATIC_COMPANY_PROFILE()
 	if (finance_analysis_mode == FinanceAnalysis_Stock)
 	{
+		DECLARE_AND_IMPLEMENT_STATIC_COMPANY_PROFILE()
 		if (!company_profile->is_company_exist(company_code_number))
 		{
 			WRITE_FORMAT_ERROR("The company[%s] does NOT exist", company_code_number.c_str());
@@ -95,7 +95,7 @@ unsigned short DataSqlReader::read_from_tables(
 	string table_name;
 	for (QuerySet::const_iterator iter = query_set->begin() ; iter != query_set->end() ; ++iter)
 	{
-		// const INT_DEQUE& query_field = (*query_set)[source_index];
+		// const INT_DEQUE& query_field = (*query_set)[method_index];
 		const INT_DEQUE& query_field = (*iter);
 		assert(!query_field.empty() && "query_field should NOT be empty");
 		int method_index = iter.get_first();
@@ -107,15 +107,16 @@ unsigned short DataSqlReader::read_from_tables(
 		string field_cmd = string("");
 		DataSqlReader::get_sql_field_command(method_index, query_field, field_cmd);
 // Search for each table
-		table_name = string(FINANCE_TABLE_NAME_LIST[method_index]);
+		table_name = string(FINANCE_SQL_TABLE_NAME_LIST[method_index]);
 		if (finance_analysis_mode == FinanceAnalysis_Stock)
 			table_name = company_code_number + table_name;
-		ret = sql_reader->select_data(
+// Read the SQL data from database
+		ret = sql_reader_obj->select_data(
 			method_index, 
 			table_name, 
 			field_cmd, 
 			(const PINT_DEQUE)&query_field, 
-			restricted_time_range_cfg, 
+			time_range_param, 
 			result_set
 		);
 		if (CHECK_FAILURE(ret))
@@ -126,19 +127,19 @@ unsigned short DataSqlReader::read_from_tables(
 
 unsigned short DataSqlReader::read_market(
 	const PQUERY_SET query_set, 
-	const PTIME_RANGE_CFG time_range_cfg, 
-	DataSqlReader* reader_obj, 
+	const PTIME_RANGE_PARAM time_range_param, 
+	DataSqlReader* sql_reader_obj, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
-	DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
+	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 	static string company_code_number_dummy("xxxx");
 
-	assert(reader_obj != NULL && query_set != NULL && time_range_cfg != NULL && result_set_map != NULL);
+	assert(sql_reader_obj != NULL && query_set != NULL && time_range_param != NULL && result_set_map != NULL);
 	// assert(sql_reader != NULL);
 	// assert(query_set != NULL);
-	// assert(time_range_cfg != NULL);
+	// assert(time_range_param != NULL);
 	// assert(result_set_map != NULL);
 
 	if (!query_set->is_add_query_done())
@@ -146,32 +147,31 @@ unsigned short DataSqlReader::read_market(
 		WRITE_ERROR("The setting of query data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	if (time_range_cfg->get_start_time() == NULL || time_range_cfg->get_end_time() == NULL)
+	if (time_range_param->get_start_time() == NULL || time_range_param->get_end_time() == NULL)
 	{
-		WRITE_ERROR("The start/end time in time_range_cfg should NOT be NULL");
+		WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	PDATA_SQL_READER sql_reader_obj = (PDATA_SQL_READER)reader_obj;
 	unsigned short ret = RET_SUCCESS;
 // Connect to the database
 	ret = sql_reader_obj->try_connect_mysql(FINANCE_DATA_MARKET_NAME);
 	if (CHECK_FAILURE(ret))
 		return ret;
-// Check the boundary of each database
-	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
-	WRITE_FORMAT_DEBUG("The original search time range: %s", sp_restricted_time_range_cfg->to_string());
-	ret = database_time_range->restrict_time_range(query_set, sp_restricted_time_range_cfg.get_instance());
-	if (CHECK_FAILURE(ret))
-		return ret;
-	WRITE_FORMAT_DEBUG("The new search time range: %s", sp_restricted_time_range_cfg->to_string());
+// // Check the boundary of each database
+// 	SmartPointer<TimeRangeParam> sp_time_range_param(new TimeRangeParam(*time_range_param));
+// 	WRITE_FORMAT_DEBUG("The original search time range: %s", sp_time_range_param->to_string());
+// 	ret = database_time_range->restrict_time_range(query_set, sp_time_range_param.get_instance());
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	WRITE_FORMAT_DEBUG("The new search time range: %s", sp_time_range_param->to_string());
 
 	ResultSetDataUnit result_set_data_unit = result_set_map->get_data_unit();
 	switch (result_set_data_unit)
 	{
-		case ResultSetDataUnit_NoSourceType:
+		case ResultSetDataUnit_MultipleMethod:
 		{
 // Query data from MySQL
-			PRESULT_SET result_set = new ResultSet();
+			PRESULT_SET result_set = new ResultSet(FinanceData_SQL);
 			if (result_set == NULL)
 			{
 				WRITE_ERROR("Fail to allocate memory: result_set");
@@ -180,7 +180,8 @@ unsigned short DataSqlReader::read_market(
 			}
 // Query the data from each table
 			ret = read_from_tables(
-				sp_restricted_time_range_cfg.get_instance(), 
+				// sp_time_range_param.get_instance(), 
+				time_range_param,
 				query_set,
 				company_code_number_dummy,  // For stock mode only, ignored in market mode
 				sql_reader_obj, 
@@ -189,7 +190,7 @@ unsigned short DataSqlReader::read_market(
 			);
 			if (CHECK_FAILURE(ret))
 				goto OUT;
-			ret = result_set_map->register_result_set(NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE, result_set);
+			ret = result_set_map->register_result_set(NO_METHOD_MARKET_SOURCE_KEY_VALUE, result_set);
 			if (CHECK_FAILURE(ret))
 				goto OUT;
 // Check the result
@@ -199,7 +200,7 @@ unsigned short DataSqlReader::read_market(
 				goto OUT;
 		}
 		break;
-		case ResultSetDataUnit_SourceType:
+		case ResultSetDataUnit_SingleMethod:
 		{
 			QuerySet::const_iterator iter = query_set->begin();			
 			while (iter != query_set->end())
@@ -215,7 +216,7 @@ unsigned short DataSqlReader::read_market(
 				sp_query_sub_set.set_new(query_sub_set);
 				// sp_query_sub_set->add_query_done();
 // Query data from MySQL
-				PRESULT_SET result_set = new ResultSet();
+				PRESULT_SET result_set = new ResultSet(FinanceData_SQL);
 				if (result_set == NULL)
 				{
 					WRITE_ERROR("Fail to allocate memory: result_set");
@@ -224,7 +225,8 @@ unsigned short DataSqlReader::read_market(
 				}
 // Query the data from each table
 				ret = read_from_tables(
-					sp_restricted_time_range_cfg.get_instance(), 
+					// sp_time_range_param.get_instance(), 
+					time_range_param,
 					sp_query_sub_set.get_instance(),
 					company_code_number_dummy,  // For stock mode only, ignored in market mode
 					sql_reader_obj,
@@ -251,26 +253,26 @@ unsigned short DataSqlReader::read_market(
 	}
 
 // 	for (MarketQuerySet::iterator iter = query_set.begin() ; iter < query_set.end() ; iter++)
-// 	// for (int source_index = 0 ; source_index < FinanceSourceSize ; source_index++)
+// 	// for (int method_index = 0 ; method_index < FinanceSourceSize ; method_index++)
 // 	{
-// 		// const INT_DEQUE& query_field = (*query_set)[source_index];
+// 		// const INT_DEQUE& query_field = (*query_set)[method_index];
 // 		const INT_DEQUE& query_field = (*iter);
 // 		assert(!query_field.empty() && "query_field should NOT be empty");
-// 		int source_index = iter.get_first();
+// 		int method_index = iter.get_first();
 // 		// if (query_field.empty())
 // 		// 	continue;
 // // Add to the result set
-// 		ret = result_set->add_set(source_index, query_field);
+// 		ret = result_set->add_set(method_index, query_field);
 // 		if (CHECK_FAILURE(ret))
 // 			return ret;
 // // Generate the field command
 // 		string field_cmd = string("");
-// 		DataSqlReader::get_sql_field_command(source_index, query_field, field_cmd);
+// 		DataSqlReader::get_sql_field_command(method_index, query_field, field_cmd);
 // // Query the data in each table
-// 		int start_year = sp_restricted_time_range_cfg->get_start_time()->get_year();
-// 		int end_year = sp_restricted_time_range_cfg->get_end_time()->get_year();
+// 		int start_year = sp_time_range_param->get_start_time()->get_year();
+// 		int end_year = sp_time_range_param->get_end_time()->get_year();
 // // Search for each table
-// 		ret = sql_reader->select_data(source_index, string(table_name), field_cmd, (const PINT_DEQUE)&query_field, time_range_cfg_in_year, result_set);
+// 		ret = sql_reader->select_data(method_index, string(table_name), field_cmd, (const PINT_DEQUE)&query_field, time_range_param_in_year, result_set);
 // 		if (CHECK_FAILURE(ret))
 // 			return ret;
 // 	}
@@ -287,34 +289,34 @@ OUT:
 
 // unsigned short DataSqlReader::read_market(
 // 	const PQUERY_SET query_set, 
-// 	const PTIME_RANGE_CFG time_range_cfg, 
+// 	const PTIME_RANGE_PARAM time_range_param, 
 // 	PRESULT_SET_MAP result_set_map
 // 	)
 // {
 // 	DataSqlReader sql_reader;
-// 	return read_market(query_set, time_range_cfg, &sql_reader, result_set_map);
+// 	return read_market(query_set, time_range_param, &sql_reader, result_set_map);
 // }
 
 unsigned short DataSqlReader::read_stock(
 	const PQUERY_SET query_set, 
-	const PTIME_RANGE_CFG time_range_cfg, 
+	const PTIME_RANGE_PARAM time_range_param, 
 	const PCOMPANY_GROUP_SET company_group_set,
-	DataSqlReader* reader_obj, 
+	DataSqlReader* sql_reader_obj, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
-	DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
+	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 
-	assert(reader_obj != NULL && query_set != NULL && time_range_cfg != NULL && company_group_set != NULL && result_set_map != NULL);
+	assert(sql_reader_obj != NULL && query_set != NULL && time_range_param != NULL && company_group_set != NULL && result_set_map != NULL);
 	if (!query_set->is_add_query_done())
 	{
 		WRITE_ERROR("The setting of query data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	if (time_range_cfg->get_start_time() == NULL || time_range_cfg->get_end_time() == NULL)
+	if (time_range_param->get_start_time() == NULL || time_range_param->get_end_time() == NULL)
 	{
-		WRITE_ERROR("The start/end time in time_range_cfg should NOT be NULL");
+		WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	if (!company_group_set->is_add_company_done())
@@ -322,15 +324,14 @@ unsigned short DataSqlReader::read_stock(
 		WRITE_ERROR("The setting of company group data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	// if (time_range_cfg->is_month_type())
+	// if (time_range_param->is_month_type())
 	// {
-	// 	WRITE_ERROR("The time format of time_range_cfg should be Day type");
+	// 	WRITE_ERROR("The time format of time_range_param should be Day type");
 	// 	return RET_FAILURE_INVALID_ARGUMENT;
 	// }
-	PDATA_SQL_READER sql_reader_obj = (PDATA_SQL_READER)reader_obj;
 	unsigned short ret = RET_SUCCESS;
-	bool init_query_sub_set_array = false; // For ResultSetDataUnit_SourceType only
-	SmartPointer<QuerySet> sp_query_sub_set_array[STOCK_SOURCE_TYPE_INDEX_LENGTH]; // For ResultSetDataUnit_SourceType only
+	bool init_query_sub_set_array = false; // For ResultSetDataUnit_SingleMethod only
+	SmartPointer<QuerySet> sp_query_sub_set_array[STOCK_METHOD_INDEX_LENGTH]; // For ResultSetDataUnit_SingleMethod only
 
 	static char database_stock_name[32];
 	ResultSetDataUnit result_set_data_unit = result_set_map->get_data_unit();
@@ -339,7 +340,7 @@ unsigned short DataSqlReader::read_stock(
 	{
 		int company_group_number = iter.get_first();
 // Connect to the database
-		snprintf(database_stock_name, 32, FINANCE_DATA_STOCK_NAME_FORMAT, company_group_number);
+		snprintf(database_stock_name, 32, "%s%02d", FINANCE_DATA_STOCK_NAME, company_group_number);
 		ret = sql_reader_obj->try_connect_mysql(string(database_stock_name));
 		if (CHECK_FAILURE(ret))
 			return ret;
@@ -347,19 +348,19 @@ unsigned short DataSqlReader::read_stock(
 		for(STRING_DEQUE_CONST_ITER iter = company_code_number_deque.begin() ; iter != company_code_number_deque.end() ; ++iter)
 		{
 			string company_code_number = (string)*iter;
-// Check the boundary of each database
-			SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg(new TimeRangeCfg(*time_range_cfg));
-			WRITE_FORMAT_DEBUG("The original search time range: %s", sp_restricted_time_range_cfg->to_string());
-			ret = database_time_range->restrict_time_range(query_set, sp_restricted_time_range_cfg.get_instance());
-			if (CHECK_FAILURE(ret))
-				return ret;
-			WRITE_FORMAT_DEBUG("The new search time range: %s", sp_restricted_time_range_cfg->to_string());
+// // Check the boundary of each database
+// 			SmartPointer<TimeRangeParam> sp_time_range_param(new TimeRangeParam(*time_range_param));
+// 			WRITE_FORMAT_DEBUG("The original search time range: %s", sp_time_range_param->to_string());
+// 			ret = database_time_range->restrict_time_range(query_set, sp_time_range_param.get_instance());
+// 			if (CHECK_FAILURE(ret))
+// 				return ret;
+// 			WRITE_FORMAT_DEBUG("The new search time range: %s", sp_time_range_param->to_string());
 // Query the data from each table
 			switch (result_set_data_unit)
 			{
-				case ResultSetDataUnit_NoSourceType:
+				case ResultSetDataUnit_MultipleMethod:
 				{
-					PRESULT_SET result_set = new ResultSet();
+					PRESULT_SET result_set = new ResultSet(FinanceData_SQL);
 					if (result_set == NULL)
 					{
 						WRITE_FORMAT_ERROR("Fail to allocate memory: result_set while reading %s table", company_code_number.c_str());
@@ -367,7 +368,8 @@ unsigned short DataSqlReader::read_stock(
 						goto OUT;
 					}
 					ret = read_from_tables(
-						sp_restricted_time_range_cfg.get_instance(), 
+						// sp_time_range_param.get_instance(), 
+						time_range_param,
 						query_set,
 						company_code_number,  // For stock mode only, ignored in market mode
 						sql_reader_obj, 
@@ -388,7 +390,7 @@ unsigned short DataSqlReader::read_stock(
 						goto OUT;
 				}
 				break;
-				case ResultSetDataUnit_SourceType:
+				case ResultSetDataUnit_SingleMethod:
 				{
 // Initialize the sub query set for the first time
 					if (!init_query_sub_set_array)
@@ -397,14 +399,14 @@ unsigned short DataSqlReader::read_stock(
 						while (iter != query_set->end())
 						{
 							int method_index = iter.get_first();
-							int source_type_revised_index = method_index - FinanceSource_StockStart;
+							int method_revised_index = method_index - FinanceMethod_StockStart;
 							// const PINT_DEQUE field_index_deque = iter.get_second();
 							PQUERY_SET query_sub_set = NULL;
 							ret = query_set->get_query_sub_set(method_index, &query_sub_set);
 							if (CHECK_FAILURE(ret))
 								goto OUT;
-							sp_query_sub_set_array[source_type_revised_index].set_new(query_sub_set);
-							// sp_query_sub_set_array[source_type_revised_index]->add_query_done();
+							sp_query_sub_set_array[method_revised_index].set_new(query_sub_set);
+							// sp_query_sub_set_array[method_revised_index]->add_query_done();
 						}
 						init_query_sub_set_array = true;
 					}
@@ -413,8 +415,8 @@ unsigned short DataSqlReader::read_stock(
 					while (iter != query_set->end())
 					{
 						int method_index = iter.get_first();
-						int source_type_revised_index = method_index - FinanceSource_StockStart;
-						PRESULT_SET result_set = new ResultSet();
+						int method_revised_index = method_index - FinanceMethod_StockStart;
+						PRESULT_SET result_set = new ResultSet(FinanceData_SQL);
 						if (result_set == NULL)
 						{
 							WRITE_ERROR("Fail to allocate memory: result_set");
@@ -423,8 +425,9 @@ unsigned short DataSqlReader::read_stock(
 						}
 // Query the data from each table
 						ret = read_from_tables(
-							sp_restricted_time_range_cfg.get_instance(), 
-							sp_query_sub_set_array[source_type_revised_index].get_instance(),
+							// sp_time_range_param.get_instance(), 
+							time_range_param,
+							sp_query_sub_set_array[method_revised_index].get_instance(),
 							company_code_number,  // For stock mode only, ignored in market mode
 							sql_reader_obj, 
 							FinanceAnalysis_Stock,
@@ -461,13 +464,13 @@ OUT:
 
 // unsigned short DataSqlReader::read_stock(
 // 	const PQUERY_SET query_set, 
-// 	const PTIME_RANGE_CFG time_range_cfg,
+// 	const PTIME_RANGE_PARAM time_range_param,
 // 	const PCOMPANY_GROUP_SET company_group_set, 
 // 	PRESULT_SET_MAP result_set_map
 // 	)
 // {
 // 	DataSqlReader sql_reader;
-// 	return read_stock(query_set, time_range_cfg, company_group_set, &sql_reader, result_set_map);	
+// 	return read_stock(query_set, time_range_param, company_group_set, &sql_reader, result_set_map);	
 // }
 
 unsigned short DataSqlReader::read_by_object(
@@ -476,8 +479,18 @@ unsigned short DataSqlReader::read_by_object(
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	assert(reader_obj != NULL && search_rule_set != NULL && result_set_map != NULL);
+	assert(reader_obj != NULL && search_rule_set != NULL && result_set_map != NULL && search_rule_set->get_query_rule() != NULL);
 	unsigned short ret = RET_SUCCESS;
+	if (search_rule_set->get_query_rule()->get_data_type() != FinanceData_SQL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("The data type of the QuerySet object should be %s, not %s", FINANCE_DATA_DESCRIPTION[FinanceData_SQL], FINANCE_DATA_DESCRIPTION[search_rule_set->get_query_rule()->get_data_type()]);		
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	if (result_set_map->get_data_type() != FinanceData_SQL)
+	{
+		STATIC_WRITE_FORMAT_ERROR("The data type of the ResultSetMap object should be %s, not %s", FINANCE_DATA_DESCRIPTION[FinanceData_SQL], FINANCE_DATA_DESCRIPTION[result_set_map->get_data_type()]);		
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
 	PDATA_SQL_READER sql_reader_obj = (PDATA_SQL_READER)reader_obj;
 	if (search_rule_set->get_finance_mode() == FinanceAnalysis_Market)
 		ret = read_market(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), sql_reader_obj, result_set_map);
@@ -587,15 +600,15 @@ unsigned short DataSqlReader::disconnect_mysql()
 }
 
 unsigned short DataSqlReader::select_data(
-		int source_index,
+		int method_index,
 		const std::string& table_name,
 		const std::string& cmd_table_field,
 		const PINT_DEQUE query_field,
-		const PTIME_RANGE_CFG time_range_cfg,
+		const PTIME_RANGE_PARAM time_range_param,
 		PRESULT_SET result_set
 	)
 {
-	assert(query_field != NULL && !query_field->empty() && "result_set should NOT be NULL/Empty");
+	assert(query_field != NULL && !query_field->empty() && "query_field should NOT be NULL/Empty");
 	assert(result_set != NULL && "result_set should NOT be NULL");
 // Check if the connection is established
 	if (connection == NULL)
@@ -621,41 +634,69 @@ unsigned short DataSqlReader::select_data(
 	char _format_cmd_select_data_tail[32];
 	snprintf(_format_cmd_select_data_tail, 32, FORMAT_CMD_SELECT_DATA_TAIL_FORMAT, table_name.c_str());
 	string cmd_select_data = FORMAT_CMD_SELECT_DATA_HEAD + cmd_table_field + string(_format_cmd_select_data_tail);
-	if (time_range_cfg != NULL)
+	if (time_range_param != NULL)
 	{
 		char _cmd_search_rule[256];
 		bool need_add_rule = true;
-		if (time_range_cfg->is_month_type())
+		switch(time_range_param->get_time_unit())
 		{
-			if (time_range_cfg->get_start_time() != NULL && time_range_cfg->get_end_time() != NULL)
+			case TIME_UNIT_DATE:
 			{
-				if (time_range_cfg->is_single_time())
-					snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT, time_range_cfg->get_start_time()->to_string());
+				if (time_range_param->get_start_time() != NULL && time_range_param->get_end_time() != NULL)
+				{
+					if (time_range_param->is_single_time())
+						snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_EQUAL_FORMAT, time_range_param->get_start_time()->to_string());
+					else
+						snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT, time_range_param->get_start_time()->to_string(), time_range_param->get_end_time()->to_string());
+				}
+				else if (time_range_param->get_start_time() != NULL)
+					snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN_FORMAT, time_range_param->get_start_time()->to_string());
+				else if (time_range_param->get_end_time() != NULL)
+					snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN_FORMAT, time_range_param->get_end_time()->to_string());
 				else
-					snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT, time_range_cfg->get_start_time()->get_month(), time_range_cfg->get_end_time()->get_month());
+					need_add_rule = false;
 			}
-			else if (time_range_cfg->get_start_time() != NULL)
-				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT, time_range_cfg->get_start_time()->get_month());
-			else if (time_range_cfg->get_end_time() != NULL)
-				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT, time_range_cfg->get_end_time()->get_month());
-			else
-				need_add_rule = false;
-		}
-		else
-		{
-			if (time_range_cfg->get_start_time() != NULL && time_range_cfg->get_end_time() != NULL)
+			break;
+			case TIME_UNIT_MONTH:
+			// {
+			// 	if (time_range_param->get_start_time() != NULL && time_range_param->get_end_time() != NULL)
+			// 	{
+			// 		if (time_range_param->is_single_time())
+			// 			snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT, time_range_param->get_start_time()->to_string());
+			// 		else
+			// 			snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT, time_range_param->get_start_time()->get_month(), time_range_param->get_end_time()->get_month());
+			// 	}
+			// 	else if (time_range_param->get_start_time() != NULL)
+			// 		snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT, time_range_param->get_start_time()->get_month());
+			// 	else if (time_range_param->get_end_time() != NULL)
+			// 		snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT, time_range_param->get_end_time()->get_month());
+			// 	else
+			// 		need_add_rule = false;
+			// }
+			// break;
+			case TIME_UNIT_QUARTER:
 			{
-				if (time_range_cfg->is_single_time())
-					snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_EQUAL_FORMAT, time_range_cfg->get_start_time()->to_string());
+				if (time_range_param->get_start_time() != NULL && time_range_param->get_end_time() != NULL)
+				{
+					if (time_range_param->is_single_time())
+						snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_EQUAL_FORMAT, time_range_param->get_start_time()->to_date_string());
+					else
+						snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT, time_range_param->get_start_time()->to_date_string(), time_range_param->get_end_time()->to_date_string());
+				}
+				else if (time_range_param->get_start_time() != NULL)
+					snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN_FORMAT, time_range_param->get_start_time()->to_date_string());
+				else if (time_range_param->get_end_time() != NULL)
+					snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN_FORMAT, time_range_param->get_end_time()->to_date_string());
 				else
-					snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT, time_range_cfg->get_start_time()->to_string(), time_range_cfg->get_end_time()->to_string());
+					need_add_rule = false;
 			}
-			else if (time_range_cfg->get_start_time() != NULL)
-				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN_FORMAT, time_range_cfg->get_start_time()->to_string());
-			else if (time_range_cfg->get_end_time() != NULL)
-				snprintf(_cmd_search_rule, 256, FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN_FORMAT, time_range_cfg->get_end_time()->to_string());
-			else
-				need_add_rule = false;
+			break;
+			default:
+			{
+				WRITE_FORMAT_ERROR("Unknown time unit of time range: %d", time_range_param->get_time_unit());
+				return RET_FAILURE_INVALID_ARGUMENT;
+			}
+			break;
 		}
 		if (need_add_rule)
 			cmd_select_data += string(_cmd_search_rule);
@@ -670,7 +711,7 @@ unsigned short DataSqlReader::select_data(
 // Count the amount of the field including the date field
 	int expected_data_dimension = (int)query_field->size() + 1;
 //	if ((*query_field)[0] == -1)
-//		expected_data_dimension = FINANCE_SQL_DATA_FIELD_AMOUNT_LIST[source_index];
+//		expected_data_dimension = FINANCE_SQL_DATA_FIELD_AMOUNT_LIST[method_index];
 //	else
 //		expected_data_dimension = (int)query_field->size() + 1;
 // Store the query result into a self-defined data structure
@@ -694,9 +735,9 @@ unsigned short DataSqlReader::select_data(
 		if (CHECK_FAILURE(ret))
 			return ret;
 // Set the data in each field
-		for(int field_index = 1 ; field_index < actual_data_dimension ; field_index++)
+		for(int sql_field_index = 1 ; sql_field_index < actual_data_dimension ; sql_field_index++)
 		{
-			ret = result_set->set_data(source_index, (*query_field)[field_index - 1], row[field_index]);
+			ret = result_set->set_data(method_index, (*query_field)[sql_field_index - 1], row[sql_field_index]);
 			if (CHECK_FAILURE(ret))
 				return ret;
 //			printf("%s ", row[i]);

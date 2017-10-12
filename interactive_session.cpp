@@ -1074,7 +1074,7 @@ unsigned short InteractiveSession::handle_help_command(int argc, char **argv)
 	get_method_index_range(method_index_start, method_index_end, finance_analysis_mode);
 	for (int i = method_index_start ; i < method_index_end ; i++)
 	{
-		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_DATA_DESCRIPTION_LIST[i], i);
+		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_METHOD_DESCRIPTION_LIST[i], i);
 		usage_string += string(buf);
 	}
 	usage_string += string("  Format 1: All source types/fields (ex. all)\n");	

@@ -4,7 +4,7 @@
 #include <string>
 #include "common.h"
 #include "workday_canlendar.h"
-#include "database_time_range.h"
+// #include "database_time_range.h"
 #include "stock_support_resistance.h"
 
 
@@ -18,7 +18,7 @@ protected:
 
 	DECLARE_MSG_DUMPER()
 	DECLARE_WORKDAY_CANLENDAR()
-	DECLARE_DATABASE_TIME_RANGE()
+	// DECLARE_DATABASE_TIME_RANGE()
 private:
 	STRING_LIST email_address_list;
 
@@ -27,7 +27,7 @@ private:
 
 	const char* get_description_head(const PRESULT_SET result_set, const PRESULT_SET_ACCESS_PARAM result_set_access_param, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
 	const char* get_no_data_description(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg)const;
-	unsigned short get_restricted_time_range(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const;
+	// unsigned short get_restricted_time_range(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const;
 	// unsigned short query_from_database(int source_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSetMap>& sp_result_set_map)const;
 
 	unsigned short get_statistics_result(StatisticsMethod statistics_method, int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, std::string& result_str)const;

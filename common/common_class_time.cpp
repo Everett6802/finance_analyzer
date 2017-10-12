@@ -11,6 +11,8 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const int TimeParam::VALUE_ARRAY_LEN[TIME_UNIT_SIZE] = {3, 3, 2};
+
 unsigned short TimeParam::parse_time_string(const char* time_str, TimeParam& time_param)
 {
 	if (time_str == NULL)
@@ -43,9 +45,9 @@ unsigned short TimeParam::parse_time_string(const char* time_str, TimeParam& tim
 			pch = strtok(NULL, DELIM);
 			// count++;
 		}
-		if (count == 2)
+		if (count == VALUE_ARRAY_LEN[TIME_UNIT_MONTH])
 			time_param.time_unit = TIME_UNIT_MONTH;
-		else if (count == 3)
+		else if (count == VALUE_ARRAY_LEN[TIME_UNIT_DATE])
 			time_param.time_unit = TIME_UNIT_DATE;
 	}
 	if (time_param.time_unit == TIME_UNIT_NONE)
@@ -143,11 +145,11 @@ void TimeParam::update_param_from_value_array(TimeUnit cur_time_unit, const int*
 	switch (time_unit)
 	{
 		case TIME_UNIT_DATE:
-			memcpy(param.value, cur_value_array, sizeof(int) * 3);
+			memcpy(param.value, cur_value_array, sizeof(int) * VALUE_ARRAY_LEN[time_unit]);
 			break;
 		case TIME_UNIT_MONTH:
 		case TIME_UNIT_QUARTER:
-			memcpy(param.value, cur_value_array, sizeof(int) * 2);
+			memcpy(param.value, cur_value_array, sizeof(int) * VALUE_ARRAY_LEN[time_unit]);
 			break;
 		default:
 		{
@@ -158,6 +160,11 @@ void TimeParam::update_param_from_value_array(TimeUnit cur_time_unit, const int*
 		break;
 	}
 	find_time_string();
+	if (time_date_str != NULL)
+	{
+		delete[] time_date_str;
+		time_date_str = NULL;
+	}
 }
 
 bool TimeParam::check_param_equal_from_value_array(TimeUnit another_time_unit, const int* another_value_array)const
@@ -169,14 +176,14 @@ bool TimeParam::check_param_equal_from_value_array(TimeUnit another_time_unit, c
 	{
 		case TIME_UNIT_DATE:
 		{
-			if (memcmp(param.value, another_value_array, sizeof(int) * 3) != 0)
+			if (memcmp(param.value, another_value_array, sizeof(int) * VALUE_ARRAY_LEN[time_unit]) != 0)
 				return false;
 		}
 		break;
 		case TIME_UNIT_MONTH:
 		case TIME_UNIT_QUARTER:
 		{
-			if (memcmp(param.value, another_value_array, sizeof(int) * 2) != 0)
+			if (memcmp(param.value, another_value_array, sizeof(int) * VALUE_ARRAY_LEN[time_unit]) != 0)
 				return false;
 		}
 		break;
@@ -192,25 +199,29 @@ bool TimeParam::check_param_equal_from_value_array(TimeUnit another_time_unit, c
 }
 
 TimeParam::TimeParam() :
-	time_unit(TIME_UNIT_NONE)
+	time_unit(TIME_UNIT_NONE),
+	time_date_str(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 }
 
-TimeParam::TimeParam(const char* cur_time_str)
+TimeParam::TimeParam(const char* cur_time_str) :
+	time_date_str(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 	parse_time_string(cur_time_str, *this);
 	snprintf(time_str, 16, "%s", cur_time_str);
 }
 
-TimeParam::TimeParam(TimeUnit cur_time_unit, int* cur_value_array)
+TimeParam::TimeParam(TimeUnit cur_time_unit, int* cur_value_array) :
+	time_date_str(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 	update_param_from_value_array(cur_time_unit, cur_value_array);
 }
 
-TimeParam::TimeParam(const TimeParam* another_time_param)
+TimeParam::TimeParam(const TimeParam* another_time_param) :
+	time_date_str(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 	assert(another_time_param != NULL && "another_time_param should NOT be NULL");
@@ -219,6 +230,11 @@ TimeParam::TimeParam(const TimeParam* another_time_param)
 
 TimeParam::~TimeParam()
 {
+	if (time_date_str != NULL)
+	{
+		delete[] time_date_str;
+		time_date_str = NULL;
+	}
 	RELEASE_MSG_DUMPER()
 }
 
@@ -231,12 +247,64 @@ TimeParam& TimeParam::operator=(const TimeParam& another)
 }
 
 const char* TimeParam::to_string()const{return time_str;}
+
+const char* TimeParam::to_date_string()const
+{
+	if (time_date_str == NULL)
+	{
+		time_date_str = new char[16];
+		if (time_date_str == NULL)
+			throw bad_alloc();
+		switch (time_unit)
+		{
+			case TIME_UNIT_DATE:
+				memcpy(time_date_str, time_str, sizeof(char) * strlen(time_str));
+				break;
+			case TIME_UNIT_MONTH:
+				snprintf(time_date_str, 16, "%04d-%02d-01", param.value[0], param.value[1]);
+				break;
+			case TIME_UNIT_QUARTER:
+				snprintf(time_date_str, 16, "%04d-%02d-01", param.value[0], (param.value[1] - 1) / 3 + 1);
+				break;
+			default:
+			{
+				char errmsg[64];
+				snprintf(errmsg, 64, "Unknown time unit: %d", time_unit);
+				throw invalid_argument(errmsg);
+			}
+			break;
+		}
+	}
+	return time_date_str;
+}
+
 TimeUnit TimeParam::get_time_unit()const{return time_unit;}
 
 bool TimeParam::equal_to(const TimeParam* another_time_param)const
 {
 	assert(another_time_param != NULL && "another_time_param should NOT be NULL");
 	return check_param_equal_from_value_array(another_time_param->time_unit, another_time_param->param.value);
+}
+
+void TimeParam::get_value_array(int* value_array, int& value_array_len)const
+{
+	assert(value_array != NULL && "value_array NOT be NULL");
+	switch (time_unit)
+	{
+		case TIME_UNIT_DATE:
+		case TIME_UNIT_MONTH:
+		case TIME_UNIT_QUARTER:
+			memcpy(value_array, param.value, sizeof(int) * VALUE_ARRAY_LEN[time_unit]);
+			value_array_len = VALUE_ARRAY_LEN[time_unit];
+			break;
+		default:
+		{
+			char errmsg[64];
+			snprintf(errmsg, 64, "Unknown time unit: %d", time_unit);
+			throw invalid_argument(errmsg);
+		}
+		break;
+	}
 }
 
 void TimeParam::reset(const char* new_time_str)
@@ -681,7 +749,7 @@ bool TimeRangeParam::is_single_time()const
 
 bool TimeRangeParam::is_add_time_done()const{return add_done;}
 
-const char* TimeRangeParam::to_string()
+const char* TimeRangeParam::to_string()const
 {
 	if (!add_done)
 	{
@@ -701,6 +769,16 @@ const char* TimeRangeParam::to_string()
 			snprintf(time_range_description, 32, ",%s", time_end_param->to_string());
 	}
 	return time_range_description;
+}
+
+TimeUnit TimeRangeParam::get_time_unit()const
+{
+	if (!add_done)
+	{
+		WRITE_ERROR("the add_done flag is NOT true");
+		throw runtime_error(string("the add_done flag is NOT true"));
+	}
+	return time_unit;
 }
 
 const PTIME_PARAM TimeRangeParam::get_start_time()const

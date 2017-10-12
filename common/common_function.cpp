@@ -76,7 +76,7 @@ int get_source_key(int method_index/*, FinanceAnalysisMode finance_analysis_mode
 	if (method_index == -1)
 	{
 // No source type mode
-		return NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE;
+		return NO_METHOD_MARKET_SOURCE_KEY_VALUE;
 	}
 	else
 	{
@@ -100,13 +100,13 @@ int get_source_key(int company_group_number, const string& company_code_number, 
 	else
 	{
 // Source type mode
-		return (company_group_number << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET | company_code_number_int << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET | method_index << SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
+		return (company_group_number << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET | company_code_number_int << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET | method_index << SOURCE_KEY_METHOD_INDEX_BIT_OFFSET);
 	}
 }
 
 int get_method(int source_key)
 {
-	return ((source_key & SOURCE_KEY_SOURCE_TYPE_INDEX_MASK) >> SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
+	return ((source_key & SOURCE_KEY_METHOD_INDEX_MASK) >> SOURCE_KEY_METHOD_INDEX_BIT_OFFSET);
 }
 
 string get_company_code_number(int source_key)
@@ -190,31 +190,31 @@ const char* get_sql_field_description(int method_index, int field_index)
 {
 	switch(method_index)
 	{
-		case FinanceSource_StockExchangeAndVolume:
+		case FinanceMethod_StockExchangeAndVolume:
 			return SQL_STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_StockTop3LegalPersonsNetBuyOrSell:
+		case FinanceMethod_StockTop3LegalPersonsNetBuyOrSell:
 			return SQL_STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_StockMarginTradingAndShortSelling:
+		case FinanceMethod_StockMarginTradingAndShortSelling:
 			return SQL_STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest:
+		case FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest:
 			return SQL_FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest:
+		case FinanceMethod_FutureOrOptionTop3LegalPersonsOpenInterest:
 			return SQL_FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest:
+		case FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest:
 			return SQL_OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_OptionPutCallRatio:
+		case FinanceMethod_OptionPutCallRatio:
 			return SQL_OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_FutureTop10DealersAndLegalPersons:
+		case FinanceMethod_FutureTop10DealersAndLegalPersons:
 			return SQL_FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_DepositoryShareholderDistributionTable:
+		case FinanceMethod_DepositoryShareholderDistributionTable:
 			return SQL_COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_BalanceSheet:
+		case FinanceMethod_BalanceSheet:
 			return SQL_BALANCE_SHEET_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_IncomeStatement:
+		case FinanceMethod_IncomeStatement:
 			return SQL_INCOME_STATEMENT_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_CashFlowStatement:
+		case FinanceMethod_CashFlowStatement:
 			return SQL_CASH_FLOW_STATEMENT_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_StatementOfChangesInEquity:
+		case FinanceMethod_StatementOfChangesInEquity:
 			return SQL_STATEMENT_OF_CHANGES_IN_EQUITY_FIELD_DESCRIPTION[field_index];
 		default:
 		{
@@ -232,31 +232,31 @@ const char* get_csv_field_description(int method_index, int field_index)
 {
 	switch(method_index)
 	{
-		case FinanceSource_StockExchangeAndVolume:
+		case FinanceMethod_StockExchangeAndVolume:
 			return CSV_STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_StockTop3LegalPersonsNetBuyOrSell:
+		case FinanceMethod_StockTop3LegalPersonsNetBuyOrSell:
 			return CSV_STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_StockMarginTradingAndShortSelling:
+		case FinanceMethod_StockMarginTradingAndShortSelling:
 			return CSV_STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest:
+		case FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest:
 			return CSV_FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest:
+		case FinanceMethod_FutureOrOptionTop3LegalPersonsOpenInterest:
 			return CSV_FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest:
+		case FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest:
 			return CSV_OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_OptionPutCallRatio:
+		case FinanceMethod_OptionPutCallRatio:
 			return CSV_OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_FutureTop10DealersAndLegalPersons:
+		case FinanceMethod_FutureTop10DealersAndLegalPersons:
 			return CSV_FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_DepositoryShareholderDistributionTable:
+		case FinanceMethod_DepositoryShareholderDistributionTable:
 			return CSV_COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_BalanceSheet:
+		case FinanceMethod_BalanceSheet:
 			return CSV_BALANCE_SHEET_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_IncomeStatement:
+		case FinanceMethod_IncomeStatement:
 			return CSV_INCOME_STATEMENT_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_CashFlowStatement:
+		case FinanceMethod_CashFlowStatement:
 			return CSV_CASH_FLOW_STATEMENT_FIELD_DESCRIPTION[field_index];
-		case FinanceSource_StatementOfChangesInEquity:
+		case FinanceMethod_StatementOfChangesInEquity:
 			return CSV_STATEMENT_OF_CHANGES_IN_EQUITY_FIELD_DESCRIPTION[field_index];
 		default:
 		{
@@ -289,12 +289,12 @@ bool check_method_index_in_range(int method_index, FinanceAnalysisMode finance_a
 {
     if (finance_analysis_mode == FinanceAnalysis_Market)
     {
-        if (method_index >= FinanceSource_MarketStart && method_index < FinanceSource_MarketEnd)
+        if (method_index >= FinanceMethod_MarketStart && method_index < FinanceMethod_MarketEnd)
             return true;
     }
     else if (finance_analysis_mode == FinanceAnalysis_Stock)
     {
-        if (method_index >= FinanceSource_StockStart && method_index < FinanceSource_StockEnd)
+        if (method_index >= FinanceMethod_StockStart && method_index < FinanceMethod_StockEnd)
             return true;
     }
     else
@@ -310,14 +310,14 @@ void get_method_index_range(int& method_index_start, int& method_index_end, Fina
 	{
 	case FinanceAnalysis_Market:
 	{
-		method_index_start = FinanceSource_MarketStart;
-		method_index_end = FinanceSource_MarketEnd;
+		method_index_start = FinanceMethod_MarketStart;
+		method_index_end = FinanceMethod_MarketEnd;
 	}
 	break;
 	case FinanceAnalysis_Stock:
 	{
-		method_index_start = FinanceSource_StockStart;
-		method_index_end = FinanceSource_StockEnd;
+		method_index_start = FinanceMethod_StockStart;
+		method_index_end = FinanceMethod_StockEnd;
 	}
 	break;
 	default:
@@ -331,9 +331,9 @@ int get_method_size(FinanceAnalysisMode finance_analysis_mode)
 	// if (finance_analysis_mode == FinanceAnalysis_None)
 	// 	finance_analysis_mode = g_finance_analysis_mode;
 	if (finance_analysis_mode == FinanceAnalysis_Market)
-		return MARKET_SOURCE_TYPE_INDEX_LENGTH;
+		return MARKET_METHOD_INDEX_LENGTH;
 	else if (finance_analysis_mode == FinanceAnalysis_Stock)
-		return STOCK_SOURCE_TYPE_INDEX_LENGTH;
+		return STOCK_METHOD_INDEX_LENGTH;
 	else
 		throw runtime_error(string("Unknown finance mode"));
 }

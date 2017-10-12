@@ -37,24 +37,24 @@ private:
 	static const char* FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN_FORMAT;
 	static const char* FORMAT_CMD_SELECT_DATE_RULE_EQUAL_FORMAT;
-	static const char* FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT;
-	static const char* FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT;
-	static const char* FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT;
-	static const char* FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT;
+	// static const char* FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT;
+	// static const char* FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT;
+	// static const char* FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT;
+	// static const char* FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT;
 
 	static unsigned short get_sql_field_command(int method_index, const INT_DEQUE& query_field, std::string& field_cmd);
 	static unsigned short read_from_tables(
-		const PTIME_RANGE_CFG restricted_time_range_cfg, 
+		const PTIME_RANGE_PARAM time_range_param, 
 		const PQUERY_SET query_set,
 		const std::string& company_code_number,  // For stock mode only, ignored in market mode
-		DataSqlReader* reader_obj, 
+		DataSqlReader* sql_reader_obj, 
 		FinanceAnalysisMode finance_analysis_mode,
 		PRESULT_SET result_set
 	);
-	static unsigned short read_market(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, DataSqlReader* reader_obj, PRESULT_SET_MAP result_set_map);
-	// static unsigned short read_market(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, PRESULT_SET_MAP result_set_map);
-	static unsigned short read_stock(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, const PCOMPANY_GROUP_SET company_group_set, DataSqlReader* reader_obj, PRESULT_SET_MAP result_set_map);
-	// static unsigned short read_stock(const PQUERY_SET query_set, const PTIME_RANGE_CFG time_range_cfg, const PCOMPANY_GROUP_SET company_group_set, PRESULT_SET_MAP result_set_map);
+	static unsigned short read_market(const PQUERY_SET query_set, const PTIME_RANGE_PARAM time_range_param, DataSqlReader* sql_reader_obj, PRESULT_SET_MAP result_set_map);
+	// static unsigned short read_market(const PQUERY_SET query_set, const PTIME_RANGE_PARAM time_range_param, PRESULT_SET_MAP result_set_map);
+	static unsigned short read_stock(const PQUERY_SET query_set, const PTIME_RANGE_PARAM time_range_param, const PCOMPANY_GROUP_SET company_group_set, DataSqlReader* sql_reader_obj, PRESULT_SET_MAP result_set_map);
+	// static unsigned short read_stock(const PQUERY_SET query_set, const PTIME_RANGE_PARAM time_range_param, const PCOMPANY_GROUP_SET company_group_set, PRESULT_SET_MAP result_set_map);
 
 public:
 	// static unsigned short query(const PSEARCH_RULE_SET search_rule_set, DataSqlReader* sql_reader, PRESULT_SET_MAP result_set_map);
@@ -76,11 +76,11 @@ private:
 	unsigned short disconnect_mysql();
 
 	unsigned short select_data(
-		int source_index,
+		int method_index,
 		const std::string& table_name,
 		const std::string& cmd_table_field,
 		const PINT_DEQUE query_field,
-		const PTIME_RANGE_CFG time_range_cfg,
+		const PTIME_RANGE_PARAM time_range_param,
 		PRESULT_SET result_set
 	);
 

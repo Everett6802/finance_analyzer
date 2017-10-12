@@ -152,29 +152,29 @@ enum FinanceDataType
 	FinanceData_None
 };
 
-enum FinanceSourceType
+enum FinanceMethodType
 {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Market data source
-	FinanceSource_MarketStart = 0, // Keep in mind to update the value at the right time 
-	FinanceSource_StockExchangeAndVolume = 0,
-	FinanceSource_StockTop3LegalPersonsNetBuyOrSell = 1,
-	FinanceSource_StockMarginTradingAndShortSelling = 2,
-	FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest = 3,
-	FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest = 4,
-	FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest = 5,
-	FinanceSource_OptionPutCallRatio = 6,
-	FinanceSource_FutureTop10DealersAndLegalPersons = 7,
-	FinanceSource_MarketEnd = 8, // Keep in mind to update the value at the right time
+	FinanceMethod_MarketStart = 0, // Keep in mind to update the value at the right time 
+	FinanceMethod_StockExchangeAndVolume = 0,
+	FinanceMethod_StockTop3LegalPersonsNetBuyOrSell = 1,
+	FinanceMethod_StockMarginTradingAndShortSelling = 2,
+	FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest = 3,
+	FinanceMethod_FutureOrOptionTop3LegalPersonsOpenInterest = 4,
+	FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest = 5,
+	FinanceMethod_OptionPutCallRatio = 6,
+	FinanceMethod_FutureTop10DealersAndLegalPersons = 7,
+	FinanceMethod_MarketEnd = 8, // Keep in mind to update the value at the right time
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Stock data source
-	FinanceSource_StockStart = 8, // Keep in mind to update the value at the right time
-	FinanceSource_DepositoryShareholderDistributionTable = 8,
-	FinanceSource_BalanceSheet = 9,
-	FinanceSource_IncomeStatement = 10,
-	FinanceSource_CashFlowStatement = 11,
-	FinanceSource_StatementOfChangesInEquity = 12,
-	FinanceSource_StockEnd = 13 // Keep in mind to update the value at the right time
+	FinanceMethod_StockStart = 8, // Keep in mind to update the value at the right time
+	FinanceMethod_DepositoryShareholderDistributionTable = 8,
+	FinanceMethod_BalanceSheet = 9,
+	FinanceMethod_IncomeStatement = 10,
+	FinanceMethod_CashFlowStatement = 11,
+	FinanceMethod_StatementOfChangesInEquity = 12,
+	FinanceMethod_StockEnd = 13 // Keep in mind to update the value at the right time
 };
 
 enum FinanceFieldType
@@ -231,8 +231,8 @@ enum FinanceAnalysisMode
 
 enum ResultSetDataUnit
 {
-	ResultSetDataUnit_NoSourceType,
-	ResultSetDataUnit_SourceType
+	ResultSetDataUnit_SingleMethod, // Only single method data are stored in the ResultSet object
+	ResultSetDataUnit_MultipleMethod // mutliple methods data are stored in the ResultSet object
 };
 
 enum TestType{
@@ -260,10 +260,10 @@ extern const char* FINANCE_MODE_DESCRIPTION[];
 extern const char* FINANCE_DATA_DESCRIPTION[];
 
 extern const char* FINANCE_DATA_MARKET_NAME;
-extern const char* FINANCE_DATA_STOCK_NAME_FORMAT;
+extern const char* FINANCE_DATA_STOCK_NAME;
 
-extern const int MARKET_SOURCE_TYPE_INDEX_LENGTH;
-extern const int STOCK_SOURCE_TYPE_INDEX_LENGTH;
+extern const int MARKET_METHOD_INDEX_LENGTH;
+extern const int STOCK_METHOD_INDEX_LENGTH;
 
 extern const char* DAILY_FINANCE_FILENAME_FORMAT;
 extern const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT;
@@ -304,9 +304,13 @@ extern const int TABLE_STATSTICS_METHOD_SIZE;
 extern const char* GRAPH_STATSTICS_METHOD_DESCRIPTION[];
 extern const int GRAPH_STATSTICS_METHOD_SIZE;
 
-extern const char* FINANCE_TABLE_NAME_LIST[];
-extern const int FINANCE_TABLE_NAME_LIST_LEN;
-extern const char* FINANCE_DATA_DESCRIPTION_LIST[];
+extern const char* FINANCE_METHOD_DATA_NAME_LIST[];
+extern const int FINANCE_METHOD_DATA_NAME_LIST_LEN;
+#define FINANCE_SQL_TABLE_NAME_LIST FINANCE_METHOD_DATA_NAME_LIST
+#define FINANCE_SQL_TABLE_NAME_LIST_LEN FINANCE_METHOD_DATA_NAME_LIST_LEN
+#define FINANCE_CSV_FILE_NAME_LIST FINANCE_METHOD_DATA_NAME_LIST
+#define FINANCE_CSV_FILE_NAME_LIST_LEN FINANCE_METHOD_DATA_NAME_LIST_LEN
+extern const char* FINANCE_METHOD_DESCRIPTION_LIST[];
 extern const int* FINANCE_SQL_DATA_FIELD_TYPE_LIST[];
 extern const int* FINANCE_CSV_DATA_FIELD_TYPE_LIST[];
 extern const int FINANCE_SQL_DATA_FIELD_AMOUNT_LIST[];
@@ -327,13 +331,13 @@ extern const int SHOW_RES_TYPE_SIZE;
 // extern const int SEVERITY_NAME_SIZE;
 
 // extern const int SOURCE_KEY_FIELD_MASK;
-extern const int SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET;
+extern const int SOURCE_KEY_METHOD_INDEX_BIT_OFFSET;
 extern const int SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET;
 extern const int SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET;
-extern const int SOURCE_KEY_SOURCE_TYPE_INDEX_MASK;
+extern const int SOURCE_KEY_METHOD_INDEX_MASK;
 extern const int SOURCE_KEY_COMPANY_CODE_NUMBER_MASK;
 extern const int SOURCE_KEY_COMPANY_GROUP_NUMBER_MASK;
-extern const int NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE;
+extern const int NO_METHOD_MARKET_SOURCE_KEY_VALUE;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Company profile field index

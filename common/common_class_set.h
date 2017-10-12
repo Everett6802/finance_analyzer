@@ -264,7 +264,8 @@ private:
 	bool add_done;
 	FinanceAnalysisMode finance_analysis_mode;
 	PQUERY_SET query_set;
-	PTIME_RANGE_CFG time_range_cfg;
+	// PTIME_RANGE_CFG time_range_cfg;
+	PTIME_RANGE_PARAM time_range_param;
 	PCOMPANY_GROUP_SET company_group_set;
 	mutable std::string search_rule_set_string;
 
@@ -279,7 +280,7 @@ public:
 	const std::string& to_string();
 	unsigned short add_query_rule(const PQUERY_SET new_query_set);
 	unsigned short add_query_rule(const char* query_source_string);
-	unsigned short add_time_rule(const PTIME_RANGE_CFG new_time_range_cfg);
+	unsigned short add_time_rule(const PTIME_RANGE_PARAM new_time_range_param);
 	unsigned short add_time_rule(const char* time_source_string);
 	unsigned short add_company_rule(const PCOMPANY_GROUP_SET new_company_group_set);
 	unsigned short add_company_rule(const char* company_source_string);
@@ -287,7 +288,7 @@ public:
 	bool is_add_rule_done()const;
 	FinanceAnalysisMode get_finance_mode()const;
 	const PQUERY_SET get_query_rule()const;
-	const PTIME_RANGE_CFG get_time_rule()const;
+	const PTIME_RANGE_PARAM get_time_rule()const;
 	const PCOMPANY_GROUP_SET get_company_rule()const;
 };
 typedef SearchRuleSet* PSEARCH_RULE_SET;
@@ -368,17 +369,17 @@ typedef DataSet* PDATA_SET;
 class ResultSetAccessParam
 {
 private:
-	FinanceSourceType finance_source_type;
+	FinanceMethodType finance_method;
 	int finance_field_no;
 	ArrayElementCalculationType calculation_type;
 	int start_index;
 	int end_index;
 
 public:
-	ResultSetAccessParam(FinanceSourceType new_finance_source_type, int new_finance_field_no, ArrayElementCalculationType new_calculation_type=ArrayElementCalculation_None, int new_start_index=0, int new_end_index=-1);
+	ResultSetAccessParam(FinanceMethodType new_finance_method, int new_finance_field_no, ArrayElementCalculationType new_calculation_type=ArrayElementCalculation_None, int new_start_index=0, int new_end_index=-1);
 
-	void set_finance_source_type(FinanceSourceType new_finance_source_type);
-	FinanceSourceType get_finance_source_type()const;
+	void set_finance_method(FinanceMethodType new_finance_method);
+	FinanceMethodType get_finance_method()const;
 
 	void set_finance_field_no(int new_finance_field_no);
 	int get_finance_field_no()const;
@@ -536,7 +537,7 @@ private:
 	ResultSetDataUnit result_set_data_unit;
 
 public:
-	ResultSetMap(ResultSetDataUnit data_unit=ResultSetDataUnit_NoSourceType, FinanceDataType data_type=FinanceData_SQL);
+	ResultSetMap(ResultSetDataUnit data_unit=ResultSetDataUnit_SingleMethod, FinanceDataType data_type=FinanceData_SQL);
 	~ResultSetMap();
 	FinanceDataType get_data_type()const;
 	const std::string& to_metadata_string();

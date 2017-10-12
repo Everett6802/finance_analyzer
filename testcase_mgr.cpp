@@ -77,14 +77,14 @@ void TestCaseMgr::test_check_array()
 // Generate data
 	ResultSet::generate_data_for_simulation(result_set);
 // Check Avg/Diff array
-//	if (show_test_case_detail) cout << "2 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff) << endl;
-//	if (show_test_case_detail) cout << "2 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5) << endl;
-//	if (show_test_case_detail) cout << "2 Avg10: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg10) << endl;
-//	if (show_test_case_detail) cout << "4 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff) << endl;
-//	if (show_test_case_detail) cout << "4 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5) << endl;
+//	if (show_test_case_detail) cout << "2 Diff: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff) << endl;
+//	if (show_test_case_detail) cout << "2 Avg5: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5) << endl;
+//	if (show_test_case_detail) cout << "2 Avg10: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg10) << endl;
+//	if (show_test_case_detail) cout << "4 Diff: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff) << endl;
+//	if (show_test_case_detail) cout << "4 Avg5: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5) << endl;
 	// result_set.show_data_mapping();
 
-	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1);
+	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1);
 	ret = data_array1->get_diff_array(*sp_long_data_array, 0);
 	if (CHECK_FAILURE(ret))
 	{
@@ -175,7 +175,7 @@ void TestCaseMgr::test_check_array()
 	}
 	sp_float_data_array->reset_array();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 3);
+	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 3);
 	ret = data_array3->get_diff_array(*sp_int_data_array, 0);
 	if (CHECK_FAILURE(ret))
 	{
@@ -266,7 +266,7 @@ void TestCaseMgr::test_check_array()
 	}
 	sp_float_data_array->reset_array();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	PFINANCE_FLOAT_DATA_ARRAY data_array4 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 4);
+	PFINANCE_FLOAT_DATA_ARRAY data_array4 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4);
 	ret = data_array4->get_diff_array(*sp_float_data_array, 0);
 	if (CHECK_FAILURE(ret))
 	{
@@ -374,13 +374,13 @@ void TestCaseMgr::test_check_array_statistics()
 // Generate data
 	ResultSet::generate_data_for_simulation(result_set);
 // Check Avg/Diff array
-//	if (show_test_case_detail) cout << "2 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff) << endl;
-//	if (show_test_case_detail) cout << "2 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5) << endl;
-//	if (show_test_case_detail) cout << "2 Avg10: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg10) << endl;
-//	if (show_test_case_detail) cout << "4 Diff: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff) << endl;
-//	if (show_test_case_detail) cout << "4 Avg5: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5) << endl;
+//	if (show_test_case_detail) cout << "2 Diff: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff) << endl;
+//	if (show_test_case_detail) cout << "2 Avg5: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5) << endl;
+//	if (show_test_case_detail) cout << "2 Avg10: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg10) << endl;
+//	if (show_test_case_detail) cout << "4 Diff: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff) << endl;
+//	if (show_test_case_detail) cout << "4 Avg5: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5) << endl;
 
-	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1);
+	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1);
 	long data_array1_min, data_array1_max;
 	ret = get_data_range(*data_array1, data_array1_min, data_array1_max);
 	if (CHECK_FAILURE(ret))
@@ -404,7 +404,7 @@ void TestCaseMgr::test_check_array_statistics()
 	sp_long_data_array->reset_array();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 3);
+	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 3);
 	int data_array3_min, data_array3_max;
 	ret = get_data_range(*data_array3, data_array3_min, data_array3_max);
 	if (CHECK_FAILURE(ret))
@@ -428,7 +428,7 @@ void TestCaseMgr::test_check_array_statistics()
 	sp_int_data_array->reset_array();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	PFINANCE_FLOAT_DATA_ARRAY data_array4 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 4);
+	PFINANCE_FLOAT_DATA_ARRAY data_array4 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4);
 	float data_array4_min, data_array4_max;
 	ret = get_data_range(*data_array4, data_array4_min, data_array4_max);
 	if (CHECK_FAILURE(ret))
@@ -469,7 +469,7 @@ void TestCaseMgr::test_check_filter_array()
 // Generate data
 	ResultSet::generate_filtered_data_for_simulation(result_set, filter_data_array);
 
-	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1);
+	PFINANCE_LONG_DATA_ARRAY data_array1 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1);
 	ret = data_array1->get_sub_array(*sp_long_data_array, &filter_data_array, 0);
 	if (CHECK_FAILURE(ret))
 	{
@@ -485,7 +485,7 @@ void TestCaseMgr::test_check_filter_array()
 	}
 	sp_long_data_array->reset_array();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 3);
+	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 3);
 	ret = data_array3->get_sub_array(*sp_int_data_array, &filter_data_array, 0);
 	if (CHECK_FAILURE(ret))
 	{
@@ -501,7 +501,7 @@ void TestCaseMgr::test_check_filter_array()
 	}
 	sp_int_data_array->reset_array();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	PFINANCE_FLOAT_DATA_ARRAY data_array4 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 4);
+	PFINANCE_FLOAT_DATA_ARRAY data_array4 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4);
 	ret = data_array4->get_sub_array(*sp_float_data_array, &filter_data_array, 0);
 	if (CHECK_FAILURE(ret))
 	{
@@ -536,22 +536,22 @@ void TestCaseMgr::test_check_filter_rule()
 	unsigned short ret = RET_SUCCESS;
 	ResultSet result_set;
 	for (int i = 1 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
+		result_set.add_set(FinanceMethod_StockExchangeAndVolume, i);
 	char data[32];
 	for (int i = 0 ; i < DATA_SIZE ; i++)
 	{
 		snprintf(data, 32, "%s", date[i]);
 		result_set.set_date(data);
 		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 1, data);
 		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 2, data);
 		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 3, data);
 		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 4, data);
 		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 5, data);
 //		filter_data_array.add(filter[i]);
 	}
 
@@ -565,9 +565,9 @@ void TestCaseMgr::test_check_filter_rule()
 	ResultSetAccessParamDeque result_set_access_param_deque;
 	FilterRuleThresholdDeque filter_rule_threshold_deque;
 // Add the filter rule
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1), new FilterRuleThresholdLong(FilterRule_GreaterThan, 3));
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3), new FilterRuleThresholdRangeInt(FilterRule_OutOfRange_LCRC, -5, 5));
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5), new FilterRuleThresholdRangeFloat(FilterRule_InRange_LCRO, 100.0, 600.0));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 1), new FilterRuleThresholdLong(FilterRule_GreaterThan, 3));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 3), new FilterRuleThresholdRangeInt(FilterRule_OutOfRange_LCRC, -5, 5));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 5), new FilterRuleThresholdRangeFloat(FilterRule_InRange_LCRO, 100.0, 600.0));
 	if (show_test_case_detail) show_filter_rule(result_set_access_param_deque, filter_rule_threshold_deque);
 	ret = filter_and(&result_set, &result_set_access_param_deque, &filter_rule_threshold_deque, filter_data_array);
 	if (CHECK_FAILURE(ret))
@@ -600,11 +600,11 @@ void TestCaseMgr::test_check_filter_rule()
 	cleanup_filter_rule(result_set_access_param_deque, filter_rule_threshold_deque);
 
 // Add the filter rule
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1), new FilterRuleThresholdLong(FilterRule_LessThan, 9));
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2), new FilterRuleThresholdLong(FilterRule_NotEqual, -5));
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3), new FilterRuleThresholdRangeInt(FilterRule_OutOfRange_LORO, -5, 5));
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4), new FilterRuleThresholdRangeFloat(FilterRule_InRange_LORC, 40.1, 90.1));
-	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5), new FilterRuleThresholdRangeFloat(FilterRule_InRange_LORO, 200.0, 600.0));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 1), new FilterRuleThresholdLong(FilterRule_LessThan, 9));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 2), new FilterRuleThresholdLong(FilterRule_NotEqual, -5));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 3), new FilterRuleThresholdRangeInt(FilterRule_OutOfRange_LORO, -5, 5));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 4), new FilterRuleThresholdRangeFloat(FilterRule_InRange_LORC, 40.1, 90.1));
+	add_filter_rule(&result_set_access_param_deque, &filter_rule_threshold_deque, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 5), new FilterRuleThresholdRangeFloat(FilterRule_InRange_LORO, 200.0, 600.0));
 	if (show_test_case_detail) show_filter_rule(result_set_access_param_deque, filter_rule_threshold_deque);
 	ret = filter_and(&result_set, &result_set_access_param_deque, &filter_rule_threshold_deque, filter_data_array);
 	if (CHECK_FAILURE(ret))
@@ -646,90 +646,90 @@ void TestCaseMgr::test_check_formula()
 	float value;
 // Check Formula
 //// Show array
-//	if (show_test_case_detail) cout << "1: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 1) << endl;
-//	if (show_test_case_detail) cout << "2: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2) << endl;
+//	if (show_test_case_detail) cout << "1: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1) << endl;
+//	if (show_test_case_detail) cout << "2: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2) << endl;
 // Check average, variance, standard deviation
-	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1));
+	value = average(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1));
 	check_float_value_equal(5.5, value);
 	if (show_test_case_detail) printf("[1] average: %.2f\n", value);
-	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1));
+	value = variance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1));
 	check_float_value_equal(8.25, value);
 	if (show_test_case_detail) printf("[1] variance: %.2f\n", value);
-	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1));
+	value = standard_deviation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1));
 	check_float_value_equal(2.87, value);
 	if (show_test_case_detail) printf("[1] standard deviation: %.2f\n", value);
 // Check average, variance, standard deviation
-	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2));
+	value = average(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2));
 	check_float_value_equal(0.5, value);
 	if (show_test_case_detail) printf("[2] average: %.2f\n", value);
-	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2));
+	value = variance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2));
 	check_float_value_equal(38.25, value);
 	if (show_test_case_detail) printf("[2] variance: %.2f\n", value);
-	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2));
+	value = standard_deviation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2));
 	check_float_value_equal(6.18, value);
 	if (show_test_case_detail) printf("[2] standard deviation: %.2f\n", value);
 // Check covariance, correlation
-	value = covariance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2));
+	value = covariance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1), result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2));
 	check_float_value_equal(2.75, value);
 	if (show_test_case_detail) printf("[1,2] covariance: %.2f\n", value);
-	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2));
+	value = correlation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1), result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2));
 	check_float_value_equal(0.15, value);
 	if (show_test_case_detail) printf("[1,2] correlation: %.2f\n", value);
 // Check Diff average, variance, standard deviation
-	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff));
+	value = average(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff));
 	check_float_value_equal(1.22, value);
 	if (show_test_case_detail) printf("[2 Diff] average: %.2f\n", value);
-	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff));
+	value = variance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff));
 	check_float_value_equal(146.17, value);
 	if (show_test_case_detail) printf("[2 Diff] variance: %.2f\n", value);
-	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff));
+	value = standard_deviation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff));
 	check_float_value_equal(12.09, value);
 	if (show_test_case_detail) printf("[2 Diff] standard deviation: %.2f\n", value);
 // Check Diff average, variance, standard deviation
-	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
+	value = average(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
 	check_float_value_equal(10.00, value);
 	if (show_test_case_detail) printf("[4 Diff] average: %.2f\n", value);
-	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
+	value = variance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
 	check_float_value_equal(0.00, value);
 	if (show_test_case_detail) printf("[4 Diff] variance: %.2f\n", value);
-	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
+	value = standard_deviation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
 	check_float_value_equal(0.00, value);
 	if (show_test_case_detail) printf("[4 Diff] standard deviation: %.2f\n", value);
 // Check Avg5 average, variance, standard deviation
-	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5));
+	value = average(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5));
 	check_float_value_equal(0.10, value);
 	if (show_test_case_detail) printf("[2 Avg5] average: %.2f\n", value);
-	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5));
+	value = variance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5));
 	check_float_value_equal(1.32, value);
 	if (show_test_case_detail) printf("[2 Avg5] variance: %.2f\n", value);
-	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5));
+	value = standard_deviation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5));
 	check_float_value_equal(1.15, value);
 	if (show_test_case_detail) printf("[2 Avg5] standard deviation: %.2f\n", value);
 // Check Diff average, variance, standard deviation
-	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
+	value = average(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
 	check_float_value_equal(55.10, value);
 	if (show_test_case_detail) printf("[4 Avg5] average: %.2f\n", value);
-	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
+	value = variance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
 	check_float_value_equal(291.67, value);
 	if (show_test_case_detail) printf("[4 Avg5] variance: %.2f\n", value);
-	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
+	value = standard_deviation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
 	check_float_value_equal(17.08, value);
 	if (show_test_case_detail) printf("[4 Avg5] standard deviation: %.2f\n", value);
 // Check Diff/Avg5 correlation
-	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff), result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
+	value = correlation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff), result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Diff));
 	check_float_value_equal(-0.16, value);
 	if (show_test_case_detail) printf("[2(Diff),4(Diff)] correlation: %.2f\n", value);
-	value = covariance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
+	value = covariance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
 	check_float_value_equal(5.50, value);
 	if (show_test_case_detail) printf("[2(Avg5),4(Avg5)] covariance: %.2f\n", value);
-	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), result_set.get_array(FinanceSource_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
+	value = correlation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), result_set.get_array(FinanceMethod_StockExchangeAndVolume, 4, ArrayElementCalculation_Avg5));
 	check_float_value_equal(0.28, value);
 	if (show_test_case_detail) printf("[2(Avg5),4(Avg5)] correlation: %.2f\n", value);
-	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), 2, 3, 4, 5);
+	value = correlation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Diff), result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2, ArrayElementCalculation_Avg5), 2, 3, 4, 5);
 	check_float_value_equal(1.00, value);
 	if (show_test_case_detail) printf("[2(Diff 2:4),2(Avg5 3:5)] correlation: %.2f\n", value);
 // // Check binary search interval
-// 	int index = binary_search_interval((PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 1));
+// 	int index = binary_search_interval((PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1));
 // 	check_float_value_equal(5.5, value);
 // 	if (show_test_case_detail) printf("[1] average: %.2f\n", value);
 }
@@ -744,33 +744,33 @@ void TestCaseMgr::test_check_filter_formula()
 	float value;
 // Check Formula
 //// Show array
-//	if (show_test_case_detail) cout << "1: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 1) << endl;
-//	if (show_test_case_detail) cout << "2: " << *result_set.get_array(FinanceSource_StockExchangeAndVolume, 2) << endl;
+//	if (show_test_case_detail) cout << "1: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1) << endl;
+//	if (show_test_case_detail) cout << "2: " << *result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2) << endl;
 // Check average, variance, standard deviation
-	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), &filter_data_array);
+	value = average(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1), &filter_data_array);
 	check_float_value_equal(5.5, value);
 	if (show_test_case_detail) printf("[1] average: %.2f\n", value);
-	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), &filter_data_array);
+	value = variance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1), &filter_data_array);
 	check_float_value_equal(8.25, value);
 	if (show_test_case_detail) printf("[1] variance: %.2f\n", value);
-	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), &filter_data_array);
+	value = standard_deviation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1), &filter_data_array);
 	check_float_value_equal(2.87, value);
 	if (show_test_case_detail) printf("[1] standard deviation: %.2f\n", value);
 // Check average, variance, standard deviation
-	value = average(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	value = average(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2), &filter_data_array);
 	check_float_value_equal(0.5, value);
 	if (show_test_case_detail) printf("[2] average: %.2f\n", value);
-	value = variance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	value = variance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2), &filter_data_array);
 	check_float_value_equal(38.25, value);
 	if (show_test_case_detail) printf("[2] variance: %.2f\n", value);
-	value = standard_deviation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	value = standard_deviation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2), &filter_data_array);
 	check_float_value_equal(6.18, value);
 	if (show_test_case_detail) printf("[2] standard deviation: %.2f\n", value);
 // Check covariance, correlation
-	value = covariance(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	value = covariance(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1), result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2), &filter_data_array);
 	check_float_value_equal(2.75, value);
 	if (show_test_case_detail) printf("[1,2] covariance: %.2f\n", value);
-	value = correlation(result_set.get_array(FinanceSource_StockExchangeAndVolume, 1), result_set.get_array(FinanceSource_StockExchangeAndVolume, 2), &filter_data_array);
+	value = correlation(result_set.get_array(FinanceMethod_StockExchangeAndVolume, 1), result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2), &filter_data_array);
 	check_float_value_equal(0.15, value);
 	if (show_test_case_detail) printf("[1,2] correlation: %.2f\n", value);
 }
@@ -790,8 +790,8 @@ void TestCaseMgr::test_check_filter_formula()
 // 	SmartPointer<ResultSetAccessParam> sp_access_param1(NULL);
 // 	SmartPointer<ResultSetAccessParam> sp_access_param2(NULL);
 // // Check Different type of array
-// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
-// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3));
+// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 2));
+// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 3));
 // 	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
 // 	if (CHECK_FAILURE(ret))
 // 	{
@@ -800,8 +800,8 @@ void TestCaseMgr::test_check_filter_formula()
 // 	}
 // 	if (show_test_case_detail) printf("[2,3] correlation_value: %.2f\n", correlation_value);
 
-// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2));
-// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
+// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 2));
+// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 4));
 // 	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
 // 	if (CHECK_FAILURE(ret))
 // 	{
@@ -810,8 +810,8 @@ void TestCaseMgr::test_check_filter_formula()
 // 	}
 // 	if (show_test_case_detail) printf("[2,4] correlation_value: %.2f\n", correlation_value);
 
-// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
-// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 4));
+// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 1));
+// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 4));
 // 	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
 // 	if (CHECK_FAILURE(ret))
 // 	{
@@ -820,8 +820,8 @@ void TestCaseMgr::test_check_filter_formula()
 // 	}
 // 	if (show_test_case_detail) printf("[1,4] correlation_value: %.2f\n", correlation_value);
 
-// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 1));
-// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5));
+// 	sp_access_param1.set_new(new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 1));
+// 	sp_access_param2.set_new(new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 5));
 // 	ret = data_statistics.correlate_auto_alignment(&result_set, sp_access_param1, sp_access_param2, correlation_value);
 // 	if (CHECK_FAILURE(ret))
 // 	{
@@ -856,7 +856,7 @@ void TestCaseMgr::test_check_histogram()
 	list<string>::iterator output_result_list_iter;
 	int histogram_array_index = 0;
 
-	PFINANCE_LONG_DATA_ARRAY data_array2 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 2);
+	PFINANCE_LONG_DATA_ARRAY data_array2 = (PFINANCE_LONG_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 2);
 	int data_array2_interval = 4;
 // Get Histogram Interval
 	ret = get_histogram_interval(*data_array2, data_array2_interval, long_data_array);
@@ -888,7 +888,7 @@ void TestCaseMgr::test_check_histogram()
 	}
 // Output the histogram data
 	static const char* LONG_HISTOGRAM_OUTPUT_FILENAME = "long_histogram_for_test.output";
-	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 2), data_array2_interval, LONG_HISTOGRAM_OUTPUT_FILENAME);
+	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 2), data_array2_interval, LONG_HISTOGRAM_OUTPUT_FILENAME);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail to output Array [2 HistStatistics], due to: %s", get_ret_description(ret));
@@ -924,7 +924,7 @@ void TestCaseMgr::test_check_histogram()
 	int_data_statistics.reset_array();
 	output_result_list.clear();
 
-	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 3);
+	PFINANCE_INT_DATA_ARRAY data_array3 = (PFINANCE_INT_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 3);
 	int data_array3_interval = 3;
 // Get Histogram Interval
 	ret = get_histogram_interval(*data_array3, data_array3_interval, int_data_array);
@@ -956,7 +956,7 @@ void TestCaseMgr::test_check_histogram()
 	}
 // Output the histogram data
 	static const char* INT_HISTOGRAM_OUTPUT_FILENAME = "int_histogram_for_test.output";
-	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 3), data_array3_interval, INT_HISTOGRAM_OUTPUT_FILENAME);
+	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 3), data_array3_interval, INT_HISTOGRAM_OUTPUT_FILENAME);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail to output Array [3 HistStatistics], due to: %s", get_ret_description(ret));
@@ -991,7 +991,7 @@ void TestCaseMgr::test_check_histogram()
 	int_data_statistics.reset_array();
 	output_result_list.clear();
 
-	PFINANCE_FLOAT_DATA_ARRAY data_array5 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceSource_StockExchangeAndVolume, 5);
+	PFINANCE_FLOAT_DATA_ARRAY data_array5 = (PFINANCE_FLOAT_DATA_ARRAY)result_set.get_array(FinanceMethod_StockExchangeAndVolume, 5);
 	int data_array5_interval = 5;
 // Get Histogram Interval
 	ret = get_histogram_interval(*data_array5, data_array5_interval, float_data_array);
@@ -1023,7 +1023,7 @@ void TestCaseMgr::test_check_histogram()
 	}
 // Output the histogram data
 	static const char* FLOAT_HISTOGRAM_OUTPUT_FILENAME = "float_histogram_for_test.output";
-	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceSource_StockExchangeAndVolume, 5), data_array5_interval, FLOAT_HISTOGRAM_OUTPUT_FILENAME);
+	ret = output_histogram_result(&result_set, new ResultSetAccessParam(FinanceMethod_StockExchangeAndVolume, 5), data_array5_interval, FLOAT_HISTOGRAM_OUTPUT_FILENAME);
 	if (CHECK_FAILURE(ret))
 	{
 		snprintf(errmsg, ERRMSG_SIZE, "Fail to output Array [5 HistStatistics], due to: %s", get_ret_description(ret));

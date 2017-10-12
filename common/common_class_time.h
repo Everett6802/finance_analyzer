@@ -26,12 +26,13 @@ struct QuarterCfg
 	int quarter;
 };
 
-enum TimeUnit{TIME_UNIT_DATE, TIME_UNIT_MONTH, TIME_UNIT_QUARTER, TIME_UNIT_NONE};
+enum TimeUnit{TIME_UNIT_DATE, TIME_UNIT_MONTH, TIME_UNIT_QUARTER, TIME_UNIT_SIZE, TIME_UNIT_NONE};
 
 class TimeParam
 {
 	DECLARE_MSG_DUMPER()
 private:
+	static const int VALUE_ARRAY_LEN[TIME_UNIT_SIZE];
 	static unsigned short parse_time_string(const char* time_str, TimeParam& time_param);
 
 public:
@@ -48,6 +49,11 @@ private:
 		QuarterCfg quarter_cfg;
 	}param;
 	char time_str[16];
+// To save the time of the data into MySQL and access easily,
+// convert the Quarter and Month to Date time in MySQL
+// Month: the first date of the month
+// Quarter: the first date of the quarter
+	mutable char* time_date_str;
 
 	int get_date_int_value()const;
 	int get_month_int_value()const;
@@ -69,8 +75,10 @@ public:
 	~TimeParam();
 
 	const char* to_string()const;
+	const char* to_date_string()const;
 	TimeUnit get_time_unit()const;
 	bool equal_to(const TimeParam* another_time_param)const;
+	void get_value_array(int* value_array, int& value_array_len)const;
 
 	void reset(const char* new_time_str); // Format: "2015-09" or "2015-09-04"
 	void reset(TimeUnit new_time_unit, int* new_value_array);
@@ -110,7 +118,7 @@ public:
 protected:
 	PTIME_PARAM time_start_param;
 	PTIME_PARAM time_end_param;
-	char* time_range_description;
+	mutable char* time_range_description;
 	TimeUnit time_unit;
 	bool add_done;
 
@@ -141,7 +149,8 @@ public:
 
 	bool is_single_time()const;
 	bool is_add_time_done()const;
-	const char* to_string();
+	const char* to_string()const;
+	TimeUnit get_time_unit()const;
 	const PTIME_PARAM get_start_time()const;
 	const PTIME_PARAM get_end_time()const;
 // Don't modify the start/end time in the following way

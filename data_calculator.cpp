@@ -31,31 +31,31 @@ unsigned short DataCalculatorBase::generate_general_query_set(QuerySet& query_se
 	臺股期貨_到期月份_買方_前十大交易人合計_部位數(3), 臺股期貨_到期月份_賣方_前十大交易人合計_部位數(7), 臺股期貨_所有契約_買方_前十大交易人合計_部位數(12), 臺股期貨_所有契約_賣方_前十大交易人合計_部位數(16)
  */
 	unsigned short ret = RET_SUCCESS;
-	ADD_QUERY(query_set, FinanceSource_StockExchangeAndVolume, 2);
-	ADD_QUERY(query_set, FinanceSource_StockExchangeAndVolume, 4);
-	ADD_QUERY(query_set, FinanceSource_StockExchangeAndVolume, 5);
-	ADD_QUERY(query_set, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 3);
-	ADD_QUERY(query_set, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 6);
-	ADD_QUERY(query_set, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 9);
-	ADD_QUERY(query_set, FinanceSource_StockTop3LegalPersonsNetBuyOrSell, 12);
-	ADD_QUERY(query_set, FinanceSource_StockMarginTradingAndShortSelling, 14);
-	ADD_QUERY(query_set, FinanceSource_StockMarginTradingAndShortSelling, 15);
-	ADD_QUERY(query_set, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 6);
-	ADD_QUERY(query_set, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 12);
-	ADD_QUERY(query_set, FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest, 18);
-	ADD_QUERY(query_set, FinanceSource_OptionPutCallRatio, 6);
-	ADD_QUERY(query_set, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1);
-	ADD_QUERY(query_set, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3);
-	ADD_QUERY(query_set, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13);
-	ADD_QUERY(query_set, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15);
-	ADD_QUERY(query_set, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19);
-	ADD_QUERY(query_set, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21);
-	ADD_QUERY(query_set, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31);
-	ADD_QUERY(query_set, FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33);
-	ADD_QUERY(query_set, FinanceSource_FutureTop10DealersAndLegalPersons, 3);
-	ADD_QUERY(query_set, FinanceSource_FutureTop10DealersAndLegalPersons, 7);
-	ADD_QUERY(query_set, FinanceSource_FutureTop10DealersAndLegalPersons, 12);
-	ADD_QUERY(query_set, FinanceSource_FutureTop10DealersAndLegalPersons, 16);
+	ADD_QUERY(query_set, FinanceMethod_StockExchangeAndVolume, 2);
+	ADD_QUERY(query_set, FinanceMethod_StockExchangeAndVolume, 4);
+	ADD_QUERY(query_set, FinanceMethod_StockExchangeAndVolume, 5);
+	ADD_QUERY(query_set, FinanceMethod_StockTop3LegalPersonsNetBuyOrSell, 3);
+	ADD_QUERY(query_set, FinanceMethod_StockTop3LegalPersonsNetBuyOrSell, 6);
+	ADD_QUERY(query_set, FinanceMethod_StockTop3LegalPersonsNetBuyOrSell, 9);
+	ADD_QUERY(query_set, FinanceMethod_StockTop3LegalPersonsNetBuyOrSell, 12);
+	ADD_QUERY(query_set, FinanceMethod_StockMarginTradingAndShortSelling, 14);
+	ADD_QUERY(query_set, FinanceMethod_StockMarginTradingAndShortSelling, 15);
+	ADD_QUERY(query_set, FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest, 6);
+	ADD_QUERY(query_set, FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest, 12);
+	ADD_QUERY(query_set, FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest, 18);
+	ADD_QUERY(query_set, FinanceMethod_OptionPutCallRatio, 6);
+	ADD_QUERY(query_set, FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 1);
+	ADD_QUERY(query_set, FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 3);
+	ADD_QUERY(query_set, FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 13);
+	ADD_QUERY(query_set, FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 15);
+	ADD_QUERY(query_set, FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 19);
+	ADD_QUERY(query_set, FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 21);
+	ADD_QUERY(query_set, FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 31);
+	ADD_QUERY(query_set, FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest, 33);
+	ADD_QUERY(query_set, FinanceMethod_FutureTop10DealersAndLegalPersons, 3);
+	ADD_QUERY(query_set, FinanceMethod_FutureTop10DealersAndLegalPersons, 7);
+	ADD_QUERY(query_set, FinanceMethod_FutureTop10DealersAndLegalPersons, 12);
+	ADD_QUERY(query_set, FinanceMethod_FutureTop10DealersAndLegalPersons, 16);
 	return ret;
 }
 
@@ -82,12 +82,12 @@ DataCalculatorBase::DataCalculatorBase()
 {
 	IMPLEMENT_MSG_DUMPER()
 	IMPLEMENT_WORKDAY_CANLENDAR()
-	IMPLEMENT_DATABASE_TIME_RANGE()
+	// IMPLEMENT_DATABASE_TIME_RANGE()
 }
 
 DataCalculatorBase::~DataCalculatorBase()
 {
-	RELEASE_DATABASE_TIME_RANGE()
+	// RELEASE_DATABASE_TIME_RANGE()
 	RELEASE_WORKDAY_CANLENDAR()
 	RELEASE_MSG_DUMPER()
 }
@@ -238,7 +238,7 @@ const char* DataCalculatorBase::get_description_head(const PRESULT_SET result_se
 	}
 	// int data_amount = end_index - start_index;
 	// snprintf(buf, BUF_SIZE, "%s:%s %s:%s %d", 
-	// 	FINANCE_DATA_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
+	// 	FINANCE_METHOD_DESCRIPTION_LIST[result_set_access_param->get_finance_source_type()],
 	// 	get_database_field_description(result_set_access_param->get_finance_source_type(), result_set_access_param->get_finance_field_no()),
 	// 	result_set->get_date_array_element(start_index),
 	// 	result_set->get_date_array_element(end_index),
@@ -256,7 +256,7 @@ const char* DataCalculatorBase::get_no_data_description(int method_index, int fi
 	static char buf[BUF_SIZE];
 
 	// snprintf(buf, BUF_SIZE, "%s:%s %s:%s *** No Data in MySQL ***", 
-	// 	FINANCE_DATA_DESCRIPTION_LIST[method_index],
+	// 	FINANCE_METHOD_DESCRIPTION_LIST[method_index],
 	// 	get_database_field_description(method_index, field_index),
 	// 	time_range_cfg->get_start_time()->to_string(),
 	// 	time_range_cfg->get_end_time()->to_string()
@@ -264,48 +264,48 @@ const char* DataCalculatorBase::get_no_data_description(int method_index, int fi
 	return buf;
 }
 
-unsigned short DataCalculatorBase::get_restricted_time_range(int method_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const
-{
-	set<int> method_index_set;
-	// int method_index, field_index;
-	// for (int index = 0 ; index < FinanceSourceSize ; index++)
-	// {
-	// 	const INT_DEQUE& query_field = (*sp_query_set.get_instance())[index];
-	// 	if (!query_field.empty())
-	// 	{
-	// 		method_index_set.insert(index);
-	// 		method_index = index;
-	// 		field_index = query_field[0];
-	// 		break;
-	// 	}
-	// }
-	// assert(method_index_set.size() == 1 && "The size of method_index_set should be 1");
-	method_index_set.insert(method_index);
+// unsigned short DataCalculatorBase::get_restricted_time_range(int method_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const
+// {
+// 	set<int> method_index_set;
+// 	// int method_index, field_index;
+// 	// for (int index = 0 ; index < FinanceSourceSize ; index++)
+// 	// {
+// 	// 	const INT_DEQUE& query_field = (*sp_query_set.get_instance())[index];
+// 	// 	if (!query_field.empty())
+// 	// 	{
+// 	// 		method_index_set.insert(index);
+// 	// 		method_index = index;
+// 	// 		field_index = query_field[0];
+// 	// 		break;
+// 	// 	}
+// 	// }
+// 	// assert(method_index_set.size() == 1 && "The size of method_index_set should be 1");
+// 	method_index_set.insert(method_index);
 
-	unsigned short ret = RET_SUCCESS;
-// Check the time range of this database
-	// SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
-	if (time_range_cfg != NULL)
-	{
-		sp_restricted_time_range_cfg.set_new(new TimeRangeCfg(*time_range_cfg));
-	}
-	else
-	{
-		ret = database_time_range->get_max_database_time_range(sp_restricted_time_range_cfg);
-		if (CHECK_FAILURE(ret))
-			return ret;
-		WRITE_FORMAT_DEBUG("time_rage_cfg is NULL, use the max database time range: %s", sp_restricted_time_range_cfg->to_string());
-	}
+// 	unsigned short ret = RET_SUCCESS;
+// // Check the time range of this database
+// 	// SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
+// 	if (time_range_cfg != NULL)
+// 	{
+// 		sp_restricted_time_range_cfg.set_new(new TimeRangeCfg(*time_range_cfg));
+// 	}
+// 	else
+// 	{
+// 		ret = database_time_range->get_max_database_time_range(sp_restricted_time_range_cfg);
+// 		if (CHECK_FAILURE(ret))
+// 			return ret;
+// 		WRITE_FORMAT_DEBUG("time_rage_cfg is NULL, use the max database time range: %s", sp_restricted_time_range_cfg->to_string());
+// 	}
 	
-	ret = database_time_range->restrict_time_range(
-		method_index_set, 
-		sp_restricted_time_range_cfg.get_instance()
-		);
-	if (CHECK_FAILURE(ret))
-		return ret;
-	WRITE_FORMAT_DEBUG("The search time range: %s", sp_restricted_time_range_cfg->to_string());
-	return ret;
-}
+// 	ret = database_time_range->restrict_time_range(
+// 		method_index_set, 
+// 		sp_restricted_time_range_cfg.get_instance()
+// 		);
+// 	if (CHECK_FAILURE(ret))
+// 		return ret;
+// 	WRITE_FORMAT_DEBUG("The search time range: %s", sp_restricted_time_range_cfg->to_string());
+// 	return ret;
+// }
 
 // unsigned short DataCalculatorBase::query_from_database(int method_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSetMap>& sp_result_set_map)const
 // {

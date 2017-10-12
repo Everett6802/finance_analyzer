@@ -62,30 +62,30 @@ unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_fin
 
 	strcpy(source_string_copy, source_string);
 	char* source_buf = source_string_copy;
-	char* source_type_data_outer = NULL;
-	char* rest_source_type_data_outer = NULL;
+	char* method_data_outer = NULL;
+	char* rest_method_data_outer = NULL;
 // Parse the source type. ex. 1(1-2;4),2-4(2-4;5),5,6(1;3;5-7)
-	while ((source_type_data_outer = strtok_r(source_buf, ",", &rest_source_type_data_outer)) != NULL)
+	while ((method_data_outer = strtok_r(source_buf, ",", &rest_method_data_outer)) != NULL)
 	{
 // Parse the field
-		char* close_parenthesis_pos = strrchr(source_type_data_outer, ')');
+		char* close_parenthesis_pos = strrchr(method_data_outer, ')');
 		if (close_parenthesis_pos != NULL)
 		{
 // Add the source type with the field
-			char* open_parenthesis_pos = strchr(source_type_data_outer, '(');
+			char* open_parenthesis_pos = strchr(method_data_outer, '(');
 			if (open_parenthesis_pos == NULL)
 			{
-				STATIC_WRITE_FORMAT_ERROR("Incorrect format: %s", source_type_data_outer);
+				STATIC_WRITE_FORMAT_ERROR("Incorrect format: %s", method_data_outer);
 				ret = RET_FAILURE_INVALID_ARGUMENT;
 				goto OUT;
 			}
-			int open_parenthesis_index = open_parenthesis_pos - source_type_data_outer;
-			int close_parenthesis_index = close_parenthesis_pos - source_type_data_outer;
-			int source_type_string_len = open_parenthesis_index;
+			int open_parenthesis_index = open_parenthesis_pos - method_data_outer;
+			int close_parenthesis_index = close_parenthesis_pos - method_data_outer;
+			int method_string_len = open_parenthesis_index;
 // Check source type/type range
-			if (source_type_string_len <= 0)
+			if (method_string_len <= 0)
 			{
-				STATIC_WRITE_FORMAT_ERROR("Incorrect source type format: %s", source_type_data_outer);
+				STATIC_WRITE_FORMAT_ERROR("Incorrect source type format: %s", method_data_outer);
 				ret = RET_FAILURE_INVALID_ARGUMENT;
 				goto OUT;
 			}
@@ -93,28 +93,28 @@ unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_fin
 			int field_string_len = close_parenthesis_index - (open_parenthesis_index + 1);
 			if (field_string_len <= 2)
 			{
-				STATIC_WRITE_FORMAT_ERROR("Incorrect field format: %s", source_type_data_outer);
+				STATIC_WRITE_FORMAT_ERROR("Incorrect field format: %s", method_data_outer);
 				ret = RET_FAILURE_INVALID_ARGUMENT;
 				goto OUT;
 			}
 // Parse the sourc type
 			INT_DEQUE method_index_deque;
-			get_int_deque_from_partial_string(source_type_data_outer, source_type_string_len, method_index_deque);
+			get_int_deque_from_partial_string(method_data_outer, method_string_len, method_index_deque);
 // Parse the field
 			INT_DEQUE field_index_deque;
-			char* source_buf_inner = &source_type_data_outer[open_parenthesis_index + 1];
-			char* source_type_data_innner = NULL;
-			char* rest_source_type_data_innner = NULL;
-			// fprintf(stderr, "source_type_data_outer: %s, open_parenthesis_index: %d, close_parenthesis_index: %d\n", source_type_data_outer, open_parenthesis_index, close_parenthesis_index);
-			while ((source_type_data_innner = strtok_r(source_buf_inner, ";", &rest_source_type_data_innner)) != NULL)
+			char* source_buf_inner = &method_data_outer[open_parenthesis_index + 1];
+			char* method_data_innner = NULL;
+			char* rest_method_data_innner = NULL;
+			// fprintf(stderr, "method_data_outer: %s, open_parenthesis_index: %d, close_parenthesis_index: %d\n", method_data_outer, open_parenthesis_index, close_parenthesis_index);
+			while ((method_data_innner = strtok_r(source_buf_inner, ";", &rest_method_data_innner)) != NULL)
 			{
-				// fprintf(stderr, "source_type_data_innner: %s, rest_source_type_data_innner: %s\n", source_type_data_innner, rest_source_type_data_innner);
-				get_int_deque_from_partial_string(source_type_data_innner, strlen(source_type_data_innner), field_index_deque);
+				// fprintf(stderr, "method_data_innner: %s, rest_method_data_innner: %s\n", method_data_innner, rest_method_data_innner);
+				get_int_deque_from_partial_string(method_data_innner, strlen(method_data_innner), field_index_deque);
 				if (source_buf_inner != NULL)
 					source_buf_inner = NULL;
 			}	
-			INT_DEQUE::iterator iter_source_type = method_index_deque.begin();
-			while (iter_source_type != method_index_deque.end())
+			INT_DEQUE::iterator iter_method = method_index_deque.begin();
+			while (iter_method != method_index_deque.end())
 			{
 				// INT_DEQUE::iterator iter_field = field_index_deque.begin();
 				// while (iter_field != field_index_deque.end())
@@ -122,11 +122,11 @@ unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_fin
 				// 	printf("Add field: %d into QuerySet1\n", *iter_field);
 				// 	iter_field++;
 				// }
-				// printf("Add source type: %d into QuerySet1\n", *iter_source_type);
-				ret = query_set.add_query_list(*iter_source_type, &field_index_deque);
+				// printf("Add source type: %d into QuerySet1\n", *iter_method);
+				ret = query_set.add_query_list(*iter_method, &field_index_deque);
 				if (CHECK_FAILURE(ret))
 					goto OUT;
-				iter_source_type++;
+				iter_method++;
 			}
 		}
 		else
@@ -134,7 +134,7 @@ unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_fin
 // Add the source type without the field
 // Parse the source type
 			INT_DEQUE method_index_deque;
-			get_int_deque_from_partial_string(source_type_data_outer, strlen(source_type_data_outer), method_index_deque);
+			get_int_deque_from_partial_string(method_data_outer, strlen(method_data_outer), method_index_deque);
 			INT_DEQUE::iterator iter = method_index_deque.begin();
 			while (iter != method_index_deque.end())
 			{
@@ -261,13 +261,13 @@ const std::string& QuerySet::to_string()
 	if (query_set_string.empty())
 	{
 		get_method_index_set();
-		INT_SET_ITER iter_source_type_set = method_index_set->begin();
-		while (iter_source_type_set != method_index_set->end())
+		INT_SET_ITER iter_method_set = method_index_set->begin();
+		while (iter_method_set != method_index_set->end())
 		{
-			int method_index = (int)*iter_source_type_set;
+			int method_index = (int)*iter_method_set;
 			const PINT_DEQUE source_field_queue = source_field_query_map[method_index];
 			assert(source_field_queue != NULL && "source_field_queue should NOT be NULL");
-			snprintf(buf, BUF_SIZE, "%2d|", *iter_source_type_set);
+			snprintf(buf, BUF_SIZE, "%2d|", *iter_method_set);
 			query_set_string += string(buf);
 			INT_DEQUE_ITER iter_field_deque = source_field_queue->begin();
 			while (iter_field_deque != source_field_queue->end())
@@ -276,7 +276,7 @@ const std::string& QuerySet::to_string()
 				query_set_string += string(buf);
 				iter_field_deque++;
 			}
-			iter_source_type_set++;
+			iter_method_set++;
 			query_set_string += string("\n");
 		}
 	}
@@ -346,13 +346,13 @@ unsigned short QuerySet::add_query(int method_index, int field_index)
 	INT_DEQUE::iterator it = find(source_field_query_map[method_index]->begin(), source_field_query_map[method_index]->end(), 10);
 	if (it != source_field_query_map[method_index]->end())
 	{
-		WRITE_FORMAT_WARN("Duplicate index: %d in %s", field_index, FINANCE_DATA_DESCRIPTION_LIST[method_index]);
+		WRITE_FORMAT_WARN("Duplicate index: %d in %s", field_index, FINANCE_METHOD_DESCRIPTION_LIST[method_index]);
 		return RET_WARN_INDEX_DUPLICATE;
 	}
 // If all fields are selected, it's no need to add extra index
 	if (!source_field_query_map[method_index]->empty() && (*source_field_query_map[method_index])[0] == -1)
 	{
-		WRITE_FORMAT_WARN("Ignore index: %d in %s, since all fields are selected", field_index, FINANCE_DATA_DESCRIPTION_LIST[method_index]);
+		WRITE_FORMAT_WARN("Ignore index: %d in %s, since all fields are selected", field_index, FINANCE_METHOD_DESCRIPTION_LIST[method_index]);
 		return RET_WARN_INDEX_IGNORE;
 	}
 
@@ -400,13 +400,13 @@ unsigned short QuerySet::add_query_list(int method_index, const PINT_DEQUE field
 		INT_DEQUE::iterator it = find(source_field_query_map[method_index]->begin(), source_field_query_map[method_index]->end(), 10);
 		if (it != source_field_query_map[method_index]->end())
 		{
-			WRITE_FORMAT_WARN("Duplicate index: %d in %s", field_index, FINANCE_DATA_DESCRIPTION_LIST[method_index]);
+			WRITE_FORMAT_WARN("Duplicate index: %d in %s", field_index, FINANCE_METHOD_DESCRIPTION_LIST[method_index]);
 			continue;
 		}
 // If all fields are selected, it's no need to add extra index
 		if (!source_field_query_map[method_index]->empty() && (*source_field_query_map[method_index])[0] == -1)
 		{
-			WRITE_FORMAT_WARN("Ignore index: %d in %s, since all fields are selected", field_index, FINANCE_DATA_DESCRIPTION_LIST[method_index]);
+			WRITE_FORMAT_WARN("Ignore index: %d in %s, since all fields are selected", field_index, FINANCE_METHOD_DESCRIPTION_LIST[method_index]);
 			break;
 		}
 // Add the index
@@ -1264,8 +1264,8 @@ const string& SearchRuleSet::to_string()
 	{
 		if (query_set != NULL)
 			search_rule_set_string += query_set->to_string();
-		if (time_range_cfg != NULL)
-			search_rule_set_string += time_range_cfg->to_string();
+		if (time_range_param != NULL)
+			search_rule_set_string += time_range_param->to_string();
 		if (company_group_set != NULL)
 			search_rule_set_string += company_group_set->to_string();
 	}
@@ -1277,7 +1277,7 @@ SearchRuleSet::SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode) :
 	add_done(false),
 	finance_analysis_mode(cur_finance_analysis_mode),
 	query_set(NULL),
-	time_range_cfg(NULL),
+	time_range_param(NULL),
 	company_group_set(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
@@ -1287,7 +1287,7 @@ SearchRuleSet::SearchRuleSet() :
 	add_done(false),
 	finance_analysis_mode(FinanceAnalysis_None),
 	query_set(NULL),
-	time_range_cfg(NULL),
+	time_range_param(NULL),
 	company_group_set(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
@@ -1300,10 +1300,10 @@ SearchRuleSet::~SearchRuleSet()
 		delete company_group_set;
 		company_group_set = NULL;
 	}
-	if (time_range_cfg != NULL)
+	if (time_range_param != NULL)
 	{
-		delete time_range_cfg;
-		time_range_cfg = NULL;
+		delete time_range_param;
+		time_range_param = NULL;
 	}
 	if (query_set != NULL)
 	{
@@ -1366,23 +1366,23 @@ unsigned short SearchRuleSet::add_query_rule(const char* query_source_string)
 	return QuerySet::create_instance_from_string(finance_analysis_mode, query_source_string, &query_set);
 }
 
-unsigned short SearchRuleSet::add_time_rule(const PTIME_RANGE_CFG new_time_range_cfg)
+unsigned short SearchRuleSet::add_time_rule(const PTIME_RANGE_PARAM new_time_range_param)
 {
 	if (add_done)
 	{
 		WRITE_ERROR("The add_done flag is true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	assert(new_time_range_cfg != NULL && "new_time_range_cfg should NOT be NULL");
-	if (time_range_cfg != NULL)
+	assert(new_time_range_param != NULL && "new_time_range_param should NOT be NULL");
+	if (time_range_param != NULL)
 	{
-		WRITE_ERROR("time_range_cfg is NOT NULL");
+		WRITE_ERROR("time_range_param is NOT NULL");
 		return RET_FAILURE_INCORRECT_OPERATION;	
 	}
-	time_range_cfg = new TimeRangeCfg(*new_time_range_cfg);
-	if (time_range_cfg != NULL)
+	time_range_param = new TimeRangeParam(*new_time_range_param);
+	if (time_range_param != NULL)
 	{
-		WRITE_ERROR("fail to allocate memory: time_range_cfg");
+		WRITE_ERROR("fail to allocate memory: time_range_param");
 		return RET_FAILURE_INSUFFICIENT_MEMORY;	
 	}	
 	return RET_SUCCESS;
@@ -1395,7 +1395,7 @@ unsigned short SearchRuleSet::add_time_rule(const char* time_source_string)
 		WRITE_ERROR("The add_done flag is true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	return TimeRangeCfg::create_instance_from_string(time_source_string, &time_range_cfg);
+	return TimeRangeParam::create_instance_from_string(time_source_string, &time_range_param);
 }
 
 unsigned short SearchRuleSet::add_company_rule(const PCOMPANY_GROUP_SET new_company_group_set)
@@ -1453,11 +1453,11 @@ unsigned short SearchRuleSet::add_rule_done()
 		// 	return ret;
 		search_rule_added = true;
 	}
-	if (time_range_cfg != NULL)
+	if (time_range_param != NULL)
 	{
-		assert(time_range_cfg->is_add_time_done() && "time_range_cfg::is_add_time_done() should be TRUE");
+		assert(time_range_param->is_add_time_done() && "time_range_param::is_add_time_done() should be TRUE");
 // No need, is implemented in each class
-		// ret = time_range_cfg->add_time_done();
+		// ret = time_range_param->add_time_done();
 		// if (CHECK_FAILURE(ret))
 		// 	return ret;
 		search_rule_added = true;
@@ -1497,14 +1497,14 @@ const PQUERY_SET SearchRuleSet::get_query_rule()const
 	return query_set;
 }
 
-const PTIME_RANGE_CFG SearchRuleSet::get_time_rule()const
+const PTIME_RANGE_PARAM SearchRuleSet::get_time_rule()const
 {
 	if (!add_done)
 	{
 		WRITE_ERROR("The add_done flag is false");
 		throw runtime_error("The add_done flag is false");
 	}
-	return time_range_cfg;
+	return time_range_param;
 }
 
 const PCOMPANY_GROUP_SET SearchRuleSet::get_company_rule()const
@@ -1741,17 +1741,17 @@ DEFINE_GET_DATA_ARRAY_ELEMENT_FUNC(float, FLOAT)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ResultSetAccessParam::ResultSetAccessParam(FinanceSourceType new_finance_source_type, int new_finance_field_no, ArrayElementCalculationType new_calculation_type, int new_start_index, int new_end_index)
+ResultSetAccessParam::ResultSetAccessParam(FinanceMethodType new_finance_method, int new_finance_field_no, ArrayElementCalculationType new_calculation_type, int new_start_index, int new_end_index)
 {
-	finance_source_type = new_finance_source_type;
+	finance_method = new_finance_method;
 	finance_field_no = new_finance_field_no;
 	calculation_type = new_calculation_type;
 	start_index = new_start_index;
 	end_index = new_end_index;
 }
 
-void ResultSetAccessParam::set_finance_source_type(FinanceSourceType new_finance_source_type){finance_source_type = new_finance_source_type;}
-FinanceSourceType ResultSetAccessParam::get_finance_source_type()const{return finance_source_type;}
+void ResultSetAccessParam::set_finance_method(FinanceMethodType new_finance_method){finance_method = new_finance_method;}
+FinanceMethodType ResultSetAccessParam::get_finance_method()const{return finance_method;}
 
 void ResultSetAccessParam::set_finance_field_no(int new_finance_field_no){finance_field_no = new_finance_field_no;}
 int ResultSetAccessParam::get_finance_field_no()const{return finance_field_no;}
@@ -1912,7 +1912,7 @@ void ResultSet::generate_data_for_simulation(ResultSet& result_set)
 
 	char data[32];
 	for (int i = 1 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
+		result_set.add_set(FinanceMethod_StockExchangeAndVolume, i);
 	// printf("============= Data Mapping =============\n");
 	// result_set.show_data_mapping();
 	for (int i = 0 ; i < DATA_SIZE ; i++)
@@ -1920,15 +1920,15 @@ void ResultSet::generate_data_for_simulation(ResultSet& result_set)
 		snprintf(data, 32, "%s", date[i]);
 		result_set.set_date(data);
 		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 1, data);
 		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 2, data);
 		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 3, data);
 		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 4, data);
 		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 5, data);
 	}
 	// printf("================= Data =================\n");
 	// result_set.show_data();
@@ -1947,7 +1947,7 @@ void ResultSet::generate_filtered_data_for_simulation(ResultSet& result_set, Fin
 
 	char data[32];
 	for (int i = 1 ; i < 6 ; i++)
-		result_set.add_set(FinanceSource_StockExchangeAndVolume, i);
+		result_set.add_set(FinanceMethod_StockExchangeAndVolume, i);
 	// printf("============= Data Mapping =============\n");
 	// result_set.show_data_mapping();
 	for (int i = 0 ; i < DATA_SIZE ; i++)
@@ -1955,15 +1955,15 @@ void ResultSet::generate_filtered_data_for_simulation(ResultSet& result_set, Fin
 		snprintf(data, 32, "%s", date[i]);
 		result_set.set_date(data);
 		snprintf(data, 32, "%s", field1[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 1, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 1, data);
 		snprintf(data, 32, "%s", field2[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 2, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 2, data);
 		snprintf(data, 32, "%s", field3[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 3, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 3, data);
 		snprintf(data, 32, "%s", field4[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 4, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 4, data);
 		snprintf(data, 32, "%s", field5[i]);
-		result_set.set_data(FinanceSource_StockExchangeAndVolume, 5, data);
+		result_set.set_data(FinanceMethod_StockExchangeAndVolume, 5, data);
 		filter_data_array.add_data(filter[i]);
 	}
 	// printf("================= Data =================\n");
@@ -2759,7 +2759,7 @@ unsigned short ResultSet::show_data_mapping()const
 		field_index = get_lower_subindex(key);
 		field_type_index = get_upper_subindex(value);
 		field_type_pos = get_lower_subindex(value);
-		printf("%s:%s%d => %s:%d\n", FINANCE_DATA_DESCRIPTION_LIST[method_index], MYSQL_FILED_NAME_BASE, field_index, FINANCE_FIELD_TYPE_DESCRIPTION[field_type_index], field_type_pos);
+		printf("%s:%s%d => %s:%d\n", FINANCE_METHOD_DESCRIPTION_LIST[method_index], MYSQL_FILED_NAME_BASE, field_index, FINANCE_FIELD_TYPE_DESCRIPTION[field_type_index], field_type_pos);
 		iter++;
 	}
 	return RET_SUCCESS;
@@ -2793,7 +2793,7 @@ unsigned short ResultSet::show_data()const
 		key = iter->first;
 		method_index = get_upper_subindex(key);
 		field_index = get_lower_subindex(key);
-		printf(" %s:%s%d |", FINANCE_DATA_DESCRIPTION_LIST[method_index], MYSQL_FILED_NAME_BASE, field_index);
+		printf(" %s:%s%d |", FINANCE_METHOD_DESCRIPTION_LIST[method_index], MYSQL_FILED_NAME_BASE, field_index);
 		iter++;
 	}
 	printf("\n");
@@ -2880,10 +2880,10 @@ const std::string& ResultSetMap::to_string()
 	{
 		if (result_set_map.empty())
 			return result_set_map_string;
-		if (result_set_map.size() == 1 && result_set_map.find(NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE) != result_set_map.end())
+		if (result_set_map.size() == 1 && result_set_map.find(NO_METHOD_MARKET_SOURCE_KEY_VALUE) != result_set_map.end())
 		{
 			result_set_map_string += string("========== Market ==========\n");
-			result_set_map_string += result_set_map[NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE]->to_string();
+			result_set_map_string += result_set_map[NO_METHOD_MARKET_SOURCE_KEY_VALUE]->to_string();
 		}
 		else
 		{

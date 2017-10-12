@@ -216,7 +216,7 @@ unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DA
 		string title_buf = "";
 		for (int j = 0 ; j < access_param_deque_size ; j++)
 		{
-			int finance_source_type = (int)(*access_param_deque)[j]->get_finance_source_type();
+			int finance_source_type = (int)(*access_param_deque)[j]->get_finance_method();
 			int finance_field_no = (*access_param_deque)[j]->get_finance_field_no();
 			switch(FINANCE_DATA_FIELD_TYPE_LIST[finance_source_type][finance_field_no])
 			{
@@ -250,7 +250,7 @@ unsigned short output_result(const ResultSet* result_set, const PFINANCE_BOOL_DA
 		string data_buf = "";
 		for (int j = 0 ; j < access_param_deque_size ; j++)
 		{
-			int finance_source_type = (int)(*access_param_deque)[j]->get_finance_source_type();
+			int finance_source_type = (int)(*access_param_deque)[j]->get_finance_method();
 			int finance_field_no = (*access_param_deque)[j]->get_finance_field_no();
 			switch(FINANCE_DATA_FIELD_TYPE_LIST[finance_source_type][finance_field_no])
 			{
@@ -336,7 +336,7 @@ unsigned short output_csv_result(const ResultSet* result_set, const PRESULT_SET_
 unsigned short output_histogram_result(const ResultSet* result_set, const PFINANCE_BOOL_DATA_ARRAY filter_array, const PRESULT_SET_ACCESS_PARAM access_param, int interval_amount, const char* output_filename)
 {
 	assert(access_param != NULL && "access_param should NOT be NULL");
-	int finance_source_type = (int)access_param->get_finance_source_type();
+	int finance_source_type = (int)access_param->get_finance_method();
 	int finance_field_no = access_param->get_finance_field_no();
 	FinanceIntDataArray data_histogram_statistics;
 	unsigned short ret = get_histogram(result_set->get_array(finance_source_type, finance_field_no), filter_array, interval_amount, data_histogram_statistics);

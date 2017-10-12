@@ -5,7 +5,7 @@ CXXFLAGS := -g -Wall -std=c++0x
 
 CMN_FOLDER := common
 CMN_SOURCES := $(CMN_FOLDER)/msg_dumper_wrapper.cpp $(CMN_FOLDER)/common_definition_base.cpp $(CMN_FOLDER)/common_definition_data_market_field.cpp $(CMN_FOLDER)/common_definition_data_stock_field.cpp $(CMN_FOLDER)/common_function.cpp $(CMN_FOLDER)/common_class_base.cpp $(CMN_FOLDER)/common_class_company_profile.cpp $(CMN_FOLDER)/common_class_time.cpp $(CMN_FOLDER)/common_class_set.cpp $(CMN_FOLDER)/common_class_smart_pointer.cpp $(CMN_FOLDER)/common_class_output.cpp
-SOURCES := $(CMN_SOURCES) finance_analyzer.cpp finance_analyzer_mgr.cpp mgr_factory.cpp data_sql_reader.cpp data_csv_reader.cpp data_reader.cpp workday_canlendar.cpp database_time_range.cpp data_algorithm.cpp data_filter.cpp data_collector.cpp data_calculator.cpp testcase_mgr.cpp data_output.cpp interactive_server.cpp interactive_session.cpp stock_support_resistance.cpp
+SOURCES := $(CMN_SOURCES) finance_analyzer.cpp finance_analyzer_mgr.cpp mgr_factory.cpp data_sql_reader.cpp data_csv_reader.cpp data_reader.cpp workday_canlendar.cpp data_algorithm.cpp data_filter.cpp data_collector.cpp data_calculator.cpp testcase_mgr.cpp data_output.cpp interactive_server.cpp interactive_session.cpp stock_support_resistance.cpp
 OBJS := $(SOURCES:.cpp=.o)
 LIB_MSG_DUMPER := libmsg_dumper.so
 LIB_MSG_DUMPER_HEADER := msg_dumper.h

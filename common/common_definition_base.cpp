@@ -17,11 +17,11 @@ const char* FINANCE_ANALYZER_PROCESS_NAME = "finance_analyzer";
 const char* FINANCE_MODE_DESCRIPTION[] = {"Market", "Stock"};
 const char* FINANCE_DATA_DESCRIPTION[] = {"SQL", "CSV"};
 
-const char* FINANCE_DATA_MARKET_NAME = "Market";
-const char* FINANCE_DATA_STOCK_NAME_FORMAT = "Stock%02d";
+const char* FINANCE_DATA_MARKET_NAME = "market";
+const char* FINANCE_DATA_STOCK_NAME = "stock";
 
-const int MARKET_SOURCE_TYPE_INDEX_LENGTH = FinanceSource_MarketEnd - FinanceSource_MarketStart;
-const int STOCK_SOURCE_TYPE_INDEX_LENGTH = FinanceSource_StockEnd - FinanceSource_StockStart;
+const int MARKET_METHOD_INDEX_LENGTH = FinanceMethod_MarketEnd - FinanceMethod_MarketStart;
+const int STOCK_METHOD_INDEX_LENGTH = FinanceMethod_StockEnd - FinanceMethod_StockStart;
 
 const char* DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
 const char* DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%02d%02d";
@@ -79,7 +79,7 @@ const char* FINANCE_FIELD_TYPE_DESCRIPTION[] =
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const char* FINANCE_TABLE_NAME_LIST[] =
+const char* FINANCE_METHOD_DATA_NAME_LIST[] =
 {
 	"stock_exchange_and_volume",
 	"stock_top3_legal_persons_net_buy_or_sell",
@@ -95,8 +95,9 @@ const char* FINANCE_TABLE_NAME_LIST[] =
 	"cash_flow_statement",
 	"statement_of_changes_in_equity"
 };
-const int FINANCE_TABLE_NAME_LIST_LEN = sizeof(FINANCE_TABLE_NAME_LIST) / sizeof(FINANCE_TABLE_NAME_LIST[0]);
-const char* FINANCE_DATA_DESCRIPTION_LIST[] =
+const int FINANCE_METHOD_DATA_NAME_LIST_LEN = sizeof(FINANCE_METHOD_DATA_NAME_LIST) / sizeof(FINANCE_METHOD_DATA_NAME_LIST[0]);
+
+const char* FINANCE_METHOD_DESCRIPTION_LIST[] =
 {
 	"臺股指數及成交量",
 	"三大法人現貨買賣超",
@@ -217,13 +218,13 @@ const int SHOW_RES_TYPE_SIZE = sizeof(SHOW_RES_TYPE_DESCRIPTION) / sizeof(SHOW_R
 // const int SEVERITY_NAME_SIZE = sizeof(SEVERITY_NAME) / sizeof(SEVERITY_NAME[0]);
 
 // const int SOURCE_KEY_FIELD_MASK = 0xFF << 8;
-const int SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET = 0;
+const int SOURCE_KEY_METHOD_INDEX_BIT_OFFSET = 0;
 const int SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET = 8;
 const int SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET = 24;
-const int SOURCE_KEY_SOURCE_TYPE_INDEX_MASK = 0xFF << SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET;
+const int SOURCE_KEY_METHOD_INDEX_MASK = 0xFF << SOURCE_KEY_METHOD_INDEX_BIT_OFFSET;
 const int SOURCE_KEY_COMPANY_CODE_NUMBER_MASK = 0xFFFF << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET;
 const int SOURCE_KEY_COMPANY_GROUP_NUMBER_MASK = 0xFF << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET;
-const int NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE = 0;
+const int NO_METHOD_MARKET_SOURCE_KEY_VALUE = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Company profile field index
