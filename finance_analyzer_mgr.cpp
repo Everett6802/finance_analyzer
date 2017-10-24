@@ -3,7 +3,7 @@
 #include <string>
 #include <set>
 #include "finance_analyzer_mgr.h"
-#include "data_collector.h"
+// #include "data_collector.h"
 #include "data_calculator.h"
 #include "data_output.h"
 
@@ -13,29 +13,44 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////////
 // The Manager Base Class
 FinanceAnalyzerMgrBase::FinanceAnalyzerMgrBase() :
-	data_collector(NULL),
+	// data_collector(NULL),
+	finance_data_type(FinanceData_SQL),
+	csv_root_folderpath(NULL),
+	operation_non_stop(true),
 	data_calculator(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
+	IMPLEMENT_DATA_READER()
 // Caution: Data Collector/ Data Calculator is allocated in the derived class
 	// IMPLEMENT_WORKDAY_CANLENDAR()
 	// IMPLEMENT_DATABASE_TIME_RANGE()
+	static const int DEFAULT_CSV_ROOT_FOLDERPATH_LEN = strlen(DEFAULT_CSV_ROOT_FOLDERPATH) + 1; 
+	csv_root_folderpath = new char[DEFAULT_CSV_ROOT_FOLDERPATH_LEN];
+	if (csv_root_folderpath == NULL)
+		throw bad_alloc();
+	memcpy(csv_root_folderpath, DEFAULT_CSV_ROOT_FOLDERPATH, sizeof(char) * DEFAULT_CSV_ROOT_FOLDERPATH_LEN);
 }
 
 FinanceAnalyzerMgrBase::~FinanceAnalyzerMgrBase()
 {
+	if (csv_root_folderpath != NULL)
+	{
+		delete[] csv_root_folderpath;
+		csv_root_folderpath = NULL;
+	}
 	if (data_calculator != NULL)
 	{
 		delete data_calculator;
 		data_calculator = NULL;
 	}
-	if (data_collector != NULL)
-	{
-		delete data_collector;
-		data_collector = NULL;
-	}
+	// if (data_collector != NULL)
+	// {
+	// 	delete data_collector;
+	// 	data_collector = NULL;
+	// }
 	// RELEASE_DATABASE_TIME_RANGE()
 	// RELEASE_WORKDAY_CANLENDAR()
+	RELEASE_DATA_READER()
 	RELEASE_MSG_DUMPER()
 }
 
@@ -121,6 +136,62 @@ unsigned short FinanceAnalyzerMgrBase::initialize()
 	return RET_SUCCESS;
 }
 
+unsigned short FinanceAnalyzerMgrBase::search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)
+{
+	assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
+	assert(result_set_map != NULL && "result_set_map should NOT be NULL");
+	void* reader_obj = NULL;
+	switch (finance_data_type)
+	{
+		case FinanceData_SQL:
+		{
+			WRITE_DEBUG("Set the SQL parameters for searching......");
+			static DataSqlReader sql_reader_obj;
+			sql_reader_obj.set_continue_when_non_exist(operation_non_stop);
+			reader_obj = (void*)&sql_reader_obj;
+		}
+		break;
+		case FinanceData_CSV:
+		{
+			WRITE_DEBUG("Set the CSV parameters for searching......");
+			static DataCsvReader csv_reader_obj;
+			csv_reader_obj.set_root_folderpath(csv_root_folderpath);
+			csv_reader_obj.set_continue_when_non_exist(operation_non_stop);
+			reader_obj = (void*)&csv_reader_obj;
+		}
+		break;
+		default:
+		{
+			WRITE_FORMAT_DEBUG("Unknown finance data type: %d", finance_data_type);
+			throw runtime_error(string("Unknown finance data type"));
+		}
+		break;
+	}
+	unsigned short ret = DATA_READ_BY_OBJECT(finance_data_type, search_rule_set, reader_obj, result_set_map);
+	return ret;
+}
+
+void FinanceAnalyzerMgrBase::set_data_type(FinanceDataType data_type){finance_data_type = data_type;}
+FinanceDataType FinanceAnalyzerMgrBase::get_data_type()const{return finance_data_type;}
+
+void FinanceAnalyzerMgrBase::set_operation_non_stop(bool non_stop){operation_non_stop = non_stop;}
+bool FinanceAnalyzerMgrBase::is_operation_non_stop()const{return operation_non_stop;}
+
+unsigned short FinanceAnalyzerMgrBase::set_csv_root_folderpath(const char* root_folderpath)
+{
+	assert(root_folderpath != NULL && "root_folderpath should NOT be NULL");
+	if (csv_root_folderpath != NULL)
+		delete[] csv_root_folderpath;
+	int root_folderpath_len = strlen(root_folderpath) + 1;
+	csv_root_folderpath = new char[root_folderpath_len];
+	if (csv_root_folderpath == NULL)
+		throw bad_alloc();
+	memcpy(csv_root_folderpath, root_folderpath, sizeof(char) * root_folderpath_len);
+	return RET_SUCCESS;
+}
+	
+const char* FinanceAnalyzerMgrBase::get_csv_root_folderpath()const{return csv_root_folderpath;}
+
 #ifdef DO_DEBUG
 unsigned short FinanceAnalyzerMgrBase::test()
 {
@@ -157,13 +228,13 @@ IFinanceAnalyzerMgr* FinanceAnalyzerMarketMgr::create_instance()
 }
 
 FinanceAnalyzerMarketMgr::FinanceAnalyzerMarketMgr() :
-	market_data_collector(NULL),
+	// market_data_collector(NULL),
 	market_data_calculator(NULL)
 {
-	market_data_collector = new MarketDataCollector();
-	if (market_data_collector == NULL)
-		throw bad_alloc();
-	data_collector = market_data_collector;
+	// market_data_collector = new MarketDataCollector();
+	// if (market_data_collector == NULL)
+	// 	throw bad_alloc();
+	// data_collector = market_data_collector;
 	market_data_calculator = new MarketDataCalculator();
 	if (market_data_calculator == NULL)
 		throw bad_alloc();
@@ -174,7 +245,7 @@ FinanceAnalyzerMarketMgr::~FinanceAnalyzerMarketMgr()
 {
 // Caution: Data Collector/ Data Calculator is released in the base class
 	market_data_calculator = NULL;
-	market_data_collector = NULL;
+	// market_data_collector = NULL;
 }
 
 unsigned short FinanceAnalyzerMarketMgr::initialize()
@@ -185,12 +256,40 @@ unsigned short FinanceAnalyzerMarketMgr::initialize()
 	return ret;
 }
 
-unsigned short FinanceAnalyzerMarketMgr::search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)
-{
-	WRITE_DEBUG("Initialize FinanceAnalyzerMarketMgr.....");
-	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
-	return RET_SUCCESS;
-}
+// unsigned short FinanceAnalyzerMarketMgr::search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)
+// {
+// 	WRITE_DEBUG("Initialize FinanceAnalyzerMarketMgr.....");
+// 	assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
+// 	assert(result_set_map != NULL && "result_set_map should NOT be NULL");
+// 	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
+// 	void* reader_obj = NULL;
+// 	switch (finance_data_type)
+// 	{
+// 		case FinanceData_SQL:
+// 		{
+// 			static DataSqlReader sql_reader_obj;
+// 			sql_reader_obj.set_continue_when_non_exist(operation_non_stop);
+// 			reader_obj = (void*)&sql_reader_obj;
+// 		}
+// 		break;
+// 		case FinanceData_CSV:
+// 		{
+// 			static DataCsvReader csv_reader_obj;
+// 			csv_reader_obj.set_root_folderpath(csv_root_folderpath);
+// 			csv_reader_obj.set_continue_when_non_exist(operation_non_stop);
+// 			reader_obj = (void*)&csv_reader_obj;
+// 		}
+// 		break;
+// 		default:
+// 		{
+// 			WRITE_FORMAT_DEBUG("Unknown finance data type: %d", finance_data_type);
+// 			throw runtime_error(string("Unknown finance data type"));
+// 		}
+// 		break;
+// 	}
+// 	unsigned short ret = DATA_READ_BY_OBJECT(finance_data_type, search_rule_set, reader_obj, result_set_map);
+// 	return ret;
+// }
 
 unsigned short FinanceAnalyzerMarketMgr::get_stock_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& stock_support_resistance_string, const char* stock_stock_support_resistance_folderpath, bool show_detail, const char* stock_stock_support_resistance_time_filter, const char* stock_support_resistance_volume_filter)
 {
@@ -208,13 +307,13 @@ IFinanceAnalyzerMgr* FinanceAnalyzerStockMgr::create_instance()
 }
 
 FinanceAnalyzerStockMgr::FinanceAnalyzerStockMgr() :
-	stock_data_collector(NULL),
+	// stock_data_collector(NULL),
 	stock_data_calculator(NULL)
 {
-	stock_data_collector = new StockDataCollector();
-	if (stock_data_collector == NULL)
-		throw bad_alloc();
-	data_collector = stock_data_collector;
+	// stock_data_collector = new StockDataCollector();
+	// if (stock_data_collector == NULL)
+	// 	throw bad_alloc();
+	// data_collector = stock_data_collector;
 	stock_data_calculator = new StockDataCalculator();
 	if (stock_data_calculator == NULL)
 		throw bad_alloc();
@@ -226,7 +325,7 @@ FinanceAnalyzerStockMgr::~FinanceAnalyzerStockMgr()
 {
 // Caution: Data Collector/ Data Calculator is released in the base class
 	stock_data_calculator = NULL;
-	stock_data_collector = NULL;
+	// stock_data_collector = NULL;
 }
 
 unsigned short FinanceAnalyzerStockMgr::initialize()
@@ -237,12 +336,12 @@ unsigned short FinanceAnalyzerStockMgr::initialize()
 	return ret;
 }
 
-unsigned short FinanceAnalyzerStockMgr::search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)
-{
-	WRITE_DEBUG("Initialize FinanceAnalyzerStockMgr.....");
-	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
-	return RET_SUCCESS;
-}
+// unsigned short FinanceAnalyzerStockMgr::search(PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)
+// {
+// 	WRITE_DEBUG("Initialize FinanceAnalyzerStockMgr.....");
+// 	// fprintf(stderr, "Initialize FinanceAnalyzerMarketMgr.....\n");
+// 	return RET_SUCCESS;
+// }
 
 unsigned short FinanceAnalyzerStockMgr::get_stock_support_resistance_string(const std::string& company_code_number, float stock_close_price, std::string& stock_support_resistance_string, const char* stock_stock_support_resistance_folderpath, bool show_detail, const char* stock_stock_support_resistance_time_filter, const char* stock_support_resistance_volume_filter)
 {

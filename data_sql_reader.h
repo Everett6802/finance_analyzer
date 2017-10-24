@@ -69,9 +69,6 @@ private:
 	std::string database_name;
 	DataSqlReaderParam data_sql_reader_param;
 // public:
-	DataSqlReader();
-	~DataSqlReader();
-
 	unsigned short try_connect_mysql(const std::string database);
 	unsigned short disconnect_mysql();
 
@@ -84,6 +81,9 @@ private:
 		PRESULT_SET result_set
 	);
 
+public:
+	DataSqlReader();
+	~DataSqlReader();
 	unsigned short set_continue_when_non_exist(bool enable);
 };
 typedef DataSqlReader* PDATA_SQL_READER;

@@ -40,9 +40,6 @@ public:
 private:
 	DataCsvReaderParam data_csv_reader_param;
 
-	DataCsvReader();
-	~DataCsvReader();
-
 	unsigned short read_data(
 		int method_index,
 		const char* csv_filepath,
@@ -51,6 +48,9 @@ private:
 		PRESULT_SET result_set
 	);
 
+public:
+	DataCsvReader();
+	~DataCsvReader();
 	unsigned short set_root_folderpath(const char* new_root_folderpath);
 	unsigned short set_continue_when_non_exist(bool enable);
 };

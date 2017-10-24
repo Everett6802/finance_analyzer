@@ -39,7 +39,7 @@ static char* param_test_case = NULL;
 static bool param_show_test_verbose = false;
 static bool param_interactive_mode = false;
 static bool param_daemonize = false;
-static char* param_source = NULL;
+static char* param_method = NULL;
 static char* param_time_range = NULL;
 static char* param_company = NULL;
 static bool param_search = false;
@@ -55,7 +55,7 @@ static bool show_stock_support_resistance_detail = false;
 DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER();
 
 static void signal_handler(int signo);
-
+// static void copy_param(const char* src_param, char** dst_param);
 static void print_errmsg(const char* errmsg);
 static void print_errmsg_and_exit(const char* errmsg);
 static unsigned short parse_param(int argc, char** argv);
@@ -95,6 +95,19 @@ static void signal_handler(int signo)
 	sleep(1);
 	exit(EXIT_SUCCESS);
 }
+
+// void copy_param(const char* src_param, char** dst_param)
+// {
+// 	assert(src_param != NULL && "src_param should NOT be NULL");
+// 	assert(dst_param != NULL && "dst_param should NOT be NULL");
+// 	int src_param_len = strlen(src_param);
+// 	char* dst_param_tmp = new char[src_param_len + 1];
+// 	if (dst_param_tmp == NULL)
+// 		throw bad_alloc();
+// 	memset(dst_param_tmp, 0x0, sizeof(char) * (src_param_len + 1));
+// 	memcpy(dst_param_tmp, src_param, src_param_len);
+// 	*dst_param = dst_param_tmp;
+// }
 
 void show_usage_and_exit()
 {
@@ -147,13 +160,13 @@ void show_usage_and_exit()
 		PRINT("--renew_company\nDescription: Renew the table of the company profile\nCaution: Exit after renewing the company profile\n");
 		PRINT("--renew_company_profile_filepath\nDescription: The company profile filepath for renewing the table of the company profile\nDefault: %s\n", DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH);
 		PRINT("--stock_support_resistance_filepath\nDescription: Set the file path for finding the stock support and resistance of a specific company\nDefault: %s\n", DEFAULT_STOCK_SUPPORT_RESISTANCE_ROOT_FOLDERPATH);
-		PRINT("--enable_stock_support_resistance_verbose\nDescription: Find the stock support and resistance of a specific company in detail\n");
+		PRINT("--enable_stock_support_resistance_verbose\nDescription: Show the stock support and resistance of a specific company in detail\n");
 		PRINT("  Format 1: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
 		PRINT("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\nCaution: Max up to %d stock entry once\n", MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT);
 		PRINT("--filter_stock_support_resistance_date\nDescription: Filter the data which is eariler than a specific date\n");
-		PRINT("  Format 1: Date(ex. 170801)");
+		PRINT("  Format 1: Date(ex. 170801)\n");
 		PRINT("--filter_stock_support_resistance_volume\nDescription: Filter the data whose volume is smaller than a specific value\n");
-		PRINT("  Format 1: Value(ex. 5000)");
+		PRINT("  Format 1: Value(ex. 5000)\n");
 		PRINT("--find_stock_support_resistance\nDescription: Find the stock support and resistance of a specific company\n");
 	}
 // Search
@@ -302,11 +315,12 @@ unsigned short parse_param(int argc, char** argv)
 			param_daemonize = true;
 			offset = 1;
 		}
-		else if ((strcmp(argv[index], "--source") == 0) || (strcmp(argv[index], "-s") == 0))
+		else if ((strcmp(argv[index], "--method") == 0) || (strcmp(argv[index], "-m") == 0))
 		{
 			if (index + 1 >= argc)
-				print_errmsg_and_exit("No argument found in 'source' parameter");
-			param_source = argv[index + 1];
+				print_errmsg_and_exit("No argument found in 'method' parameter");
+			param_method = argv[index + 1];
+			// copy_param(argv[index + 1], &param_method);
 			offset = 2;
 		}
 		else if ((strcmp(argv[index], "--time_range") == 0) || (strcmp(argv[index], "-t") == 0))
@@ -473,17 +487,17 @@ unsigned short check_param()
 			print_errmsg_and_exit(error_msg);
 		}
 	}
-	if (param_source != NULL)
+	if (param_method != NULL)
 	{
-		if (!param_interactive_mode)
+		if (param_interactive_mode)
 		{
-			param_source = NULL;
+			param_method = NULL;
 			PRINT("WARNING: the Source argument is ignored in the Interactive mode\n");
 		}
 	}
 	if (param_time_range != NULL)
 	{
-		if (!param_interactive_mode)
+		if (param_interactive_mode)
 		{
 			param_time_range = NULL;
 			PRINT("WARNING: the Time Range argument is ignored in the Interactive mode\n");
@@ -536,7 +550,7 @@ unsigned short check_param()
 	{
 		if (param_company != NULL)
 		{
-			if (!param_interactive_mode)
+			if (param_interactive_mode)
 			{
 				param_company = NULL;
 				PRINT("WARNING: the Company argument is ignored in the Interactive mode\n");
@@ -603,11 +617,8 @@ unsigned short setup_param()
 	unsigned short ret = RET_SUCCESS;
 	if (!param_interactive_mode)
 	{
-		bool need_set_search_rule = false;
-		if (param_source != NULL || param_time_range != NULL || param_company != NULL)
-			need_set_search_rule = true;
-// Initialize the search rule	
-		if (need_set_search_rule)
+		// bool need_set_search_rule = false;
+		if (param_search)
 		{
 			search_rule_set = new SearchRuleSet(g_finance_analysis_mode);
 			if (search_rule_set == NULL)
@@ -617,9 +628,10 @@ unsigned short setup_param()
 			}		
 		}
 // Add the source type into the search rule
-		if (param_source != NULL)
+		if (param_method != NULL)
 		{
-			ret = search_rule_set->add_query_rule(param_source);
+			assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
+			ret = search_rule_set->add_query_rule(param_method);
 			if (CHECK_FAILURE(ret))
 			{
 				snprintf(errmsg, ERRMSG_SIZE, "SearchRuleSet::add_query_rule() fails, due to: %s", get_ret_description(ret));
@@ -630,6 +642,7 @@ unsigned short setup_param()
 // Add the time range into the search rule
 		if (param_time_range != NULL)
 		{
+			assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
 			ret = search_rule_set->add_time_rule(param_time_range);
 			if (CHECK_FAILURE(ret))
 			{
@@ -641,6 +654,7 @@ unsigned short setup_param()
 // Add the company into the search rule
 		if (param_company != NULL)
 		{
+			assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
 			ret = search_rule_set->add_company_rule(param_company);
 			if (CHECK_FAILURE(ret))
 			{
@@ -649,7 +663,7 @@ unsigned short setup_param()
 				return ret;
 			}
 		}
-		if (need_set_search_rule)
+		if (search_rule_set != NULL)
 		{
 			ret = search_rule_set->add_rule_done();
 			if (CHECK_FAILURE(ret))
@@ -943,26 +957,29 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
-#include <list>
-#include <string>
-using namespace std;
+// #include <list>
+// #include <string>
+// using namespace std;
 
 int main(int argc, char** argv)
 {
-	unsigned int line_count = 0;
-	unsigned short ret_test = get_file_line_count(line_count, "/var/tmp/finance_sample/market/option_top3_legal_persons_buy_and_sell_option_open_interest.csv");
-	printf("Line Count: %d\n", line_count);
-	PTIME_RANGE_PARAM time_range_param = new TimeRangeParam("2016-01-07", "2016-01-11");
-	list<string> line_list;
-	read_file_lines_ex(line_list, "/var/tmp/finance_sample/market/option_top3_legal_persons_buy_and_sell_option_open_interest.csv", "r", time_range_param);
-	list<string>::iterator iter = line_list.begin();
-	while (iter != line_list.end())
-	{
-		string line = (string)*iter;
-		printf("%s\n", line.c_str());
-		iter++;
-	}
-	exit(0);
+	// WRITE_ERROR("Fuck You");
+	// getchar();
+	// exit(EXIT_SUCCESS);
+	// unsigned int line_count = 0;
+	// unsigned short ret_test = get_file_line_count(line_count, "/var/tmp/finance_sample/market/option_top3_legal_persons_buy_and_sell_option_open_interest.csv");
+	// printf("Line Count: %d\n", line_count);
+	// PTIME_RANGE_PARAM time_range_param = new TimeRangeParam("2016-01-07", "2016-01-11");
+	// list<string> line_list;
+	// read_file_lines_ex(line_list, "/var/tmp/finance_sample/market/option_top3_legal_persons_buy_and_sell_option_open_interest.csv", "r", time_range_param);
+	// list<string>::iterator iter = line_list.begin();
+	// while (iter != line_list.end())
+	// {
+	// 	string line = (string)*iter;
+	// 	printf("%s\n", line.c_str());
+	// 	iter++;
+	// }
+	// exit(0);
 // Register the signals so that the process can exit gracefully
 	struct sigaction sa;
 	memset(&sa, 0x0, sizeof(sa));

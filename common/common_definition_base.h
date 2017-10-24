@@ -395,5 +395,11 @@ extern const int START_YEAR;
 extern const int END_YEAR;
 extern const char* START_DATE_STR;
 extern const char* END_DATE_STR;
+extern const char* START_MONTH_STR;
+extern const char* END_MONTH_STR;
+extern const char* START_QUARTER_STR;
+extern const char* END_QUARTER_STR;
+extern const char* START_TIME_STR_ARRAY[];
+extern const char* END_TIME_STR_ARRAY[];
 
 #endif

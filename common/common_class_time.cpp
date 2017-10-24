@@ -11,7 +11,7 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const int TimeParam::VALUE_ARRAY_LEN[TIME_UNIT_SIZE] = {3, 3, 2};
+const int TimeParam::VALUE_ARRAY_LEN[TIME_UNIT_SIZE] = {3, 2, 2};
 
 unsigned short TimeParam::parse_time_string(const char* time_str, TimeParam& time_param)
 {
@@ -210,7 +210,8 @@ TimeParam::TimeParam(const char* cur_time_str) :
 {
 	IMPLEMENT_MSG_DUMPER()
 	parse_time_string(cur_time_str, *this);
-	snprintf(time_str, 16, "%s", cur_time_str);
+	memcpy(time_str, cur_time_str, sizeof(char) * (strlen(cur_time_str) + 1));
+	// snprintf(time_str, 16, "%s", cur_time_str);
 }
 
 TimeParam::TimeParam(TimeUnit cur_time_unit, int* cur_value_array) :
@@ -486,6 +487,7 @@ void TimeRangeParam::update_time_unit(const TimeParam* time_param_start, const T
 			snprintf(errmsg, 64, "The time unit is NOT identical, start: %s, end: %s", time_param_start->to_string(), time_param_end->to_string());
 			throw invalid_argument(errmsg);
 		}
+		time_unit = time_param_start->get_time_unit();
 	}
 	else if (time_param_start != NULL)
 		time_unit = time_param_start->get_time_unit();
@@ -665,15 +667,17 @@ unsigned short TimeRangeParam::add_time_done()
 		WRITE_ERROR("the add_done flag is true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
+	assert((time_start_param != NULL || time_end_param != NULL) && "time_start_param/time_end_param should NOT be both NULL");
 	if (time_range_description != NULL)
 	{
 		delete time_range_description;
 		time_range_description = NULL;
 	}
+	update_time_unit(time_start_param, time_end_param);
 	if (time_start_param == NULL)
-		add_start_time(START_DATE_STR);
+		add_start_time(START_TIME_STR_ARRAY[time_end_param->get_time_unit()]);
 	if (time_end_param == NULL)
-		add_end_time(END_DATE_STR);
+		add_end_time(END_TIME_STR_ARRAY[time_start_param->get_time_unit()]);
 	add_done = true;
 	return RET_SUCCESS;
 }

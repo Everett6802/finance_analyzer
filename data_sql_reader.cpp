@@ -78,9 +78,9 @@ unsigned short DataSqlReader::read_from_tables(
 	PRESULT_SET result_set
 	)
 {
-	assert(!(finance_analysis_mode == FinanceAnalysis_Market || finance_analysis_mode == FinanceAnalysis_Stock) && "finance_analysis_mode is NOT FinanceAnalysis_Market/FinanceAnalysis_Stock");
-	assert(result_set != NULL && "result_set should NOT be NULL");
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
+	assert((finance_analysis_mode == FinanceAnalysis_Market || finance_analysis_mode == FinanceAnalysis_Stock) && "finance_analysis_mode is NOT FinanceAnalysis_Market/FinanceAnalysis_Stock");
+	assert(result_set != NULL && "result_set should NOT be NULL");
 	if (finance_analysis_mode == FinanceAnalysis_Stock)
 	{
 		DECLARE_AND_IMPLEMENT_STATIC_COMPANY_PROFILE()
@@ -135,7 +135,7 @@ unsigned short DataSqlReader::read_market(
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 	static string company_code_number_dummy("xxxx");
-
+	STATIC_WRITE_DEBUG("Start to read the SQL data in the Market mode......");
 	assert(sql_reader_obj != NULL && query_set != NULL && time_range_param != NULL && result_set_map != NULL);
 	// assert(sql_reader != NULL);
 	// assert(query_set != NULL);
@@ -144,12 +144,12 @@ unsigned short DataSqlReader::read_market(
 
 	if (!query_set->is_add_query_done())
 	{
-		WRITE_ERROR("The setting of query data is NOT complete");
+		STATIC_WRITE_ERROR("The setting of query data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 	if (time_range_param->get_start_time() == NULL || time_range_param->get_end_time() == NULL)
 	{
-		WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
+		STATIC_WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	unsigned short ret = RET_SUCCESS;
@@ -174,7 +174,7 @@ unsigned short DataSqlReader::read_market(
 			PRESULT_SET result_set = new ResultSet(FinanceData_SQL);
 			if (result_set == NULL)
 			{
-				WRITE_ERROR("Fail to allocate memory: result_set");
+				STATIC_WRITE_ERROR("Fail to allocate memory: result_set");
 				ret = RET_FAILURE_INSUFFICIENT_MEMORY;
 				goto OUT;
 			}
@@ -219,7 +219,7 @@ unsigned short DataSqlReader::read_market(
 				PRESULT_SET result_set = new ResultSet(FinanceData_SQL);
 				if (result_set == NULL)
 				{
-					WRITE_ERROR("Fail to allocate memory: result_set");
+					STATIC_WRITE_ERROR("Fail to allocate memory: result_set");
 					ret = RET_FAILURE_INSUFFICIENT_MEMORY;
 					goto OUT;
 				}
@@ -245,7 +245,7 @@ unsigned short DataSqlReader::read_market(
 		break;
 		default:
 		{
-			WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
+			STATIC_WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
 			ret = RET_FAILURE_INVALID_ARGUMENT;
 			goto OUT;
 		}
@@ -307,21 +307,21 @@ unsigned short DataSqlReader::read_stock(
 {
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
-
+	STATIC_WRITE_DEBUG("Start to read the SQL data in the Stock mode......");
 	assert(sql_reader_obj != NULL && query_set != NULL && time_range_param != NULL && company_group_set != NULL && result_set_map != NULL);
 	if (!query_set->is_add_query_done())
 	{
-		WRITE_ERROR("The setting of query data is NOT complete");
+		STATIC_WRITE_ERROR("The setting of query data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 	if (time_range_param->get_start_time() == NULL || time_range_param->get_end_time() == NULL)
 	{
-		WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
+		STATIC_WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	if (!company_group_set->is_add_company_done())
 	{
-		WRITE_ERROR("The setting of company group data is NOT complete");
+		STATIC_WRITE_ERROR("The setting of company group data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 	// if (time_range_param->is_month_type())
@@ -363,7 +363,7 @@ unsigned short DataSqlReader::read_stock(
 					PRESULT_SET result_set = new ResultSet(FinanceData_SQL);
 					if (result_set == NULL)
 					{
-						WRITE_FORMAT_ERROR("Fail to allocate memory: result_set while reading %s table", company_code_number.c_str());
+						STATIC_WRITE_FORMAT_ERROR("Fail to allocate memory: result_set while reading %s table", company_code_number.c_str());
 						ret = RET_FAILURE_INSUFFICIENT_MEMORY;
 						goto OUT;
 					}
@@ -419,7 +419,7 @@ unsigned short DataSqlReader::read_stock(
 						PRESULT_SET result_set = new ResultSet(FinanceData_SQL);
 						if (result_set == NULL)
 						{
-							WRITE_ERROR("Fail to allocate memory: result_set");
+							STATIC_WRITE_ERROR("Fail to allocate memory: result_set");
 							ret = RET_FAILURE_INSUFFICIENT_MEMORY;
 							goto OUT;
 						}
@@ -445,7 +445,7 @@ unsigned short DataSqlReader::read_stock(
 				break;
 				default:
 				{
-					WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
+					STATIC_WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
 					ret = RET_FAILURE_INVALID_ARGUMENT;
 					goto OUT;
 				}
@@ -479,6 +479,7 @@ unsigned short DataSqlReader::read_by_object(
 	PRESULT_SET_MAP result_set_map
 	)
 {
+	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	assert(reader_obj != NULL && search_rule_set != NULL && result_set_map != NULL && search_rule_set->get_query_rule() != NULL);
 	unsigned short ret = RET_SUCCESS;
 	if (search_rule_set->get_query_rule()->get_data_type() != FinanceData_SQL)

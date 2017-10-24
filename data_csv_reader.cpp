@@ -38,7 +38,7 @@ unsigned short DataCsvReader::read_from_filesystem(
 		PRESULT_SET result_set
 	)
 {
-	assert(!(finance_analysis_mode == FinanceAnalysis_Market || finance_analysis_mode == FinanceAnalysis_Stock) && "finance_analysis_mode is NOT FinanceAnalysis_Market/FinanceAnalysis_Stock");
+	assert((finance_analysis_mode == FinanceAnalysis_Market || finance_analysis_mode == FinanceAnalysis_Stock) && "finance_analysis_mode is NOT FinanceAnalysis_Market/FinanceAnalysis_Stock");
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	static int const CSV_FILEPATH_BUF_SIZE = 256;
@@ -92,7 +92,7 @@ unsigned short DataCsvReader::read_market(const PQUERY_SET query_set, const PTIM
 	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 	static string company_code_number_dummy("xxxx");
 	static int company_group_number_dummy = 99;
-
+	STATIC_WRITE_DEBUG("Start to read the CSV data in the Market mode......");
 	assert(csv_reader_obj != NULL && query_set != NULL && time_range_param != NULL && result_set_map != NULL);
 
 	if (!query_set->is_add_query_done())
@@ -207,7 +207,7 @@ unsigned short DataCsvReader::read_stock(const PQUERY_SET query_set, const PTIME
 {
 	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
-
+	STATIC_WRITE_DEBUG("Start to read the CSV data in the Stock mode......");
 	assert(csv_reader_obj != NULL && query_set != NULL && time_range_param != NULL && company_group_set != NULL && result_set_map != NULL);
 	if (!query_set->is_add_query_done())
 	{
@@ -353,6 +353,7 @@ unsigned short DataCsvReader::read_by_object(
 	)
 {
 	assert(reader_obj != NULL && search_rule_set != NULL && result_set_map != NULL && search_rule_set->get_query_rule() != NULL);
+	STATIC_WRITE_DEBUG("Start to read the CSV data......");
 	unsigned short ret = RET_SUCCESS;
 	if (search_rule_set->get_query_rule()->get_data_type() != FinanceData_CSV)
 	{
