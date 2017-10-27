@@ -51,8 +51,8 @@ static const char *interactive_session_command[InteractiveSessionCommandSize] =
 	"set_time_range",
 	"get_company",
 	"set_company",
-	"get_reader_type",
-	"set_reader_type",
+	"get_data_type",
+	"set_data_type",
 	"set_csv_root_folderpath",
 	"search",
 	"reset_search_param",
@@ -544,8 +544,8 @@ unsigned short InteractiveSession::handle_command(int argc, char **argv)
 		&InteractiveSession::handle_set_time_range_command,
 		&InteractiveSession::handle_get_company_command,
 		&InteractiveSession::handle_set_company_command,
-		&InteractiveSession::handle_get_reader_type_command,
-		&InteractiveSession::handle_set_reader_type_command,
+		&InteractiveSession::handle_get_data_type_command,
+		&InteractiveSession::handle_set_data_type_command,
 		&InteractiveSession::handle_set_csv_root_folderpath_command,
 		&InteractiveSession::handle_search_command,
 		&InteractiveSession::handle_reset_search_param_command,
@@ -742,7 +742,7 @@ unsigned short InteractiveSession::handle_set_company_command(int argc, char **a
 	return RET_SUCCESS;
 }
 
-unsigned short InteractiveSession::handle_get_reader_type_command(int argc, char **argv)
+unsigned short InteractiveSession::handle_get_data_type_command(int argc, char **argv)
 {
 	if (argc != 1)
 	{
@@ -757,7 +757,7 @@ unsigned short InteractiveSession::handle_get_reader_type_command(int argc, char
 	return RET_SUCCESS;
 }
 
-unsigned short InteractiveSession::handle_set_reader_type_command(int argc, char **argv)
+unsigned short InteractiveSession::handle_set_data_type_command(int argc, char **argv)
 {
 	// unsigned short ret = RET_SUCCESS;
 	if (argc != 2)
@@ -837,14 +837,14 @@ unsigned short InteractiveSession::handle_search_command(int argc, char **argv)
 		// }
 		if (result_set_map != NULL)
 			delete result_set_map;
-		result_set_map = new ResultSetMap();
+		result_set_map = new ResultSetMap(finance_data_type);
 		if (result_set_map == NULL)
 			throw bad_alloc();
 		unsigned short ret = RET_SUCCESS;
 		SearchRuleSet search_rule_set;
 // Set search rule
 // The create_instance_from_string() function probably returns the WARN code
-		ret = SearchRuleSet::create_instance_from_string(finance_analysis_mode, source_string_param, time_range_string_param, company_string_param, search_rule_set);
+		ret = SearchRuleSet::create_instance_from_string(finance_analysis_mode, finance_data_type, source_string_param, time_range_string_param, company_string_param, search_rule_set);
 		if (!CHECK_SUCCESS(ret))
 			return ret;
 // Query the data
@@ -1087,15 +1087,16 @@ unsigned short InteractiveSession::handle_help_command(int argc, char **argv)
 	usage_string += string("  Format 2: Start time,End time: (ex. 2015-01-01,2015-09-04)\n");
 	usage_string += string("  Format 3: ,End time: (ex. ,2015-09-04)\n");
 // Data Reader Type
-	usage_string += string("* get_reader_type\n Description: Get data reader type\n");
-	usage_string += string("* set_reader_type\n Description: Set data reader type\n");
-	usage_string += string(" Data reader type:\n");
+	usage_string += string("* get_data_type\nDescription: Get data type of the reader\n");
+	usage_string += string("* set_data_type\nDescription: Set data type of the reader\n");
+	usage_string += string(" Data type of the reader:\n");
 	for(int i = 0 ; i < FinanceDataSize ; i++)
 	{
 		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_DATA_DESCRIPTION[i], i);
 		usage_string += string(buf);
 	}
-	usage_string += string("* set_csv_root_folderpath\n Description: Set CSV root folerpath\nDefault: %s\n", DEFAULT_CSV_ROOT_FOLDERPATH);	
+	snprintf(buf, BUF_SIZE, "* set_csv_root_folderpath\nDescription: Set CSV root folerpath\nDefault: %s\n", DEFAULT_CSV_ROOT_FOLDERPATH);
+	usage_string += string(buf);
 // Company
 	if (finance_analysis_mode == FinanceAnalysis_Stock)
 	{

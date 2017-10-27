@@ -519,7 +519,8 @@ unsigned short DataCsvReader::set_root_folderpath(const char* new_root_folderpat
 	data_csv_reader_param.root_folderpath = new char[new_root_folderpath_len + 1];
 	if (data_csv_reader_param.root_folderpath == NULL)
 		throw bad_alloc();
-	snprintf(data_csv_reader_param.root_folderpath, new_root_folderpath_len, "%s", new_root_folderpath);
+	// snprintf(data_csv_reader_param.root_folderpath, new_root_folderpath_len, "%s", new_root_folderpath);
+	memcpy(data_csv_reader_param.root_folderpath, new_root_folderpath, sizeof(char) * (new_root_folderpath_len + 1));
 	return RET_SUCCESS;
 }
 

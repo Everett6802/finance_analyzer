@@ -42,12 +42,14 @@ static bool param_daemonize = false;
 static char* param_method = NULL;
 static char* param_time_range = NULL;
 static char* param_company = NULL;
+static char* param_data_type = NULL;
 static bool param_search = false;
 
 static const int ERRMSG_SIZE = 256;
 static char errmsg[ERRMSG_SIZE];
 static const int MAX_STOCK_SUPPORT_RESISTANCE_AMOUNT = 32;
 static FinanceAnalysisMode g_finance_analysis_mode = FinanceAnalysis_None;
+static FinanceDataType g_data_type = FinanceData_None;
 static PIFINANCE_ANALYZER_MGR manager = NULL;
 static PSEARCH_RULE_SET search_rule_set = NULL;
 static bool show_stock_support_resistance_detail = false;
@@ -178,6 +180,10 @@ void show_usage_and_exit()
 	{
 		PRINT("--search\n Description: Search the database under the rule of source type, time range and company number\n");
 	}
+// Data Type
+	PRINT("--data_type\nDescription: Set the type of the data reading from\nDefault: 0\n");
+	for (int i = 0 ; i < FinanceDataSize ; i++)
+		PRINT("  %s: %d\n", FINANCE_DATA_DESCRIPTION[i], i);
 	PRINT("===================================================\n");
 	exit(EXIT_SUCCESS);
 }
@@ -342,7 +348,13 @@ unsigned short parse_param(int argc, char** argv)
 			param_search = true;
 			offset = 1;
 		}
-
+		else if (strcmp(argv[index], "--data_type") == 0)
+		{
+			if (index + 1 >= argc)
+				print_errmsg_and_exit("No argument found in 'data_type' parameter");
+			param_data_type = argv[index + 1];
+			offset = 2;
+		}
 		// else if (strcmp(argv[index], "--calculate_statistics") == 0)
 		// {
 		// 	if (statistics_method == StatisticsMethod_None)
@@ -604,6 +616,24 @@ unsigned short check_param()
 			}
 		}
 	}
+	if (param_data_type != NULL)
+	{
+		try
+		{
+			int param_data_type_int = atoi(param_data_type);
+			if (param_data_type_int < 0 || param_data_type_int >= FinanceDataSize)
+			{
+				snprintf(error_msg, ERROR_MSG_SIZE, "Unknown data type: %s", param_data_type);
+				print_errmsg_and_exit(error_msg);
+			}
+			g_data_type = (FinanceDataType)param_data_type_int;
+		}
+		catch (exception& e)
+		{
+			snprintf(error_msg, ERROR_MSG_SIZE, "Unknown data type argument: %s", param_data_type);
+			print_errmsg_and_exit(error_msg);
+		}
+	}
 
 	return RET_SUCCESS;
 }
@@ -620,7 +650,7 @@ unsigned short setup_param()
 		// bool need_set_search_rule = false;
 		if (param_search)
 		{
-			search_rule_set = new SearchRuleSet(g_finance_analysis_mode);
+			search_rule_set = new SearchRuleSet(g_finance_analysis_mode, (g_data_type == FinanceData_None ? FinanceData_SQL : g_data_type));
 			if (search_rule_set == NULL)
 			{
 				print_errmsg("Fail to allocate memory: search_rule_set");
@@ -674,6 +704,9 @@ unsigned short setup_param()
 			}
 		}
 	}
+// Set the data type
+	if (param_data_type != NULL)
+		manager->set_data_type(g_data_type);
 	return RET_SUCCESS;
 }
 
@@ -724,7 +757,7 @@ void show_search_result_and_exit()
 {
 	assert(search_rule_set != NULL && "search_rule_set is NOT NULL");
 	assert(search_rule_set->is_add_rule_done() && "SearchRuleSet::add_done is NOT true");
-	ResultSetMap result_set_map;
+	ResultSetMap result_set_map(g_data_type);
 	unsigned short ret = manager->search(search_rule_set, &result_set_map);
 	if (CHECK_SUCCESS(ret))
 	{
@@ -957,29 +990,9 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
-// #include <list>
-// #include <string>
-// using namespace std;
 
 int main(int argc, char** argv)
 {
-	// WRITE_ERROR("Fuck You");
-	// getchar();
-	// exit(EXIT_SUCCESS);
-	// unsigned int line_count = 0;
-	// unsigned short ret_test = get_file_line_count(line_count, "/var/tmp/finance_sample/market/option_top3_legal_persons_buy_and_sell_option_open_interest.csv");
-	// printf("Line Count: %d\n", line_count);
-	// PTIME_RANGE_PARAM time_range_param = new TimeRangeParam("2016-01-07", "2016-01-11");
-	// list<string> line_list;
-	// read_file_lines_ex(line_list, "/var/tmp/finance_sample/market/option_top3_legal_persons_buy_and_sell_option_open_interest.csv", "r", time_range_param);
-	// list<string>::iterator iter = line_list.begin();
-	// while (iter != line_list.end())
-	// {
-	// 	string line = (string)*iter;
-	// 	printf("%s\n", line.c_str());
-	// 	iter++;
-	// }
-	// exit(0);
 // Register the signals so that the process can exit gracefully
 	struct sigaction sa;
 	memset(&sa, 0x0, sizeof(sa));

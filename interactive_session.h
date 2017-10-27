@@ -79,8 +79,8 @@ private:
 	unsigned short handle_set_time_range_command(int argc, char **argv);
 	unsigned short handle_get_company_command(int argc, char **argv);
 	unsigned short handle_set_company_command(int argc, char **argv);
-	unsigned short handle_get_reader_type_command(int argc, char **argv);
-	unsigned short handle_set_reader_type_command(int argc, char **argv);
+	unsigned short handle_get_data_type_command(int argc, char **argv);
+	unsigned short handle_set_data_type_command(int argc, char **argv);
 	unsigned short handle_set_csv_root_folderpath_command(int argc, char **argv);
 	unsigned short handle_search_command(int argc, char **argv);
 	unsigned short handle_reset_search_param_command(int argc, char **argv);

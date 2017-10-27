@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "data_reader.h"
 
 
@@ -87,15 +88,39 @@ int DataReader::release()
 
 unsigned short DataReader::read_by_object(FinanceDataType finance_data_type, const PSEARCH_RULE_SET search_rule_set, void* reader_obj, PRESULT_SET_MAP result_set_map)
 {
+	assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
+	if (finance_data_type != search_rule_set->get_data_type())
+	{
+		static const int ERRMSG_BUF_SIZE = 64;
+		static char errmsg_buf[ERRMSG_BUF_SIZE];
+		snprintf(errmsg_buf, ERRMSG_BUF_SIZE, "The finance data type are NOT identical: %d, %d", finance_data_type, search_rule_set->get_data_type());
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
 	return (*(read_by_object_map[finance_data_type]))(search_rule_set, reader_obj, result_set_map);
 }
 
 unsigned short DataReader::read_by_param(FinanceDataType finance_data_type, const PSEARCH_RULE_SET search_rule_set, void* reader_param, PRESULT_SET_MAP result_set_map)
 {
+	assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
+	if (finance_data_type != search_rule_set->get_data_type())
+	{
+		static const int ERRMSG_BUF_SIZE = 64;
+		static char errmsg_buf[ERRMSG_BUF_SIZE];
+		snprintf(errmsg_buf, ERRMSG_BUF_SIZE, "The finance data type are NOT identical: %d, %d", finance_data_type, search_rule_set->get_data_type());
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
 	return (*(read_by_param_map[finance_data_type]))(search_rule_set, reader_param, result_set_map);
 }
 
 unsigned short DataReader::read_by_default(FinanceDataType finance_data_type, const PSEARCH_RULE_SET search_rule_set, PRESULT_SET_MAP result_set_map)
 {
+	assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
+	if (finance_data_type != search_rule_set->get_data_type())
+	{
+		static const int ERRMSG_BUF_SIZE = 64;
+		static char errmsg_buf[ERRMSG_BUF_SIZE];
+		snprintf(errmsg_buf, ERRMSG_BUF_SIZE, "The finance data type are NOT identical: %d, %d", finance_data_type, search_rule_set->get_data_type());
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
 	return (*(read_by_default_map[finance_data_type]))(search_rule_set, result_set_map);
 }

@@ -115,8 +115,8 @@ public:
 		const PINT_DEQUE get_second()const;
 	};
 
-	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* source_string, QuerySet& query_set);
-	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* source_string, QuerySet** query_set);
+	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type, const char* source_string, QuerySet& query_set);
+	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type, const char* source_string, QuerySet** query_set);
 
 private:
 	FinanceDataType finance_data_type;
@@ -134,7 +134,7 @@ private:
 	unsigned short init_method_index_set();
 
 public:
-	QuerySet(FinanceDataType cur_finance_data_type=FinanceData_SQL);
+	QuerySet(FinanceDataType cur_finance_data_type/*=FinanceData_SQL*/);
 	QuerySet(const QuerySet& another_query_set);
 	~QuerySet();
 
@@ -257,12 +257,13 @@ private:
 	DECLARE_MSG_DUMPER()
 
 public: 
-	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set);
-	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set);
+	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set);
+	static unsigned short create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set);
 
 private:
 	bool add_done;
 	FinanceAnalysisMode finance_analysis_mode;
+	FinanceDataType finance_data_type;
 	PQUERY_SET query_set;
 	// PTIME_RANGE_CFG time_range_cfg;
 	PTIME_RANGE_PARAM time_range_param;
@@ -270,9 +271,10 @@ private:
 	mutable std::string search_rule_set_string;
 
 	unsigned short set_finance_mode(FinanceAnalysisMode cur_finance_analysis_mode);
+	unsigned short set_finance_data_type(FinanceDataType cur_finance_data_type);
 
 public:
-	SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode);
+	SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type/*=FinanceData_SQL*/);
 	SearchRuleSet();
 
 	~SearchRuleSet();
@@ -287,6 +289,7 @@ public:
 	unsigned short add_rule_done();
 	bool is_add_rule_done()const;
 	FinanceAnalysisMode get_finance_mode()const;
+	FinanceDataType get_data_type()const;
 	const PQUERY_SET get_query_rule()const;
 	const PTIME_RANGE_PARAM get_time_rule()const;
 	const PCOMPANY_GROUP_SET get_company_rule()const;
@@ -537,7 +540,7 @@ private:
 	ResultSetDataUnit result_set_data_unit;
 
 public:
-	ResultSetMap(ResultSetDataUnit data_unit=ResultSetDataUnit_SingleMethod, FinanceDataType data_type=FinanceData_SQL);
+	ResultSetMap(FinanceDataType data_type/*=FinanceData_SQL*/, ResultSetDataUnit data_unit=ResultSetDataUnit_SingleMethod);
 	~ResultSetMap();
 	FinanceDataType get_data_type()const;
 	const std::string& to_metadata_string();

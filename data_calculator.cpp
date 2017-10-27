@@ -59,24 +59,24 @@ unsigned short DataCalculatorBase::generate_general_query_set(QuerySet& query_se
 	return ret;
 }
 
-const PQUERY_SET DataCalculatorBase::get_general_query_set()
-{
-	static QuerySet query_set;
-	// if (!query_set.is_add_query_done())
-	// {
-	// 	unsigned short ret = DataCalculatorBase::generate_general_query_set(query_set);
-	// 	if (CHECK_FAILURE(ret))
-	// 	{
-	// 		const int BUF_SIZE = 256;
-	// 		char buf[BUF_SIZE];
-	// 		snprintf(buf, BUF_SIZE, "Fail to generate generate query set, due to: %s", get_ret_description(ret));
-	// 		throw runtime_error(string(buf));
-	// 	}
-	// 	query_set.add_query_done();	
-	// 	// WRITE_FORMAT_DEBUG("There are totally %d query items", query_set.get_size());
-	// }
-	return &query_set;
-}
+// const PQUERY_SET DataCalculatorBase::get_general_query_set()
+// {
+// 	static QuerySet query_set;
+// 	// if (!query_set.is_add_query_done())
+// 	// {
+// 	// 	unsigned short ret = DataCalculatorBase::generate_general_query_set(query_set);
+// 	// 	if (CHECK_FAILURE(ret))
+// 	// 	{
+// 	// 		const int BUF_SIZE = 256;
+// 	// 		char buf[BUF_SIZE];
+// 	// 		snprintf(buf, BUF_SIZE, "Fail to generate generate query set, due to: %s", get_ret_description(ret));
+// 	// 		throw runtime_error(string(buf));
+// 	// 	}
+// 	// 	query_set.add_query_done();	
+// 	// 	// WRITE_FORMAT_DEBUG("There are totally %d query items", query_set.get_size());
+// 	// }
+// 	return &query_set;
+// }
 
 DataCalculatorBase::DataCalculatorBase()
 {

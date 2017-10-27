@@ -14,7 +14,7 @@ class DataCalculatorBase
 {
 protected:
 	static unsigned short generate_general_query_set(QuerySet& query_set);
-	static const PQUERY_SET get_general_query_set();
+	// static const PQUERY_SET get_general_query_set();
 
 	DECLARE_MSG_DUMPER()
 	DECLARE_WORKDAY_CANLENDAR()

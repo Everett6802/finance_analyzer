@@ -49,8 +49,9 @@ const PINT_DEQUE QuerySet::const_iterator::get_second()const
 	return (PINT_DEQUE)iter->second;
 }
 
-unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* source_string, QuerySet& query_set)
+unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type, const char* source_string, QuerySet& query_set)
 {
+	assert(cur_finance_data_type == query_set.finance_data_type && "The finance data types are NOT identical");
 	assert(source_string != NULL && "soruce_string should NOT be NULL");
 	unsigned short ret = RET_SUCCESS;
 	char* source_string_copy = new char[strlen(source_string) + 1];
@@ -158,17 +159,17 @@ OUT:
 	return ret;
 }
 
-unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* source_string, QuerySet** query_set)
+unsigned short QuerySet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type, const char* source_string, QuerySet** query_set)
 {
 	assert(query_set != NULL && "query_set should NOT be NULL");
-	QuerySet* query_set_tmp = new QuerySet();
+	QuerySet* query_set_tmp = new QuerySet(cur_finance_data_type);
 	if (query_set_tmp == NULL)
 	{
 		STATIC_WRITE_ERROR("Fail to allocate the memory: query_set_tmp");
 		if (query_set_tmp != NULL) delete query_set_tmp;
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
-	unsigned short ret = create_instance_from_string(cur_finance_analysis_mode, source_string, *query_set_tmp);
+	unsigned short ret = create_instance_from_string(cur_finance_analysis_mode, cur_finance_data_type, source_string, *query_set_tmp);
 	if (CHECK_FAILURE(ret))
 	{
 		delete query_set_tmp;
@@ -512,7 +513,7 @@ unsigned short QuerySet::get_query_sub_set(int method_index, QuerySet** query_su
 	const PINT_DEQUE field_index_deque = iter->second;
 	assert(field_index_deque != NULL && "source_field_query_map[method_index] should NOT be NULL");
 
-	PQUERY_SET query_sub_set_tmp = new QuerySet();
+	PQUERY_SET query_sub_set_tmp = new QuerySet(finance_data_type);
 	if (query_sub_set_tmp == NULL)
 	{
 		WRITE_ERROR("Fail to allocate memory: query_sub_set_tmp");
@@ -1196,12 +1197,21 @@ CompanyGroupSet::const_iterator CompanyGroupSet::end()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set)
+unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet& search_rule_set)
 {
+	if (search_rule_set.add_done)
+	{
+		STATIC_WRITE_ERROR("the add_done flag is true");
+		throw runtime_error(string("the add_done flag is true"));
+	}
+
 	unsigned ret = RET_SUCCESS;
 	ret = search_rule_set.set_finance_mode(cur_finance_analysis_mode);
 	if (CHECK_FAILURE(ret))
 		return ret;
+	ret = search_rule_set.set_finance_data_type(cur_finance_data_type);
+	if (CHECK_FAILURE(ret))
+		return ret;	
 	if (query_source_string != NULL)
 	{
 		ret = search_rule_set.add_query_rule(query_source_string);
@@ -1233,7 +1243,7 @@ unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cu
 	return search_rule_set.add_rule_done();
 }
 
-unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set)
+unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type, const char* query_source_string, const char* time_source_string, const char* company_source_string, SearchRuleSet** search_rule_set)
 {
 	assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
 	SearchRuleSet* search_rule_set_tmp = new SearchRuleSet();
@@ -1243,7 +1253,7 @@ unsigned short SearchRuleSet::create_instance_from_string(FinanceAnalysisMode cu
 		if (search_rule_set_tmp != NULL) delete search_rule_set_tmp;
 		return RET_FAILURE_INSUFFICIENT_MEMORY;
 	}
-	unsigned short ret = create_instance_from_string(cur_finance_analysis_mode, query_source_string, time_source_string, company_source_string, *search_rule_set_tmp);
+	unsigned short ret = create_instance_from_string(cur_finance_analysis_mode, cur_finance_data_type, query_source_string, time_source_string, company_source_string, *search_rule_set_tmp);
 	if (CHECK_FAILURE(ret))
 	{
 		delete search_rule_set_tmp;
@@ -1273,9 +1283,10 @@ const string& SearchRuleSet::to_string()
 
 }
 
-SearchRuleSet::SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode) :
+SearchRuleSet::SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode, FinanceDataType cur_finance_data_type) :
 	add_done(false),
 	finance_analysis_mode(cur_finance_analysis_mode),
+	finance_data_type(cur_finance_data_type),
 	query_set(NULL),
 	time_range_param(NULL),
 	company_group_set(NULL)
@@ -1286,6 +1297,7 @@ SearchRuleSet::SearchRuleSet(FinanceAnalysisMode cur_finance_analysis_mode) :
 SearchRuleSet::SearchRuleSet() :
 	add_done(false),
 	finance_analysis_mode(FinanceAnalysis_None),
+	finance_data_type(FinanceData_None),
 	query_set(NULL),
 	time_range_param(NULL),
 	company_group_set(NULL)
@@ -1322,18 +1334,38 @@ unsigned short SearchRuleSet::set_finance_mode(FinanceAnalysisMode cur_finance_a
 	}
 	if (finance_analysis_mode != FinanceAnalysis_None)
 	{
-		WRITE_ERROR("finance_analysis_mode is NOT finance_analysis_mode");
+		WRITE_ERROR("finance_analysis_mode is NOT FinanceAnalysis_None");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	finance_analysis_mode = cur_finance_analysis_mode;
 	if (finance_analysis_mode == FinanceAnalysis_None)
 	{
-		WRITE_ERROR("finance_analysis_mode is finance_analysis_mode");
+		WRITE_ERROR("finance_analysis_mode is FinanceAnalysis_None");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	return RET_SUCCESS;
 }
 
+unsigned short SearchRuleSet::set_finance_data_type(FinanceDataType cur_finance_data_type)
+{
+	if (add_done)
+	{
+		WRITE_ERROR("The add_done flag is true");
+		return RET_FAILURE_INCORRECT_OPERATION;
+	}
+	if (finance_data_type != FinanceData_None)
+	{
+		WRITE_FORMAT_ERROR("finance_data_type[%d] is NOT FinanceData_None", finance_data_type);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	finance_data_type = cur_finance_data_type;
+	if (finance_data_type == FinanceData_None)
+	{
+		WRITE_ERROR("finance_data_type is FinanceData_None");
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	return RET_SUCCESS;
+}
 unsigned short SearchRuleSet::add_query_rule(const PQUERY_SET new_query_set)
 {
 	if (add_done)
@@ -1342,6 +1374,7 @@ unsigned short SearchRuleSet::add_query_rule(const PQUERY_SET new_query_set)
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 	assert(new_query_set != NULL && "new_query_set should NOT be NULL");
+	assert(finance_data_type == new_query_set->get_data_type() && "The finance data type between the SearchRuleSet and QuerySet objects are NOT identical");
 	if (query_set != NULL)
 	{
 		WRITE_ERROR("query_set is NOT NULL");
@@ -1363,7 +1396,7 @@ unsigned short SearchRuleSet::add_query_rule(const char* query_source_string)
 		WRITE_ERROR("The add_done flag is true");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
-	return QuerySet::create_instance_from_string(finance_analysis_mode, query_source_string, &query_set);
+	return QuerySet::create_instance_from_string(finance_analysis_mode, finance_data_type, query_source_string, &query_set);
 }
 
 unsigned short SearchRuleSet::add_time_rule(const PTIME_RANGE_PARAM new_time_range_param)
@@ -1485,6 +1518,16 @@ FinanceAnalysisMode SearchRuleSet::get_finance_mode()const
 		throw runtime_error("The add_done flag is false");
 	}
 	return finance_analysis_mode;
+}
+
+FinanceDataType SearchRuleSet::get_data_type()const
+{
+	if (!add_done)
+	{
+		WRITE_ERROR("The add_done flag is false");
+		throw runtime_error("The add_done flag is false");
+	}
+	return finance_data_type;
 }
 
 const PQUERY_SET SearchRuleSet::get_query_rule()const
@@ -2839,7 +2882,7 @@ int ResultSet::get_data_size()const{return date_data_size;}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ResultSetMap::ResultSetMap(ResultSetDataUnit data_unit, FinanceDataType data_type) : 
+ResultSetMap::ResultSetMap(FinanceDataType data_type, ResultSetDataUnit data_unit) : 
 	finance_data_type(data_type),
 	result_set_data_unit(data_unit)
 {
