@@ -174,7 +174,9 @@ enum FinanceMethodType
 	FinanceMethod_IncomeStatement = 10,
 	FinanceMethod_CashFlowStatement = 11,
 	FinanceMethod_StatementOfChangesInEquity = 12,
-	FinanceMethod_StockEnd = 13 // Keep in mind to update the value at the right time
+	FinanceMethod_DailyStockPriceAndVolume = 13,
+	FinanceMethod_Top3LegalPersonsStockNetBuyOrSellSummary = 14,
+	FinanceMethod_StockEnd = 15 // Keep in mind to update the value at the right time
 };
 
 enum FinanceFieldType

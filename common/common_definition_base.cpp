@@ -93,7 +93,9 @@ const char* FINANCE_METHOD_DATA_NAME_LIST[] =
 	"balance_sheet",
 	"income_statement",
 	"cash_flow_statement",
-	"statement_of_changes_in_equity"
+	"statement_of_changes_in_equity",
+	"daily_stock_price_and_volume",
+	"top3_legal_persons_stock_net_buy_and_sell_summary"
 };
 const int FINANCE_METHOD_DATA_NAME_LIST_LEN = sizeof(FINANCE_METHOD_DATA_NAME_LIST) / sizeof(FINANCE_METHOD_DATA_NAME_LIST[0]);
 
@@ -112,6 +114,8 @@ const char* FINANCE_METHOD_DESCRIPTION_LIST[] =
     "損益表",
     "現金流量表",
     "股東權益變動表",
+	"個股日股價及成交量",
+	"三大法人個股買賣超日報"
 };
 
 const int* FINANCE_SQL_DATA_FIELD_TYPE_LIST[] =
