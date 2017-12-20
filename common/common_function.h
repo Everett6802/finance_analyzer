@@ -64,5 +64,12 @@ unsigned short get_process_count(const char* process_name, int& proccss_count);
 unsigned short get_process_username(const char* process_name, std::string& process_username);
 unsigned short get_absolute_filepath_from_username(const char* relative_filepath, char** absolute_filepath);
 unsigned short check_string_is_digit(const char* time_string, int time_string_len=-1);
-
+// unsigned short open_shm_file(const char* shm_filepath);
+// unsigned short unlink_shm_file(const char* shm_filepath);
+unsigned short gm_add_data(const char* shm_filepath, const void* data, int data_size);
+unsigned short gm_delete_data(const char* shm_filepath);
+unsigned short gm_read_data(const char* shm_filepath, void** data, int& data_size);
+unsigned short gm_write_data(const char* shm_filepath, void* data, int data_size);
+unsigned short gm_get_data_ptr(const char* shm_filepath, void** data, int& data_size);
+unsigned short gm_put_data_ptr(void* data, int data_size);
 #endif

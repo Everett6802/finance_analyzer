@@ -991,8 +991,55 @@ unsigned short init_interactive_server()
 }
 
 
+#include <string>
+
+using namespace std;
+
 int main(int argc, char** argv)
 {
+	// char * csv_filepath = "/var/tmp/finance/market/stock_exchange_and_volume.csv";
+	// FILE* fp = fopen(csv_filepath, "r");
+	// const int BUF_SIZE = 255;
+	// char buf[BUF_SIZE];
+	// string total_str = "";
+	// while (fgets(buf, BUF_SIZE, fp) != NULL)
+	// {
+	// 	printf("File: %s", buf);
+	// 	total_str += string(buf);
+	// }
+	// gm_add_data("/test2", total_str.c_str(), strlen(total_str.c_str()));
+	// char* data;
+	// int data_size;
+
+	// gm_get_data_ptr("/test2", (void**)&data, data_size);
+	// printf("%s", data);
+	// memset(data, 'x', sizeof(char) * data_size);
+	// gm_put_data_ptr((void*)data, data_size);
+
+	// // gm_read_data("/test2", (void**)&data, data_size);
+	// // // char* data_replica = strdup(data);
+	// // // char* data_replica_tmp = data_replica;
+	// // // char* sub_data = NULL;
+	// // // char* rest_data = NULL;
+	// // // while ((sub_data = strtok_r(data_replica_tmp, "\r\n", &rest_data)) != NULL)
+	// // // {
+	// // // 	printf ("SHM: %s\n", sub_data);
+	// // // 	if (data_replica_tmp != NULL)
+	// // // 		data_replica_tmp = NULL;
+	// // // }
+	// // // free(data_replica);
+	// // printf("%s", data);
+	// // memset(data, 'x', sizeof(char) * data_size);
+	// // gm_write_data("/test2", (void*)data, data_size);
+	// // if (data != NULL)
+	// // 	delete[] data;
+	// gm_read_data("/test2", (void**)&data, data_size);
+	// printf("%s", data);
+	// if (data != NULL)
+	// 	delete[] data;
+	// gm_delete_data("/test2");
+	// exit(EXIT_SUCCESS);
+
 // Register the signals so that the process can exit gracefully
 	struct sigaction sa;
 	memset(&sa, 0x0, sizeof(sa));

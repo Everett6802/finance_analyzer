@@ -1020,7 +1020,6 @@ unsigned short get_absolute_filepath_from_username(const char* relative_filepath
 	return RET_SUCCESS;
 }
 
-
 unsigned short check_string_is_digit(const char* time_string, int time_string_len)
 {
 	assert(time_string != NULL && "time_string should NOT be NULL");
