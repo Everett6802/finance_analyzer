@@ -3,6 +3,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
+
+#include <sys/types.h>
+#include <dirent.h>
+// #include <stdio.h>
+// #include <string.h>
+
 #include <string.h>
 #include <stdexcept>
 #include <new>
@@ -605,6 +611,7 @@ bool check_config_file_timestamp_equal(const char* config_filename1, const char*
 
 unsigned short create_folder_if_not_exist(const char* path, int mode)
 {
+	assert(path != NULL && "path should NOT be NULL");
 	if (!check_file_exist(path))
 	{
 		/* Directory does not exist. EEXIST for race condition */
@@ -615,6 +622,78 @@ unsigned short create_folder_if_not_exist(const char* path, int mode)
 		}
 	}
 	return RET_SUCCESS;
+}
+
+unsigned short create_folders_if_not_exist(const char* path, const char* ignore_path_prefix, int mode)
+{
+	assert(path != NULL && "path should NOT be NULL");
+	static const int FILEPATH_SIZE = 256;
+	unsigned short ret = RET_SUCCESS;
+	char* path_duplica = strdup(path);
+	char* path_tmp = path_duplica;
+	char filepath[FILEPATH_SIZE] = {'\0'};
+	if (ignore_path_prefix != NULL)
+	{
+// Remove the filepath which should NOT check the folder exist and create it
+		int ignore_path_prefix_len = strlen(ignore_path_prefix);
+		int path_tmp_len = strlen(path_tmp);
+		if (strncmp(path_tmp, ignore_path_prefix, ignore_path_prefix_len) != 0)
+		{
+			fprintf(stderr, "Incorrect file path prefix: %s => %s\n", ignore_path_prefix, path);
+			return RET_FAILURE_INVALID_ARGUMENT;
+		}
+		strcpy(filepath, ignore_path_prefix);
+		if (ignore_path_prefix[ignore_path_prefix_len - 1] == '/')
+		{
+// Remove the '/' postfix if exist
+			filepath[ignore_path_prefix_len - 1] = '\0';
+			memmove(path_tmp, path_tmp + ignore_path_prefix_len, path_tmp_len - ignore_path_prefix_len + 1);
+		}
+		else
+		{
+// Remove the '/' prefix if exist
+			memmove(path_tmp, path_tmp + ignore_path_prefix_len + 1, path_tmp_len - ignore_path_prefix_len);
+		}
+	}
+	else
+	{
+		if (path_tmp[0] == '/')
+		{
+			filepath[0] = '/';
+			memmove(path_tmp, path_tmp + 1, strlen(path_tmp));
+		}
+	}
+
+	char* path_sep = NULL;
+	bool not_exist = false;
+	while ((path_sep = strsep(&path_tmp, "/")) != NULL)
+	{
+		strcat(filepath, "/");
+		strcat(filepath, path_sep);
+		// snprintf(filepath, FILEPATH_SIZE, "%s/%s", filepath, path_sep);
+		if (!not_exist)
+		{
+			if (!check_file_exist(filepath))
+				not_exist = true;
+		}
+		if (not_exist)
+		{
+			if (mkdir(filepath, mode) != 0 && errno != EEXIST)
+			{
+				fprintf(stderr, "Fail to create the folder: %s, due to: %s", filepath, strerror(errno));
+				ret = RET_FAILURE_SYSTEM_API;
+				goto OUT;
+			}
+		}
+	}
+
+OUT:
+	if (path_duplica != NULL)
+	{
+		free(path_duplica);
+		path_duplica = NULL;
+	}
+	return ret;
 }
 
 unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_project, int mode)
@@ -1034,4 +1113,88 @@ unsigned short check_string_is_digit(const char* time_string, int time_string_le
 		}
 	}
 	return RET_SUCCESS;
+}
+
+void traverse_directory(const char* root_filepath, unsigned short (*function_handler)(const char* filepath, void* param), void* function_handler_param)
+{
+	assert(root_filepath != NULL && "root_filepath should NOT be NULL");
+	static const int MAX_FILEPATH_SIZE = 256;
+    DIR *dir = NULL;
+    if (!(dir = opendir(root_filepath)))
+    	return;
+
+    struct dirent *entry = NULL;
+    char filepath[MAX_FILEPATH_SIZE];
+    unsigned short ret = RET_SUCCESS;
+    while ((entry = readdir(dir)) != NULL) 
+    {
+        if (entry->d_type == DT_DIR) 
+        {            
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue;
+            snprintf(filepath, sizeof(char) * MAX_FILEPATH_SIZE, "%s/%s", root_filepath, entry->d_name);
+            traverse_directory(filepath, function_handler, function_handler_param);
+        } 
+        else 
+        {
+        	snprintf(filepath, sizeof(char) * MAX_FILEPATH_SIZE, "%s/%s", root_filepath, entry->d_name);
+            ret = (*function_handler)(filepath, function_handler_param);
+            if (CHECK_FAILURE(ret))
+            {
+            	STATIC_WRITE_FORMAT_ERROR("Error occur while visiting the folder: %s", root_filepath);
+            	goto OUT;
+            }
+        }
+    }
+OUT:
+    closedir(dir);
+}
+
+// Only for test
+unsigned short count_filesize_sum(const char* filepath, void* param)
+{
+	assert(filepath != NULL && "filepath should NOT be NULL");
+	assert(param != NULL && "param should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	int fd = open(filepath, O_RDWR, 0666);
+    struct stat stat_buf;
+    if (stat(filepath, &stat_buf) == -1)
+    {
+        STATIC_WRITE_FORMAT_ERROR("stat() fails, due to %s", strerror(errno));
+        goto OUT;
+    }
+    printf("%s: %d\n", filepath, (int)stat_buf.st_size);
+    *(int*)param += (int)stat_buf.st_size;
+OUT:
+	close(fd);
+    return ret;
+}
+
+void traverse_directory(const char* root_filepath, int indent)
+{
+	assert(root_filepath != NULL && "root_filepath should NOT be NULL");
+	static const int MAX_FILEPATH_SIZE = 256;
+    DIR *dir = NULL;
+    if (!(dir = opendir(root_filepath)))
+    	return;
+
+    struct dirent *entry = NULL;
+    char filepath[MAX_FILEPATH_SIZE];
+    // unsigned short ret = RET_SUCCESS;
+    while ((entry = readdir(dir)) != NULL) 
+    {
+        if (entry->d_type == DT_DIR) 
+        {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue;
+            snprintf(filepath, sizeof(char) * MAX_FILEPATH_SIZE, "%s/%s", root_filepath, entry->d_name);
+            printf("%*s[%s]\n", indent, "", entry->d_name);
+            traverse_directory(filepath, indent + 2);
+        } 
+        else 
+        {
+            printf("%*s- %s\n", indent, "", entry->d_name);
+        }
+    }
+    closedir(dir);
 }

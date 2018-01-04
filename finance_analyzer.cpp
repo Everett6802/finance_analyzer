@@ -990,10 +990,9 @@ unsigned short init_interactive_server()
 	return RET_SUCCESS;
 }
 
+// #include <string>
 
-#include <string>
-
-using namespace std;
+// using namespace std;
 
 int main(int argc, char** argv)
 {
@@ -1038,6 +1037,12 @@ int main(int argc, char** argv)
 	// if (data != NULL)
 	// 	delete[] data;
 	// gm_delete_data("/test2");
+
+	// int filesize_sum = 0;
+	// traverse_directory("/var/tmp/finance/market", count_filesize_sum, (void*)&filesize_sum);
+	// printf("filesize_sum: %d\n", filesize_sum);
+	// create_folders_if_not_exist("/dev/shm/test/test3/test4/test5", "/dev/shm", 0777);
+
 	// exit(EXIT_SUCCESS);
 
 // Register the signals so that the process can exit gracefully

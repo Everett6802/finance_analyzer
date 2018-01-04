@@ -45,6 +45,7 @@ unsigned short write_config_file_lines(std::list<std::string>& conf_line_list, c
 unsigned short get_config_file_timestamp(std::string& timestamp_string, const char* config_filename, const char* config_folderpath=NULL);
 bool check_config_file_timestamp_equal(const char* config_filename1, const char* config_filename2, const char* config_folderpath1=NULL, const char* config_folderpath2=NULL);
 unsigned short create_folder_if_not_exist(const char* path, int mode=0755);
+unsigned short create_folders_if_not_exist(const char* path, const char* ignore_path_prefix="/dev/shm", int mode=0755);
 unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_project, int mode=0755);
 unsigned short direct_string_to_output_stream(const char* data, const char* filepath=NULL);
 unsigned short send_email(const char* title, const char* address, const char* content);
@@ -64,8 +65,10 @@ unsigned short get_process_count(const char* process_name, int& proccss_count);
 unsigned short get_process_username(const char* process_name, std::string& process_username);
 unsigned short get_absolute_filepath_from_username(const char* relative_filepath, char** absolute_filepath);
 unsigned short check_string_is_digit(const char* time_string, int time_string_len=-1);
-// unsigned short open_shm_file(const char* shm_filepath);
-// unsigned short unlink_shm_file(const char* shm_filepath);
+void traverse_directory(const char* root_filepath, unsigned short (*function_handler)(const char* filepath, void* param), void* function_handler_param);
+// Only for test
+unsigned short count_filesize_sum(const char* filepath, void* param);
+void traverse_directory(const char* root_filepath, int indent=0);
 unsigned short gm_add_data(const char* shm_filepath, const void* data, int data_size);
 unsigned short gm_delete_data(const char* shm_filepath);
 unsigned short gm_read_data(const char* shm_filepath, void** data, int& data_size);
