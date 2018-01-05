@@ -62,11 +62,17 @@ unsigned short DataCsvReader::read_from_filesystem(
 // Determine the CSV file path
 		if (finance_analysis_mode == FinanceAnalysis_Market)
 		{
-			snprintf(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, "%s/%s/%s.csv", csv_reader_obj->data_csv_reader_param.root_folderpath, FINANCE_DATA_MARKET_NAME, FINANCE_CSV_FILE_NAME_LIST[method_index]);
+			// snprintf(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, "%s/%s/%s.csv", csv_reader_obj->data_csv_reader_param.root_folderpath, FINANCE_DATA_MARKET_NAME, FINANCE_CSV_FILE_NAME_LIST[method_index]);
+			ret = format_market_csv_filepath(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, csv_reader_obj->data_csv_reader_param.root_folderpath, method_index);
+			if (CHECK_FAILURE(ret))
+				return ret;
 		}
 		else
 		{
-			snprintf(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, "%s/%s%02d/%s/%s.csv", csv_reader_obj->data_csv_reader_param.root_folderpath, FINANCE_DATA_STOCK_NAME, company_group_number, company_code_number.c_str(), FINANCE_CSV_FILE_NAME_LIST[method_index]);
+			// snprintf(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, "%s/%s%02d/%s/%s.csv", csv_reader_obj->data_csv_reader_param.root_folderpath, FINANCE_DATA_STOCK_NAME, company_group_number, company_code_number.c_str(), FINANCE_CSV_FILE_NAME_LIST[method_index]);
+			ret = format_stock_csv_filepath(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, csv_reader_obj->data_csv_reader_param.root_folderpath, company_group_number, company_code_number.c_str(), method_index);
+			if (CHECK_FAILURE(ret))
+				return ret;
 		}
 // Add to the result set
 		ret = result_set->add_set(method_index, query_field);

@@ -706,6 +706,32 @@ unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_p
 	return create_folder_if_not_exist(folder_path, mode);
 }
 
+unsigned short format_market_csv_filepath(char* csv_filepath_buf, int csv_filepath_buf_size, const char* root_folderpath, int method_index)
+{
+	assert(csv_filepath_buf != NULL && "csv_filepath_buf should NOT be NULL");
+	assert(root_folderpath != NULL && "root_folderpath should NOT be NULL");
+	if (method_index < FinanceMethod_MarketStart || method_index >= FinanceMethod_MarketEnd)
+	{
+		fprintf(stderr, "method_index[%d] is NOT in range: [%d, %d)\n", method_index, FinanceMethod_MarketStart, FinanceMethod_MarketEnd);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	snprintf(csv_filepath_buf, csv_filepath_buf_size, "%s/%s/%s.csv", root_folderpath, FINANCE_DATA_MARKET_NAME, FINANCE_CSV_FILE_NAME_LIST[method_index]);	
+	return RET_SUCCESS;
+}
+
+unsigned short format_stock_csv_filepath(char* csv_filepath_buf, int csv_filepath_buf_size, const char* root_folderpath, int company_group_number, const char* company_code_number, int method_index)
+{
+	assert(csv_filepath_buf != NULL && "csv_filepath_buf should NOT be NULL");
+	assert(root_folderpath != NULL && "root_folderpath should NOT be NULL");
+	if (method_index < FinanceMethod_StockStart || method_index >= FinanceMethod_StockEnd)
+	{
+		fprintf(stderr, "method_index[%d] is NOT in range: [%d, %d)\n", method_index, FinanceMethod_StockStart, FinanceMethod_StockEnd);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}	
+	snprintf(csv_filepath_buf, csv_filepath_buf_size, "%s/%s%02d/%s/%s.csv", root_folderpath, FINANCE_DATA_STOCK_NAME, company_group_number, company_code_number, FINANCE_CSV_FILE_NAME_LIST[method_index]);
+	return RET_SUCCESS;
+}
+
 unsigned short direct_string_to_output_stream(const char* data, const char* filepath)
 {
 	assert(data != NULL && "data should NOT be NULL");

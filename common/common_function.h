@@ -47,6 +47,8 @@ bool check_config_file_timestamp_equal(const char* config_filename1, const char*
 unsigned short create_folder_if_not_exist(const char* path, int mode=0755);
 unsigned short create_folders_if_not_exist(const char* path, const char* ignore_path_prefix="/dev/shm", int mode=0755);
 unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_project, int mode=0755);
+unsigned short format_market_csv_filepath(char* csv_filepath_buf, int csv_filepath_buf_size, const char* root_folderpath, int method_index);
+unsigned short format_stock_csv_filepath(char* csv_filepath_buf, int csv_filepath_buf_size, const char* root_folderpath, int company_group_number, const char* company_code_number, int method_index);
 unsigned short direct_string_to_output_stream(const char* data, const char* filepath=NULL);
 unsigned short send_email(const char* title, const char* address, const char* content);
 int get_end_index_ex(int end_index, int data_size);
