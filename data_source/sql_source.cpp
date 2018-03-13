@@ -1,8 +1,7 @@
 #include <assert.h>
 #include <stdexcept>
 #include <set>
-#include "data_sql_reader.h"
-// #include "database_time_range.h"
+#include "sql_source.h"
 /*
  * Go to the following links to see more detailed info:
  * http://www.cs.wichita.edu/~chang/lecture/cs742/program/how-mysql-c-api.html
@@ -12,38 +11,72 @@
 
 using namespace std;
 
-DataSqlReaderParam::DataSqlReaderParam(): 
-	continue_when_non_exist(true)
+SqlSourceParam::SqlSourceParam()
 {
 
 }
 
-DataSqlReaderParam::~DataSqlReaderParam()
+SqlSourceParam::SqlSourceParam(bool new_continue_when_non_exist)
 {
+	continue_when_non_exist = new_continue_when_non_exist;
+}
 
+SqlSourceParam::~SqlSourceParam()
+{
+}
+
+FinanceDataType SqlSourceParam::get_type()const
+{
+	return FinanceData_SQL;
+}
+
+unsigned short SqlSourceParam::to_object(ISource** source_obj)
+{
+	assert(source_obj != NULL && "source_obj should NOT be NULL");
+	PSQL_SOURCE sql_source_obj = new SqlSource();
+	if (sql_source_obj == NULL)
+		throw bad_alloc();
+	unsigned short ret = RET_SUCCESS;
+	ret = sql_source_obj->set_continue_when_non_exist(continue_when_non_exist);
+	if (CHECK_FAILURE(ret))
+		goto OUT;
+	// if (time_range_param != NULL)
+	// {
+	// 	ret = sql_source_obj->set_time_range_param(time_range_param);
+	// 	if (CHECK_FAILURE(ret))
+	// 		goto OUT;
+	// }
+	return RET_SUCCESS;
+OUT:
+	if (sql_source_obj != NULL)
+	{
+		delete sql_source_obj;
+		sql_source_obj = NULL;
+	}
+	return ret;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
-const char* DataSqlReader::MYSQL_SERVER = "localhost";
-const char* DataSqlReader::MYSQL_USERNAME = "root";
-const char* DataSqlReader::MYSQL_PASSWORD = "lab4man1";
-const char* DataSqlReader::FORMAT_CMD_CREATE_DATABASE = "CREATE DATABASE %s";
-const char* DataSqlReader::FORMAT_CMD_SELECT_DATA_HEAD = "SELECT ";
-const char* DataSqlReader::FORMAT_CMD_SELECT_DATA_TAIL_FORMAT = " FROM %s";
-const char* DataSqlReader::FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT = " WHERE date BETWEEN '%s' AND '%s'";
-const char* DataSqlReader::FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE date >= '%s'";
-const char* DataSqlReader::FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE date <= '%s'";
-const char* DataSqlReader::FORMAT_CMD_SELECT_DATE_RULE_EQUAL_FORMAT = " WHERE date = '%s'";
-// const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
-// const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE month(date) >= '%d'";
-// const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE month(date) <= '%d'";
-// const char* DataSqlReader::FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT = " WHERE month(date) = '%s'";
+const char* SqlSource::MYSQL_SERVER = "localhost";
+const char* SqlSource::MYSQL_USERNAME = "root";
+const char* SqlSource::MYSQL_PASSWORD = "lab4man1";
+const char* SqlSource::FORMAT_CMD_CREATE_DATABASE = "CREATE DATABASE %s";
+const char* SqlSource::FORMAT_CMD_SELECT_DATA_HEAD = "SELECT ";
+const char* SqlSource::FORMAT_CMD_SELECT_DATA_TAIL_FORMAT = " FROM %s";
+const char* SqlSource::FORMAT_CMD_SELECT_DATE_RULE_BETWEEN_FORMAT = " WHERE date BETWEEN '%s' AND '%s'";
+const char* SqlSource::FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE date >= '%s'";
+const char* SqlSource::FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE date <= '%s'";
+const char* SqlSource::FORMAT_CMD_SELECT_DATE_RULE_EQUAL_FORMAT = " WHERE date = '%s'";
+// const char* SqlSource::FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
+// const char* SqlSource::FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE month(date) >= '%d'";
+// const char* SqlSource::FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE month(date) <= '%d'";
+// const char* SqlSource::FORMAT_CMD_SELECT_MONTH_RULE_EQUAL_FORMAT = " WHERE month(date) = '%s'";
 
-//const char* DataSqlReader::format_cmd_create_table = "CREATE TABLE sql%s (date VARCHAR(16), time VARCHAR(16), severity INT, data VARCHAR(512))";
-//const char* DataSqlReader::format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
+//const char* SqlSource::format_cmd_create_table = "CREATE TABLE sql%s (date VARCHAR(16), time VARCHAR(16), severity INT, data VARCHAR(512))";
+//const char* SqlSource::format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
 
-unsigned short DataSqlReader::get_sql_field_command(int method_index, const INT_DEQUE& query_field, string& field_cmd)
+unsigned short SqlSource::get_sql_field_command(int method_index, const INT_DEQUE& query_field, string& field_cmd)
 {
 	if (query_field.empty())
 		throw invalid_argument("The query should NOT be empty");
@@ -69,16 +102,15 @@ unsigned short DataSqlReader::get_sql_field_command(int method_index, const INT_
 	return RET_SUCCESS;
 }
 
-unsigned short DataSqlReader::read_from_tables(
+unsigned short SqlSource::read_from_tables(
 	const PTIME_RANGE_PARAM time_range_param, 
 	const PQUERY_SET query_set,
 	const std::string& company_code_number,  // For stock mode only, ignored in market mode
-	DataSqlReader* sql_reader_obj,
+	SqlSource* sql_source_obj,
 	FinanceAnalysisMode finance_analysis_mode,
 	PRESULT_SET result_set
 	)
 {
-	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	assert((finance_analysis_mode == FinanceAnalysis_Market || finance_analysis_mode == FinanceAnalysis_Stock) && "finance_analysis_mode is NOT FinanceAnalysis_Market/FinanceAnalysis_Stock");
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	if (finance_analysis_mode == FinanceAnalysis_Stock)
@@ -86,7 +118,7 @@ unsigned short DataSqlReader::read_from_tables(
 		DECLARE_AND_IMPLEMENT_STATIC_COMPANY_PROFILE()
 		if (!company_profile->is_company_exist(company_code_number))
 		{
-			WRITE_FORMAT_ERROR("The company[%s] does NOT exist", company_code_number.c_str());
+			STATIC_WRITE_FORMAT_ERROR("The company[%s] does NOT exist", company_code_number.c_str());
 			return RET_FAILURE_INVALID_ARGUMENT;
 		}
 	}
@@ -105,13 +137,13 @@ unsigned short DataSqlReader::read_from_tables(
 			return ret;
 // Generate the field command
 		string field_cmd = string("");
-		DataSqlReader::get_sql_field_command(method_index, query_field, field_cmd);
+		SqlSource::get_sql_field_command(method_index, query_field, field_cmd);
 // Search for each table
 		table_name = string(FINANCE_SQL_TABLE_NAME_LIST[method_index]);
 		if (finance_analysis_mode == FinanceAnalysis_Stock)
 			table_name = company_code_number + table_name;
 // Read the SQL data from database
-		ret = sql_reader_obj->select_data(
+		ret = sql_source_obj->select_data(
 			method_index, 
 			table_name, 
 			field_cmd, 
@@ -125,18 +157,17 @@ unsigned short DataSqlReader::read_from_tables(
 	return RET_SUCCESS;
 }
 
-unsigned short DataSqlReader::read_market(
+unsigned short SqlSource::read_market(
 	const PQUERY_SET query_set, 
 	const PTIME_RANGE_PARAM time_range_param, 
-	DataSqlReader* sql_reader_obj, 
+	SqlSource* sql_source_obj, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 	static string company_code_number_dummy("xxxx");
-	STATIC_WRITE_DEBUG("Start to read the SQL data in the Market mode......");
-	assert(sql_reader_obj != NULL && query_set != NULL && time_range_param != NULL && result_set_map != NULL);
+	STATIC_WRITE_DEBUG("Start to read the data in MySQL in the Market mode......");
+	assert(sql_source_obj != NULL && query_set != NULL && time_range_param != NULL && result_set_map != NULL);
 	// assert(sql_reader != NULL);
 	// assert(query_set != NULL);
 	// assert(time_range_param != NULL);
@@ -154,7 +185,7 @@ unsigned short DataSqlReader::read_market(
 	}
 	unsigned short ret = RET_SUCCESS;
 // Connect to the database
-	ret = sql_reader_obj->try_connect_mysql(FINANCE_DATA_MARKET_NAME);
+	ret = sql_source_obj->try_connect_mysql(FINANCE_DATA_MARKET_NAME);
 	if (CHECK_FAILURE(ret))
 		return ret;
 // // Check the boundary of each database
@@ -184,7 +215,7 @@ unsigned short DataSqlReader::read_market(
 				time_range_param,
 				query_set,
 				company_code_number_dummy,  // For stock mode only, ignored in market mode
-				sql_reader_obj, 
+				sql_source_obj, 
 				FinanceAnalysis_Market,
 				result_set
 			);
@@ -229,7 +260,7 @@ unsigned short DataSqlReader::read_market(
 					time_range_param,
 					sp_query_sub_set.get_instance(),
 					company_code_number_dummy,  // For stock mode only, ignored in market mode
-					sql_reader_obj,
+					sql_source_obj,
 					FinanceAnalysis_Market, 
 					result_set
 				);
@@ -267,7 +298,7 @@ unsigned short DataSqlReader::read_market(
 // 			return ret;
 // // Generate the field command
 // 		string field_cmd = string("");
-// 		DataSqlReader::get_sql_field_command(method_index, query_field, field_cmd);
+// 		SqlSource::get_sql_field_command(method_index, query_field, field_cmd);
 // // Query the data in each table
 // 		int start_year = sp_time_range_param->get_start_time()->get_year();
 // 		int end_year = sp_time_range_param->get_end_time()->get_year();
@@ -282,33 +313,23 @@ unsigned short DataSqlReader::read_market(
 	// RELEASE_MSG_DUMPER()
 // Disconnect from the database
 OUT:
-	sql_reader_obj->disconnect_mysql();
+	sql_source_obj->disconnect_mysql();
 
 	return ret;
 }
 
-// unsigned short DataSqlReader::read_market(
-// 	const PQUERY_SET query_set, 
-// 	const PTIME_RANGE_PARAM time_range_param, 
-// 	PRESULT_SET_MAP result_set_map
-// 	)
-// {
-// 	DataSqlReader sql_reader;
-// 	return read_market(query_set, time_range_param, &sql_reader, result_set_map);
-// }
-
-unsigned short DataSqlReader::read_stock(
+unsigned short SqlSource::read_stock(
 	const PQUERY_SET query_set, 
 	const PTIME_RANGE_PARAM time_range_param, 
 	const PCOMPANY_GROUP_SET company_group_set,
-	DataSqlReader* sql_reader_obj, 
+	SqlSource* sql_source_obj, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
+	// DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 	STATIC_WRITE_DEBUG("Start to read the SQL data in the Stock mode......");
-	assert(sql_reader_obj != NULL && query_set != NULL && time_range_param != NULL && company_group_set != NULL && result_set_map != NULL);
+	assert(sql_source_obj != NULL && query_set != NULL && time_range_param != NULL && company_group_set != NULL && result_set_map != NULL);
 	if (!query_set->is_add_query_done())
 	{
 		STATIC_WRITE_ERROR("The setting of query data is NOT complete");
@@ -341,7 +362,7 @@ unsigned short DataSqlReader::read_stock(
 		int company_group_number = iter.get_first();
 // Connect to the database
 		snprintf(database_stock_name, 32, "%s%02d", FINANCE_DATA_STOCK_NAME, company_group_number);
-		ret = sql_reader_obj->try_connect_mysql(string(database_stock_name));
+		ret = sql_source_obj->try_connect_mysql(string(database_stock_name));
 		if (CHECK_FAILURE(ret))
 			return ret;
 		const STRING_DEQUE& company_code_number_deque = *iter;
@@ -372,7 +393,7 @@ unsigned short DataSqlReader::read_stock(
 						time_range_param,
 						query_set,
 						company_code_number,  // For stock mode only, ignored in market mode
-						sql_reader_obj, 
+						sql_source_obj, 
 						FinanceAnalysis_Stock,
 						result_set
 					);
@@ -429,7 +450,7 @@ unsigned short DataSqlReader::read_stock(
 							time_range_param,
 							sp_query_sub_set_array[method_revised_index].get_instance(),
 							company_code_number,  // For stock mode only, ignored in market mode
-							sql_reader_obj, 
+							sql_source_obj, 
 							FinanceAnalysis_Stock,
 							result_set
 						);
@@ -453,7 +474,7 @@ unsigned short DataSqlReader::read_stock(
 			}
 // Disconnect from the database
 OUT:
-			sql_reader_obj->disconnect_mysql();
+			sql_source_obj->disconnect_mysql();
 			if (CHECK_FAILURE(ret))
 				return ret;
 		}
@@ -462,25 +483,13 @@ OUT:
 	return ret;
 }
 
-// unsigned short DataSqlReader::read_stock(
-// 	const PQUERY_SET query_set, 
-// 	const PTIME_RANGE_PARAM time_range_param,
-// 	const PCOMPANY_GROUP_SET company_group_set, 
-// 	PRESULT_SET_MAP result_set_map
-// 	)
-// {
-// 	DataSqlReader sql_reader;
-// 	return read_stock(query_set, time_range_param, company_group_set, &sql_reader, result_set_map);	
-// }
-
-unsigned short DataSqlReader::read_by_object(
+unsigned short SqlSource::read_by_object(
 	const PSEARCH_RULE_SET search_rule_set,
-	void* reader_obj, 
+	PISOURCE source_obj, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
-	assert(reader_obj != NULL && search_rule_set != NULL && result_set_map != NULL && search_rule_set->get_query_rule() != NULL);
+	assert(source_obj != NULL && search_rule_set != NULL && result_set_map != NULL && search_rule_set->get_query_rule() != NULL);
 	unsigned short ret = RET_SUCCESS;
 	if (search_rule_set->get_query_rule()->get_data_type() != FinanceData_SQL)
 	{
@@ -492,11 +501,11 @@ unsigned short DataSqlReader::read_by_object(
 		STATIC_WRITE_FORMAT_ERROR("The data type of the ResultSetMap object should be %s, not %s", FINANCE_DATA_DESCRIPTION[FinanceData_SQL], FINANCE_DATA_DESCRIPTION[result_set_map->get_data_type()]);		
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	PDATA_SQL_READER sql_reader_obj = (PDATA_SQL_READER)reader_obj;
+	// PDATA_SQL_READER sql_source_obj = (PDATA_SQL_READER)reader_obj;
 	if (search_rule_set->get_finance_mode() == FinanceAnalysis_Market)
-		ret = read_market(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), sql_reader_obj, result_set_map);
+		ret = read_market(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), (PSQL_SOURCE)source_obj, result_set_map);
 	else if (search_rule_set->get_finance_mode() == FinanceAnalysis_Stock)
-		ret = read_stock(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), search_rule_set->get_company_rule(), sql_reader_obj, result_set_map);
+		ret = read_stock(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), search_rule_set->get_company_rule(), (PSQL_SOURCE)source_obj, result_set_map);
 	else
 	{
 		ret = RET_FAILURE_INVALID_ARGUMENT;
@@ -505,43 +514,61 @@ unsigned short DataSqlReader::read_by_object(
 	return ret;
 }
 
-unsigned short DataSqlReader::read_by_param(
+unsigned short SqlSource::read_by_param(
 	const PSEARCH_RULE_SET search_rule_set,
-	void* reader_param, 
+	PISOURCE_PARAM source_param, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	assert(reader_param != NULL);
+	assert(source_param != NULL);
 	unsigned short ret = RET_SUCCESS;
-	PDATA_SQL_READER_PARAM data_sql_reader_param = (PDATA_SQL_READER_PARAM)reader_param;
-	DataSqlReader sql_reader_obj;
-	ret = sql_reader_obj.set_continue_when_non_exist(data_sql_reader_param->continue_when_non_exist);
+	// PSQL_SOURCE_PARAM source_param = (PSQL_SOURCE_PARAM)reader_param;
+	// SqlSource sql_source_obj;
+	PISOURCE source_obj = NULL;
+	source_param->to_object(&source_obj);
+	// ret = sql_source_obj.set_continue_when_non_exist(source_param->continue_when_non_exist);
+	// if (CHECK_FAILURE(ret))
+	// 	return ret;
+	// return read_by_object(search_rule_set, &sql_source_obj, result_set_map);
+	ret = read_by_object(search_rule_set, source_obj, result_set_map);
 	if (CHECK_FAILURE(ret))
-		return ret;
-	return read_by_object(search_rule_set, &sql_reader_obj, result_set_map);
+		goto OUT;
+	return RET_SUCCESS;
+OUT:
+	if (source_obj != NULL)
+	{
+		delete source_obj;
+		source_obj = NULL;
+	}
+	return ret;
 }
 
-unsigned short DataSqlReader::read_by_default(
+unsigned short SqlSource::read_by_default(
 	const PSEARCH_RULE_SET search_rule_set, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	DataSqlReader sql_reader_obj;
-	return read_by_object(search_rule_set, &sql_reader_obj, result_set_map);	
+	SqlSource sql_source_obj;
+	return read_by_object(search_rule_set, &sql_source_obj, result_set_map);	
 }
 
-DataSqlReader::DataSqlReader() :
+SqlSource::SqlSource() :
 	connection(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
 }
 
-DataSqlReader::~DataSqlReader()
+SqlSource::~SqlSource()
 {
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short DataSqlReader::try_connect_mysql(const string database)
+FinanceDataType SqlSource::get_type()const
+{
+	return FinanceData_SQL;
+}
+
+unsigned short SqlSource::try_connect_mysql(const string database)
 {
 	WRITE_DEBUG("Initialize the parameters connected to the MySQL database server");
 	connection = mysql_init(NULL); // 初始化数据库连接变量
@@ -587,7 +614,7 @@ unsigned short DataSqlReader::try_connect_mysql(const string database)
 	return RET_SUCCESS;
 }
 
-unsigned short DataSqlReader::disconnect_mysql()
+unsigned short SqlSource::disconnect_mysql()
 {
 	WRITE_DEBUG("Disconnect from the MySQL database server...");
 	if (connection != NULL)
@@ -600,7 +627,7 @@ unsigned short DataSqlReader::disconnect_mysql()
 	return RET_SUCCESS;
 }
 
-unsigned short DataSqlReader::select_data(
+unsigned short SqlSource::select_data(
 		int method_index,
 		const std::string& table_name,
 		const std::string& cmd_table_field,
@@ -749,9 +776,15 @@ unsigned short DataSqlReader::select_data(
 	return RET_SUCCESS;
 }
 
-unsigned short DataSqlReader::set_continue_when_non_exist(bool enable)
+unsigned short SqlSource::set_continue_when_non_exist(bool enable)
 {
-	// assert(data_csv_reader_param != NULL && "data_csv_reader_param should NOT be NULL");
-	data_sql_reader_param.continue_when_non_exist = enable;
+	assert(source_param != NULL && "source_param should NOT be NULL");
+	source_param->continue_when_non_exist = enable;
 	return RET_SUCCESS;
 }
+
+// unsigned short SqlSource::set_time_range_param(const TimeRangeParam* new_time_range_param)
+// {
+// 	assert(source_param != NULL && "source_param should NOT be NULL");
+// 	return source_param->set_time_range_param(new_time_range_param);
+// }

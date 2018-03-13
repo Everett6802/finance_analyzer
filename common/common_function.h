@@ -24,7 +24,7 @@ const int** get_finance_data_field_type_list(FinanceDataType finance_data_type=F
 // const int* get_finance_csv_data_field_amount_list();
 const int* get_finance_data_field_amount_list(FinanceDataType finance_data_type=FinanceData_SQL);
 // const char* get_sql_field_description(int method_index, int field_index);
-// const char* get_csv_field_description(int method_index, int field_index);
+// const char* get_fs_field_description(int method_index, int field_index);
 const char* get_field_description(int method_index, int field_index/*, FinanceAnalysisMode finance_analysis_mode=FinanceAnalysis_None*/, FinanceDataType finance_data_type=FinanceData_SQL);
 bool check_method_index_in_range(int method_index, FinanceAnalysisMode finance_analysis_mode/*=FinanceAnalysis_None*/);
 void get_method_index_range(int& method_index_start, int& method_index_end, FinanceAnalysisMode finance_analysis_mode/*=FinanceAnalysis_None*/);
@@ -39,7 +39,7 @@ unsigned short get_file_line_count(unsigned int &line_count, const char* filepat
 unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char* filepath, const char* file_read_attribute, PTIME_RANGE_PARAM time_range_param=NULL, char data_seperate_character=',');
 unsigned short read_config_file_lines_ex(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_file_read_attribute, const char* config_folderpath=NULL);
 unsigned short read_config_file_lines(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_folderpath=NULL);
-unsigned short write_file_lines_ex(const std::list<std::string>& line_list, const char* filepath, const char* file_write_attribute);
+unsigned short write_file_lines_ex(const std::list<std::string>& line_list, const char* filepath, const char* file_write_attribute, PTIME_RANGE_PARAM time_range_param=NULL, char data_seperate_character=',');
 unsigned short write_config_file_lines_ex(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_file_write_attribute, const char* config_folderpath=NULL);
 unsigned short write_config_file_lines(std::list<std::string>& conf_line_list, const char* config_filename, const char* config_folderpath=NULL);
 unsigned short get_config_file_timestamp(std::string& timestamp_string, const char* config_filename, const char* config_folderpath=NULL);
@@ -47,8 +47,6 @@ bool check_config_file_timestamp_equal(const char* config_filename1, const char*
 unsigned short create_folder_if_not_exist(const char* path, int mode=0755);
 unsigned short create_folders_if_not_exist(const char* path, const char* ignore_path_prefix="/dev/shm", int mode=0755);
 unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_project, int mode=0755);
-unsigned short format_market_csv_filepath(char* csv_filepath_buf, int csv_filepath_buf_size, const char* root_folderpath, int method_index);
-unsigned short format_stock_csv_filepath(char* csv_filepath_buf, int csv_filepath_buf_size, const char* root_folderpath, int company_group_number, const char* company_code_number, int method_index);
 unsigned short direct_string_to_output_stream(const char* data, const char* filepath=NULL);
 unsigned short send_email(const char* title, const char* address, const char* content);
 int get_end_index_ex(int end_index, int data_size);
@@ -77,4 +75,6 @@ unsigned short gm_read_data(const char* shm_filepath, void** data, int& data_siz
 unsigned short gm_write_data(const char* shm_filepath, void* data, int data_size);
 unsigned short gm_get_data_ptr(const char* shm_filepath, void** data, int& data_size);
 unsigned short gm_put_data_ptr(void* data, int data_size);
+unsigned short read_shm_file_lines_ex(std::list<std::string>& line_list, const char* shm_filepath, const char* file_read_attribute, PTIME_RANGE_PARAM time_range_param=NULL, char data_seperate_character=',');
+unsigned short write_shm_file_lines_ex(const std::list<std::string>& line_list, const char* shm_filepath, const char* file_write_attribute, PTIME_RANGE_PARAM time_range_param=NULL, char data_seperate_character=',');
 #endif

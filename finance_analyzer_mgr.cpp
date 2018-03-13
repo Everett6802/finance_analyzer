@@ -15,8 +15,9 @@ using namespace std;
 FinanceAnalyzerMgrBase::FinanceAnalyzerMgrBase() :
 	// data_collector(NULL),
 	finance_data_type(FinanceData_SQL),
+	continue_when_non_exist(true),
 	csv_root_folderpath(NULL),
-	operation_non_stop(true),
+	shm_root_folderpath(NULL),
 	data_calculator(NULL)
 {
 	IMPLEMENT_MSG_DUMPER()
@@ -24,15 +25,25 @@ FinanceAnalyzerMgrBase::FinanceAnalyzerMgrBase() :
 // Caution: Data Collector/ Data Calculator is allocated in the derived class
 	// IMPLEMENT_WORKDAY_CANLENDAR()
 	// IMPLEMENT_DATABASE_TIME_RANGE()
-	static const int DEFAULT_CSV_ROOT_FOLDERPATH_LEN = strlen(DEFAULT_CSV_ROOT_FOLDERPATH) + 1; 
-	csv_root_folderpath = new char[DEFAULT_CSV_ROOT_FOLDERPATH_LEN];
+	static const int DEFAULT_CSV_ROOT_FINANCE_FOLDERPATH_LEN = strlen(DEFAULT_CSV_ROOT_FINANCE_FOLDERPATH) + 1; 
+	csv_root_folderpath = new char[DEFAULT_CSV_ROOT_FINANCE_FOLDERPATH_LEN];
 	if (csv_root_folderpath == NULL)
 		throw bad_alloc();
-	memcpy(csv_root_folderpath, DEFAULT_CSV_ROOT_FOLDERPATH, sizeof(char) * DEFAULT_CSV_ROOT_FOLDERPATH_LEN);
+	memcpy(csv_root_folderpath, DEFAULT_CSV_ROOT_FINANCE_FOLDERPATH, sizeof(char) * DEFAULT_CSV_ROOT_FINANCE_FOLDERPATH_LEN);
+	static const int DEFAULT_SHM_ROOT_FINANCE_FOLDERPATH_LEN = strlen(DEFAULT_SHM_ROOT_FINANCE_FOLDERPATH) + 1; 
+	shm_root_folderpath = new char[DEFAULT_SHM_ROOT_FINANCE_FOLDERPATH_LEN];
+	if (shm_root_folderpath == NULL)
+		throw bad_alloc();
+	memcpy(shm_root_folderpath, DEFAULT_SHM_ROOT_FINANCE_FOLDERPATH, sizeof(char) * DEFAULT_SHM_ROOT_FINANCE_FOLDERPATH_LEN);
 }
 
 FinanceAnalyzerMgrBase::~FinanceAnalyzerMgrBase()
 {
+	if (shm_root_folderpath != NULL)
+	{
+		delete[] shm_root_folderpath;
+		shm_root_folderpath = NULL;
+	}
 	if (csv_root_folderpath != NULL)
 	{
 		delete[] csv_root_folderpath;
@@ -140,24 +151,51 @@ unsigned short FinanceAnalyzerMgrBase::search(PSEARCH_RULE_SET search_rule_set, 
 {
 	assert(search_rule_set != NULL && "search_rule_set should NOT be NULL");
 	assert(result_set_map != NULL && "result_set_map should NOT be NULL");
-	void* reader_obj = NULL;
+	unsigned short ret = RET_SUCCESS;
+	// void* reader_obj = NULL;
+	PISOURCE source_obj = NULL;
 	switch (finance_data_type)
 	{
 		case FinanceData_SQL:
 		{
 			WRITE_DEBUG("Set the SQL parameters for searching......");
-			static DataSqlReader sql_reader_obj;
-			sql_reader_obj.set_continue_when_non_exist(operation_non_stop);
-			reader_obj = (void*)&sql_reader_obj;
+			PSQL_SOURCE sql_source_obj = new SqlSource();
+			if (sql_source_obj == NULL)
+				throw bad_alloc();
+			ret = sql_source_obj->set_continue_when_non_exist(continue_when_non_exist);
+			if (CHECK_FAILURE(ret))
+				goto OUT;
+			source_obj = sql_source_obj;
 		}
 		break;
 		case FinanceData_CSV:
 		{
 			WRITE_DEBUG("Set the CSV parameters for searching......");
-			static DataCsvReader csv_reader_obj;
-			csv_reader_obj.set_root_folderpath(csv_root_folderpath);
-			csv_reader_obj.set_continue_when_non_exist(operation_non_stop);
-			reader_obj = (void*)&csv_reader_obj;
+			PCSV_SOURCE csv_source_obj = new CsvSource();
+			if (csv_source_obj == NULL)
+				throw bad_alloc();
+			ret = csv_source_obj->set_continue_when_non_exist(continue_when_non_exist);
+			if (CHECK_FAILURE(ret))
+				goto OUT;
+			ret = csv_source_obj->set_root_folderpath(csv_root_folderpath);
+			if (CHECK_FAILURE(ret))
+				goto OUT;
+			source_obj = csv_source_obj;
+		}
+		break;
+		case FinanceData_SHM:
+		{
+			WRITE_DEBUG("Set the SHM parameters for searching......");
+			PSHM_SOURCE shm_source_obj = new ShmSource();
+			if (shm_source_obj == NULL)
+				throw bad_alloc();
+			ret = shm_source_obj->set_continue_when_non_exist(continue_when_non_exist);
+			if (CHECK_FAILURE(ret))
+				goto OUT;
+			ret = shm_source_obj->set_root_folderpath(shm_root_folderpath);
+			if (CHECK_FAILURE(ret))
+				goto OUT;
+			source_obj = shm_source_obj;
 		}
 		break;
 		default:
@@ -167,15 +205,21 @@ unsigned short FinanceAnalyzerMgrBase::search(PSEARCH_RULE_SET search_rule_set, 
 		}
 		break;
 	}
-	unsigned short ret = DATA_READ_BY_OBJECT(finance_data_type, search_rule_set, reader_obj, result_set_map);
+	ret = DATA_READ_BY_OBJECT(finance_data_type, search_rule_set, source_obj, result_set_map);
+OUT:
+	if (source_obj != NULL)
+	{
+		delete source_obj;
+		source_obj = NULL;
+	}
 	return ret;
 }
 
 void FinanceAnalyzerMgrBase::set_data_type(FinanceDataType data_type){finance_data_type = data_type;}
 FinanceDataType FinanceAnalyzerMgrBase::get_data_type()const{return finance_data_type;}
 
-void FinanceAnalyzerMgrBase::set_operation_non_stop(bool non_stop){operation_non_stop = non_stop;}
-bool FinanceAnalyzerMgrBase::is_operation_non_stop()const{return operation_non_stop;}
+void FinanceAnalyzerMgrBase::set_continue_when_non_exist(bool non_stop){continue_when_non_exist = non_stop;}
+bool FinanceAnalyzerMgrBase::is_continue_when_non_exist()const{return continue_when_non_exist;}
 
 unsigned short FinanceAnalyzerMgrBase::set_csv_root_folderpath(const char* root_folderpath)
 {
@@ -186,11 +230,26 @@ unsigned short FinanceAnalyzerMgrBase::set_csv_root_folderpath(const char* root_
 	csv_root_folderpath = new char[root_folderpath_len];
 	if (csv_root_folderpath == NULL)
 		throw bad_alloc();
-	memcpy(csv_root_folderpath, root_folderpath, sizeof(char) * root_folderpath_len);
+	strcpy(csv_root_folderpath, root_folderpath);
 	return RET_SUCCESS;
 }
 	
 const char* FinanceAnalyzerMgrBase::get_csv_root_folderpath()const{return csv_root_folderpath;}
+
+unsigned short FinanceAnalyzerMgrBase::set_shm_root_folderpath(const char* root_folderpath)
+{
+	assert(root_folderpath != NULL && "root_folderpath should NOT be NULL");
+	if (shm_root_folderpath != NULL)
+		delete[] shm_root_folderpath;
+	int root_folderpath_len = strlen(root_folderpath) + 1;
+	shm_root_folderpath = new char[root_folderpath_len];
+	if (shm_root_folderpath == NULL)
+		throw bad_alloc();
+	strcpy(shm_root_folderpath, root_folderpath);
+	return RET_SUCCESS;
+}
+	
+const char* FinanceAnalyzerMgrBase::get_shm_root_folderpath()const{return shm_root_folderpath;}
 
 #ifdef DO_DEBUG
 unsigned short FinanceAnalyzerMgrBase::test()
@@ -268,7 +327,7 @@ unsigned short FinanceAnalyzerMarketMgr::initialize()
 // 		case FinanceData_SQL:
 // 		{
 // 			static DataSqlReader sql_reader_obj;
-// 			sql_reader_obj.set_continue_when_non_exist(operation_non_stop);
+// 			sql_reader_obj.set_continue_when_non_exist(continue_when_non_exist);
 // 			reader_obj = (void*)&sql_reader_obj;
 // 		}
 // 		break;
@@ -276,7 +335,7 @@ unsigned short FinanceAnalyzerMarketMgr::initialize()
 // 		{
 // 			static DataCsvReader csv_reader_obj;
 // 			csv_reader_obj.set_root_folderpath(csv_root_folderpath);
-// 			csv_reader_obj.set_continue_when_non_exist(operation_non_stop);
+// 			csv_reader_obj.set_continue_when_non_exist(continue_when_non_exist);
 // 			reader_obj = (void*)&csv_reader_obj;
 // 		}
 // 		break;

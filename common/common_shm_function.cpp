@@ -4,11 +4,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <assert.h>
+#include <string>
 #include "common_function.h"
 #include "msg_dumper_wrapper.h"
 
 
-static const char* SHM_ROOT_FILEPATH = "/dev/shm";
+using namespace std;
+
 static const int MAX_FILEPATH_SIZE = 256;
 
 #define GM_WRITE_LOG_BEGIN(format, ...)\
@@ -32,7 +34,22 @@ GM_WRITE_LOG_END()
 
 static void format_full_shm_filepath(const char* shm_filepath, char* full_filepath, int full_filepath_buf_size)
 {
-	snprintf(full_filepath, full_filepath_buf_size, "%s%s", SHM_ROOT_FILEPATH, shm_filepath);
+	assert(shm_filepath != NULL && "shm_filepath shuold NOT be NULL");
+	if (strncmp(shm_filepath, SHM_ROOT_FILEPATH, SHM_ROOT_FILEPATH_LEN) != 0)
+	{
+// Should be the relative file path
+		if (shm_filepath[0] == '/')
+		{
+			GM_WRITE_ERROR("Incorect shm file path: %s", shm_filepath);
+			assert(0 && "Incorect shm file path");
+		}
+// The filepath does NOT start with '/dev/shm'
+// 		int filepath_left_len = strlen(filepath_buf) + 1 - (SHM_ROOT_FILEPATH_LEN + 1);
+// 		memmove(filepath_buf, filepath_buf + SHM_ROOT_FILEPATH_LEN + 1, filepath_left_len);
+		snprintf(full_filepath, full_filepath_buf_size, "%s/%s", SHM_ROOT_FILEPATH, shm_filepath);		
+	}
+	else
+		strcpy(full_filepath, shm_filepath);
 }
 
 // unsigned short open_shm_file(const char* shm_filepath, int flags, mode_t mode=0666)
@@ -234,5 +251,129 @@ unsigned short gm_put_data_ptr(void* data, int data_size)
 {
 	assert(data != NULL && "data should NOT be NULL");
 	munmap(data, data_size);
+	return RET_SUCCESS;
+}
+
+unsigned short read_shm_file_lines_ex(std::list<std::string>& line_list, const char* shm_filepath, const char* file_read_attribute, PTIME_RANGE_PARAM time_range_param, char data_seperate_character)
+{
+	assert(shm_filepath != NULL && "shm_filepath should NOT be NULL");
+	assert(file_read_attribute != NULL && "file_read_attribute should NOT be NULL");
+	char full_filepath[MAX_FILEPATH_SIZE];
+// Find the file full path in the /dev/shm
+	format_full_shm_filepath(shm_filepath, full_filepath, MAX_FILEPATH_SIZE);
+	if (!check_file_exist(shm_filepath))
+	{
+		STATIC_WRITE_FORMAT_ERROR("The shm file[%s] does NOT exist", shm_filepath);
+		return RET_FAILURE_NOT_FOUND;		
+	}
+
+	unsigned short ret = RET_SUCCESS;
+	char *data = NULL;
+	int data_size = 0;
+	ret = gm_get_data_ptr(full_filepath, (void**)&data, data_size);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	char* data_duplica = strdup(data);
+	char* line = NULL;
+	while ((line = strsep(&data_duplica, "\n")) != NULL)
+	{
+		if (strlen(line) == 0 || line[0] == '#')
+			continue;
+// CAUTION: To check the time range, I assume the time field index is 0 
+		if (time_range_param != NULL)
+		{
+			static const int TIME_BUF_SIZE = 16;
+			static char time_buf[TIME_BUF_SIZE];
+			char* pos = strchr(line, data_seperate_character);
+			if (pos == NULL)
+			{
+				GM_WRITE_ERROR("Incorrect data format in file[%s]: %s", full_filepath, line);
+				ret = RET_FAILURE_INCORRECT_FORMAT;
+				break;
+			}
+			int pos_index = pos - line;
+			if (pos_index >= TIME_BUF_SIZE)
+			{
+				GM_WRITE_ERROR("Incorrect time format in file[%s], time string length: %d", full_filepath, pos_index);
+				ret = RET_FAILURE_INCORRECT_FORMAT;
+				break;
+			}
+			memset(time_buf, 0x0, sizeof(char) * TIME_BUF_SIZE);
+			memcpy(time_buf, line, sizeof(char) * pos_index);
+			TimeInRangeType time_in_range_type = TimeRangeParam::time_in_range_type(time_range_param, time_buf);
+			if (time_in_range_type == TIME_BEFORE_RANGE)
+				continue;
+			else if (time_in_range_type == TIME_AFTER_RANGE)
+				break;
+		}
+		string line_str(line);
+		line_list.push_back(line_str);
+	}
+
+	if (data_duplica != NULL)
+	{
+		free(data_duplica);
+		data_duplica = NULL;
+	}
+	gm_put_data_ptr(data, data_size);
+	return ret;
+}
+
+unsigned short write_shm_file_lines_ex(const std::list<std::string>& line_list, const char* shm_filepath, const char* file_write_attribute, PTIME_RANGE_PARAM time_range_param, char data_seperate_character)
+{
+	assert(shm_filepath != NULL && "shm_filepath should NOT be NULL");
+	assert(file_write_attribute != NULL && "file_write_attribute should NOT be NULL");
+	static string new_line("\n");
+	char full_filepath[MAX_FILEPATH_SIZE];
+// Find the file full path in the /dev/shm
+	format_full_shm_filepath(shm_filepath, full_filepath, MAX_FILEPATH_SIZE);
+	if (check_file_exist(shm_filepath))
+	{
+		GM_WRITE_ERROR("The shm file[%s] already exist", shm_filepath);
+		return RET_FAILURE_NOT_FOUND;		
+	}
+
+	unsigned short ret = RET_SUCCESS;
+	static const int BUF_SIZE = 512;
+	char line_buf[BUF_SIZE];
+	list<string>::const_iterator iter = line_list.begin();
+	string total_string;
+// Write into file line by line
+	while (iter != line_list.end())
+	{
+		string line = (string)*iter;
+// CAUTION: To check the time range, I assume the time field index is 0 
+		if (time_range_param != NULL)
+		{
+			static const int TIME_BUF_SIZE = 16;
+			static char time_buf[TIME_BUF_SIZE];
+			strncpy(line_buf, line.c_str(), BUF_SIZE);
+			char* pos = strchr(line_buf, data_seperate_character);
+			if (pos == NULL)
+			{
+				GM_WRITE_ERROR("Incorrect data format in file[%s]: %s", shm_filepath, line_buf);
+				return RET_FAILURE_INCORRECT_FORMAT;
+			}
+			int pos_index = pos - line_buf;
+			if (pos_index >= TIME_BUF_SIZE)
+			{
+				GM_WRITE_ERROR("Incorrect time format in file[%s], time string length: %d", shm_filepath, pos_index);
+				return RET_FAILURE_INCORRECT_FORMAT;
+			}
+			memset(time_buf, 0x0, sizeof(char) * TIME_BUF_SIZE);
+			memcpy(time_buf, line_buf, sizeof(char) * pos_index);
+			TimeInRangeType time_in_range_type = TimeRangeParam::time_in_range_type(time_range_param, time_buf);
+			if (time_in_range_type == TIME_BEFORE_RANGE)
+				continue;
+			else if (time_in_range_type == TIME_AFTER_RANGE)
+				break;
+		}
+		total_string += (line + new_line);
+		iter++;
+	}
+
+	ret = gm_add_data(full_filepath, (void*)total_string.c_str(), total_string.size());
+	if (CHECK_FAILURE(ret))
+		return ret;
 	return RET_SUCCESS;
 }

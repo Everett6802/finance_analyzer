@@ -3,12 +3,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
-
 #include <sys/types.h>
 #include <dirent.h>
 // #include <stdio.h>
 // #include <string.h>
-
 #include <string.h>
 #include <stdexcept>
 #include <new>
@@ -49,7 +47,7 @@ FinanceAnalysisMode get_finance_analysis_mode_from_file()
 			throw runtime_error(string(errmsg));
 			goto OUT;
 		}
-	OUT:
+OUT:
 		if (fp != NULL)
 		{
 			fclose(fp);
@@ -168,26 +166,30 @@ const char* get_ret_description(unsigned short ret)
 }
 const int** get_finance_sql_data_field_type_list(){return FINANCE_SQL_DATA_FIELD_TYPE_LIST;}
 const int** get_finance_csv_data_field_type_list(){return FINANCE_CSV_DATA_FIELD_TYPE_LIST;}
+const int** get_finance_shm_data_field_type_list(){return FINANCE_SHM_DATA_FIELD_TYPE_LIST;}
 const int** get_finance_data_field_type_list(FinanceDataType finance_data_type)
 {
 	typedef const int** (*GET_FINANCE_DATA_FIELD_TYPE_LIST_FUNC_PTR)();
 	static GET_FINANCE_DATA_FIELD_TYPE_LIST_FUNC_PTR get_finance_data_field_type_list_func_ptr[] =
 	{
 		get_finance_sql_data_field_type_list,
-		get_finance_csv_data_field_type_list
+		get_finance_csv_data_field_type_list,
+		get_finance_shm_data_field_type_list
 	};
 	return (*(get_finance_data_field_type_list_func_ptr[finance_data_type]))();
 }
 
 const int* get_finance_sql_data_field_amount_list(){return FINANCE_SQL_DATA_FIELD_AMOUNT_LIST;}
 const int* get_finance_csv_data_field_amount_list(){return FINANCE_CSV_DATA_FIELD_AMOUNT_LIST;}
+const int* get_finance_shm_data_field_amount_list(){return FINANCE_SHM_DATA_FIELD_AMOUNT_LIST;}
 const int* get_finance_data_field_amount_list(FinanceDataType finance_data_type)
 {
 	typedef const int* (*GET_FINANCE_DATA_FIELD_AMOUNT_LIST_FUNC_PTR)();
 	static GET_FINANCE_DATA_FIELD_AMOUNT_LIST_FUNC_PTR get_finance_data_field_amount_list_func_ptr[] =
 	{
 		get_finance_sql_data_field_amount_list,
-		get_finance_csv_data_field_amount_list
+		get_finance_csv_data_field_amount_list,
+		get_finance_shm_data_field_amount_list
 	};
 	return (*(get_finance_data_field_amount_list_func_ptr[finance_data_type]))();
 }
@@ -234,36 +236,36 @@ const char* get_sql_field_description(int method_index, int field_index)
 	return NULL;
 }
 
-const char* get_csv_field_description(int method_index, int field_index)
+const char* get_fs_field_description(int method_index, int field_index)
 {
 	switch(method_index)
 	{
 		case FinanceMethod_StockExchangeAndVolume:
-			return CSV_STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[field_index];
+			return FS_STOCK_EXCHANGE_AND_VALUE_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_StockTop3LegalPersonsNetBuyOrSell:
-			return CSV_STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[field_index];
+			return FS_STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_StockMarginTradingAndShortSelling:
-			return CSV_STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[field_index];
+			return FS_STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest:
-			return CSV_FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+			return FS_FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_FutureOrOptionTop3LegalPersonsOpenInterest:
-			return CSV_FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+			return FS_FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest:
-			return CSV_OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
+			return FS_OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_OptionPutCallRatio:
-			return CSV_OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[field_index];
+			return FS_OPTION_PUT_CALL_RATIO_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_FutureTop10DealersAndLegalPersons:
-			return CSV_FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[field_index];
+			return FS_FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_DepositoryShareholderDistributionTable:
-			return CSV_COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_FIELD_DESCRIPTION[field_index];
+			return FS_COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_BalanceSheet:
-			return CSV_BALANCE_SHEET_FIELD_DESCRIPTION[field_index];
+			return FS_BALANCE_SHEET_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_IncomeStatement:
-			return CSV_INCOME_STATEMENT_FIELD_DESCRIPTION[field_index];
+			return FS_INCOME_STATEMENT_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_CashFlowStatement:
-			return CSV_CASH_FLOW_STATEMENT_FIELD_DESCRIPTION[field_index];
+			return FS_CASH_FLOW_STATEMENT_FIELD_DESCRIPTION[field_index];
 		case FinanceMethod_StatementOfChangesInEquity:
-			return CSV_STATEMENT_OF_CHANGES_IN_EQUITY_FIELD_DESCRIPTION[field_index];
+			return FS_STATEMENT_OF_CHANGES_IN_EQUITY_FIELD_DESCRIPTION[field_index];
 		default:
 		{
 			static const int BUF_SIZE = 256;
@@ -276,6 +278,9 @@ const char* get_csv_field_description(int method_index, int field_index)
 	return NULL;
 }
 
+#define get_csv_field_description get_fs_field_description
+#define get_shm_field_description get_fs_field_description
+
 const char* get_field_description(int method_index, int field_index/*, FinanceAnalysisMode finance_analysis_mode*/, FinanceDataType finance_data_type)
 {
 	// assert((method_index >= 0 && method_index < FinanceSourceSize) && "method_index is out of range");
@@ -286,7 +291,8 @@ const char* get_field_description(int method_index, int field_index/*, FinanceAn
 	static GET_FILED_DESCRIPTION_FUNC_PTR get_field_description_func_ptr[] = 
 	{
 		get_sql_field_description,
-		get_csv_field_description
+		get_csv_field_description,
+		get_shm_field_description
 	};
 	return (*(get_field_description_func_ptr[finance_data_type]))(method_index, field_index);
 }
@@ -357,7 +363,7 @@ bool check_sql_field_index_in_range(int method_index, int field_index)
 
 bool check_csv_field_index_in_range(int method_index, int field_index)
 {
-	if(field_index < 0 && field_index >= FINANCE_CSV_DATA_FIELD_AMOUNT_LIST[method_index])
+	if(field_index < 0 && field_index >= FINANCE_FS_DATA_FIELD_AMOUNT_LIST[method_index])
 	{
 // If field_index == -1, it means select all field in the table
 		if (field_index != -1)
@@ -434,6 +440,7 @@ unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char*
 		STATIC_WRITE_FORMAT_ERROR("The file[%s] does NOT exist", filepath);
 		return RET_FAILURE_NOT_FOUND;		
 	}
+// Open the file
 	FILE* fp = fopen(filepath, file_read_attribute);
 	if (fp == NULL)
 	{
@@ -441,8 +448,9 @@ unsigned short read_file_lines_ex(std::list<std::string>& line_list, const char*
 		return RET_FAILURE_SYSTEM_API;
 	}
 	static const int BUF_SIZE = 512;
-	static char line_buf[BUF_SIZE];
+	char line_buf[BUF_SIZE];
 	int last_character_in_string_index = 0;
+// Read the file line by line
 	while (fgets(line_buf, BUF_SIZE, fp) != NULL) 
 	{
 		if (line_buf[0] == '\n' || line_buf[0] == '#')
@@ -498,19 +506,51 @@ unsigned short read_config_file_lines(std::list<std::string>& conf_line_list, co
 	return read_config_file_lines_ex(conf_line_list, config_filename, "r", config_folderpath);
 }
 
-unsigned short write_file_lines_ex(const std::list<std::string>& line_list, const char* filepath, const char* file_write_attribute)
+unsigned short write_file_lines_ex(const std::list<std::string>& line_list, const char* filepath, const char* file_write_attribute, PTIME_RANGE_PARAM time_range_param, char data_seperate_character)
 {
 	static string new_line("\n");
+// Open the file
 	FILE* fp = fopen(filepath, file_write_attribute);
 	if (fp == NULL)
 	{
 		STATIC_WRITE_FORMAT_ERROR("Fail to open the file[%s], due to: %s", filepath, strerror(errno));
 		return RET_FAILURE_SYSTEM_API;
 	}
+	static const int BUF_SIZE = 512;
+	char line_buf[BUF_SIZE];
 	list<string>::const_iterator iter = line_list.begin();
+// Write into file line by line
 	while (iter != line_list.end())
 	{
-		string line = (string)*iter + new_line;
+		string line = (string)*iter;
+// CAUTION: To check the time range, I assume the time field index is 0 
+		if (time_range_param != NULL)
+		{
+			static const int TIME_BUF_SIZE = 16;
+			static char time_buf[TIME_BUF_SIZE];
+			strncpy(line_buf, line.c_str(), BUF_SIZE);
+			// char* line_buf = line.c_str();
+			char* pos = strchr(line_buf, data_seperate_character);
+			if (pos == NULL)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect data format in file[%s]: %s", filepath, line_buf);
+				return RET_FAILURE_INCORRECT_FORMAT;
+			}
+			int pos_index = pos - line_buf;
+			if (pos_index >= TIME_BUF_SIZE)
+			{
+				STATIC_WRITE_FORMAT_ERROR("Incorrect time format in file[%s], time string length: %d", filepath, pos_index);
+				return RET_FAILURE_INCORRECT_FORMAT;
+			}
+			memset(time_buf, 0x0, sizeof(char) * TIME_BUF_SIZE);
+			memcpy(time_buf, line_buf, sizeof(char) * pos_index);
+			TimeInRangeType time_in_range_type = TimeRangeParam::time_in_range_type(time_range_param, time_buf);
+			if (time_in_range_type == TIME_BEFORE_RANGE)
+				continue;
+			else if (time_in_range_type == TIME_AFTER_RANGE)
+				break;
+		}
+		line += new_line;
 		fputs(line.c_str(), fp);
 		iter++;
 	}
@@ -704,32 +744,6 @@ unsigned short create_folder_in_project_if_not_exist(const char* foldername_in_p
 	getcwd(current_working_directory, FILE_PATH_SIZE);
 	snprintf(folder_path, FILE_PATH_SIZE, "%s/%s", current_working_directory, foldername_in_project);
 	return create_folder_if_not_exist(folder_path, mode);
-}
-
-unsigned short format_market_csv_filepath(char* csv_filepath_buf, int csv_filepath_buf_size, const char* root_folderpath, int method_index)
-{
-	assert(csv_filepath_buf != NULL && "csv_filepath_buf should NOT be NULL");
-	assert(root_folderpath != NULL && "root_folderpath should NOT be NULL");
-	if (method_index < FinanceMethod_MarketStart || method_index >= FinanceMethod_MarketEnd)
-	{
-		fprintf(stderr, "method_index[%d] is NOT in range: [%d, %d)\n", method_index, FinanceMethod_MarketStart, FinanceMethod_MarketEnd);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}
-	snprintf(csv_filepath_buf, csv_filepath_buf_size, "%s/%s/%s.csv", root_folderpath, FINANCE_DATA_MARKET_NAME, FINANCE_CSV_FILE_NAME_LIST[method_index]);	
-	return RET_SUCCESS;
-}
-
-unsigned short format_stock_csv_filepath(char* csv_filepath_buf, int csv_filepath_buf_size, const char* root_folderpath, int company_group_number, const char* company_code_number, int method_index)
-{
-	assert(csv_filepath_buf != NULL && "csv_filepath_buf should NOT be NULL");
-	assert(root_folderpath != NULL && "root_folderpath should NOT be NULL");
-	if (method_index < FinanceMethod_StockStart || method_index >= FinanceMethod_StockEnd)
-	{
-		fprintf(stderr, "method_index[%d] is NOT in range: [%d, %d)\n", method_index, FinanceMethod_StockStart, FinanceMethod_StockEnd);
-		return RET_FAILURE_INVALID_ARGUMENT;
-	}	
-	snprintf(csv_filepath_buf, csv_filepath_buf_size, "%s/%s%02d/%s/%s.csv", root_folderpath, FINANCE_DATA_STOCK_NAME, company_group_number, company_code_number, FINANCE_CSV_FILE_NAME_LIST[method_index]);
-	return RET_SUCCESS;
 }
 
 unsigned short direct_string_to_output_stream(const char* data, const char* filepath)

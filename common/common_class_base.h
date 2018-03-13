@@ -6,6 +6,8 @@
 #include "common_function.h"
 
 
+// #define ENABLE_OLD_TIME_STRUCTURE
+
 // class DataSetAccessParam;
 // class ResultSetAccessParam;
 // class FilterRuleThresholdBase;
@@ -109,6 +111,8 @@ typedef TimeCfg* PTIME_CFG;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef ENABLE_OLD_TIME_STRUCTURE
+
 class TimeRangeCfg
 {
 private:
@@ -172,6 +176,8 @@ public:
 	SingleTimeRangeCfg(int year, int month, int day); // Single day
 };
 typedef SingleTimeRangeCfg* PSINGLE_TIME_RANGE_CFG;
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

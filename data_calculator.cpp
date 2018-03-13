@@ -205,7 +205,7 @@ unsigned short DataCalculatorBase::show_result(string& result_str, int show_resu
 // 	return res_info;
 // }
 
-const char* DataCalculatorBase::get_description_head(const PRESULT_SET result_set, const PRESULT_SET_ACCESS_PARAM result_set_access_param, const PTIME_RANGE_CFG time_range_cfg)const
+const char* DataCalculatorBase::get_description_head(const PRESULT_SET result_set, const PRESULT_SET_ACCESS_PARAM result_set_access_param, const PTIME_RANGE_PARAM time_range_param)const
 {
 	assert(result_set != NULL && "result_set should NOT be NULL");
 	assert(result_set_access_param != NULL && "result_set_access_param should NOT be NULL");
@@ -215,23 +215,23 @@ const char* DataCalculatorBase::get_description_head(const PRESULT_SET result_se
 	// assert(result_set != NULL && "result_set should NOT be NULL");
 	int start_index = 0;
 	int end_index = result_set->get_data_size();
-	if (time_range_cfg != NULL)
+	if (time_range_param != NULL)
 	{
-		if (time_range_cfg->get_start_time() != NULL)
+		if (time_range_param->get_start_time() != NULL)
 		{
-			start_index = result_set->get_date_array_element_index(time_range_cfg->get_start_time()->to_string());
+			start_index = result_set->get_date_array_element_index(time_range_param->get_start_time()->to_string());
 			if (start_index == -1)
 			{
-				snprintf(buf, BUF_SIZE, "Fail to find the start index of the date: %s", time_range_cfg->get_start_time()->to_string());
+				snprintf(buf, BUF_SIZE, "Fail to find the start index of the date: %s", time_range_param->get_start_time()->to_string());
 				throw invalid_argument(string(buf));
 			}
 		}
-		if (time_range_cfg->get_end_time() != NULL)
+		if (time_range_param->get_end_time() != NULL)
 		{
-			end_index = result_set->get_date_array_element_index(time_range_cfg->get_end_time()->to_string());
+			end_index = result_set->get_date_array_element_index(time_range_param->get_end_time()->to_string());
 			if (end_index == -1)
 			{
-				snprintf(buf, BUF_SIZE, "Fail to find the end index of the date: %s", time_range_cfg->get_end_time()->to_string());
+				snprintf(buf, BUF_SIZE, "Fail to find the end index of the date: %s", time_range_param->get_end_time()->to_string());
 				throw invalid_argument(string(buf));
 			}
 		}
@@ -247,24 +247,24 @@ const char* DataCalculatorBase::get_description_head(const PRESULT_SET result_se
 	return buf;
 }
 
-const char* DataCalculatorBase::get_no_data_description(int method_index, int field_index, const PTIME_RANGE_CFG time_range_cfg)const
+const char* DataCalculatorBase::get_no_data_description(int method_index, int field_index, const PTIME_RANGE_PARAM time_range_param)const
 {
-	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
-	assert(time_range_cfg->get_start_time() != NULL && "time_range_cfg::start_time should NOT be NULL");
-	assert(time_range_cfg->get_end_time() != NULL && "time_range_cfg::end_time should NOT be NULL");
+	assert(time_range_param != NULL && "time_range_param should NOT be NULL");
+	assert(time_range_param->get_start_time() != NULL && "time_range_param::start_time should NOT be NULL");
+	assert(time_range_param->get_end_time() != NULL && "time_range_param::end_time should NOT be NULL");
 	static const int BUF_SIZE = 512;
 	static char buf[BUF_SIZE];
 
 	// snprintf(buf, BUF_SIZE, "%s:%s %s:%s *** No Data in MySQL ***", 
 	// 	FINANCE_METHOD_DESCRIPTION_LIST[method_index],
 	// 	get_database_field_description(method_index, field_index),
-	// 	time_range_cfg->get_start_time()->to_string(),
-	// 	time_range_cfg->get_end_time()->to_string()
+	// 	time_range_param->get_start_time()->to_string(),
+	// 	time_range_param->get_end_time()->to_string()
 	// );
 	return buf;
 }
 
-// unsigned short DataCalculatorBase::get_restricted_time_range(int method_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const
+// unsigned short DataCalculatorBase::get_restricted_time_range(int method_index, int field_index, const PTIME_RANGE_PARAM time_range_param, SmartPointer<TimeRangeParam>& sp_restricted_time_range_param)const
 // {
 // 	set<int> method_index_set;
 // 	// int method_index, field_index;
@@ -284,30 +284,30 @@ const char* DataCalculatorBase::get_no_data_description(int method_index, int fi
 
 // 	unsigned short ret = RET_SUCCESS;
 // // Check the time range of this database
-// 	// SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
-// 	if (time_range_cfg != NULL)
+// 	// SmartPointer<TimeRangeParam> sp_restricted_time_range_param;
+// 	if (time_range_param != NULL)
 // 	{
-// 		sp_restricted_time_range_cfg.set_new(new TimeRangeCfg(*time_range_cfg));
+// 		sp_restricted_time_range_param.set_new(new TimeRangeParam(*time_range_param));
 // 	}
 // 	else
 // 	{
-// 		ret = database_time_range->get_max_database_time_range(sp_restricted_time_range_cfg);
+// 		ret = database_time_range->get_max_database_time_range(sp_restricted_time_range_param);
 // 		if (CHECK_FAILURE(ret))
 // 			return ret;
-// 		WRITE_FORMAT_DEBUG("time_rage_cfg is NULL, use the max database time range: %s", sp_restricted_time_range_cfg->to_string());
+// 		WRITE_FORMAT_DEBUG("time_rage_cfg is NULL, use the max database time range: %s", sp_restricted_time_range_param->to_string());
 // 	}
 	
 // 	ret = database_time_range->restrict_time_range(
 // 		method_index_set, 
-// 		sp_restricted_time_range_cfg.get_instance()
+// 		sp_restricted_time_range_param.get_instance()
 // 		);
 // 	if (CHECK_FAILURE(ret))
 // 		return ret;
-// 	WRITE_FORMAT_DEBUG("The search time range: %s", sp_restricted_time_range_cfg->to_string());
+// 	WRITE_FORMAT_DEBUG("The search time range: %s", sp_restricted_time_range_param->to_string());
 // 	return ret;
 // }
 
-// unsigned short DataCalculatorBase::query_from_database(int method_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSetMap>& sp_result_set_map)const
+// unsigned short DataCalculatorBase::query_from_database(int method_index, int field_index, const SmartPointer<TimeRangeParam>& sp_restricted_time_range_param, SmartPointer<ResultSetMap>& sp_result_set_map)const
 // {
 // 	unsigned short ret = RET_SUCCESS;
 // 	SmartPointer<QuerySet> sp_query_set(new QuerySet());
@@ -316,7 +316,7 @@ const char* DataCalculatorBase::get_no_data_description(int method_index, int fi
 // 	// SmartPointer<ResultSet> sp_result_set(new ResultSet());	
 // // Query the data from MySQL
 // 	ret = SqlReader::query_market(
-// 		(const PTIME_RANGE_CFG)sp_restricted_time_range_cfg.get_const_instance(), 
+// 		(const PTIME_RANGE_PARAM)sp_restricted_time_range_param.get_const_instance(), 
 // 		(const PQUERY_SET)sp_query_set.get_const_instance(), 
 // 		// parent_obj->sql_reader, 
 // 		sp_result_set_map.get_instance()
@@ -330,7 +330,7 @@ const char* DataCalculatorBase::get_no_data_description(int method_index, int fi
 // 	return ret;
 // }
 
-unsigned short DataCalculatorBase::get_statistics_result(StatisticsMethod statistics_method, int method_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, string& result_str)const
+unsigned short DataCalculatorBase::get_statistics_result(StatisticsMethod statistics_method, int method_index, int field_index, const PTIME_RANGE_PARAM time_range_param, string& result_str)const
 {
 	// typedef unsigned short (DataCalculatorBase::*get_result_str_func_ptr)(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
 	// static get_result_str_func_ptr get_result_str_func_array[] =
@@ -346,20 +346,20 @@ unsigned short DataCalculatorBase::get_statistics_result(StatisticsMethod statis
 	// unsigned short ret = RET_SUCCESS;
 	// int method_index = statistics_method - StatisticsFormula_Start;
 // // Find the time range of this database
-// 	SmartPointer<TimeRangeCfg> sp_restricted_time_range_cfg;
-// 	ret = get_restricted_time_range(method_index, field_index, time_range_cfg, sp_restricted_time_range_cfg);
+// 	SmartPointer<TimeRangeParam> sp_restricted_time_range_param;
+// 	ret = get_restricted_time_range(method_index, field_index, time_range_param, sp_restricted_time_range_param);
 // 	if (CHECK_FAILURE(ret))
 // 	{
 // 		if (!FAILURE_IS_OUT_OF_RANGE(ret))
 // 			return ret;
-// 		const char* description = get_no_data_description(method_index, field_index, (const PTIME_RANGE_CFG)sp_restricted_time_range_cfg.get_const_instance());
+// 		const char* description = get_no_data_description(method_index, field_index, (const PTIME_RANGE_PARAM)sp_restricted_time_range_param.get_const_instance());
 // 		result_str = string(description);
 // 	}
 // 	else
 // 	{
 // // Query the data from MySQL
 // 		SmartPointer<ResultSetMap> sp_result_set_map(new ResultSetMap());	
-// 		ret = query_from_database(method_index, field_index, sp_restricted_time_range_cfg, sp_result_set_map);
+// 		ret = query_from_database(method_index, field_index, sp_restricted_time_range_param, sp_result_set_map);
 // 		if (CHECK_FAILURE(ret))
 // 			return ret;
 
@@ -381,7 +381,7 @@ unsigned short DataCalculatorBase::get_statistics_result(StatisticsMethod statis
 // 		const char* description_head = get_description_head(
 // 			sp_result_set.get_instance(), 
 // 			sp_result_set_access_param.get_instance(), 
-// 			sp_restricted_time_range_cfg.get_instance()
+// 			sp_restricted_time_range_param.get_instance()
 // 			);
 // 		snprintf(buf, BUF_SIZE, "%s, %s", description_head, new_str.c_str());
 
@@ -487,7 +487,7 @@ unsigned short DataCalculatorBase::get_standard_deviation_result_str(const PFINA
 	return RET_SUCCESS;
 }
 
-unsigned short DataCalculatorBase::calculate_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)const
+unsigned short DataCalculatorBase::calculate_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeParam>& sp_time_range_param)const
 {
 	// static const char* DEF_DESCRIPTION_FORMAT = "***** %s Analysis Result *****";
 	// static const int DESCRIPTION_SIZE = 256;
@@ -516,7 +516,7 @@ unsigned short DataCalculatorBase::calculate_statistics(StatisticsMethod statist
 	// 			statistics_method,
 	// 			method_index, 
 	// 			field_index, 
-	// 			(const PTIME_RANGE_CFG)sp_time_range_cfg.get_const_instance(), 
+	// 			(const PTIME_RANGE_PARAM)sp_time_range_param.get_const_instance(), 
 	// 			new_str
 	// 			);
 	// 		if (CHECK_FAILURE(ret))

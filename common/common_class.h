@@ -6,5 +6,6 @@
 #include "common_class_set.h"
 #include "common_class_smart_pointer.h"
 #include "common_class_output.h"
+#include "common_class_time.h"
 
 #endif

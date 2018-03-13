@@ -11,10 +11,8 @@
 #include <string>
 #include "common.h"
 #include "mgr_factory.h"
+#include "data_source/data_source.h"
 #include "finance_analyzer_mgr.h"
-#include "data_sql_reader.h"
-#include "data_csv_reader.h"
-#include "data_reader.h"
 
 
 enum InteractiveSessionEventType
@@ -54,10 +52,15 @@ private:
 	char* time_range_string_param;
 	char* company_string_param;
 	FinanceDataType finance_data_type;
-	DataSqlReaderParam* data_sql_reader_param;
-	DataCsvReaderParam* data_csv_reader_param;
-	void* data_reader_param_array[FinanceDataSize];
-	bool search_rule_need_reset;
+	bool continue_when_non_exist;
+	char* csv_root_folderpath;
+	char* shm_root_folderpath;
+	// PISOURCE_PARAM source_param;
+	// ShmSourceParam* data_sql_reader_param;
+	// DataCsvReaderParam* data_csv_reader_param;
+	// PISOURCE_PARAM data_source_param_array[FinanceDataSize];
+	bool search_rule_changed;
+	bool source_param_not_default;
 	bool show_stock_support_resistance_verbose;
 	char* stock_support_resistance_date_filter;
 	char* stock_support_resistance_volume_filter;
@@ -81,8 +84,14 @@ private:
 	unsigned short handle_set_company_command(int argc, char **argv);
 	unsigned short handle_get_data_type_command(int argc, char **argv);
 	unsigned short handle_set_data_type_command(int argc, char **argv);
+	unsigned short handle_get_continue_when_non_exist_command(int argc, char **argv);
+	unsigned short handle_set_continue_when_non_exist_command(int argc, char **argv);
+	unsigned short handle_get_csv_root_folderpath_command(int argc, char **argv);
 	unsigned short handle_set_csv_root_folderpath_command(int argc, char **argv);
+	unsigned short handle_get_shm_root_folderpath_command(int argc, char **argv);
+	unsigned short handle_set_shm_root_folderpath_command(int argc, char **argv);
 	unsigned short handle_search_command(int argc, char **argv);
+	// unsigned short handle_show_search_param_command(int argc, char **argv);
 	unsigned short handle_reset_search_param_command(int argc, char **argv);
 	unsigned short handle_set_stock_support_resistance_filepath_command(int argc, char **argv);
 	unsigned short handle_set_stock_support_resistance_verbose_command(int argc, char **argv);

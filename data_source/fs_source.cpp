@@ -1,23 +1,29 @@
 #include <assert.h>
-#include "data_csv_reader.h"
+#include "fs_source.h"
 // #include "database_time_range.h"
 
 
 using namespace std;
 
-DataCsvReaderParam::DataCsvReaderParam() :
-	root_folderpath(NULL),
-	continue_when_non_exist(true)
-{
-	static int default_root_folderpath_len = strlen(DEFAULT_CSV_ROOT_FOLDERPATH);
-	root_folderpath = new char[default_root_folderpath_len + 1];
-	if (root_folderpath == NULL)
-		throw bad_alloc();
-	memset(root_folderpath, 0x0, sizeof(char) * (default_root_folderpath_len + 1));
-	memcpy(root_folderpath, DEFAULT_CSV_ROOT_FOLDERPATH, sizeof(char) * default_root_folderpath_len);
-}
+// FsSourceParam::FsSourceParam() :
+// 	root_folderpath(NULL)
+// {
+// }
 
-DataCsvReaderParam::~DataCsvReaderParam()
+// FsSourceParam::FsSourceParam(bool new_continue_when_non_exist, const char* new_root_folderpath)
+// {
+// 	continue_when_non_exist = new_continue_when_non_exist;
+// 	if (new_root_folderpath != NULL)
+// 	{
+// 		int root_folderpath_len = strlen(new_root_folderpath);
+// 		root_folderpath = new char[root_folderpath_len + 1];
+// 		if (root_folderpath == NULL)
+// 			throw bad_alloc();
+// 		strcpy(root_folderpath, new_root_folderpath);
+// 	}
+// }
+
+FsSourceParam::~FsSourceParam()
 {
 	if (root_folderpath != NULL)
 	{
@@ -26,29 +32,77 @@ DataCsvReaderParam::~DataCsvReaderParam()
 	}
 }
 
+unsigned short FsSourceParam::set_param(IFsSource* source_obj)
+{
+	assert(source_obj != NULL && "source_obj should NOT be NULL");
+	unsigned short ret = RET_SUCCESS;
+	if (root_folderpath != NULL)
+	{
+		ret = ((PFS_SOURCE)source_obj)->set_root_folderpath(root_folderpath);
+		if (CHECK_FAILURE(ret))
+			return ret;
+	}
+	ret = ((PFS_SOURCE)source_obj)->set_continue_when_non_exist(continue_when_non_exist);
+	if (CHECK_FAILURE(ret))
+		return ret;
+	// if (time_range_param != NULL)
+	// {
+	// 	ret = source_obj->set_time_range_param(time_range_param);
+	// 	if (CHECK_FAILURE(ret))
+	// 		return ret;
+	// }
+	return ret;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 
-unsigned short DataCsvReader::read_from_filesystem(
+unsigned short FsSourceHelper::format_market_filepath(char* filepath_buf, int filepath_buf_size, const char* root_folderpath, int method_index)
+{
+	assert(filepath_buf != NULL && "filepath_buf should NOT be NULL");
+	assert(root_folderpath != NULL && "root_folderpath should NOT be NULL");
+	if (method_index < FinanceMethod_MarketStart || method_index >= FinanceMethod_MarketEnd)
+	{
+		fprintf(stderr, "method_index[%d] is NOT in range: [%d, %d)\n", method_index, FinanceMethod_MarketStart, FinanceMethod_MarketEnd);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}
+	snprintf(filepath_buf, filepath_buf_size, "%s/%s/%s.csv", root_folderpath, FINANCE_DATA_MARKET_NAME, FINANCE_FS_FILE_NAME_LIST[method_index]);	
+	return RET_SUCCESS;
+}
+
+unsigned short FsSourceHelper::format_stock_filepath(char* filepath_buf, int filepath_buf_size, const char* root_folderpath, int method_index, int company_group_number, const char* company_code_number)
+{
+	assert(filepath_buf != NULL && "filepath_buf should NOT be NULL");
+	assert(root_folderpath != NULL && "root_folderpath should NOT be NULL");
+	if (method_index < FinanceMethod_StockStart || method_index >= FinanceMethod_StockEnd)
+	{
+		fprintf(stderr, "method_index[%d] is NOT in range: [%d, %d)\n", method_index, FinanceMethod_StockStart, FinanceMethod_StockEnd);
+		return RET_FAILURE_INVALID_ARGUMENT;
+	}	
+	snprintf(filepath_buf, filepath_buf_size, "%s/%s%02d/%s/%s.csv", root_folderpath, FINANCE_DATA_STOCK_NAME, company_group_number, company_code_number, FINANCE_FS_FILE_NAME_LIST[method_index]);
+	return RET_SUCCESS;
+}
+
+unsigned short FsSourceHelper::read_from_filesystem(
 		const PTIME_RANGE_PARAM time_range_param, 
 		const PQUERY_SET query_set,
 		const std::string& company_code_number,  // For stock mode only, ignored in market mode
 		const int company_group_number,  // For stock mode only, ignored in market mode
-		DataCsvReader* csv_reader_obj, 
+		FsSource* fs_source_obj, 
 		FinanceAnalysisMode finance_analysis_mode,
 		PRESULT_SET result_set
 	)
 {
 	assert((finance_analysis_mode == FinanceAnalysis_Market || finance_analysis_mode == FinanceAnalysis_Stock) && "finance_analysis_mode is NOT FinanceAnalysis_Market/FinanceAnalysis_Stock");
 	assert(result_set != NULL && "result_set should NOT be NULL");
-	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
-	static int const CSV_FILEPATH_BUF_SIZE = 256;
-	static char csv_filepath_buf[CSV_FILEPATH_BUF_SIZE];
+	// DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
+	static int const FILEPATH_BUF_SIZE = 256;
+	static char filepath_buf[FILEPATH_BUF_SIZE];
 	if (finance_analysis_mode == FinanceAnalysis_Stock)
 	{
 		DECLARE_AND_IMPLEMENT_STATIC_COMPANY_PROFILE()
 		if (!company_profile->is_company_exist(company_code_number))
 		{
-			WRITE_FORMAT_ERROR("The company[%s] does NOT exist", company_code_number.c_str());
+			STATIC_WRITE_FORMAT_ERROR("The company[%s] does NOT exist", company_code_number.c_str());
 			return RET_FAILURE_INVALID_ARGUMENT;
 		}
 	}
@@ -62,15 +116,17 @@ unsigned short DataCsvReader::read_from_filesystem(
 // Determine the CSV file path
 		if (finance_analysis_mode == FinanceAnalysis_Market)
 		{
-			// snprintf(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, "%s/%s/%s.csv", csv_reader_obj->data_csv_reader_param.root_folderpath, FINANCE_DATA_MARKET_NAME, FINANCE_CSV_FILE_NAME_LIST[method_index]);
-			ret = format_market_csv_filepath(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, csv_reader_obj->data_csv_reader_param.root_folderpath, method_index);
+			// snprintf(filepath_buf, CSV_FILEPATH_BUF_SIZE, "%s/%s/%s.csv", fs_source_obj->source_param->root_folderpath, FINANCE_DATA_MARKET_NAME, FINANCE_CSV_FILE_NAME_LIST[method_index]);
+			ret = format_market_filepath(filepath_buf, FILEPATH_BUF_SIZE, fs_source_obj->source_param->root_folderpath, method_index);
+			// ret = format_market_filepath(filepath_buf, FILEPATH_BUF_SIZE, fs_source_obj->source_param->root_folderpath, method_index);
 			if (CHECK_FAILURE(ret))
 				return ret;
 		}
 		else
 		{
-			// snprintf(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, "%s/%s%02d/%s/%s.csv", csv_reader_obj->data_csv_reader_param.root_folderpath, FINANCE_DATA_STOCK_NAME, company_group_number, company_code_number.c_str(), FINANCE_CSV_FILE_NAME_LIST[method_index]);
-			ret = format_stock_csv_filepath(csv_filepath_buf, CSV_FILEPATH_BUF_SIZE, csv_reader_obj->data_csv_reader_param.root_folderpath, company_group_number, company_code_number.c_str(), method_index);
+			// snprintf(filepath_buf, CSV_FILEPATH_BUF_SIZE, "%s/%s%02d/%s/%s.csv", fs_source_obj->source_param->root_folderpath, FINANCE_DATA_STOCK_NAME, company_group_number, company_code_number.c_str(), FINANCE_CSV_FILE_NAME_LIST[method_index]);
+			ret = format_stock_filepath(filepath_buf, FILEPATH_BUF_SIZE, fs_source_obj->source_param->root_folderpath, method_index, company_group_number, company_code_number.c_str());
+			// ret = format_stock_filepath(filepath_buf, FILEPATH_BUF_SIZE, fs_source_obj->source_param->root_folderpath, method_index, company_group_number, company_code_number.c_str());
 			if (CHECK_FAILURE(ret))
 				return ret;
 		}
@@ -79,9 +135,9 @@ unsigned short DataCsvReader::read_from_filesystem(
 		if (CHECK_FAILURE(ret))
 			return ret;
 // Read the CSV data from the file system
-		ret = csv_reader_obj->read_data(
+		ret = fs_source_obj->read_data(
 			method_index,
-			csv_filepath_buf,
+			filepath_buf,
 			(const PINT_DEQUE)&query_field, 
 			time_range_param, 
 			result_set
@@ -92,23 +148,23 @@ unsigned short DataCsvReader::read_from_filesystem(
 	return RET_SUCCESS;
 }
 
-unsigned short DataCsvReader::read_market(const PQUERY_SET query_set, const PTIME_RANGE_PARAM time_range_param, DataCsvReader* csv_reader_obj, PRESULT_SET_MAP result_set_map)
+unsigned short FsSourceHelper::read_market(const PQUERY_SET query_set, const PTIME_RANGE_PARAM time_range_param, FsSource* fs_source_obj, PRESULT_SET_MAP result_set_map)
 {
-	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
+	// DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 	static string company_code_number_dummy("xxxx");
 	static int company_group_number_dummy = 99;
-	STATIC_WRITE_DEBUG("Start to read the CSV data in the Market mode......");
-	assert(csv_reader_obj != NULL && query_set != NULL && time_range_param != NULL && result_set_map != NULL);
+	STATIC_WRITE_DEBUG("Start to read the data in file system in the Market mode......");
+	assert(fs_source_obj != NULL && query_set != NULL && time_range_param != NULL && result_set_map != NULL);
 
 	if (!query_set->is_add_query_done())
 	{
-		WRITE_ERROR("The setting of query data is NOT complete");
+		STATIC_WRITE_ERROR("The setting of query data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 	if (time_range_param->get_start_time() == NULL || time_range_param->get_end_time() == NULL)
 	{
-		WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
+		STATIC_WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	unsigned short ret = RET_SUCCESS;
@@ -129,7 +185,7 @@ unsigned short DataCsvReader::read_market(const PQUERY_SET query_set, const PTIM
 			PRESULT_SET result_set = new ResultSet(FinanceData_CSV);
 			if (result_set == NULL)
 			{
-				WRITE_ERROR("Fail to allocate memory: result_set");
+				STATIC_WRITE_ERROR("Fail to allocate memory: result_set");
 				return RET_FAILURE_INSUFFICIENT_MEMORY;
 			}
 // Query the data from each table
@@ -139,7 +195,7 @@ unsigned short DataCsvReader::read_market(const PQUERY_SET query_set, const PTIM
 				query_set,
 				company_code_number_dummy,  // For stock mode only, ignored in market mode
 				company_group_number_dummy,  // For stock mode only, ignored in market mode
-				csv_reader_obj, 
+				fs_source_obj, 
 				FinanceAnalysis_Market,
 				result_set
 			);
@@ -174,7 +230,7 @@ unsigned short DataCsvReader::read_market(const PQUERY_SET query_set, const PTIM
 				PRESULT_SET result_set = new ResultSet(FinanceData_CSV);
 				if (result_set == NULL)
 				{
-					WRITE_ERROR("Fail to allocate memory: result_set");
+					STATIC_WRITE_ERROR("Fail to allocate memory: result_set");
 					return RET_FAILURE_INSUFFICIENT_MEMORY;
 				}
 // Query the data from each table
@@ -184,7 +240,7 @@ unsigned short DataCsvReader::read_market(const PQUERY_SET query_set, const PTIM
 					sp_query_sub_set.get_instance(),
 					company_code_number_dummy,  // For stock mode only, ignored in market mode
 					company_group_number_dummy,  // For stock mode only, ignored in market mode
-					csv_reader_obj,
+					fs_source_obj,
 					FinanceAnalysis_Market, 
 					result_set
 				);
@@ -200,7 +256,7 @@ unsigned short DataCsvReader::read_market(const PQUERY_SET query_set, const PTIM
 		break;
 		default:
 		{
-			WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
+			STATIC_WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
 			return RET_FAILURE_INVALID_ARGUMENT;
 		}
 		break;
@@ -209,25 +265,25 @@ unsigned short DataCsvReader::read_market(const PQUERY_SET query_set, const PTIM
 	return RET_SUCCESS;
 }
 
-unsigned short DataCsvReader::read_stock(const PQUERY_SET query_set, const PTIME_RANGE_PARAM time_range_param, const PCOMPANY_GROUP_SET company_group_set, DataCsvReader* csv_reader_obj, PRESULT_SET_MAP result_set_map)
+unsigned short FsSourceHelper::read_stock(const PQUERY_SET query_set, const PTIME_RANGE_PARAM time_range_param, const PCOMPANY_GROUP_SET company_group_set, FsSource* fs_source_obj, PRESULT_SET_MAP result_set_map)
 {
-	DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
+	// DECLARE_AND_IMPLEMENT_STATIC_MSG_DUMPER()
 	// DECLARE_AND_IMPLEMENT_STATIC_DATABASE_TIME_RANGE()
 	STATIC_WRITE_DEBUG("Start to read the CSV data in the Stock mode......");
-	assert(csv_reader_obj != NULL && query_set != NULL && time_range_param != NULL && company_group_set != NULL && result_set_map != NULL);
+	assert(fs_source_obj != NULL && query_set != NULL && time_range_param != NULL && company_group_set != NULL && result_set_map != NULL);
 	if (!query_set->is_add_query_done())
 	{
-		WRITE_ERROR("The setting of query data is NOT complete");
+		STATIC_WRITE_ERROR("The setting of query data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 	if (time_range_param->get_start_time() == NULL || time_range_param->get_end_time() == NULL)
 	{
-		WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
+		STATIC_WRITE_ERROR("The start/end time in time_range_param should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	if (!company_group_set->is_add_company_done())
 	{
-		WRITE_ERROR("The setting of company group data is NOT complete");
+		STATIC_WRITE_ERROR("The setting of company group data is NOT complete");
 		return RET_FAILURE_INCORRECT_OPERATION;
 	}
 
@@ -259,7 +315,7 @@ unsigned short DataCsvReader::read_stock(const PQUERY_SET query_set, const PTIME
 					PRESULT_SET result_set = new ResultSet(FinanceData_CSV);
 					if (result_set == NULL)
 					{
-						WRITE_FORMAT_ERROR("Fail to allocate memory: result_set while reading %s table", company_code_number.c_str());
+						STATIC_WRITE_FORMAT_ERROR("Fail to allocate memory: result_set while reading %s table", company_code_number.c_str());
 						return RET_FAILURE_INSUFFICIENT_MEMORY;
 					}
 					ret = read_from_filesystem(
@@ -268,7 +324,7 @@ unsigned short DataCsvReader::read_stock(const PQUERY_SET query_set, const PTIME
 						query_set,
 						company_code_number,  // For stock mode only, ignored in market mode
 						company_group_number,  // For stock mode only, ignored in market mode
-						csv_reader_obj, 
+						fs_source_obj, 
 						FinanceAnalysis_Stock,
 						result_set
 					);
@@ -315,7 +371,7 @@ unsigned short DataCsvReader::read_stock(const PQUERY_SET query_set, const PTIME
 						PRESULT_SET result_set = new ResultSet(FinanceData_CSV);
 						if (result_set == NULL)
 						{
-							WRITE_ERROR("Fail to allocate memory: result_set");
+							STATIC_WRITE_ERROR("Fail to allocate memory: result_set");
 							return RET_FAILURE_INSUFFICIENT_MEMORY;
 						}
 // Query the data from each table
@@ -325,7 +381,7 @@ unsigned short DataCsvReader::read_stock(const PQUERY_SET query_set, const PTIME
 							sp_query_sub_set_array[method_revised_index].get_instance(),
 							company_code_number,  // For stock mode only, ignored in market mode
 							company_group_number,  // For stock mode only, ignored in market mode
-							csv_reader_obj, 
+							fs_source_obj, 
 							FinanceAnalysis_Stock,
 							result_set
 						);
@@ -341,7 +397,7 @@ unsigned short DataCsvReader::read_stock(const PQUERY_SET query_set, const PTIME
 				break;
 				default:
 				{
-					WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
+					STATIC_WRITE_FORMAT_ERROR("Unknown result set data unit: %d", result_set_data_unit);
 					return RET_FAILURE_INVALID_ARGUMENT;
 				}
 				break;
@@ -352,13 +408,13 @@ unsigned short DataCsvReader::read_stock(const PQUERY_SET query_set, const PTIME
 	return RET_SUCCESS;
 }
 
-unsigned short DataCsvReader::read_by_object(
+unsigned short FsSourceHelper::read_by_object(
 	const PSEARCH_RULE_SET search_rule_set,
-	void* reader_obj, 
+	PISOURCE source_obj, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	assert(reader_obj != NULL && search_rule_set != NULL && result_set_map != NULL && search_rule_set->get_query_rule() != NULL);
+	assert(source_obj != NULL && search_rule_set != NULL && result_set_map != NULL && search_rule_set->get_query_rule() != NULL);
 	STATIC_WRITE_DEBUG("Start to read the CSV data......");
 	unsigned short ret = RET_SUCCESS;
 	if (search_rule_set->get_query_rule()->get_data_type() != FinanceData_CSV)
@@ -371,11 +427,11 @@ unsigned short DataCsvReader::read_by_object(
 		STATIC_WRITE_FORMAT_ERROR("The data type of the ResultSetMap object should be %s, not %s", FINANCE_DATA_DESCRIPTION[FinanceData_CSV], FINANCE_DATA_DESCRIPTION[result_set_map->get_data_type()]);		
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	PDATA_CSV_READER csv_reader_obj = (PDATA_CSV_READER)reader_obj;
+	// PISOURCE source_obj = (PISOURCE)source_obj;
 	if (search_rule_set->get_finance_mode() == FinanceAnalysis_Market)
-		ret = read_market(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), csv_reader_obj, result_set_map);
+		ret = read_market(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), (FsSource*)source_obj, result_set_map);
 	else if (search_rule_set->get_finance_mode() == FinanceAnalysis_Stock)
-		ret = read_stock(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), search_rule_set->get_company_rule(), csv_reader_obj, result_set_map);
+		ret = read_stock(search_rule_set->get_query_rule(), search_rule_set->get_time_rule(), search_rule_set->get_company_rule(), (FsSource*)source_obj, result_set_map);
 	else
 	{
 		ret = RET_FAILURE_INVALID_ARGUMENT;
@@ -384,57 +440,52 @@ unsigned short DataCsvReader::read_by_object(
 	return ret;
 }
 
-unsigned short DataCsvReader::read_by_param(
+unsigned short FsSourceHelper::read_by_param(
 	const PSEARCH_RULE_SET search_rule_set,
-	void* reader_param, 
+	PISOURCE_PARAM source_param, 
 	PRESULT_SET_MAP result_set_map
 	)
 {
-	assert(reader_param != NULL && "reader_param should NOT be NULL");
+	assert(source_param != NULL && "source_param should NOT be NULL");
 	unsigned short ret = RET_SUCCESS;
-	PDATA_CSV_READER_PARAM data_csv_reader_param = (PDATA_CSV_READER_PARAM)reader_param;
-	DataCsvReader csv_reader_obj;
-// Set parameters......
-	if (data_csv_reader_param->root_folderpath != NULL)
+	// PFS_SOURCE_PARAM source_param = (PFS_SOURCE_PARAM)source_param;
+	PISOURCE source_obj = NULL;
+	source_param->to_object(&source_obj);
+	ret = read_by_object(search_rule_set, source_obj, result_set_map);
+// OUT:
+	if (source_obj != NULL)
 	{
-		ret = csv_reader_obj.set_root_folderpath(data_csv_reader_param->root_folderpath);
-		if (CHECK_FAILURE(ret))
-			return ret;
+		delete source_obj;
+		source_obj = NULL;
 	}
-	ret = csv_reader_obj.set_continue_when_non_exist(data_csv_reader_param->continue_when_non_exist);
-	if (CHECK_FAILURE(ret))
-		return ret;
-	return read_by_object(search_rule_set, &csv_reader_obj, result_set_map);
+	return ret;
 }
 
-unsigned short DataCsvReader::read_by_default(
-	const PSEARCH_RULE_SET search_rule_set, 
-	PRESULT_SET_MAP result_set_map
-	)
-{
-	DataCsvReader csv_reader_obj;
-	return read_by_object(search_rule_set, &csv_reader_obj, result_set_map);	
-}
+///////////////////////////////////////////////////////////////////////////
 
-DataCsvReader::DataCsvReader()
+FsSource::FsSource() : source_param(NULL){}
+
+FsSource::FsSource(PFS_SOURCE_PARAM new_source_param)
 {
 	IMPLEMENT_MSG_DUMPER()
-	// int default_csv_root_folderpath_len = strlen(DEFAULT_CSV_ROOT_FOLDERPATH);
-	// data_csv_reader_param.root_folderpath = new char[default_csv_root_folderpath_len + 1];
-	// if (data_csv_reader_param.root_folderpath == NULL)
-	// 	throw bad_alloc();
-	// memset(data_csv_reader_param.root_folderpath, 0x0, sizeof(char) * default_csv_root_folderpath_len);
-	// memcpy(data_csv_reader_param.root_folderpath, DEFAULT_CSV_ROOT_FOLDERPATH, default_csv_root_folderpath_len);
+	source_param = new_source_param;
+	if (source_param == NULL)
+		throw bad_alloc();
 }
 
-DataCsvReader::~DataCsvReader()
+FsSource::~FsSource()
 {
+	if (source_param != NULL)
+	{
+		delete source_param;
+		source_param = NULL;
+	}
 	RELEASE_MSG_DUMPER()
 }
 
-unsigned short DataCsvReader::read_data(
+unsigned short FsSource::read_data(
 		int method_index,
-		const char* csv_filepath,
+		const char* filepath,
 		const PINT_DEQUE query_field,
 		const PTIME_RANGE_PARAM time_range_param,
 		PRESULT_SET result_set
@@ -448,9 +499,10 @@ unsigned short DataCsvReader::read_data(
 	static const int LINE_MAX_ELEMENT_COUT = 256;
 	static char *line_element[LINE_MAX_ELEMENT_COUT];
 	unsigned short ret = RET_SUCCESS;
-// Read the data from CSV
+// Read the data from File System
 	list<string> line_list;
-	ret = read_file_lines_ex(line_list, csv_filepath, "r", time_range_param);
+	// ret = read_file_lines_ex(line_list, filepath, "r", time_range_param);
+	ret = read_line_data(line_list, filepath, time_range_param);
 	if (CHECK_FAILURE(ret))
 		return ret;
 // Count the amount of the field including the date field
@@ -474,7 +526,7 @@ unsigned short DataCsvReader::read_data(
 		line_element[line_element_count++] = strtok(line_buf, DELIM);
 		if (line_element[0] == NULL)
 		{
-			WRITE_FORMAT_ERROR("Incorrect format in csv file[%s]: %s", csv_filepath, line_buf);
+			WRITE_FORMAT_ERROR("Incorrect format in csv file[%s]: %s", filepath, line_buf);
 			return RET_FAILURE_INCORRECT_CONFIG;
 		}
 		// printf("%s ", line_element[0]);
@@ -511,28 +563,109 @@ unsigned short DataCsvReader::read_data(
 	return RET_SUCCESS;
 }
 
-unsigned short DataCsvReader::set_root_folderpath(const char* new_root_folderpath)
+unsigned short FsSource::write_data(
+		int method_index,
+		const char* filepath,
+		const PINT_DEQUE query_field,
+		const PTIME_RANGE_PARAM time_range_param,
+		const PRESULT_SET result_set
+	)
+{
+	assert(query_field != NULL && !query_field->empty() && "query_field should NOT be NULL/Empty");
+	assert(result_set != NULL && "result_set should NOT be NULL");
+	static const string DELIM = string(",");
+	static const int LINE_BUF_SIZE = 1024;
+	static char line_buf[LINE_BUF_SIZE];
+	// static const int LINE_MAX_ELEMENT_COUT = 256;
+	// static char *line_element[LINE_MAX_ELEMENT_COUT];
+	unsigned short ret = RET_SUCCESS;
+// Count the amount of the field including the date field
+	int data_size = result_set->get_data_size();
+	int data_dimension = (int)query_field->size() + 1;
+	list<string> line_list;
+	for (int i = 0 ; i < data_size ; i++)
+	{
+		bool first_element = true;
+		string line;
+// Get the data in each field
+		for(int index = 0 ; index < data_dimension ; index++)
+		{
+			int finance_field_no = (*query_field)[index];
+			switch(FINANCE_FS_DATA_FIELD_TYPE_LIST[method_index][finance_field_no])
+			{
+			case FinanceField_INT:
+			{
+				snprintf(line_buf, LINE_BUF_SIZE, "%d", result_set->get_int_array_element(method_index, finance_field_no, i));
+			}
+			break;
+			case FinanceField_LONG:
+			{
+				snprintf(line_buf, LINE_BUF_SIZE, "%ld", result_set->get_long_array_element(method_index, finance_field_no, i));
+			}
+			break;
+			case FinanceField_FLOAT:
+			{
+				snprintf(line_buf, LINE_BUF_SIZE, "%.2f", result_set->get_float_array_element(method_index, finance_field_no, i));
+			}
+			break;
+			case FinanceField_DATE:
+			{
+				snprintf(line_buf, LINE_BUF_SIZE, "%s", result_set->get_date_array_element(i));
+			}
+			break;
+			default:
+				assert("Unsupported field type");
+				ret = RET_FAILURE_INVALID_ARGUMENT;
+				goto OUT;
+			}
+			if (!first_element)
+				first_element = false;
+			else
+				line += DELIM;
+			line += string(line_buf);
+		}
+		if (!line.empty())
+		{
+			// line.pop_back();
+			line_list.push_back(line);
+		}
+	}
+// Write the data to File System
+	ret = write_line_data(line_list, filepath, time_range_param);
+	if (CHECK_FAILURE(ret))
+		return ret;
+OUT:
+	return ret;
+}
+
+unsigned short FsSource::set_root_folderpath(const char* new_root_folderpath)
 {
 	if(new_root_folderpath == NULL)
 	{
 		WRITE_ERROR("new_root_folderpath should NOT be NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
-	// assert(data_csv_reader_param != NULL && "data_csv_reader_param should NOT be NULL");
-	assert(data_csv_reader_param.root_folderpath != NULL && "data_csv_reader_param.root_folderpath should NOT be NULL");
-	delete[] data_csv_reader_param.root_folderpath;
+	assert(source_param != NULL && "source_param should NOT be NULL");
+	// assert(source_param->root_folderpath != NULL && "source_param->root_folderpath should NOT be NULL");
+	delete[] source_param->root_folderpath;
 	int new_root_folderpath_len = strlen(new_root_folderpath);
-	data_csv_reader_param.root_folderpath = new char[new_root_folderpath_len + 1];
-	if (data_csv_reader_param.root_folderpath == NULL)
+	source_param->root_folderpath = new char[new_root_folderpath_len + 1];
+	if (source_param->root_folderpath == NULL)
 		throw bad_alloc();
-	// snprintf(data_csv_reader_param.root_folderpath, new_root_folderpath_len, "%s", new_root_folderpath);
-	memcpy(data_csv_reader_param.root_folderpath, new_root_folderpath, sizeof(char) * (new_root_folderpath_len + 1));
+	// snprintf(source_param->root_folderpath, new_root_folderpath_len, "%s", new_root_folderpath);
+	memcpy(source_param->root_folderpath, new_root_folderpath, sizeof(char) * (new_root_folderpath_len + 1));
 	return RET_SUCCESS;
 }
 
-unsigned short DataCsvReader::set_continue_when_non_exist(bool enable)
+unsigned short FsSource::set_continue_when_non_exist(bool enable)
 {
-	// assert(data_csv_reader_param != NULL && "data_csv_reader_param should NOT be NULL");
-	data_csv_reader_param.continue_when_non_exist = enable;
+	assert(source_param != NULL && "source_param should NOT be NULL");
+	source_param->continue_when_non_exist = enable;
 	return RET_SUCCESS;
 }
+
+// unsigned short FsSource::set_time_range_param(const TimeRangeParam* new_time_range_param)
+// {
+// 	assert(source_param != NULL && "source_param should NOT be NULL");
+// 	return source_param->set_time_range_param(new_time_range_param);
+// }

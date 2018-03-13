@@ -25,12 +25,12 @@ private:
 	unsigned short copy_email_adress_list(STRING_LIST& src_email_address_list);
 	unsigned short show_result(std::string& result_str, int show_result_type, const char* data_description)const;
 
-	const char* get_description_head(const PRESULT_SET result_set, const PRESULT_SET_ACCESS_PARAM result_set_access_param, const PTIME_RANGE_CFG time_range_cfg=NULL)const;
-	const char* get_no_data_description(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg)const;
-	// unsigned short get_restricted_time_range(int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg)const;
-	// unsigned short query_from_database(int source_index, int field_index, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSetMap>& sp_result_set_map)const;
+	const char* get_description_head(const PRESULT_SET result_set, const PRESULT_SET_ACCESS_PARAM result_set_access_param, const PTIME_RANGE_PARAM time_range_param=NULL)const;
+	const char* get_no_data_description(int source_index, int field_index, const PTIME_RANGE_PARAM time_range_param)const;
+	// unsigned short get_restricted_time_range(int source_index, int field_index, const PTIME_RANGE_PARAM time_range_param, SmartPointer<TimeRangeParam>& sp_restricted_time_range_param)const;
+	// unsigned short query_from_database(int source_index, int field_index, const SmartPointer<TimeRangeParam>& sp_restricted_time_range_param, SmartPointer<ResultSetMap>& sp_result_set_map)const;
 
-	unsigned short get_statistics_result(StatisticsMethod statistics_method, int source_index, int field_index, const PTIME_RANGE_CFG time_range_cfg, std::string& result_str)const;
+	unsigned short get_statistics_result(StatisticsMethod statistics_method, int source_index, int field_index, const PTIME_RANGE_PARAM time_range_param, std::string& result_str)const;
 
 	unsigned short get_range_value_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
 	unsigned short get_average_result_str(const PFINANCE_DATA_ARRAY_BASE data_array, std::string& result_str)const;
@@ -43,8 +43,8 @@ public:
 	unsigned short initialize(STRING_LIST& src_email_address_list);
 
 
-	// unsigned short query(const QuerySet& query_set, const SmartPointer<TimeRangeCfg>& sp_restricted_time_range_cfg, SmartPointer<ResultSetMap>& sp_result_set_map)const;
-	unsigned short calculate_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeCfg>& sp_time_range_cfg)const;
+	// unsigned short query(const QuerySet& query_set, const SmartPointer<TimeRangeParam>& sp_restricted_time_range_param, SmartPointer<ResultSetMap>& sp_result_set_map)const;
+	unsigned short calculate_statistics(StatisticsMethod statistics_method, const SmartPointer<TimeRangeParam>& sp_time_range_param)const;
 };
 ///////////////////////////////////////////////////////////////////////////////////
 

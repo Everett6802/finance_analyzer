@@ -24,9 +24,14 @@ enum InteractiveSessionCommandType
 	InteractiveSessionCommand_SetTimeRange,
 	InteractiveSessionCommand_GetCompany,
 	InteractiveSessionCommand_SetCompany,
-	InteractiveSessionCommand_GetReaderType,
-	InteractiveSessionCommand_SetReaderType,
+	InteractiveSessionCommand_GetDataType,
+	InteractiveSessionCommand_SetDataType,
+	InteractiveSessionCommand_GetContinueWhenNotExist,
+	InteractiveSessionCommand_SetContinueWhenNotExist,
+	InteractiveSessionCommand_GetCsvRootFolderPath,
 	InteractiveSessionCommand_SetCsvRootFolderPath,
+	InteractiveSessionCommand_GetShmRootFolderPath,
+	InteractiveSessionCommand_SetShmRootFolderPath,
 	InteractiveSessionCommand_Search,
 	InteractiveSessionCommand_ResetSearchParam,
 	InteractiveSessionCommand_SetStockSupportResistanceFilepath,
@@ -53,7 +58,12 @@ static const char *interactive_session_command[InteractiveSessionCommandSize] =
 	"set_company",
 	"get_data_type",
 	"set_data_type",
+	"get_continue_when_non_exist",
+	"set_continue_when_non_exist",
+	"get_csv_root_folderpath",
 	"set_csv_root_folderpath",
+	"get_shm_root_folderpath",
+	"set_shm_root_folderpath",
 	"search",
 	"reset_search_param",
 	"set_stock_support_resistance_filepath",
@@ -130,9 +140,14 @@ InteractiveSession::InteractiveSession(int client_fd, sockaddr_in& client_sockad
 	time_range_string_param(NULL),
 	company_string_param(NULL),
 	finance_data_type(FinanceData_SQL),
-	data_sql_reader_param(NULL),
-	data_csv_reader_param(NULL),
-	search_rule_need_reset(true),
+	continue_when_non_exist(DEFAULT_CONTINUE_WHEN_NOT_EXIST),
+	csv_root_folderpath(NULL),
+	shm_root_folderpath(NULL),
+	// source_param(NULL),
+	// data_sql_reader_param(NULL),
+	// data_csv_reader_param(NULL),
+	search_rule_changed(false),
+	source_param_not_default(false),
 	show_stock_support_resistance_verbose(false),
 	stock_support_resistance_date_filter(NULL),
 	stock_support_resistance_volume_filter(NULL),
@@ -146,8 +161,8 @@ InteractiveSession::InteractiveSession(int client_fd, sockaddr_in& client_sockad
 	memcpy(&client_sock, &client_sockaddress, sizeof(sockaddr_in));
 	memset(session_tag, 0x0, sizeof(char) * 64);
 	snprintf(session_tag, 64, "%s:%d", inet_ntoa(client_sock.sin_addr), htons(client_sock.sin_port));
-	data_reader_param_array[FinanceData_SQL] = (void*)data_sql_reader_param;
-	data_reader_param_array[FinanceData_CSV] = (void*)data_csv_reader_param;
+	// data_source_param_array[FinanceData_SQL] = (void*)data_sql_reader_param;
+	// data_source_param_array[FinanceData_CSV] = (void*)data_csv_reader_param;
 	// data_sql_reader_param = {.continue_when_non_exist = false};
 	// data_csv_reader_param = {.root_folderpath = NULL, .continue_when_non_exist = false};
 }
@@ -438,32 +453,58 @@ unsigned short InteractiveSession::print_single_stock_support_resistance_string(
 
 void InteractiveSession::reset_search_param()
 {
-	data_reader_param_array[FinanceData_SQL] = NULL;
-	data_reader_param_array[FinanceData_CSV] = NULL;
-	if (data_sql_reader_param != NULL)
+	// for (int i = 0 ; i < FinanceDataSize ; i++)
+	// {
+	// 	if (data_source_param_array[i] != NULL)
+	// 	{
+	// 		delete data_source_param_array[i];
+	// 		data_source_param_array[i] = NULL;	
+	// 	}	
+	// }
+	// data_source_param_array[FinanceData_SQL] = NULL;
+	// data_source_param_array[FinanceData_CSV] = NULL;
+	// if (data_sql_reader_param != NULL)
+	// {
+	// 	delete data_sql_reader_param;
+	// 	data_sql_reader_param = NULL;
+	// }
+	// if (data_csv_reader_param != NULL)
+	// {
+	// 	delete data_csv_reader_param;
+	// 	data_csv_reader_param = NULL;
+	// }
+	// if (source_param != NULL)
+	// {
+	// 	delete source_param;
+	// 	source_param = NULL;
+	// }
+	source_param_not_default = false;
+	search_rule_changed = false;
+	if (shm_root_folderpath != NULL)
 	{
-		delete data_sql_reader_param;
-		data_sql_reader_param = NULL;
+		delete[] shm_root_folderpath;
+		shm_root_folderpath = NULL;
 	}
-	if (data_csv_reader_param != NULL)
+	if (csv_root_folderpath != NULL)
 	{
-		delete data_csv_reader_param;
-		data_csv_reader_param = NULL;
+		delete[] csv_root_folderpath;
+		csv_root_folderpath = NULL;
 	}
-	if (source_string_param != NULL)
+	continue_when_non_exist = DEFAULT_CONTINUE_WHEN_NOT_EXIST;
+	if (company_string_param != NULL)
 	{
-		delete[] source_string_param;
-		source_string_param = NULL;
+		delete[] company_string_param;
+		company_string_param = NULL;
 	}
 	if (time_range_string_param != NULL)
 	{
 		delete[] time_range_string_param;
 		time_range_string_param = NULL;
 	}
-	if (company_string_param != NULL)
+	if (source_string_param != NULL)
 	{
-		delete[] company_string_param;
-		company_string_param = NULL;
+		delete[] source_string_param;
+		source_string_param = NULL;
 	}
 }
 
@@ -546,7 +587,12 @@ unsigned short InteractiveSession::handle_command(int argc, char **argv)
 		&InteractiveSession::handle_set_company_command,
 		&InteractiveSession::handle_get_data_type_command,
 		&InteractiveSession::handle_set_data_type_command,
+		&InteractiveSession::handle_get_continue_when_non_exist_command,
+		&InteractiveSession::handle_set_continue_when_non_exist_command,
+		&InteractiveSession::handle_get_csv_root_folderpath_command,
 		&InteractiveSession::handle_set_csv_root_folderpath_command,
+		&InteractiveSession::handle_get_shm_root_folderpath_command,
+		&InteractiveSession::handle_set_shm_root_folderpath_command,
 		&InteractiveSession::handle_search_command,
 		&InteractiveSession::handle_reset_search_param_command,
 		&InteractiveSession::handle_set_stock_support_resistance_filepath_command,
@@ -647,7 +693,7 @@ unsigned short InteractiveSession::handle_set_method_command(int argc, char **ar
 		delete[] source_string_param;
 		source_string_param = NULL;
 	}
-	search_rule_need_reset = true;
+	search_rule_changed = true;
 	int source_string_param_size = strlen(argv[1]) + 1;
 	source_string_param = new char[source_string_param_size];
 	if (source_string_param == NULL)
@@ -690,7 +736,7 @@ unsigned short InteractiveSession::handle_set_time_range_command(int argc, char 
 		delete[] time_range_string_param;
 		time_range_string_param = NULL;
 	}
-	search_rule_need_reset = true;
+	search_rule_changed = true;
 	int time_range_string_param_size = strlen(argv[1]) + 1;
 	time_range_string_param = new char[time_range_string_param_size];
 	if (time_range_string_param == NULL)
@@ -733,7 +779,7 @@ unsigned short InteractiveSession::handle_set_company_command(int argc, char **a
 		delete[] company_string_param;
 		company_string_param = NULL;
 	}
-	search_rule_need_reset = true;
+	search_rule_changed = true;
 	int company_string_param_size = strlen(argv[1]) + 1;
 	company_string_param = new char[company_string_param_size];
 	if (company_string_param == NULL)
@@ -750,9 +796,9 @@ unsigned short InteractiveSession::handle_get_data_type_command(int argc, char *
 		print_to_console(incorrect_command_phrases);
 		return RET_WARN_INTERACTIVE_COMMAND;
 	}
-// Get the reader type
+// Get the source data type
 	static char rsp_buf[RSP_BUF_SIZE];
-	snprintf(rsp_buf, RSP_BUF_SIZE, "\nReader Type: %d(%s)\n", finance_data_type, FINANCE_DATA_DESCRIPTION[finance_data_type]);
+	snprintf(rsp_buf, RSP_BUF_SIZE, "\nData Type: %d(%s)\n", finance_data_type, FINANCE_DATA_DESCRIPTION[finance_data_type]);
 	print_to_console(string(rsp_buf));
 	return RET_SUCCESS;
 }
@@ -766,13 +812,13 @@ unsigned short InteractiveSession::handle_set_data_type_command(int argc, char *
 		print_to_console(incorrect_command_phrases);
 		return RET_WARN_INTERACTIVE_COMMAND;
 	}
-// Set the reader type
+// Set the source type
+	int new_finance_data_type_value = FinanceDataSize;
 	try
-	{		
-		int new_finance_data_type_value = atoi(argv[1]);
+	{
+		new_finance_data_type_value = atoi(argv[1]);
 		if (new_finance_data_type_value < 0 || new_finance_data_type_value >= FinanceDataSize)
 			throw invalid_argument(string("Unsupported data reader type"));
-		finance_data_type = (FinanceDataType)new_finance_data_type_value;
 	}
 	catch(exception &e)
 	{
@@ -782,40 +828,157 @@ unsigned short InteractiveSession::handle_set_data_type_command(int argc, char *
 		print_to_console(string(rsp_buf) + string("\n"));
 		return RET_WARN_INTERACTIVE_COMMAND;
 	}
-	finance_data_type = (FinanceDataType)atoi(argv[0]);
+	if (finance_data_type != (FinanceDataType)new_finance_data_type_value)
+	{
+		finance_data_type = (FinanceDataType)new_finance_data_type_value;
+		search_rule_changed = true;
+	}
 	return RET_SUCCESS;
 }
 
-unsigned short InteractiveSession::handle_set_csv_root_folderpath_command(int argc, char **argv)
+unsigned short InteractiveSession::handle_get_continue_when_non_exist_command(int argc, char **argv)
 {
-	// unsigned short ret = RET_SUCCESS;
+	if (argc != 1)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+// Get the flag of continuing when non-exist
+	static char rsp_buf[RSP_BUF_SIZE];
+	snprintf(rsp_buf, RSP_BUF_SIZE, "\nContinue When Non-Exist: %s\n", (continue_when_non_exist ? "True" : "False"));
+	print_to_console(string(rsp_buf));
+	return RET_SUCCESS;
+}
+
+unsigned short InteractiveSession::handle_set_continue_when_non_exist_command(int argc, char **argv)
+{
 	if (argc != 2)
 	{
 		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
 		print_to_console(incorrect_command_phrases);
 		return RET_WARN_INTERACTIVE_COMMAND;
 	}
-// Initialize the CSV reader param
-	if (data_csv_reader_param == NULL)
-	{
-		data_csv_reader_param = new DataCsvReaderParam();
-		if (data_csv_reader_param == NULL)
-			throw bad_alloc();
-		data_reader_param_array[FinanceData_CSV] = (void*)data_csv_reader_param;
+	bool new_continue_when_non_exist;
+	try
+	{		
+		int continue_when_non_exist_int = atoi(argv[1]);
+		if (continue_when_non_exist_int < 0 || continue_when_non_exist_int >= 1)
+			throw invalid_argument(string("The value of continue_when_non_exist should be 0 or 1"));
+		new_continue_when_non_exist = (bool)continue_when_non_exist_int;
 	}
-// Set CSV reader root folerpath
-	int new_csv_root_folderpath_len = atoi(argv[1]);
-	char* new_csv_root_folderpath = new char[new_csv_root_folderpath_len + 1];
-	if (new_csv_root_folderpath == NULL)
+	catch(exception &e)
+	{
+		char rsp_buf[RSP_BUF_SIZE];
+		snprintf(rsp_buf, RSP_BUF_SIZE, INCORRECT_COMMAND_ARGUMENT_FORMAT, argv[0], argv[1]);
+		WRITE_ERROR(rsp_buf);
+		print_to_console(string(rsp_buf) + string("\n"));
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	if (continue_when_non_exist != new_continue_when_non_exist)
+	{
+		continue_when_non_exist = new_continue_when_non_exist;
+		search_rule_changed = true;
+	}
+// Check if default value
+	if (continue_when_non_exist != DEFAULT_CONTINUE_WHEN_NOT_EXIST)
+		source_param_not_default = true;
+	return RET_SUCCESS;
+}
+
+unsigned short InteractiveSession::handle_get_csv_root_folderpath_command(int argc, char **argv)
+{
+	if (argc != 1)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+// Get CSV root folerpath
+	static char rsp_buf[RSP_BUF_SIZE];
+	snprintf(rsp_buf, RSP_BUF_SIZE, "\nCSV Root Folder Path: %s\n", csv_root_folderpath);
+	print_to_console(string(rsp_buf));
+	return RET_SUCCESS;
+}
+
+unsigned short InteractiveSession::handle_set_csv_root_folderpath_command(int argc, char **argv)
+{
+	if (argc != 2)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	if (finance_data_type != FinanceData_CSV)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect source type, expected: %s, actual: %s", FINANCE_DATA_DESCRIPTION[FinanceData_CSV], FINANCE_DATA_DESCRIPTION[finance_data_type]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	if (csv_root_folderpath != NULL)
+	{
+		delete[] csv_root_folderpath;
+		csv_root_folderpath = NULL;
+	}
+// Set CSV root folerpath
+	int csv_root_folderpath_len = strlen(argv[1]);
+	csv_root_folderpath = new char[csv_root_folderpath_len + 1];
+	if (csv_root_folderpath == NULL)
 		throw bad_alloc();
-	snprintf(new_csv_root_folderpath, new_csv_root_folderpath_len, "%s", argv[1]);
-	if (data_csv_reader_param->root_folderpath != NULL)
+	memcpy(csv_root_folderpath, argv[1], sizeof(char) * (csv_root_folderpath_len + 1));
+	WRITE_FORMAT_DEBUG("The new CSV root folderpath: %s", csv_root_folderpath);
+	search_rule_changed = true;
+// Check if default value
+	if (strcmp(csv_root_folderpath, DEFAULT_CSV_ROOT_FINANCE_FOLDERPATH) != 0)
+		source_param_not_default = true;
+	return RET_SUCCESS;
+}
+
+unsigned short InteractiveSession::handle_get_shm_root_folderpath_command(int argc, char **argv)
+{
+	if (argc != 1)
 	{
-		delete[] data_csv_reader_param->root_folderpath;
-		data_csv_reader_param->root_folderpath = NULL;
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
 	}
-	data_csv_reader_param->root_folderpath = new_csv_root_folderpath;
-	WRITE_FORMAT_DEBUG("The new CSV root folderpath: %s", data_csv_reader_param->root_folderpath);
+// Get SHM root folerpath
+	static char rsp_buf[RSP_BUF_SIZE];
+	snprintf(rsp_buf, RSP_BUF_SIZE, "\nSHM Root Folder Path: %s\n", shm_root_folderpath);
+	print_to_console(string(rsp_buf));
+	return RET_SUCCESS;
+}
+
+unsigned short InteractiveSession::handle_set_shm_root_folderpath_command(int argc, char **argv)
+{
+	if (argc != 2)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect command: %s", argv[0]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	if (finance_data_type != FinanceData_SHM)
+	{
+		WRITE_FORMAT_WARN("WANRING!! Incorrect source type, expected: %s, actual: %s", FINANCE_DATA_DESCRIPTION[FinanceData_SHM], FINANCE_DATA_DESCRIPTION[finance_data_type]);
+		print_to_console(incorrect_command_phrases);
+		return RET_WARN_INTERACTIVE_COMMAND;
+	}
+	if (shm_root_folderpath != NULL)
+	{
+		delete[] shm_root_folderpath;
+		shm_root_folderpath = NULL;
+	}
+// Set SHM root folerpath
+	int shm_root_folderpath_len = strlen(argv[1]);
+	shm_root_folderpath = new char[shm_root_folderpath_len + 1];
+	if (shm_root_folderpath == NULL)
+		throw bad_alloc();
+	memcpy(shm_root_folderpath, argv[1], sizeof(char) * (shm_root_folderpath_len + 1));
+	WRITE_FORMAT_DEBUG("The new SHM root folderpath: %s", shm_root_folderpath);
+	search_rule_changed = true;
+// Check if default value
+	if (strcmp(shm_root_folderpath, DEFAULT_SHM_ROOT_FINANCE_FOLDERPATH) != 0)
+		source_param_not_default = true;
 	return RET_SUCCESS;
 }
 
@@ -827,7 +990,7 @@ unsigned short InteractiveSession::handle_search_command(int argc, char **argv)
 		print_to_console(incorrect_command_phrases);
 		return RET_WARN_INTERACTIVE_COMMAND;
 	}
-	if (search_rule_need_reset)
+	if (search_rule_changed)
 	{
 		// if (sql_reader == NULL)
 		// {
@@ -849,9 +1012,40 @@ unsigned short InteractiveSession::handle_search_command(int argc, char **argv)
 			return ret;
 // Query the data
 		// ret = SqlReader::query(&search_rule_set, sql_reader, result_set_map);
-		if (data_reader_param_array[finance_data_type] != NULL)
+		if (source_param_not_default)
 		{
-			ret = DATA_READ_BY_PARAM(finance_data_type, &search_rule_set, data_reader_param_array[finance_data_type], result_set_map);
+// Setup the parameters before search
+			PISOURCE_PARAM source_param = NULL;
+			switch(finance_data_type)
+			{
+				case FinanceData_SQL:
+				{
+					source_param = new SqlSourceParam(continue_when_non_exist);
+				}
+				break;
+				case FinanceData_CSV:
+				{
+					source_param = new CsvSourceParam(continue_when_non_exist, csv_root_folderpath);
+				}
+				break;
+				case FinanceData_SHM:
+				{
+					source_param = new ShmSourceParam(continue_when_non_exist, shm_root_folderpath);
+				}
+				break;
+				default:
+				{
+					static int ERRMSG_SIZE = 256;
+					char errmsg[ERRMSG_SIZE];
+					snprintf(errmsg, ERRMSG_SIZE, "Unknown finance data type: %d", finance_data_type);
+					throw runtime_error(string(errmsg));
+				}
+				break;
+			}
+			if (source_param == NULL)
+				throw bad_alloc();
+			ret = DATA_READ_BY_PARAM(finance_data_type, &search_rule_set, source_param, result_set_map);
+			delete source_param;
 		}
 		else
 		{
@@ -859,7 +1053,7 @@ unsigned short InteractiveSession::handle_search_command(int argc, char **argv)
 		}
 		if (CHECK_FAILURE(ret))
 			return ret;
-		search_rule_need_reset = false;
+		search_rule_changed = false;
 	}
 	// assert(result_set_map != NULL && "result_set_map should NOT be NULL");
 	if (result_set_map != NULL)
@@ -1086,17 +1280,6 @@ unsigned short InteractiveSession::handle_help_command(int argc, char **argv)
 	usage_string += string("  Format 1: Start time: (ex. 2015-01-01)\n");
 	usage_string += string("  Format 2: Start time,End time: (ex. 2015-01-01,2015-09-04)\n");
 	usage_string += string("  Format 3: ,End time: (ex. ,2015-09-04)\n");
-// Data Reader Type
-	usage_string += string("* get_data_type\nDescription: Get data type of the reader\n");
-	usage_string += string("* set_data_type\nDescription: Set data type of the reader\n");
-	usage_string += string(" Data type of the reader:\n");
-	for(int i = 0 ; i < FinanceDataSize ; i++)
-	{
-		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_DATA_DESCRIPTION[i], i);
-		usage_string += string(buf);
-	}
-	snprintf(buf, BUF_SIZE, "* set_csv_root_folderpath\nDescription: Set CSV root folerpath\nDefault: %s\n", DEFAULT_CSV_ROOT_FOLDERPATH);
-	usage_string += string(buf);
 // Company
 	if (finance_analysis_mode == FinanceAnalysis_Stock)
 	{
@@ -1107,8 +1290,42 @@ unsigned short InteractiveSession::handle_help_command(int argc, char **argv)
 		usage_string += string("  Format 3: Company group number (ex. [Gg]12)\n");
 		usage_string += string("  Format 4: Company group number range (ex. [Gg]12-15)\n");
 		usage_string += string("  Format 5: Company code number/number range/group/group range hybrid (ex. 2347,2100-2200,G12,2362,g2,1500-1510)\n");
-		snprintf(buf, BUF_SIZE, "* set_stock_support_resistance_filepath\nDescription: Set the file path for finding the stock support and resistance of a specific company\nDefault: %s\n", DEFAULT_STOCK_SUPPORT_RESISTANCE_ROOT_FOLDERPATH);
+	}
+// Data Type
+	usage_string += string("* get_data_type\nDescription: Get data type of the reader\n");
+	usage_string += string("* set_data_type\nDescription: Set data type of the reader\n");
+	usage_string += string(" Data type of the reader:\n");
+	for(int i = 0 ; i < FinanceDataSize ; i++)
+	{
+		snprintf(buf, BUF_SIZE, "  %s: %d\n", FINANCE_DATA_DESCRIPTION[i], i);
 		usage_string += string(buf);
+	}
+// Search param in each data type
+	snprintf(buf, BUF_SIZE, "* set_continue_when_non_exist\nDescription: Set to continue searching other data even if some are missing\nDefault: %s\n", (DEFAULT_CONTINUE_WHEN_NOT_EXIST ? "True" : "False"));
+	usage_string += string(buf);
+	snprintf(buf, BUF_SIZE, "* get_continue_when_non_exist\nDescription: Get the flag of continuing searching other data even if some are missing\nDefault: %s\n", (DEFAULT_CONTINUE_WHEN_NOT_EXIST ? "True" : "False"));
+	usage_string += string(buf);	
+	snprintf(buf, BUF_SIZE, "* set_csv_root_folderpath\nDescription: Set CSV root folerpath\nDefault: %s\n", DEFAULT_CSV_ROOT_FINANCE_FOLDERPATH);
+	usage_string += string(buf);
+	snprintf(buf, BUF_SIZE, "* get_csv_root_folderpath\nDescription: Get CSV root folerpath\nDefault: %s\n", DEFAULT_CSV_ROOT_FINANCE_FOLDERPATH);
+	usage_string += string(buf);
+	snprintf(buf, BUF_SIZE, "* set_shm_root_folderpath\nDescription: Set SHM root folerpath\nDefault: %s\n", DEFAULT_SHM_ROOT_FINANCE_FOLDERPATH);
+	usage_string += string(buf);
+	snprintf(buf, BUF_SIZE, "* get_shm_root_folderpath\nDescription: Get SHM root folerpath\nDefault: %s\n", DEFAULT_SHM_ROOT_FINANCE_FOLDERPATH);
+	usage_string += string(buf);
+// Reset Search Param
+	if (finance_analysis_mode == FinanceAnalysis_Market)
+		usage_string += string("* reset_search_param\n Description: Reset the search param: source/time_range/data_sql_reader/data_csv_reader\n");
+	else if (finance_analysis_mode == FinanceAnalysis_Stock)
+		usage_string += string("* reset_search_param\n Description: Reset the search param: source/time_range/company/data_sql_reader/data_csv_reader\n");
+// Search
+	if (finance_analysis_mode == FinanceAnalysis_Market)
+		usage_string += string("* search\n Description: Search the database under the rule of source type and time range\n");
+	else if (finance_analysis_mode == FinanceAnalysis_Stock)
+		usage_string += string("* search\n Description: Search the database under the rule of source type, time range and company number\n");
+// Calcuate the support and resistance of the stock price
+	if (finance_analysis_mode == FinanceAnalysis_Stock)
+	{
 		usage_string += string("* set_stock_support_resistance_verbose\nDescription: Enable/Disable to show the stock support and resistance of a specific company in detail\nDefault: False\n");
 		usage_string += string("* set_stock_support_resistance_date_filter\nDescription: Set the filter to ignore the data which is eariler than a specific date\n");
 		usage_string += string("  Format: Date(ex. 170801)\n");
@@ -1120,16 +1337,6 @@ unsigned short InteractiveSession::handle_help_command(int argc, char **argv)
 		usage_string += string("  Format 1: Company code number:Stock close price Pair(ex. 1560:77.8)\n");
 		usage_string += string("  Format 2: Company code number:Stock close price Pair List(ex. 1560:77.8,1589:81.9,1215:67)\n");
 	}
-// Reset Search Param
-	if (finance_analysis_mode == FinanceAnalysis_Market)
-		usage_string += string("* reset_search_param\n Description: Reset the search param: source/time_range/data_sql_reader/data_csv_reader\n");
-	else if (finance_analysis_mode == FinanceAnalysis_Stock)
-		usage_string += string("* reset_search_param\n Description: Reset the search param: source/time_range/company/data_sql_reader/data_csv_reader\n");
-// Search
-	if (finance_analysis_mode == FinanceAnalysis_Market)
-		usage_string += string("* search\n Description: Search the database under the rule of source type and time range\n");
-	else if (finance_analysis_mode == FinanceAnalysis_Stock)
-		usage_string += string("* search\n Description: Search the database under the rule of source type, time range and company number\n");
 	usage_string += string("===================================================\n");
 
 	ret = print_to_console(usage_string);

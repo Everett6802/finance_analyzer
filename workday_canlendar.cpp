@@ -37,9 +37,9 @@ WorkdayCanlendar* WorkdayCanlendar::get_instance()
 
 WorkdayCanlendar::WorkdayCanlendar() :
 	ref_cnt(0),
-	time_range_cfg(NULL),
-	map_start_time_cfg(NULL),
-	map_end_time_cfg(NULL),
+	time_range_param(NULL),
+	map_start_time_param(NULL),
+	map_end_time_param(NULL),
 	workday_year_sort_queue_size(0)
 {
 	IMPLEMENT_MSG_DUMPER()
@@ -98,16 +98,16 @@ unsigned short WorkdayCanlendar::initialize()
 //				fprintf(stderr, "buf: %s\n", buf);
 			}while(strlen(buf) == BUF_SIZE - 1 && buf[BUF_SIZE - 1] == '\0');
 		}
-		if (time_range_cfg == NULL)
+		if (time_range_param == NULL)
 		{
 			char start_time_str[16];
 			char end_time_str[16];
 			sscanf(buf, "%s %s", start_time_str, end_time_str);
-			time_range_cfg = new TimeRangeCfg(start_time_str, end_time_str);
+			time_range_param = new TimeRangeParam(start_time_str, end_time_str);
 			WRITE_FORMAT_DEBUG("Find the time range [%s %s] in %s", start_time_str, end_time_str, WORKDAY_CANLENDAR_CONF_FILENAME);
-			if (time_range_cfg == NULL)
+			if (time_range_param == NULL)
 			{
-				WRITE_ERROR("Fail to allocate the memory: time_range_cfg");
+				WRITE_ERROR("Fail to allocate the memory: time_range_param");
 				ret = RET_FAILURE_INSUFFICIENT_MEMORY;
 				goto OUT1;
 			}
@@ -219,60 +219,64 @@ int WorkdayCanlendar::release()
 
 bool WorkdayCanlendar::check_in_range(int year, int month, int day)const
 {
-	return TimeRangeCfg::time_in_range(time_range_cfg, year, month, day);
+	int cur_value_array[] = {year, month, day};
+	TimeParam time_param(TIME_UNIT_DATE, cur_value_array);
+	return TimeRangeParam::time_in_range(time_range_param, &time_param);
 }
 
-bool WorkdayCanlendar::check_in_range(const PTIME_CFG time_cfg)const
+bool WorkdayCanlendar::check_in_range(const PTIME_PARAM time_param)const
 {
-	return TimeRangeCfg::time_in_range(time_range_cfg, time_cfg);
+	return TimeRangeParam::time_in_range(time_range_param, time_param);
 }
 
 bool WorkdayCanlendar::check_greater_than_start(int year, int month, int day)const
 {
-	PTIME_CFG time_cfg = new TimeCfg(year, month, day);
-	bool check = check_greater_than_start(time_cfg);
-	if (time_cfg != NULL)
+	int cur_value_array[] = {year, month, day};
+	PTIME_PARAM time_param = new TimeParam(TIME_UNIT_DATE, cur_value_array);
+	bool check = check_greater_than_start(time_param);
+	if (time_param != NULL)
 	{
-		delete time_cfg;
-		time_cfg = NULL;
+		delete time_param;
+		time_param = NULL;
 	}
 	return check;
 }
 
-bool WorkdayCanlendar::check_greater_than_start(const PTIME_CFG time_cfg)const
+bool WorkdayCanlendar::check_greater_than_start(const PTIME_PARAM time_param)const
 {
-	if (time_cfg == NULL)
+	if (time_param == NULL)
 	{
 		char errmsg[64];
-		snprintf(errmsg, 64, "time_cfg should NOT be NULL");
+		snprintf(errmsg, 64, "time_param should NOT be NULL");
 		throw invalid_argument(errmsg);
 	}
 
-	return (*time_cfg >= *time_range_cfg->get_start_time());
+	return (*time_param >= *time_range_param->get_start_time());
 }
 
 bool WorkdayCanlendar::check_less_than_end(int year, int month, int day)const
 {
-	PTIME_CFG time_cfg = new TimeCfg(year, month, day);
-	bool check = check_less_than_end(time_cfg);
-	if (time_cfg != NULL)
+	int cur_value_array[] = {year, month, day};
+	PTIME_PARAM time_param = new TimeParam(TIME_UNIT_DATE, cur_value_array);
+	bool check = check_less_than_end(time_param);
+	if (time_param != NULL)
 	{
-		delete time_cfg;
-		time_cfg = NULL;
+		delete time_param;
+		time_param = NULL;
 	}
 	return check;
 }
 
-bool WorkdayCanlendar::check_less_than_end(const PTIME_CFG time_cfg)const
+bool WorkdayCanlendar::check_less_than_end(const PTIME_PARAM time_param)const
 {
-	if (time_cfg == NULL)
+	if (time_param == NULL)
 	{
 		char errmsg[64];
-		snprintf(errmsg, 64, "time_cfg should NOT be NULL");
+		snprintf(errmsg, 64, "time_param should NOT be NULL");
 		throw invalid_argument(errmsg);
 	}
 
-	return (*time_cfg <= *time_range_cfg->get_end_time());
+	return (*time_param <= *time_range_param->get_end_time());
 }
 
 bool WorkdayCanlendar::is_workday(int year, int month, int day)
@@ -284,10 +288,14 @@ bool WorkdayCanlendar::is_workday(int year, int month, int day)
 	return CHECK_SUCCESS(find_data_pos(year, month, day, year_key_dummy, month_index_dummy, day_index_dummy));
 }
 
-bool WorkdayCanlendar::is_workday(const PTIME_CFG time_cfg)
+bool WorkdayCanlendar::is_workday(const PTIME_PARAM time_param)
 {
-	assert(time_cfg != NULL && "time_cfg should NOT be NULL");
-	return is_workday(time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day());
+	assert(time_param != NULL && "time_param should NOT be NULL");
+	int value_array[3];
+	int value_array_len;
+	time_param->get_value_array(value_array, value_array_len);
+	assert(value_array_len == 3 && "value_array_len should be 3");
+	return is_workday(value_array[0], value_array[1], value_array[2]);
 }
 
 unsigned short WorkdayCanlendar::find_data_pos(int year, int month, int day, int& year_key, int& month_index, int& day_index, TRAVERSE_SEARCH_TYPE traverse_search_type)
@@ -297,7 +305,7 @@ unsigned short WorkdayCanlendar::find_data_pos(int year, int month, int day, int
 //	{
 //		if (!check_greater_than_start(year, month, day))
 //		{
-//			WRITE_FORMAT_ERROR("The date [%04d-%02d-%02d] is NOT greater than the start time [%s]", year, month, day, time_range_cfg->get_start_time()->to_string());
+//			WRITE_FORMAT_ERROR("The date [%04d-%02d-%02d] is NOT greater than the start time [%s]", year, month, day, time_range_param->get_start_time()->to_string());
 //			return RET_FAILURE_INVALID_ARGUMENT;
 //		}
 //	}
@@ -305,7 +313,7 @@ unsigned short WorkdayCanlendar::find_data_pos(int year, int month, int day, int
 //	{
 //		if (!check_less_than_end(year, month, day))
 //		{
-//			WRITE_FORMAT_ERROR("The date [%04d-%02d-%02d] is NOT less than the end time [%s]", year, month, day, time_range_cfg->get_end_time()->to_string());
+//			WRITE_FORMAT_ERROR("The date [%04d-%02d-%02d] is NOT less than the end time [%s]", year, month, day, time_range_param->get_end_time()->to_string());
 //			return RET_FAILURE_INVALID_ARGUMENT;
 //		}
 //	}
@@ -315,8 +323,8 @@ unsigned short WorkdayCanlendar::find_data_pos(int year, int month, int day, int
 	if (!check_in_range(year, month, day))
 	{
 //		char errmsg[256];
-//		snprintf(errmsg, 256, "The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, time_range_cfg->to_string());
-		WRITE_FORMAT_ERROR("The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, time_range_cfg->to_string());
+//		snprintf(errmsg, 256, "The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, time_range_param->to_string());
+		WRITE_FORMAT_ERROR("The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, time_range_param->to_string());
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 
@@ -479,34 +487,34 @@ unsigned short WorkdayCanlendar::get_date(int year_key, int month_index, int day
 	return RET_SUCCESS;
 }
 
-unsigned short WorkdayCanlendar::get_date(int year_key, int month_index, int day_index, SmartPointer<TimeCfg>& sp_time_cfg/*PTIME_CFG* time_cfg*/)
+unsigned short WorkdayCanlendar::get_date(int year_key, int month_index, int day_index, SmartPointer<TimeParam>& sp_time_param/*PTIME_PARAM* time_param*/)
 {
-//	if (time_cfg == NULL)
+//	if (time_param == NULL)
 //	{
-//		WRITE_ERROR("time_cfg should NOT be NULL");
+//		WRITE_ERROR("time_param should NOT be NULL");
 //		return RET_FAILURE_INVALID_ARGUMENT;
 //	}
 	int year;
 	int month;
 	int day;
-//	*time_cfg = NULL;
-
+//	*time_param = NULL;
 	unsigned short ret = get_date(year_key, month_index, day_index, year, month, day);
 	if (CHECK_SUCCESS(ret))
 	{
-		PTIME_CFG time_cfg_tmp = new TimeCfg(year, month, day);
-		if (time_cfg_tmp == NULL)
+		int cur_value_array[] = {year, month, day};
+		PTIME_PARAM time_param_tmp = new TimeParam(TIME_UNIT_DATE, cur_value_array);
+		if (time_param_tmp == NULL)
 		{
-			WRITE_ERROR("Fail to allocate the memory: time_cfg_tmp");
+			WRITE_ERROR("Fail to allocate the memory: time_param_tmp");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-//		*time_cfg = time_cfg_tmp;
-		sp_time_cfg.set_new(time_cfg_tmp);
+//		*time_param = time_param_tmp;
+		sp_time_param.set_new(time_param_tmp);
 	}
 	return ret;
 }
 
-unsigned short WorkdayCanlendar::get_prev_workday_array(int year_base, int month_base, int day_base, std::deque<PTIME_CFG>& workday_deque, int max_workday_amount)
+unsigned short WorkdayCanlendar::get_prev_workday_array(int year_base, int month_base, int day_base, std::deque<PTIME_PARAM>& workday_deque, int max_workday_amount)
 {
 	int start_year_key;
 	int start_month_index;
@@ -542,13 +550,14 @@ unsigned short WorkdayCanlendar::get_prev_workday_array(int year_base, int month
 				start_day_index = day_deque->size();
 			for (int day_index = start_day_index ; day_index >= 0 ; day_index--)
 			{
-				PTIME_CFG time_cfg = new TimeCfg(cur_year, cur_month, (*day_deque)[day_index]);
-				if (time_cfg == NULL)
+				int cur_value_array[] = {cur_year, cur_month, (*day_deque)[day_index]};
+				PTIME_PARAM time_param = new TimeParam(TIME_UNIT_DATE, cur_value_array);
+				if (time_param == NULL)
 				{
-					WRITE_ERROR("Fail to allocate the memory: time_cfg");
+					WRITE_ERROR("Fail to allocate the memory: time_param");
 					return RET_FAILURE_INSUFFICIENT_MEMORY;
 				}
-				workday_deque.push_back(time_cfg);
+				workday_deque.push_back(time_param);
 				workday_deque_count++;
 				if (max_workday_amount != -1 && workday_deque_count == max_workday_amount)
 					goto OUT;
@@ -564,7 +573,7 @@ OUT:
 	return RET_SUCCESS;
 }
 
-unsigned short WorkdayCanlendar::get_next_workday_array(int year_base, int month_base, int day_base, std::deque<PTIME_CFG>& workday_deque, int max_workday_amount)
+unsigned short WorkdayCanlendar::get_next_workday_array(int year_base, int month_base, int day_base, std::deque<PTIME_PARAM>& workday_deque, int max_workday_amount)
 {
 	int start_year_key;
 	int start_month_index;
@@ -602,13 +611,15 @@ unsigned short WorkdayCanlendar::get_next_workday_array(int year_base, int month
 			day_deque_size = day_deque->size();
 			for (int day_index = start_day_index ; day_index < day_deque_size ; day_index++)
 			{
-				PTIME_CFG time_cfg = new TimeCfg(cur_year, cur_month, (*day_deque)[day_index]);
-				if (time_cfg == NULL)
+				int cur_value_array[] = {cur_year, cur_month, (*day_deque)[day_index]};
+				PTIME_PARAM time_param = new TimeParam(TIME_UNIT_DATE, cur_value_array);
+				// PTIME_PARAM time_param = new TimeParam(cur_year, cur_month, (*day_deque)[day_index]);
+				if (time_param == NULL)
 				{
-					WRITE_ERROR("Fail to allocate the memory: time_cfg");
+					WRITE_ERROR("Fail to allocate the memory: time_param");
 					return RET_FAILURE_INSUFFICIENT_MEMORY;
 				}
-				workday_deque.push_back(time_cfg);
+				workday_deque.push_back(time_param);
 				workday_deque_count++;
 				if (max_workday_amount != -1 && workday_deque_count == max_workday_amount)
 					goto OUT;
@@ -627,7 +638,7 @@ OUT:
 unsigned short WorkdayCanlendar::get_prev_workday(int year_base, int month_base, int day_base, int& prev_year, int& prev_month, int& prev_day)
 {
 // Find the date
-	deque<PTIME_CFG> workday_deque;
+	deque<PTIME_PARAM> workday_deque;
 	unsigned short ret = get_prev_workday_array(year_base, month_base, day_base, workday_deque, 1);
 	if (CHECK_FAILURE(ret))
 		return ret;
@@ -637,37 +648,46 @@ unsigned short WorkdayCanlendar::get_prev_workday(int year_base, int month_base,
 		return RET_FAILURE_NOT_FOUND;
 	}
 // Update the data
-	PTIME_CFG time_cfg = workday_deque[0];
-	prev_year = time_cfg->get_year();
-	prev_month = time_cfg->get_month();
-	prev_day = time_cfg->get_day();
+	PTIME_PARAM time_param = workday_deque[0];
+	int value_array[3];
+	int value_array_len;
+	time_param->get_value_array(value_array, value_array_len);
+	assert(value_array_len == 3 && "value_array_len should be 3");
+	prev_year = value_array[0];
+	prev_month = value_array[1];
+	prev_day = value_array[2];
 // Clear up
-	delete time_cfg;
+	delete time_param;
 	workday_deque.clear();
 
 	return RET_SUCCESS;
 }
 
-unsigned short WorkdayCanlendar::get_prev_workday(const PTIME_CFG time_cfg, SmartPointer<TimeCfg>& sp_prev_time_cfg/*PTIME_CFG* prev_time_cfg*/)
+unsigned short WorkdayCanlendar::get_prev_workday(const PTIME_PARAM time_param, SmartPointer<TimeParam>& sp_prev_time_param/*PTIME_PARAM* prev_time_param*/)
 {
-	if (time_cfg == NULL/*|| prev_time_cfg == NULL*/)
+	if (time_param == NULL/*|| prev_time_param == NULL*/)
 	{
-		WRITE_ERROR("time_cfg == NULL or prev_time_cfg == NULL");
+		WRITE_ERROR("time_param == NULL or prev_time_param == NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	int prev_year, prev_month, prev_day;
-//	*prev_time_cfg = NULL;
-	unsigned short ret = get_prev_workday(time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day(), prev_year, prev_month, prev_day);
+//	*prev_time_param = NULL;
+	int value_array[3];
+	int value_array_len;
+	time_param->get_value_array(value_array, value_array_len);
+	assert(value_array_len == 3 && "value_array_len should be 3");
+	unsigned short ret = get_prev_workday(value_array[0], value_array[1], value_array[2], prev_year, prev_month, prev_day);
 	if (CHECK_SUCCESS(ret))
 	{
-		PTIME_CFG prev_time_cfg_tmp = new TimeCfg(prev_year, prev_month, prev_day);
-		if (prev_time_cfg_tmp == NULL)
+		int cur_value_array[] = {prev_year, prev_month, prev_day};
+		PTIME_PARAM prev_time_param_tmp = new TimeParam(TIME_UNIT_DATE, cur_value_array);
+		if (prev_time_param_tmp == NULL)
 		{
-			WRITE_ERROR("Fail to allocate memory: prev_time_cfg_tmp");
+			WRITE_ERROR("Fail to allocate memory: prev_time_param_tmp");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-//		*prev_time_cfg = prev_time_cfg_tmp;
-		sp_prev_time_cfg.set_new(prev_time_cfg_tmp);
+//		*prev_time_param = prev_time_param_tmp;
+		sp_prev_time_param.set_new(prev_time_param_tmp);
 	}
 
 	return ret;
@@ -676,7 +696,7 @@ unsigned short WorkdayCanlendar::get_prev_workday(const PTIME_CFG time_cfg, Smar
 unsigned short WorkdayCanlendar::get_next_workday(int year_base, int month_base, int day_base, int& next_year, int& next_month, int& next_day)
 {
 // Find the date
-	deque<PTIME_CFG> workday_deque;
+	deque<PTIME_PARAM> workday_deque;
 	unsigned short ret = get_next_workday_array(year_base, month_base, day_base, workday_deque, 1);
 	if (CHECK_FAILURE(ret))
 		return ret;
@@ -686,37 +706,46 @@ unsigned short WorkdayCanlendar::get_next_workday(int year_base, int month_base,
 		return RET_FAILURE_NOT_FOUND;
 	}
 // Update the data
-	PTIME_CFG time_cfg = workday_deque[0];
-	next_year = time_cfg->get_year();
-	next_month = time_cfg->get_month();
-	next_day = time_cfg->get_day();
+	PTIME_PARAM time_param = workday_deque[0];
+	int value_array[3];
+	int value_array_len;
+	time_param->get_value_array(value_array, value_array_len);
+	assert(value_array_len == 3 && "value_array_len should be 3");
+	next_year = value_array[0];
+	next_month = value_array[1];
+	next_day = value_array[2];
 // Clear up
-	delete time_cfg;
+	delete time_param;
 	workday_deque.clear();
 
 	return RET_SUCCESS;
 }
 
-unsigned short WorkdayCanlendar::get_next_workday(const PTIME_CFG time_cfg, SmartPointer<TimeCfg>& sp_next_time_cfg/*PTIME_CFG* next_time_cfg*/)
+unsigned short WorkdayCanlendar::get_next_workday(const PTIME_PARAM time_param, SmartPointer<TimeParam>& sp_next_time_param/*PTIME_PARAM* next_time_param*/)
 {
-	if (time_cfg == NULL/*|| next_time_cfg == NULL*/)
+	if (time_param == NULL/*|| next_time_param == NULL*/)
 	{
-		WRITE_ERROR("time_cfg == NULL or next_time_cfg == NULL");
+		WRITE_ERROR("time_param == NULL");
 		return RET_FAILURE_INVALID_ARGUMENT;
 	}
 	int next_year, next_month, next_day;
-//	*next_time_cfg = NULL;
-	unsigned short ret = get_next_workday(time_cfg->get_year(), time_cfg->get_month(), time_cfg->get_day(), next_year, next_month, next_day);
+//	*next_time_param = NULL;
+	int value_array[3];
+	int value_array_len;
+	time_param->get_value_array(value_array, value_array_len);
+	assert(value_array_len == 3 && "value_array_len should be 3");
+	unsigned short ret = get_next_workday(value_array[0], value_array[1], value_array[2], next_year, next_month, next_day);
 	if (CHECK_SUCCESS(ret))
 	{
-		PTIME_CFG next_time_cfg_tmp = new TimeCfg(next_year, next_month, next_day);
-		if (next_time_cfg_tmp == NULL)
+		int cur_value_array[] = {next_year, next_month, next_day};
+		PTIME_PARAM next_time_param_tmp = new TimeParam(TIME_UNIT_DATE, cur_value_array);
+		if (next_time_param_tmp == NULL)
 		{
-			WRITE_ERROR("Fail to allocate memory: next_time_cfg_tmp");
+			WRITE_ERROR("Fail to allocate memory: next_time_param_tmp");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-//		*next_time_cfg = next_time_cfg_tmp;
-		sp_next_time_cfg.set_new(next_time_cfg_tmp);
+//		*next_time_param = next_time_param_tmp;
+		sp_next_time_param.set_new(next_time_param_tmp);
 	}
 
 	return ret;
@@ -739,27 +768,27 @@ unsigned short WorkdayCanlendar::get_first_workday(int& first_year, int& first_m
 	return RET_SUCCESS;
 }
 
-unsigned short WorkdayCanlendar::get_first_workday(SmartPointer<TimeCfg>& sp_first_time_cfg/*PTIME_CFG* first_time_cfg*/)
+unsigned short WorkdayCanlendar::get_first_workday(SmartPointer<TimeParam>& sp_first_time_param/*PTIME_PARAM* first_time_param*/)
 {
-//	if (first_time_cfg == NULL)
+//	if (first_time_param == NULL)
 //	{
-//		WRITE_ERROR("first_time_cfg should NOT be NULL");
+//		WRITE_ERROR("first_time_param should NOT be NULL");
 //		return RET_FAILURE_INVALID_ARGUMENT;
 //	}
-
 	int first_year, first_month, first_day;
-//	*first_time_cfg = NULL;
+//	*first_time_param = NULL;
 	unsigned short ret = get_first_workday(first_year, first_month, first_day);
 	if (CHECK_SUCCESS(ret))
 	{
-		PTIME_CFG first_time_cfg_tmp = new TimeCfg(first_year, first_month, first_day);
-		if (first_time_cfg_tmp == NULL)
+		int cur_value_array[] = {first_year, first_month, first_day};
+		PTIME_PARAM first_time_param_tmp = new TimeParam(TIME_UNIT_DATE, cur_value_array);
+		if (first_time_param_tmp == NULL)
 		{
-			WRITE_ERROR("Fail to allocate memory: first_time_cfg_tmp");
+			WRITE_ERROR("Fail to allocate memory: first_time_param_tmp");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-//		*first_time_cfg = first_time_cfg_tmp;
-		sp_first_time_cfg.set_new(first_time_cfg_tmp);
+//		*first_time_param = first_time_param_tmp;
+		sp_first_time_param.set_new(first_time_param_tmp);
 	}
 	return ret;
 }
@@ -781,27 +810,28 @@ unsigned short WorkdayCanlendar::get_last_workday(int& last_year, int& last_mont
 	return RET_SUCCESS;
 }
 
-unsigned short WorkdayCanlendar::get_last_workday(SmartPointer<TimeCfg>& sp_last_time_cfg/*PTIME_CFG* last_time_cfg*/)
+unsigned short WorkdayCanlendar::get_last_workday(SmartPointer<TimeParam>& sp_last_time_param/*PTIME_PARAM* last_time_param*/)
 {
-//	if (last_time_cfg == NULL)
+//	if (last_time_param == NULL)
 //	{
-//		WRITE_ERROR("last_time_cfg should NOT be NULL");
+//		WRITE_ERROR("last_time_param should NOT be NULL");
 //		return RET_FAILURE_INVALID_ARGUMENT;
 //	}
 
 	int last_year, last_month, last_day;
-//	*last_time_cfg = NULL;
+//	*last_time_param = NULL;
 	unsigned short ret = get_last_workday(last_year, last_month, last_day);
 	if (CHECK_SUCCESS(ret))
 	{
-		PTIME_CFG last_time_cfg_tmp = new TimeCfg(last_year, last_month, last_day);
-		if (last_time_cfg_tmp == NULL)
+		int cur_value_array[] = {last_year, last_month, last_day};
+		PTIME_PARAM last_time_param_tmp = new TimeParam(TIME_UNIT_DATE, cur_value_array);
+		if (last_time_param_tmp == NULL)
 		{
-			WRITE_ERROR("Fail to allocate memory: last_time_cfg_tmp");
+			WRITE_ERROR("Fail to allocate memory: last_time_param_tmp");
 			return RET_FAILURE_INSUFFICIENT_MEMORY;
 		}
-//		*last_time_cfg = last_time_cfg_tmp;
-		sp_last_time_cfg.set_new(last_time_cfg_tmp);
+//		*last_time_param = last_time_param_tmp;
+		sp_last_time_param.set_new(last_time_param_tmp);
 	}
 	return ret;
 }

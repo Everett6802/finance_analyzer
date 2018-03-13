@@ -339,6 +339,8 @@ bool TimeCfg::operator!=(const char* another_time_str)const {return !(*this == a
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef ENABLE_OLD_TIME_STRUCTURE
+
 bool TimeRangeCfg::time_in_range(const TimeRangeCfg* time_range_cfg, const TimeCfg* time_cfg)
 {
 	assert(time_range_cfg != NULL && "time_range_cfg should NOT be NULL");
@@ -754,6 +756,8 @@ const PTIME_CFG TimeRangeCfg::get_end_time()const
 SingleTimeRangeCfg::SingleTimeRangeCfg(const char* time_str) : TimeRangeCfg(time_str, time_str){} // Single day
 SingleTimeRangeCfg::SingleTimeRangeCfg(int year, int month) : TimeRangeCfg(year, month, year, month){} // Single month
 SingleTimeRangeCfg::SingleTimeRangeCfg(int year, int month, int day) : TimeRangeCfg(year, month, day, year, month, day){} // Single day
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

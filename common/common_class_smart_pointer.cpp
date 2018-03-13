@@ -80,8 +80,10 @@ void SmartPointer<T>::disable_release(){need_release = false;}
 template class SmartPointer<int>;
 template class SmartPointer<long>;
 template class SmartPointer<float>;
-template class SmartPointer<TimeCfg>;
-template class SmartPointer<TimeRangeCfg>;
+// template class SmartPointer<TimeCfg>;
+// template class SmartPointer<TimeRangeCfg>;
+template class SmartPointer<TimeParam>;
+template class SmartPointer<TimeRangeParam>;
 template class SmartPointer<QuerySet>;
 template class SmartPointer<ResultSet>;
 template class SmartPointer<ResultSetAccessParam>;
